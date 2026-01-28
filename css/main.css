@@ -1360,7 +1360,7 @@ select:focus {
 }
 
 .ref-value {
-  font-size: 1rem;
+  font-size: 1.4rem;
   font-weight: 500;
 }
 
@@ -1397,7 +1397,7 @@ select:focus {
 }
 
 .ref-skill-value {
-  font-size: 1rem;
+  font-size: 1.4rem;
   font-weight: 500;
 }
 
@@ -1617,24 +1617,25 @@ select:focus {
 }
 
 .movement-sublabel {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 400;
   color: var(--text-secondary);
   margin-bottom: 0.25rem;
 }
 
 .movement-value {
-  font-size: 1rem;
+  font-size: 1.4rem;
   font-weight: 500;
 }
 
 .movement-value-input {
   width: 70px;
   padding: 0.35rem 0.3rem;
-  font-size: 0.85rem;
+  font-size: 1.4rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  min-height: 1.8rem;
+  min-height: 2rem;
   box-sizing: border-box;
 }
 
