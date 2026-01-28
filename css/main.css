@@ -1417,7 +1417,6 @@ select:focus {
 .hit-location-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.78rem;
 }
 
 .hit-location-table th,
@@ -1429,23 +1428,31 @@ select:focus {
 
 .hit-location-table th {
   background: rgba(0,0,0,0.08);
-  font-weight: 600;
-  font-size: 0.72rem;
+  font-family: var(--font-header);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-header);
 }
 
+/* 1d20 column */
+.hit-location-table td:nth-child(1) {
+  font-size: 1rem;
+}
+
+/* Location column */
 .hit-location-table td:nth-child(2) {
   text-align: left;
   font-weight: 500;
+  font-size: 1rem;
 }
 
 .hit-location-table input {
   width: 100%;
-  padding: 0.35rem 0.3rem;
+  padding: 0.2rem;
   font-size: 0.85rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  min-height: 1.8rem;
   box-sizing: border-box;
 }
 
@@ -1456,6 +1463,14 @@ select:focus {
 
 .hit-location-table input.armor-input {
   text-align: left;
+}
+
+/* Make AP and HP/Crnt columns narrower */
+.hit-location-table th:nth-child(4),
+.hit-location-table td:nth-child(4),
+.hit-location-table th:nth-child(5),
+.hit-location-table td:nth-child(5) {
+  width: 50px;
 }
 
 /* Combat Skills */
