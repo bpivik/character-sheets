@@ -433,7 +433,9 @@ select:focus {
 }
 
 .field-input-third {
-  flex: 0.33;
+  flex: 1;
+  min-width: 60px;
+  max-width: 100px;
 }
 
 .field-input-small {
@@ -727,14 +729,16 @@ select:focus {
 
 .section-header {
   font-family: var(--font-header);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--text-header);
   margin: 0 0 0.75rem 0;
-  padding-bottom: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: linear-gradient(to right, rgba(139, 115, 85, 0.25), rgba(139, 115, 85, 0.1), transparent);
+  border-left: 4px solid var(--border-gold);
   border-bottom: 1px solid var(--border-gold);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .skills-header,
@@ -888,7 +892,7 @@ select:focus {
 }
 
 .language-row.native {
-  grid-template-columns: auto 1fr 65px 40px 42px;
+  grid-template-columns: auto 1fr 100px 60px 60px;
 }
 
 .language-label {
@@ -912,9 +916,10 @@ select:focus {
 }
 
 .language-formula {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   text-align: right;
+  white-space: nowrap;
 }
 
 .language-base {

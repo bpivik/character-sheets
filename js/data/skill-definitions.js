@@ -154,7 +154,7 @@ const SKILL_GRADES = [
 const SPELL_SLOTS_PER_RANK = 50;
 
 // Number of equipment slots
-const EQUIPMENT_SLOTS = 25;
+const EQUIPMENT_SLOTS = 12;
 
 // Number of professional skill slots
 const PROFESSIONAL_SKILL_SLOTS = 15;
