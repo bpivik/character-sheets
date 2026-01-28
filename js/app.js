@@ -772,6 +772,18 @@ const App = {
         `;
         meleeBody.appendChild(tr);
         
+        // Add autofill listener for weapon name field
+        const nameInput = tr.querySelector(`#melee-${i}-name`);
+        const rowIndex = i;
+        if (nameInput) {
+          nameInput.addEventListener('blur', () => {
+            if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
+              window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
+              this.scheduleAutoSave();
+            }
+          });
+        }
+        
         tr.querySelectorAll('input').forEach(input => {
           input.addEventListener('input', () => this.scheduleAutoSave());
         });
