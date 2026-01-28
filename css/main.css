@@ -1,0 +1,1673 @@
+/* ============================================
+   MYTHRAS CLASSIC FANTASY CHARACTER SHEET
+   Main Layout Styles
+   ============================================ */
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--bg-outer);
+}
+
+/* ============================================
+   Navigation
+   ============================================ */
+.sheet-navigation {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--nav-bg);
+  border-bottom: 2px solid var(--border-gold);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.tab-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  background: var(--tab-bg);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+}
+
+.tab-btn:hover {
+  background: var(--tab-hover);
+}
+
+.tab-btn.active {
+  background: var(--tab-active);
+  border-bottom-color: var(--tab-active);
+  font-weight: 600;
+}
+
+.sheet-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sheet-type-selector {
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  background: var(--input-bg);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn {
+  padding: 0.4rem 0.8rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+}
+
+.btn-secondary:hover {
+  background: var(--btn-secondary-hover);
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* ============================================
+   Page Structure
+   ============================================ */
+.character-sheet {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sheet-page {
+  display: none;
+  padding: 1rem;
+}
+
+.sheet-page.active {
+  display: block;
+}
+
+.page-content {
+  padding: 1rem;
+  background: var(--bg-parchment);
+  min-height: calc(100vh - 80px);
+}
+
+.page-title {
+  text-align: center;
+  font-family: var(--font-header);
+  font-size: 1.8rem;
+  color: var(--text-header);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ============================================
+   Ornate Border
+   ============================================ */
+.ornate-border {
+  border: 3px solid var(--border-gold);
+  border-radius: 8px;
+  box-shadow: 
+    inset 0 0 20px rgba(139, 115, 85, 0.1),
+    0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+}
+
+.ornate-border::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* ============================================
+   Page 1: Portrait
+   ============================================ */
+.page-portrait.active {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+}
+
+.portrait-frame {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 3/4;
+  padding: 2rem;
+  background: var(--bg-parchment);
+}
+
+.portrait-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--portrait-bg);
+  border: 1px solid var(--border-light);
+}
+
+.image-upload-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.image-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  pointer-events: none;
+}
+
+.upload-text {
+  font-family: var(--font-header);
+  font-size: 2rem;
+  color: var(--text-link);
+  margin-bottom: 0.5rem;
+}
+
+.upload-subtext {
+  font-size: 1.5rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.portrait-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.btn-remove-image {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(200, 50, 50, 0.8);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.btn-remove-image:hover {
+  background: rgba(200, 50, 50, 1);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ============================================
+   Page 2: Main Character Sheet Header
+   ============================================ */
+.sheet-header {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-gold);
+  margin-bottom: 1rem;
+}
+
+.header-left,
+.header-center,
+.header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.header-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-mythras {
+  text-align: center;
+}
+
+.logo-text {
+  display: block;
+  font-family: var(--font-header);
+  font-size: 1.8rem;
+  color: var(--text-header);
+  letter-spacing: 0.1em;
+}
+
+.logo-subtext {
+  display: block;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.portrait-thumbnail {
+  position: relative;
+  width: 120px;
+  height: 150px;
+  background: var(--portrait-bg);
+  border: 1px solid var(--border-gold);
+  overflow: hidden;
+}
+
+.thumbnail-label {
+  padding: 0.5rem;
+  font-size: 0.7rem;
+}
+
+.upload-text-small {
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  color: var(--text-link);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.upload-subtext-small {
+  font-size: 0.65rem;
+  font-style: italic;
+  display: block;
+}
+
+.portrait-image-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Field Rows */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.field-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.field-label-large {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.field-input {
+  flex: 1;
+  padding: 0.2rem 0.4rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  min-width: 0;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px rgba(74, 60, 42, 0.2);
+}
+
+.field-input-large {
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.field-input-half {
+  flex: 0.5;
+}
+
+.field-input-third {
+  flex: 0.33;
+}
+
+.field-input-small {
+  width: 60px;
+  flex: none;
+}
+
+.field-input-tiny {
+  width: 40px;
+  flex: none;
+  text-align: center;
+}
+
+.field-separator {
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.field-suffix {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Prerequisite Skills */
+.prereq-skills {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.prereq-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.1rem;
+}
+
+.prereq-icon {
+  font-size: 0.5rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.prereq-icon.red { background: #c44; }
+.prereq-icon.yellow { background: #ca4; }
+.prereq-icon.green { background: #4a4; }
+
+/* Rank Section */
+.rank-section {
+  border: 1px solid var(--border-light);
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.3);
+}
+
+.rank-header {
+  font-family: var(--font-header);
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.rank-label {
+  font-size: 0.75rem;
+  min-width: 70px;
+}
+
+/* Tenacity & EXP */
+.tenacity-section,
+.exp-rolls-section {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* ============================================
+   Main Content Grid
+   ============================================ */
+.main-content-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 260px;
+  gap: 1rem;
+}
+
+.column-left,
+.column-center,
+.column-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ============================================
+   Attributes Section
+   ============================================ */
+.attributes-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.attribute-row {
+  display: grid;
+  grid-template-columns: 45px 55px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.attribute-row:last-of-type {
+  border-bottom: none;
+}
+
+.attribute-label {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+.attribute-input {
+  width: 100%;
+  padding: 0.3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.attribute-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px rgba(74, 60, 42, 0.2);
+}
+
+.derived-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.derived-label {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.derived-value {
+  font-weight: 600;
+  min-width: 35px;
+  text-align: center;
+  padding: 0.15rem 0.3rem;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid var(--border-light);
+}
+
+.derived-stat.dual-value {
+  display: grid;
+  grid-template-columns: 1fr 40px 40px;
+  gap: 0.2rem;
+}
+
+.dual-value .derived-label {
+  font-size: 0.7rem;
+}
+
+.derived-input {
+  width: 100%;
+  padding: 0.15rem;
+  font-size: 0.8rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.derived-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.movement-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-gold);
+}
+
+.movement-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.movement-input {
+  width: 50px;
+  padding: 0.2rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+/* ============================================
+   Skills Section
+   ============================================ */
+.skills-section,
+.alignment-section,
+.passion-section,
+.oath-section,
+.language-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.section-header {
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-header);
+  margin: 0 0 0.25rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-gold);
+}
+
+.skills-header,
+.section-subheader {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.15rem;
+}
+
+.header-base {
+  width: 45px;
+  text-align: center;
+}
+
+.header-current {
+  width: 45px;
+  text-align: center;
+}
+
+/* Skill Rows */
+.skill-row {
+  display: grid;
+  grid-template-columns: auto 60px 40px 42px 12px;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.12rem 0;
+  font-size: 0.78rem;
+  border-bottom: 1px dotted var(--border-light);
+}
+
+.skill-row:last-child {
+  border-bottom: none;
+}
+
+.skill-name {
+  font-weight: 500;
+}
+
+.skill-formula {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.skill-base {
+  text-align: center;
+  font-weight: 500;
+  background: rgba(255,255,255,0.4);
+  padding: 0.1rem;
+  font-size: 0.75rem;
+}
+
+.skill-input {
+  width: 100%;
+  padding: 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.skill-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.enc-indicator {
+  font-size: 0.55rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Belief Rows (Alignment, Passion, Oath) */
+.belief-row {
+  display: grid;
+  grid-template-columns: 1fr 65px 40px 42px;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.12rem 0;
+  font-size: 0.78rem;
+  border-bottom: 1px dotted var(--border-light);
+}
+
+.belief-row:last-child {
+  border-bottom: none;
+}
+
+.belief-name {
+  padding: 0.1rem 0.2rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.belief-name:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.belief-formula {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.belief-base {
+  text-align: center;
+  font-weight: 500;
+  background: rgba(255,255,255,0.4);
+  padding: 0.1rem;
+  font-size: 0.75rem;
+}
+
+.belief-input {
+  width: 100%;
+  padding: 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.belief-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+/* Language Rows */
+.language-row {
+  display: grid;
+  grid-template-columns: 1fr 55px 40px 42px;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.12rem 0;
+  font-size: 0.78rem;
+  border-bottom: 1px dotted var(--border-light);
+}
+
+.language-row:last-child {
+  border-bottom: none;
+}
+
+.language-row.native {
+  grid-template-columns: auto 1fr 65px 40px 42px;
+}
+
+.language-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.language-name {
+  padding: 0.1rem 0.2rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  min-width: 0;
+}
+
+.language-name:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.language-formula {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.language-base {
+  text-align: center;
+  font-weight: 500;
+  background: rgba(255,255,255,0.4);
+  padding: 0.1rem;
+  font-size: 0.75rem;
+}
+
+.language-input {
+  width: 100%;
+  padding: 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.language-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+/* Professional Skills */
+.professional-skill-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 40px 42px;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.12rem 0;
+  font-size: 0.78rem;
+  border-bottom: 1px dotted var(--border-light);
+}
+
+.prof-skill-name {
+  padding: 0.1rem 0.2rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.prof-skill-name:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.prof-skill-base {
+  padding: 0.1rem 0.2rem;
+  font-size: 0.68rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  text-align: center;
+}
+
+.prof-skill-base-val {
+  text-align: center;
+  font-weight: 500;
+  background: rgba(255,255,255,0.4);
+  padding: 0.1rem;
+  font-size: 0.75rem;
+}
+
+.prof-skill-current {
+  width: 100%;
+  padding: 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+/* Skill Grade Reference */
+.skill-grade-reference {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+  font-size: 0.72rem;
+}
+
+.reference-header {
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.grade-table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.1rem 0.5rem;
+}
+
+.grade-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.08rem 0.2rem;
+}
+
+.grade-row:nth-child(odd) {
+  background: rgba(255,255,255,0.3);
+}
+
+.enc-penalty-note {
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   Equipment Section
+   ============================================ */
+.equipment-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.equipment-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.header-item {
+  flex: 1;
+}
+
+.header-enc {
+  width: 42px;
+  text-align: center;
+}
+
+#equipment-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 350px;
+}
+
+.equipment-row {
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.08rem 0;
+  border-bottom: 1px dotted var(--border-light);
+}
+
+.equipment-name {
+  flex: 1;
+  padding: 0.1rem 0.2rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  min-width: 0;
+}
+
+.equipment-name:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.equipment-enc {
+  width: 42px;
+  padding: 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.equipment-enc:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.enc-totals {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-gold);
+  font-size: 0.78rem;
+}
+
+.enc-toggle {
+  margin-bottom: 0.25rem;
+}
+
+.enc-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.enc-status-row,
+.enc-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.1rem 0;
+}
+
+.enc-status-value,
+.enc-total-value {
+  font-weight: 600;
+}
+
+/* ============================================
+   Page 3: Combat
+   ============================================ */
+.combat-header-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Quick Reference */
+.quick-reference {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.quick-ref-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.quick-ref-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem;
+  background: rgba(255,255,255,0.3);
+  border: 1px solid var(--border-light);
+}
+
+.ref-label {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.ref-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.quick-ref-skills {
+  font-size: 0.72rem;
+}
+
+.ref-skill-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.ref-skill {
+  text-align: center;
+  padding: 0.15rem;
+  background: rgba(255,255,255,0.3);
+  border: 1px solid var(--border-light);
+}
+
+/* Hit Locations */
+.hit-locations {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.hit-location-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.hit-location-table th,
+.hit-location-table td {
+  padding: 0.2rem 0.25rem;
+  border: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.hit-location-table th {
+  background: rgba(0,0,0,0.08);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.hit-location-table td:nth-child(2) {
+  text-align: left;
+  font-weight: 500;
+}
+
+.hit-location-table input {
+  width: 100%;
+  padding: 0.1rem;
+  font-size: 0.72rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.hit-location-table input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.hit-location-table input.armor-input {
+  text-align: left;
+}
+
+/* Combat Skills */
+.combat-skills-section {
+  margin-bottom: 1rem;
+}
+
+.combat-skill-header {
+  display: grid;
+  grid-template-columns: 130px 55px 1fr 65px;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.3rem;
+  background: rgba(0,0,0,0.08);
+  border: 1px solid var(--border-light);
+}
+
+.combat-skill-row {
+  display: grid;
+  grid-template-columns: 130px 55px 1fr 65px;
+  gap: 0.4rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--border-light);
+  border-top: none;
+  font-size: 0.82rem;
+}
+
+.combat-skill-name {
+  padding: 0.1rem 0.2rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  font-size: 0.8rem;
+}
+
+.combat-skill-name:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.combat-skill-row.unarmed .combat-skill-name {
+  background: transparent;
+  border: none;
+  font-weight: 500;
+}
+
+.combat-skill-percent {
+  padding: 0.1rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  font-size: 0.8rem;
+}
+
+.combat-skill-percent:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.combat-weapons-known {
+  padding: 0.1rem 0.2rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  font-size: 0.8rem;
+}
+
+.combat-weapons-known:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.combat-skill-row.unarmed .combat-weapons-known {
+  background: transparent;
+  border: none;
+}
+
+.combat-base {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  text-align: center;
+  align-self: center;
+}
+
+/* Weapons Tables */
+.weapons-section {
+  margin-bottom: 1rem;
+}
+
+.weapons-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.weapons-table th,
+.weapons-table td {
+  padding: 0.15rem 0.2rem;
+  border: 1px solid var(--border-light);
+}
+
+.weapons-table th {
+  background: rgba(0,0,0,0.08);
+  font-weight: 600;
+  font-size: 0.68rem;
+}
+
+.weapons-table input {
+  width: 100%;
+  padding: 0.1rem;
+  font-size: 0.7rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.weapons-table input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+/* Movement & Fatigue Grid */
+.movement-fatigue-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.movement-section,
+.fatigue-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.movement-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.movement-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem;
+  background: rgba(255,255,255,0.3);
+  border: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.movement-type {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.movement-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.jump-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+}
+
+.jump-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem;
+  background: rgba(255,255,255,0.3);
+  border: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.jump-type {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.jump-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.jump-value-input {
+  width: 55px;
+  padding: 0.1rem;
+  font-size: 0.8rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.jump-value-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.syrin-only {
+  display: none;
+}
+
+[data-sheet-type="syrin"] .syrin-only {
+  display: flex;
+}
+
+[data-sheet-type="syrin"] .human-only {
+  display: none;
+}
+
+/* Fatigue Table */
+.fatigue-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+}
+
+.fatigue-table th,
+.fatigue-table td {
+  padding: 0.12rem 0.2rem;
+  border: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.fatigue-table th {
+  background: rgba(0,0,0,0.08);
+  font-weight: 600;
+}
+
+.fatigue-table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Special Abilities & Notes */
+.abilities-notes-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.special-abilities-section,
+.combat-notes-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.abilities-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.abilities-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.ability-input {
+  padding: 0.1rem 0.2rem;
+  font-size: 0.72rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.ability-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.notes-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.4rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  resize: vertical;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.notes-textarea.full-page {
+  min-height: calc(100vh - 180px);
+}
+
+/* ============================================
+   Page 4 & 5: Magic
+   ============================================ */
+.magic-skills-section {
+  margin-bottom: 1rem;
+}
+
+.magic-skills-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.magic-skills-table th,
+.magic-skills-table td {
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--border-light);
+}
+
+.magic-skills-table th {
+  background: rgba(0,0,0,0.08);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.class-note {
+  font-size: 0.62rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.base-calc {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.magic-skill-input {
+  width: 50px;
+  padding: 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.magic-skill-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.deity-input {
+  width: 100%;
+  padding: 0.1rem 0.2rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.deity-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.syrin-note {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* Spell Columns */
+.spell-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.spell-column {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.spell-rank-header {
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-header);
+  text-align: center;
+  margin: 0 0 0.25rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-gold);
+}
+
+.memorize-count {
+  font-size: 0.72rem;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.memorize-input {
+  width: 30px;
+  padding: 0.1rem;
+  font-size: 0.72rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.memorize-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.spell-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.spell-table th,
+.spell-table td {
+  padding: 0.1rem;
+  border: 1px solid var(--border-light);
+}
+
+.spell-table th {
+  background: rgba(0,0,0,0.08);
+  font-weight: 600;
+  font-size: 0.65rem;
+}
+
+.col-memorized {
+  width: 22px;
+  text-align: center;
+}
+
+.col-spell {
+  text-align: left;
+}
+
+.col-cost {
+  width: 40px;
+  text-align: center;
+}
+
+.spell-table input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.spell-table input[type="text"] {
+  width: 100%;
+  padding: 0.08rem 0.15rem;
+  font-size: 0.7rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.spell-table input[type="text"]:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.spell-table input.spell-cost {
+  text-align: center;
+}
+
+/* Magic skill reference (page 5) */
+.magic-skill-ref {
+  font-weight: 500;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 1100px) {
+  .main-content-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .column-right {
+    grid-column: span 2;
+  }
+  
+  .sheet-header {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .header-logo {
+    grid-column: span 2;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-light);
+  }
+}
+
+@media (max-width: 800px) {
+  .sheet-navigation {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .tab-list {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .sheet-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .main-content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .column-right {
+    grid-column: auto;
+  }
+  
+  .sheet-header {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-logo {
+    grid-column: auto;
+  }
+  
+  .combat-header-grid,
+  .movement-fatigue-grid,
+  .abilities-notes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .spell-columns {
+    grid-template-columns: 1fr;
+  }
+}

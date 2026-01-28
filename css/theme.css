@@ -1,0 +1,506 @@
+/* ============================================
+   MYTHRAS CLASSIC FANTASY CHARACTER SHEET
+   Theme Styles - Parchment/Fantasy
+   ============================================ */
+
+:root {
+  /* ========== Color Palette ========== */
+  
+  /* Parchment Backgrounds */
+  --bg-outer: #2a2318;
+  --bg-parchment: #f4e4c8;
+  --bg-parchment-light: #f9f1e1;
+  --bg-parchment-dark: #e8d4b0;
+  
+  /* Portrait/Image Backgrounds */
+  --portrait-bg: #faf6ee;
+  
+  /* Navigation */
+  --nav-bg: #3a3028;
+  --tab-bg: #d4c4a0;
+  --tab-hover: #e4d4b8;
+  --tab-active: #f4e4c8;
+  
+  /* Borders */
+  --border-gold: #8b7355;
+  --border-dark: #4a3c2a;
+  --border-light: #c4b090;
+  
+  /* Text Colors */
+  --text-primary: #2a1f14;
+  --text-secondary: #5a4a3a;
+  --text-header: #1a3a5e;
+  --text-link: #2a4a7e;
+  
+  /* Input Styles */
+  --input-bg: rgba(255, 255, 255, 0.7);
+  --input-border: #a89878;
+  --input-focus: #5a4a3a;
+  
+  /* Buttons */
+  --btn-primary-bg: #4a6a8a;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #3a5a7a;
+  --btn-secondary-bg: #d4c4a0;
+  --btn-secondary-text: #2a1f14;
+  --btn-secondary-hover: #c4b490;
+  
+  /* ========== Typography ========== */
+  --font-header: 'Cinzel', 'Times New Roman', serif;
+  --font-body: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  --font-mono: 'Courier New', Courier, monospace;
+}
+
+/* ============================================
+   Global Theme Styles
+   ============================================ */
+
+/* Parchment texture effect */
+.page-content {
+  background: 
+    linear-gradient(
+      to bottom,
+      rgba(244, 228, 200, 0.9),
+      rgba(232, 212, 176, 0.95)
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 115, 85, 0.03) 2px,
+      rgba(139, 115, 85, 0.03) 4px
+    );
+  background-color: var(--bg-parchment);
+}
+
+/* Aged paper edge effect */
+.ornate-border {
+  background: 
+    linear-gradient(135deg, rgba(139, 115, 85, 0.1) 0%, transparent 50%),
+    linear-gradient(225deg, rgba(139, 115, 85, 0.1) 0%, transparent 50%),
+    linear-gradient(315deg, rgba(139, 115, 85, 0.05) 0%, transparent 50%),
+    linear-gradient(45deg, rgba(139, 115, 85, 0.05) 0%, transparent 50%),
+    var(--bg-parchment);
+}
+
+/* ============================================
+   Typography Enhancements
+   ============================================ */
+
+/* Headers with medieval feel */
+.page-title {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(to bottom, var(--text-header), #2a4a6e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-header {
+  color: var(--text-header);
+  text-shadow: 0.5px 0.5px 1px rgba(0, 0, 0, 0.1);
+}
+
+.logo-text {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(to bottom, #1a3a5e, #2a4a6e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   Input Styling
+   ============================================ */
+
+/* Slightly aged paper look for inputs */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--border-gold);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px rgba(90, 74, 58, 0.15);
+}
+
+/* Attribute inputs - larger and more prominent */
+.attribute-input {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid var(--border-gold);
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.attribute-input:focus {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.2);
+}
+
+/* ============================================
+   Section Styling
+   ============================================ */
+
+/* Subtle inset effect for sections */
+.attributes-section,
+.skills-section,
+.alignment-section,
+.passion-section,
+.oath-section,
+.language-section,
+.equipment-section,
+.quick-reference,
+.hit-locations,
+.movement-section,
+.fatigue-section,
+.special-abilities-section,
+.combat-notes-section,
+.spell-column {
+  background: 
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.25),
+      rgba(255, 255, 255, 0.15)
+    );
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   Table Styling
+   ============================================ */
+
+/* Table headers with slight gradient */
+.weapons-table th,
+.hit-location-table th,
+.magic-skills-table th,
+.fatigue-table th,
+.spell-table th,
+.combat-skill-header {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.08),
+    rgba(0, 0, 0, 0.12)
+  );
+}
+
+/* Alternating row colors */
+.weapons-table tbody tr:nth-child(even),
+.spell-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   Button Styling
+   ============================================ */
+
+.btn {
+  border-radius: 4px;
+  font-weight: 500;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.15),
+    inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(to bottom, #5a7a9a, var(--btn-primary-bg));
+}
+
+.btn-primary:hover {
+  background: linear-gradient(to bottom, #4a6a8a, var(--btn-primary-hover));
+}
+
+.btn-secondary {
+  background: linear-gradient(to bottom, #e4d4b8, var(--btn-secondary-bg));
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(to bottom, #d4c4a8, var(--btn-secondary-hover));
+}
+
+/* ============================================
+   Navigation Tabs
+   ============================================ */
+
+.tab-btn {
+  background: linear-gradient(to bottom, #e4d4b8, var(--tab-bg));
+  border-bottom: none;
+  margin-bottom: -1px;
+  position: relative;
+}
+
+.tab-btn:hover {
+  background: linear-gradient(to bottom, #f4e4c8, var(--tab-hover));
+}
+
+.tab-btn.active {
+  background: var(--tab-active);
+  border-bottom: 1px solid var(--tab-active);
+  z-index: 1;
+}
+
+/* ============================================
+   Ornate Border Corners
+   ============================================ */
+
+.ornate-border::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 1px solid rgba(139, 115, 85, 0.2);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Corner decorations */
+.portrait-frame::before,
+.portrait-frame::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--border-gold);
+}
+
+.portrait-frame::before {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.portrait-frame::after {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+/* ============================================
+   Skill Grade Reference Styling
+   ============================================ */
+
+.skill-grade-reference {
+  background: 
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.2)
+    );
+}
+
+.grade-row span:last-child {
+  font-weight: 600;
+  color: var(--text-header);
+}
+
+/* ============================================
+   Derived Stats Styling
+   ============================================ */
+
+.derived-value {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.4)
+  );
+  border-radius: 3px;
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+/* ============================================
+   Portrait Styling
+   ============================================ */
+
+.portrait-container {
+  background: 
+    linear-gradient(
+      to bottom,
+      rgba(250, 246, 238, 1),
+      rgba(244, 240, 232, 1)
+    );
+  box-shadow: inset 0 0 30px rgba(139, 115, 85, 0.1);
+}
+
+.upload-text {
+  text-decoration: none;
+  border-bottom: 2px solid var(--text-link);
+  padding-bottom: 2px;
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-parchment-dark);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-gold);
+  border-radius: 5px;
+  border: 2px solid var(--bg-parchment-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* ============================================
+   Checkbox Styling
+   ============================================ */
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-gold);
+  border-radius: 3px;
+  background: var(--input-bg);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--input-focus);
+}
+
+/* ============================================
+   Selection Highlighting
+   ============================================ */
+
+::selection {
+  background: rgba(74, 106, 138, 0.3);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   Focus Indicators for Accessibility
+   ============================================ */
+
+*:focus-visible {
+  outline: 2px solid var(--btn-primary-bg);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--btn-primary-bg);
+  outline-offset: 1px;
+}
+
+/* ============================================
+   Dark Mode Support (Optional)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Users can toggle this with a class if desired */
+  .dark-mode {
+    --bg-outer: #1a1612;
+    --bg-parchment: #2a2418;
+    --bg-parchment-light: #3a3428;
+    --bg-parchment-dark: #1a1612;
+    --portrait-bg: #3a3428;
+    --nav-bg: #1a1612;
+    --tab-bg: #3a3428;
+    --tab-hover: #4a4438;
+    --tab-active: #2a2418;
+    --border-gold: #8b7355;
+    --border-dark: #5a4a3a;
+    --border-light: #5a4a3a;
+    --text-primary: #e4d4c4;
+    --text-secondary: #a89888;
+    --text-header: #8ab4d4;
+    --text-link: #8ab4d4;
+    --input-bg: rgba(0, 0, 0, 0.3);
+    --input-border: #5a4a3a;
+  }
+}
+
+/* ============================================
+   Animation Effects
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sheet-page.active {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Subtle hover effects for interactive elements */
+.skill-row:hover,
+.belief-row:hover,
+.language-row:hover,
+.equipment-row:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.attribute-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
