@@ -121,8 +121,9 @@ body {
    Page Structure
    ============================================ */
 .character-sheet {
-  max-width: 850px;
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .sheet-page {
@@ -135,7 +136,7 @@ body {
 }
 
 .page-content {
-  padding: 0.75rem;
+  padding: 1.25rem;
   background: var(--bg-parchment);
   min-height: calc(100vh - 80px);
 }
@@ -273,11 +274,11 @@ body {
    ============================================ */
 .sheet-header {
   display: grid;
-  grid-template-columns: 200px 120px 140px auto;
-  gap: 0.4rem;
-  padding-bottom: 0.5rem;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, 200px) minmax(180px, 250px) minmax(150px, 220px);
+  gap: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--border-gold);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .header-left,
@@ -285,7 +286,7 @@ body {
 .header-right {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.3rem;
 }
 
 .header-logo {
@@ -373,13 +374,12 @@ body {
 
 .field-input {
   flex: 1;
-  padding: 0.15rem 0.3rem;
+  padding: 0.25rem 0.4rem;
   font-family: var(--font-body);
   font-size: 0.95rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   min-width: 0;
-  max-width: 140px;
 }
 
 .field-input:focus {
@@ -492,8 +492,8 @@ body {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 180px 1fr 200px;
-  gap: 0.5rem;
+  grid-template-columns: minmax(200px, 280px) 1fr minmax(220px, 350px);
+  gap: 1rem;
   align-items: start;
 }
 
@@ -501,13 +501,13 @@ body {
 .column-center {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .column-right {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-self: start;
 }
 
@@ -632,7 +632,7 @@ body {
 .oath-section,
 .language-section {
   background: rgba(255,255,255,0.2);
-  padding: 0.5rem;
+  padding: 0.75rem;
   border: 1px solid var(--border-light);
 }
 
@@ -649,16 +649,16 @@ body {
 .skills-header,
 .section-subheader {
   display: grid;
-  grid-template-columns: 1fr 65px 40px 40px;
-  font-size: 0.68rem;
+  grid-template-columns: 1fr 80px 50px 50px;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 0.1rem;
-  gap: 0.1rem;
+  margin-bottom: 0.2rem;
+  gap: 0.25rem;
 }
 
 .skills-header.prof-header {
-  grid-template-columns: 1fr 50px 40px 40px;
+  grid-template-columns: 1fr 60px 50px 50px;
 }
 
 .header-base,
@@ -669,11 +669,11 @@ body {
 /* Skill Rows */
 .skill-row {
   display: grid;
-  grid-template-columns: auto 50px 30px 34px 10px;
+  grid-template-columns: 1fr 60px 40px 45px 12px;
   align-items: center;
-  gap: 0.1rem;
-  padding: 0.1rem 0;
-  font-size: 0.88rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  font-size: 0.95rem;
   border-bottom: 1px dotted var(--border-light);
 }
 
@@ -686,7 +686,7 @@ body {
 }
 
 .skill-formula {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   text-align: right;
 }
@@ -695,14 +695,14 @@ body {
   text-align: center;
   font-weight: 500;
   background: rgba(255,255,255,0.4);
-  padding: 0.08rem;
-  font-size: 0.85rem;
+  padding: 0.15rem;
+  font-size: 0.9rem;
 }
 
 .skill-input {
   width: 100%;
-  padding: 0.1rem;
-  font-size: 0.88rem;
+  padding: 0.2rem;
+  font-size: 0.95rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -722,11 +722,11 @@ body {
 /* Belief Rows (Alignment, Passion, Oath) */
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr 65px 40px 40px;
+  grid-template-columns: 1fr 80px 50px 50px;
   align-items: center;
-  gap: 0.1rem;
-  padding: 0.1rem 0;
-  font-size: 0.88rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  font-size: 0.95rem;
   border-bottom: 1px dotted var(--border-light);
 }
 
@@ -777,11 +777,11 @@ body {
 /* Language Rows */
 .language-row {
   display: grid;
-  grid-template-columns: 1fr 65px 40px 40px;
+  grid-template-columns: 1fr 80px 50px 50px;
   align-items: center;
-  gap: 0.1rem;
-  padding: 0.1rem 0;
-  font-size: 0.88rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  font-size: 0.95rem;
   border-bottom: 1px dotted var(--border-light);
 }
 
@@ -843,11 +843,11 @@ body {
 /* Professional Skills */
 .professional-skill-row {
   display: grid;
-  grid-template-columns: 1fr 50px 40px 40px;
+  grid-template-columns: 1fr 60px 50px 50px;
   align-items: center;
-  gap: 0.1rem;
-  padding: 0.1rem 0;
-  font-size: 0.88rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  font-size: 0.95rem;
   border-bottom: 1px dotted var(--border-light);
 }
 
