@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mythras Classic Fantasy Character Sheet</title>
-  <!-- AUTH CHECK DISABLED FOR EDITING - Re-enable before deploying!
   <script>
     // Auth check - redirect to login if not authenticated
     (function() {
@@ -27,7 +26,6 @@
       }
     })();
   </script>
-  -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/print.css" media="print">
@@ -153,15 +151,15 @@
           
           <div class="header-right">
             <div class="rank-section">
-              <div class="rank-header">Rank(s)</div>
+              <h3 class="section-header">Rank(s)</h3>
               <div class="rank-row">
-                <span class="rank-label">Primary Class</span>
+                <label class="field-label">Primary Class</label>
                 <input type="text" id="rank-primary" class="field-input field-input-tiny" placeholder="">
               </div>
-              <div class="rank-row dual">
-                <span class="rank-label">2nd</span>
+              <div class="rank-row">
+                <label class="field-label">2nd</label>
                 <input type="text" id="rank-secondary" class="field-input field-input-tiny" placeholder="">
-                <span class="rank-label">3rd</span>
+                <label class="field-label">3rd</label>
                 <input type="text" id="rank-tertiary" class="field-input field-input-tiny" placeholder="">
               </div>
             </div>

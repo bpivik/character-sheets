@@ -488,36 +488,35 @@ select:focus {
 
 /* Rank Section */
 .rank-section {
-  border: 1px solid var(--border-light);
   padding: 0.5rem;
   background: rgba(255,255,255,0.3);
   border-radius: 4px;
+  margin-bottom: 0.5rem;
 }
 
-.rank-header {
-  font-family: var(--font-header);
-  font-weight: 600;
-  font-size: 0.9rem;
+.rank-section .section-header {
+  margin-bottom: 0.5rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.rank-section .rank-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.4rem;
 }
 
-.rank-row {
-  display: grid;
-  grid-template-columns: 85px 55px;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
+.rank-section .rank-row:last-child {
+  margin-bottom: 0;
 }
 
-.rank-row.dual {
-  grid-template-columns: 30px 55px 35px 55px;
-  gap: 0.5rem;
+.rank-section .field-label {
+  font-size: 0.95rem;
+  min-width: auto;
 }
 
-.rank-label {
-  font-size: 0.85rem;
-  white-space: nowrap;
+.rank-section .field-input-tiny {
+  width: 55px;
 }
 
 /* Tenacity & EXP */
