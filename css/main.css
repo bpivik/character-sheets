@@ -273,8 +273,8 @@ body {
    ============================================ */
 .sheet-header {
   display: grid;
-  grid-template-columns: 240px 150px 160px auto;
-  gap: 0.75rem;
+  grid-template-columns: 250px 180px 180px auto;
+  gap: 0.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--border-gold);
   margin-bottom: 0.75rem;
@@ -285,7 +285,7 @@ body {
 .header-right {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .header-logo {
@@ -642,7 +642,7 @@ body {
 .skills-header,
 .section-subheader {
   display: grid;
-  grid-template-columns: 1fr 60px 35px 38px;
+  grid-template-columns: minmax(80px, 180px) 60px 35px 38px;
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -650,11 +650,7 @@ body {
 }
 
 .skills-header.prof-header {
-  grid-template-columns: 1fr 55px 35px 38px;
-}
-
-.section-subheader .header-spacer {
-  /* Empty first column */
+  grid-template-columns: minmax(80px, 180px) 55px 35px 38px;
 }
 
 .header-base {
@@ -934,7 +930,6 @@ body {
   background: rgba(255,255,255,0.2);
   padding: 0.4rem;
   border: 1px solid var(--border-light);
-  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -960,9 +955,8 @@ body {
 }
 
 #equipment-container {
-  flex: 1;
   overflow-y: auto;
-  max-height: 280px;
+  max-height: 240px;
 }
 
 .equipment-row {

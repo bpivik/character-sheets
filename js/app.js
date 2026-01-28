@@ -390,7 +390,7 @@ const App = {
       row.className = 'professional-skill-row';
       row.innerHTML = `
         <input type="text" class="prof-skill-name" id="prof-skill-${i}-name" placeholder="">
-        <input type="text" class="prof-skill-base" id="prof-skill-${i}-base" placeholder="Base">
+        <input type="text" class="prof-skill-base" id="prof-skill-${i}-base" placeholder="">
         <span class="prof-skill-base-val" id="prof-skill-${i}-base-val"></span>
         <input type="number" class="prof-skill-current" id="prof-skill-${i}-current" placeholder="">
       `;
