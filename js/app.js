@@ -665,13 +665,30 @@ const App = {
       container.appendChild(row);
       
       // Add event listeners
+      const nameInput = row.querySelector('.equipment-name');
       const encInput = row.querySelector('.equipment-enc');
-      encInput.addEventListener('input', () => {
-        this.updateTotalEnc();
+      const rowIndex = i;
+      
+      // Autofill ENC on blur
+      nameInput.addEventListener('blur', () => {
+        if (window.EncumbranceData) {
+          const itemName = nameInput.value;
+          if (itemName.trim() === '') {
+            window.EncumbranceData.clearEquipmentEncIfEmpty('equip', rowIndex, itemName);
+          } else {
+            window.EncumbranceData.autofillEquipmentEnc('equip', rowIndex, itemName);
+          }
+          this.updateTotalEnc();
+          this.scheduleAutoSave();
+        }
+      });
+      
+      nameInput.addEventListener('input', () => {
         this.scheduleAutoSave();
       });
       
-      row.querySelector('.equipment-name').addEventListener('input', () => {
+      encInput.addEventListener('input', () => {
+        this.updateTotalEnc();
         this.scheduleAutoSave();
       });
     }
@@ -702,12 +719,28 @@ const App = {
       `;
       container.appendChild(row);
       
-      // Add event listeners for auto-save
-      row.querySelector('.equipment-name').addEventListener('input', () => {
+      const nameInput = row.querySelector('.equipment-name');
+      const encInput = row.querySelector('.equipment-enc');
+      const rowIndex = i;
+      
+      // Autofill ENC on blur
+      nameInput.addEventListener('blur', () => {
+        if (window.EncumbranceData) {
+          const itemName = nameInput.value;
+          if (itemName.trim() === '') {
+            window.EncumbranceData.clearEquipmentEncIfEmpty('backpack', rowIndex, itemName);
+          } else {
+            window.EncumbranceData.autofillEquipmentEnc('backpack', rowIndex, itemName);
+          }
+          this.scheduleAutoSave();
+        }
+      });
+      
+      nameInput.addEventListener('input', () => {
         this.scheduleAutoSave();
       });
       
-      row.querySelector('.equipment-enc').addEventListener('input', () => {
+      encInput.addEventListener('input', () => {
         this.scheduleAutoSave();
       });
     }
