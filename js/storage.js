@@ -55,6 +55,14 @@ const StorageManager = {
       // Derived Stats (some are editable)
       derived: {
         movementBase: '20',
+        actionPointsOriginal: '',
+        actionPointsCurrent: '',
+        damageModOriginal: '',
+        damageModCurrent: '',
+        expModOriginal: '',
+        expModCurrent: '',
+        healingRateOriginal: '',
+        healingRateCurrent: '',
         initiativeOriginal: '',
         initiativeCurrent: '',
         luckOriginal: '',
@@ -62,6 +70,9 @@ const StorageManager = {
         magicPointsOriginal: '',
         magicPointsCurrent: ''
       },
+      
+      // Whether derived original values are locked (user-edited)
+      derivedLocked: false,
       
       // Standard Skills (current values - base is calculated)
       standardSkills: {},

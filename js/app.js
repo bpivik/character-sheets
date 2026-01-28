@@ -401,19 +401,51 @@ const App = {
     
     derivedInputs.forEach(input => {
       if (isCurrentlyReadonly) {
+        // Unlocking for editing
         input.removeAttribute('readonly');
         input.classList.add('derived-editable');
       } else {
+        // Locking - save current values before locking
         input.setAttribute('readonly', '');
         input.classList.remove('derived-editable');
-        // Recalculate to restore calculated values
-        this.recalculateAll();
       }
     });
+    
+    // Update locked state
+    this.character.derivedLocked = !isCurrentlyReadonly;
+    
+    // If we just locked, save the current original values
+    if (!isCurrentlyReadonly) {
+      this.saveDerivedOriginalValues();
+    }
+    
+    this.scheduleAutoSave();
     
     if (btn) {
       btn.textContent = isCurrentlyReadonly ? 'Lock Original Values' : 'Edit Original Values';
       btn.classList.toggle('btn-warning', isCurrentlyReadonly);
+    }
+  },
+
+  /**
+   * Save the current derived original values to character data
+   */
+  saveDerivedOriginalValues() {
+    const fields = {
+      'action-points-original': 'actionPointsOriginal',
+      'damage-mod-original': 'damageModOriginal',
+      'exp-mod-original': 'expModOriginal',
+      'healing-rate-original': 'healingRateOriginal',
+      'initiative-original': 'initiativeOriginal',
+      'luck-original': 'luckOriginal',
+      'magic-points-original': 'magicPointsOriginal'
+    };
+    
+    for (const [fieldId, key] of Object.entries(fields)) {
+      const input = document.getElementById(fieldId);
+      if (input) {
+        this.character.derived[key] = input.value;
+      }
     }
   },
 
@@ -892,7 +924,7 @@ const App = {
       }
     }
     
-    // Derived stats
+    // Derived stats (current values)
     const derivedMapping = {
       'movement-base': 'movementBase',
       'action-points-current': 'actionPointsCurrent',
@@ -908,6 +940,32 @@ const App = {
       const field = document.getElementById(fieldId);
       if (field && this.character.derived[key] !== undefined) {
         field.value = this.character.derived[key];
+      }
+    }
+    
+    // Restore locked original values if locked
+    if (this.character.derivedLocked) {
+      const originalMapping = {
+        'action-points-original': 'actionPointsOriginal',
+        'damage-mod-original': 'damageModOriginal',
+        'exp-mod-original': 'expModOriginal',
+        'healing-rate-original': 'healingRateOriginal',
+        'initiative-original': 'initiativeOriginal',
+        'luck-original': 'luckOriginal',
+        'magic-points-original': 'magicPointsOriginal'
+      };
+      
+      for (const [fieldId, key] of Object.entries(originalMapping)) {
+        const field = document.getElementById(fieldId);
+        if (field && this.character.derived[key] !== undefined) {
+          field.value = this.character.derived[key];
+        }
+      }
+      
+      // Update button state to show locked
+      const btn = document.getElementById('edit-derived-btn');
+      if (btn) {
+        btn.textContent = 'Edit Original Values';
       }
     }
     
@@ -1382,40 +1440,42 @@ const App = {
     const attrs = this.character.attributes;
     const results = Calculator.recalculateAll(attrs, this.sheetType);
     
-    // Update derived stat displays - always update original values (they're readonly)
-    const apOrig = document.getElementById('action-points-original');
-    if (apOrig) {
-      apOrig.value = results.derived.actionPoints;
-    }
-    
-    const dmgOrig = document.getElementById('damage-mod-original');
-    if (dmgOrig) {
-      dmgOrig.value = results.derived.damageModifier;
-    }
-    
-    const expOrig = document.getElementById('exp-mod-original');
-    if (expOrig) {
-      expOrig.value = results.derived.expMod;
-    }
-    
-    const healOrig = document.getElementById('healing-rate-original');
-    if (healOrig) {
-      healOrig.value = results.derived.healingRate;
-    }
-    
-    const initOrig = document.getElementById('initiative-original');
-    if (initOrig) {
-      initOrig.value = results.derived.initiative;
-    }
-    
-    const luckOrig = document.getElementById('luck-original');
-    if (luckOrig) {
-      luckOrig.value = results.derived.luckPoints;
-    }
-    
-    const magicOrig = document.getElementById('magic-points-original');
-    if (magicOrig) {
-      magicOrig.value = results.derived.magicPoints;
+    // Only update original values if NOT locked
+    if (!this.character.derivedLocked) {
+      const apOrig = document.getElementById('action-points-original');
+      if (apOrig) {
+        apOrig.value = results.derived.actionPoints;
+      }
+      
+      const dmgOrig = document.getElementById('damage-mod-original');
+      if (dmgOrig) {
+        dmgOrig.value = results.derived.damageModifier;
+      }
+      
+      const expOrig = document.getElementById('exp-mod-original');
+      if (expOrig) {
+        expOrig.value = results.derived.expMod;
+      }
+      
+      const healOrig = document.getElementById('healing-rate-original');
+      if (healOrig) {
+        healOrig.value = results.derived.healingRate;
+      }
+      
+      const initOrig = document.getElementById('initiative-original');
+      if (initOrig) {
+        initOrig.value = results.derived.initiative;
+      }
+      
+      const luckOrig = document.getElementById('luck-original');
+      if (luckOrig) {
+        luckOrig.value = results.derived.luckPoints;
+      }
+      
+      const magicOrig = document.getElementById('magic-points-original');
+      if (magicOrig) {
+        magicOrig.value = results.derived.magicPoints;
+      }
     }
     
     // Update skill bases
