@@ -273,7 +273,7 @@ body {
    ============================================ */
 .sheet-header {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr auto;
+  grid-template-columns: 320px 200px 200px auto;
   gap: 1rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--border-gold);
@@ -379,6 +379,7 @@ body {
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   min-width: 0;
+  max-width: 200px;
 }
 
 .field-input:focus {
@@ -487,7 +488,7 @@ body {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 260px;
+  grid-template-columns: 280px minmax(300px, 500px) 260px;
   gap: 1rem;
 }
 
@@ -711,7 +712,7 @@ body {
 /* Belief Rows (Alignment, Passion, Oath) */
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr 65px 40px 42px;
+  grid-template-columns: minmax(100px, 250px) 65px 40px 42px;
   align-items: center;
   gap: 0.2rem;
   padding: 0.12rem 0;
@@ -766,7 +767,7 @@ body {
 /* Language Rows */
 .language-row {
   display: grid;
-  grid-template-columns: 1fr 55px 40px 42px;
+  grid-template-columns: minmax(100px, 250px) 55px 40px 42px;
   align-items: center;
   gap: 0.2rem;
   padding: 0.12rem 0;
@@ -832,7 +833,7 @@ body {
 /* Professional Skills */
 .professional-skill-row {
   display: grid;
-  grid-template-columns: 1fr 60px 40px 42px;
+  grid-template-columns: minmax(100px, 250px) 60px 40px 42px;
   align-items: center;
   gap: 0.2rem;
   padding: 0.12rem 0;
