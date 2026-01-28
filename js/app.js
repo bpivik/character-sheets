@@ -436,21 +436,42 @@ const App = {
       // Add event listeners
       const nameInput = row.querySelector('.prof-skill-name');
       const baseInput = row.querySelector('.prof-skill-base');
+      const currentInput = row.querySelector('.prof-skill-current');
       
       // Auto-fill formula when skill name is entered
       nameInput.addEventListener('input', (e) => {
         this.autoFillProfessionalSkillFormula(e.target, baseInput);
+        this.updateProfessionalSkillData(i);
         this.scheduleAutoSave();
       });
       
       // Also recalculate base value when formula changes
       baseInput.addEventListener('input', () => {
         this.calculateProfessionalSkillBase(i);
+        this.updateProfessionalSkillData(i);
         this.scheduleAutoSave();
       });
       
-      row.querySelector('.prof-skill-current').addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', () => {
+        this.updateProfessionalSkillData(i);
+        this.scheduleAutoSave();
+      });
     }
+  },
+
+  /**
+   * Update professional skill data in character object
+   */
+  updateProfessionalSkillData(index) {
+    if (!this.character.professionalSkills) {
+      this.character.professionalSkills = [];
+    }
+    
+    const name = document.getElementById(`prof-skill-${index}-name`)?.value || '';
+    const base = document.getElementById(`prof-skill-${index}-base`)?.value || '';
+    const current = document.getElementById(`prof-skill-${index}-current`)?.value || '';
+    
+    this.character.professionalSkills[index] = { name, base, current };
   },
 
   /**
@@ -933,6 +954,20 @@ const App = {
         if (encInput && item.enc) encInput.value = item.enc;
       });
     }
+    
+    // Professional Skills
+    if (this.character.professionalSkills) {
+      this.character.professionalSkills.forEach((skill, i) => {
+        const nameInput = document.getElementById(`prof-skill-${i}-name`);
+        const baseInput = document.getElementById(`prof-skill-${i}-base`);
+        const currentInput = document.getElementById(`prof-skill-${i}-current`);
+        if (nameInput && skill.name) nameInput.value = skill.name;
+        if (baseInput && skill.base) baseInput.value = skill.base;
+        if (currentInput && skill.current) currentInput.value = skill.current;
+      });
+      // Recalculate base values after loading
+      this.recalculateProfessionalSkillBases();
+    }
   },
 
   /**
@@ -1024,6 +1059,21 @@ const App = {
           current: currentInput.value,
           isNative: false
         };
+      }
+    }
+    
+    // Professional Skills
+    this.character.professionalSkills = [];
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const baseInput = document.getElementById(`prof-skill-${i}-base`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      if (nameInput && baseInput && currentInput) {
+        this.character.professionalSkills.push({
+          name: nameInput.value,
+          base: baseInput.value,
+          current: currentInput.value
+        });
       }
     }
   },
