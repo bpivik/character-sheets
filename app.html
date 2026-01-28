@@ -4,24 +4,139 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mythras Classic Fantasy - Character Sheet</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Cinzel+Decorative:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="css/app.css">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; background: #f5f5f5; color: #333; line-height: 1.4; }
+    
+    /* NAV */
+    .nav { background: #2c3e50; color: white; padding: 10px 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+    .nav-brand { font-weight: 700; font-size: 16px; }
+    .nav-tabs { display: flex; gap: 5px; }
+    .nav-tab { background: #34495e; border: none; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .nav-tab:hover { background: #4a6278; }
+    .nav-tab.active { background: #3498db; }
+    .nav-controls { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+    .nav select, .nav input { padding: 6px 10px; border: none; border-radius: 4px; font-size: 13px; }
+    .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-blue { background: #3498db; color: white; }
+    .btn-green { background: #27ae60; color: white; }
+    .btn-red { background: #c0392b; color: white; }
+    .btn-gray { background: #7f8c8d; color: white; }
+    .btn:hover { opacity: 0.9; }
+    
+    /* MAIN */
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    
+    /* CARDS */
+    .card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card-title { font-size: 14px; font-weight: 700; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db; }
+    .card-subtitle { font-size: 12px; font-weight: 600; color: #7f8c8d; margin: 12px 0 6px; }
+    
+    /* GRID LAYOUTS */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .main-layout { display: grid; grid-template-columns: 280px 1fr 300px; gap: 16px; }
+    
+    /* FORM FIELDS */
+    .field { margin-bottom: 8px; }
+    .field-label { font-size: 11px; font-weight: 600; color: #7f8c8d; text-transform: uppercase; margin-bottom: 3px; display: block; }
+    .field-input { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .field-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.2); }
+    .field-row { display: flex; gap: 8px; align-items: center; }
+    .field-row .field { flex: 1; margin-bottom: 0; }
+    
+    /* ATTRIBUTES */
+    .attr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .attr-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 10px; text-align: center; }
+    .attr-label { font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 4px; }
+    .attr-input { width: 60px; padding: 8px; font-size: 18px; font-weight: 700; text-align: center; border: 2px solid #3498db; border-radius: 4px; }
+    
+    /* DERIVED STATS */
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-size: 13px; color: #666; }
+    .stat-value { font-weight: 600; color: #2c3e50; background: #f0f0f0; padding: 2px 10px; border-radius: 4px; min-width: 40px; text-align: center; }
+    .stat-input { width: 50px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
+    
+    /* SKILLS TABLE */
+    .skill-header { display: grid; grid-template-columns: 1fr 70px 50px 60px; gap: 8px; font-size: 11px; font-weight: 600; color: #7f8c8d; text-transform: uppercase; padding: 6px 0; border-bottom: 2px solid #3498db; }
+    .skill-row { display: grid; grid-template-columns: 1fr 70px 50px 60px; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
+    .skill-row:hover { background: #f8f9fa; }
+    .skill-name { font-weight: 500; }
+    .skill-formula { font-size: 11px; color: #999; }
+    .skill-base { font-weight: 600; color: #3498db; text-align: center; }
+    .skill-total { width: 100%; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-weight: 500; }
+    
+    /* BELIEF ROW */
+    .belief-row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+    .belief-input { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+    .belief-value { text-align: center; }
+    
+    /* EQUIPMENT */
+    .equip-header { display: grid; grid-template-columns: 1fr 60px; gap: 8px; font-size: 11px; font-weight: 600; color: #7f8c8d; padding: 4px 0; border-bottom: 1px solid #ddd; }
+    .equip-row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
+    .equip-input { padding: 3px 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
+    .enc-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid #3498db; font-weight: 600; display: flex; justify-content: space-between; }
+    
+    /* COMBAT */
+    .quick-ref { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .ref-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px; text-align: center; }
+    .ref-label { font-size: 11px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 4px; }
+    .ref-value { font-size: 20px; font-weight: 700; color: #2c3e50; }
+    
+    /* TABLES */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { background: #f8f9fa; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left; padding: 8px; border-bottom: 2px solid #3498db; }
+    .data-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+    .data-table input { width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
+    
+    /* COMBAT SKILLS */
+    .combat-row { display: grid; grid-template-columns: 200px 70px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eee; align-items: center; }
+    .combat-input { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+    
+    /* ABILITIES */
+    .abilities-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .ability-input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+    
+    /* SPELLS */
+    .spell-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .spell-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .spell-row { display: grid; grid-template-columns: 20px 1fr 45px; gap: 6px; padding: 3px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
+    .spell-input { padding: 3px 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
+    
+    /* NOTES */
+    .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .notes-area { width: 100%; min-height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; line-height: 1.5; resize: vertical; }
+    
+    /* PORTRAIT */
+    .portrait-container { max-width: 500px; margin: 0 auto; }
+    .portrait-frame { aspect-ratio: 3/4; border: 3px solid #3498db; border-radius: 8px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; }
+    .portrait-frame:hover { border-color: #2980b9; background: #ecf0f1; }
+    .portrait-label { text-align: center; color: #7f8c8d; }
+    .portrait-label strong { display: block; font-size: 18px; color: #3498db; margin-bottom: 8px; }
+    .portrait-img { width: 100%; height: 100%; object-fit: contain; position: absolute; }
+    
+    .hidden { display: none !important; }
+    .mt-2 { margin-top: 16px; }
+    
+    @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 800px) { .main-layout, .grid-2, .grid-3, .spell-grid, .notes-grid { grid-template-columns: 1fr; } .quick-ref { grid-template-columns: 1fr 1fr; } }
+  </style>
   <script>
-    (function() {
-      const authData = localStorage.getItem('mythras_auth');
-      if (!authData) { window.location.href = 'index.html'; return; }
+    (function(){
+      var a = localStorage.getItem('mythras_auth');
+      if (!a) { window.location.href = 'index.html'; return; }
       try {
-        const { timestamp } = JSON.parse(authData);
-        if ((Date.now() - timestamp) / 3600000 >= 24) {
+        var t = JSON.parse(a).timestamp;
+        if ((Date.now() - t) / 3600000 >= 24) {
           localStorage.removeItem('mythras_auth');
           window.location.href = 'index.html';
         }
-      } catch (e) {
+      } catch(e) {
         localStorage.removeItem('mythras_auth');
         window.location.href = 'index.html';
       }
@@ -29,225 +144,406 @@
   </script>
 </head>
 <body>
-  
-  <nav class="nav-bar">
-    <span class="nav-brand">Mythras Classic Fantasy</span>
-    
-    <div class="char-select">
-      <label>Character:</label>
-      <select id="char-select"><option value="">-- Select --</option></select>
-      <button class="btn btn-success btn-sm" id="btn-new">+ New</button>
-      <button class="btn btn-danger btn-sm" id="btn-delete">🗑</button>
-    </div>
-    
-    <ul class="nav-tabs">
-      <li><button class="nav-tab active" data-page="portrait">Portrait</button></li>
-      <li><button class="nav-tab" data-page="character">Character</button></li>
-      <li><button class="nav-tab" data-page="combat">Combat</button></li>
-      <li><button class="nav-tab" data-page="magic">Magic</button></li>
-      <li><button class="nav-tab" data-page="notes">Notes</button></li>
-    </ul>
-    
-    <div class="nav-controls">
-      <select id="sheet-type">
-        <option value="human">Human/Demihuman</option>
-        <option value="syrin">Syrin</option>
-      </select>
-      <button class="btn btn-gold" id="btn-save">💾 Save</button>
-      <button class="btn btn-dark" id="btn-export">📤</button>
-      <button class="btn btn-dark" id="btn-import">📥</button>
-      <button class="btn btn-dark" id="btn-logout">🚪</button>
-    </div>
-  </nav>
-  
-  <div class="sheet-container">
-    
-    <!-- PORTRAIT PAGE -->
-    <div class="page active" id="page-portrait">
-      <div class="page-inner">
-        <div class="portrait-page">
-          <div class="portrait-frame" id="portrait-container">
-            <input type="file" id="portrait-upload" accept="image/*" style="display:none;">
-            <div class="portrait-upload-label" id="portrait-label">
-              <strong>Click Here</strong>
-              <em>to add a full body image of your character.</em>
-            </div>
-            <img id="portrait-img" class="hidden" style="width:100%;height:100%;object-fit:contain;position:absolute;">
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- CHARACTER PAGE -->
-    <div class="page" id="page-character">
-      <div class="page-inner">
-        <div class="logo-header">
-          <div class="logo-title">Mythras</div>
-          <div class="logo-subtitle">Classic Fantasy</div>
-        </div>
-        
-        <div class="char-header">
-          <div class="header-col">
-            <div class="field-row"><label class="field-label field-label-lg">Character</label><input type="text" id="char-name" class="field-input" placeholder="Character name"></div>
-            <div class="field-row"><label class="field-label">Species/Culture</label><input type="text" id="species" class="field-input" style="flex:0.5"><span class="field-sep">/</span><input type="text" id="culture" class="field-input" style="flex:0.5"></div>
-            <div class="field-row"><label class="field-label">Class</label><input type="text" id="class1" class="field-input" style="flex:0.33"><span class="field-sep">/</span><input type="text" id="class2" class="field-input" style="flex:0.33"><span class="field-sep">/</span><input type="text" id="class3" class="field-input" style="flex:0.33"></div>
-            <div class="field-row"><label class="field-label">Rank Name</label><input type="text" id="rank-name" class="field-input"></div>
-            <div class="field-row"><label class="field-label">Gender</label><input type="text" id="gender" class="field-input"></div>
-            <div class="field-row"><label class="field-label">Age</label><input type="number" id="age" class="field-input field-input-sm"><label class="field-label" style="min-width:auto;margin-left:0.5rem;">Handed</label><input type="text" id="handedness" class="field-input field-input-sm"></div>
-          </div>
-          <div class="header-col">
-            <div class="field-row"><label class="field-label">Height</label><input type="text" id="height" class="field-input"></div>
-            <div class="field-row"><label class="field-label">Weight</label><input type="text" id="weight" class="field-input"></div>
-            <div class="field-row"><label class="field-label">Hair</label><input type="text" id="hair" class="field-input"></div>
-            <div class="field-row"><label class="field-label">Eyes</label><input type="text" id="eyes" class="field-input"></div>
-          </div>
-          <div class="header-col">
-            <div class="rank-box">
-              <div class="rank-title">Rank(s)</div>
-              <div class="field-row"><label class="field-label-sm">Primary</label><input type="text" id="rank1" class="field-input field-input-xs"></div>
-              <div class="field-row"><label class="field-label-sm">2nd</label><input type="text" id="rank2" class="field-input field-input-xs"><label class="field-label-sm">3rd</label><input type="text" id="rank3" class="field-input field-input-xs"></div>
-            </div>
-            <div class="field-row mt-1"><label class="field-label-sm">Tenacity</label><input type="number" id="tenacity-cur" class="field-input field-input-xs"><span class="field-sep">/</span><input type="number" id="tenacity-max" class="field-input field-input-xs"></div>
-            <div class="field-row"><label class="field-label-sm">EXP Rolls</label><input type="number" id="exp-rolls" class="field-input field-input-xs"></div>
-          </div>
-          <div class="header-col" style="align-items:center;">
-            <div class="portrait-box" onclick="document.getElementById('portrait-upload-sm').click()">
-              <input type="file" id="portrait-upload-sm" accept="image/*" style="display:none;">
-              <div class="portrait-placeholder" id="portrait-sm-label"><span>Click</span>for portrait</div>
-              <img id="portrait-sm-img" class="hidden" style="width:100%;height:100%;object-fit:cover;position:absolute;">
-            </div>
-          </div>
-        </div>
-        
-        <div class="main-grid">
-          <div class="column-left">
-            <div class="section">
-              <h3 class="section-title">Attributes</h3>
-              <div class="attr-grid" id="attr-grid"></div>
-            </div>
-            <div class="section">
-              <h3 class="section-title">Derived Stats</h3>
-              <div class="derived-grid" id="derived-grid"></div>
-            </div>
-          </div>
-          
-          <div class="column-center">
-            <div class="section">
-              <h3 class="section-title">Standard Skills</h3>
-              <div class="skills-header"><span>Skill</span><span>Formula</span><span>Base</span><span>%</span></div>
-              <div id="skills-container"></div>
-            </div>
-            <div class="section">
-              <h3 class="section-title">Professional Skills</h3>
-              <div id="prof-skills-container"></div>
-              <button class="btn btn-dark btn-sm mt-1" id="add-prof-skill">+ Add</button>
-            </div>
-            <div class="section">
-              <h3 class="section-title">Languages</h3>
-              <div id="languages-container"></div>
-              <button class="btn btn-dark btn-sm mt-1" id="add-language">+ Add</button>
-            </div>
-          </div>
-          
-          <div class="column-right">
-            <div class="section">
-              <h3 class="section-title">Beliefs & Passions</h3>
-              <div class="subsection-title">Alignments</div>
-              <div id="alignments-container"></div>
-              <div class="subsection-title">Passions</div>
-              <div id="passions-container"></div>
-              <button class="btn btn-dark btn-sm mt-1" id="add-passion">+ Add</button>
-              <div class="subsection-title">Oaths</div>
-              <div id="oaths-container"></div>
-              <button class="btn btn-dark btn-sm mt-1" id="add-oath">+ Add</button>
-            </div>
-            <div class="section">
-              <h3 class="section-title">Equipment</h3>
-              <div class="equip-header"><span>Item</span><span>ENC</span></div>
-              <div id="equipment-container"></div>
-              <button class="btn btn-dark btn-sm mt-1" id="add-equipment">+ Add</button>
-              <div class="enc-summary">
-                <div class="enc-row"><span>Total ENC:</span><strong id="total-enc">0</strong></div>
-                <div class="enc-row"><span>Status:</span><strong id="enc-status">Unburdened</strong></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- COMBAT PAGE -->
-    <div class="page" id="page-combat">
-      <div class="page-inner">
-        <h2 class="page-title">Combat</h2>
-        <div class="combat-grid">
-          <div class="section">
-            <h3 class="section-title">Quick Reference</h3>
-            <div class="quick-ref" id="quick-ref"></div>
-          </div>
-          <div class="section">
-            <h3 class="section-title">Hit Locations</h3>
-            <table class="data-table"><thead><tr><th>d20</th><th>Location</th><th>Armor</th><th>AP</th><th>HP</th><th>Cur</th></tr></thead><tbody id="hit-loc-body"></tbody></table>
-          </div>
-          <div class="section combat-full">
-            <h3 class="section-title">Combat Skills</h3>
-            <div id="combat-skills-container"></div>
-            <button class="btn btn-dark btn-sm mt-1" id="add-combat-skill">+ Add</button>
-          </div>
-          <div class="section combat-full">
-            <h3 class="section-title">Melee Weapons</h3>
-            <table class="data-table"><thead><tr><th>Weapon</th><th>Damage</th><th>Size</th><th>AP/HP</th><th>Effects</th><th>Traits</th></tr></thead><tbody id="melee-body"></tbody></table>
-            <button class="btn btn-dark btn-sm mt-1" id="add-melee">+ Add</button>
-          </div>
-          <div class="section combat-full">
-            <h3 class="section-title">Ranged Weapons</h3>
-            <table class="data-table"><thead><tr><th>Weapon</th><th>Damage</th><th>Range</th><th>Load</th><th>AP/HP</th><th>Effects</th></tr></thead><tbody id="ranged-body"></tbody></table>
-            <button class="btn btn-dark btn-sm mt-1" id="add-ranged">+ Add</button>
-          </div>
-          <div class="section combat-full">
-            <h3 class="section-title">Special Abilities</h3>
-            <div id="abilities-container" class="abilities-grid"></div>
-            <button class="btn btn-dark btn-sm mt-1" id="add-ability">+ Add</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- MAGIC PAGE -->
-    <div class="page" id="page-magic">
-      <div class="page-inner">
-        <h2 class="page-title">Magic & Spells</h2>
-        <div class="section">
-          <h3 class="section-title">Magic Skills</h3>
-          <table class="data-table">
-            <thead><tr><th>Tradition</th><th>Casting Skill</th><th>%</th><th>Knowledge Skill</th><th>%</th><th>Deity</th></tr></thead>
-            <tbody>
-              <tr><td>Divine</td><td>Channel</td><td><input type="number" id="channel-pct"></td><td>Piety</td><td><input type="number" id="piety-pct"></td><td><input type="text" id="deity"></td></tr>
-              <tr class="human-only"><td>Mage</td><td>Arcane Casting</td><td><input type="number" id="arcane-cast-pct"></td><td>Arcane Knowledge</td><td><input type="number" id="arcane-know-pct"></td><td>—</td></tr>
-              <tr class="human-only"><td>Sorcerer</td><td>Arcane Sorcery</td><td><input type="number" id="sorcery-pct"></td><td>Sorcerous Wisdom</td><td><input type="number" id="sorc-wisdom-pct"></td><td>—</td></tr>
-              <tr><td>Bard</td><td>Musicianship</td><td><input type="number" id="music-pct"></td><td>Lyrical Magic</td><td><input type="number" id="lyrical-pct"></td><td>—</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="spell-grid" id="spell-grid"></div>
-      </div>
-    </div>
-    
-    <!-- NOTES PAGE -->
-    <div class="page" id="page-notes">
-      <div class="page-inner">
-        <h2 class="page-title">Notes</h2>
-        <div class="notes-grid">
-          <div class="section"><h3 class="section-title">Background</h3><textarea class="notes-area" id="notes-bg"></textarea></div>
-          <div class="section"><h3 class="section-title">Session Notes</h3><textarea class="notes-area" id="notes-session"></textarea></div>
-          <div class="section"><h3 class="section-title">Goals</h3><textarea class="notes-area" id="notes-goals"></textarea></div>
-          <div class="section"><h3 class="section-title">Other</h3><textarea class="notes-area" id="notes-other"></textarea></div>
-        </div>
-      </div>
-    </div>
-    
+
+<nav class="nav">
+  <span class="nav-brand">Mythras Classic Fantasy</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="portrait">Portrait</button>
+    <button class="nav-tab" data-page="character">Character</button>
+    <button class="nav-tab" data-page="combat">Combat</button>
+    <button class="nav-tab" data-page="magic">Magic</button>
+    <button class="nav-tab" data-page="notes">Notes</button>
   </div>
-  
-  <script src="js/app-init.js"></script>
+  <div class="nav-controls">
+    <select id="char-select"><option>-- Select Character --</option></select>
+    <button class="btn btn-green">+ New</button>
+    <button class="btn btn-red">Delete</button>
+    <select><option>Human/Demihuman</option><option>Syrin</option></select>
+    <button class="btn btn-blue">💾 Save</button>
+    <button class="btn btn-gray" id="btn-logout">Logout</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- PORTRAIT PAGE -->
+  <div class="page active" id="page-portrait">
+    <div class="portrait-container">
+      <div class="card">
+        <div class="portrait-frame" onclick="document.getElementById('portrait-upload').click()">
+          <input type="file" id="portrait-upload" accept="image/*" style="display:none">
+          <div class="portrait-label" id="portrait-label">
+            <strong>Click to Upload Portrait</strong>
+            <span>Add a full body image of your character</span>
+          </div>
+          <img id="portrait-img" class="portrait-img hidden">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARACTER PAGE -->
+  <div class="page" id="page-character">
+    
+    <!-- Header Info -->
+    <div class="card">
+      <div class="grid-4">
+        <div class="field"><label class="field-label">Character Name</label><input type="text" class="field-input" id="char-name" placeholder="Enter name"></div>
+        <div class="field"><label class="field-label">Player</label><input type="text" class="field-input" id="player-name"></div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Species</label><input type="text" class="field-input" id="species"></div>
+          <div class="field"><label class="field-label">Culture</label><input type="text" class="field-input" id="culture"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Primary Class</label><input type="text" class="field-input" id="class1"></div>
+          <div class="field"><label class="field-label">2nd Class</label><input type="text" class="field-input" id="class2"></div>
+        </div>
+      </div>
+      <div class="grid-4 mt-2">
+        <div class="field"><label class="field-label">Rank Name</label><input type="text" class="field-input" id="rank-name"></div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Gender</label><input type="text" class="field-input" id="gender"></div>
+          <div class="field"><label class="field-label">Age</label><input type="number" class="field-input" id="age"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Height</label><input type="text" class="field-input" id="height"></div>
+          <div class="field"><label class="field-label">Weight</label><input type="text" class="field-input" id="weight"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Hair</label><input type="text" class="field-input" id="hair"></div>
+          <div class="field"><label class="field-label">Eyes</label><input type="text" class="field-input" id="eyes"></div>
+        </div>
+      </div>
+      <div class="grid-4 mt-2">
+        <div class="field"><label class="field-label">Handedness</label><input type="text" class="field-input" id="handedness"></div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Rank (Primary)</label><input type="text" class="field-input" id="rank1"></div>
+          <div class="field"><label class="field-label">Rank (2nd)</label><input type="text" class="field-input" id="rank2"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="field-label">Tenacity Pts</label><input type="number" class="field-input" id="tenacity-cur"> / <input type="number" class="field-input" id="tenacity-max"></div>
+        </div>
+        <div class="field"><label class="field-label">EXP Rolls</label><input type="number" class="field-input" id="exp-rolls"></div>
+      </div>
+    </div>
+
+    <!-- Main 3-column layout -->
+    <div class="main-layout">
+      
+      <!-- LEFT: Attributes & Derived -->
+      <div>
+        <div class="card">
+          <div class="card-title">Attributes</div>
+          <div class="attr-grid" id="attr-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Derived Statistics</div>
+          <div id="derived-stats"></div>
+        </div>
+      </div>
+
+      <!-- CENTER: Skills -->
+      <div>
+        <div class="card">
+          <div class="card-title">Standard Skills</div>
+          <div class="skill-header"><span>Skill</span><span>Formula</span><span>Base</span><span>Total %</span></div>
+          <div id="standard-skills"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Professional Skills</div>
+          <div id="prof-skills"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Languages</div>
+          <div id="languages"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Passions & Equipment -->
+      <div>
+        <div class="card">
+          <div class="card-title">Alignments, Passions & Oaths</div>
+          <div class="card-subtitle">Alignments (POW+INT+50)</div>
+          <div id="alignments"></div>
+          <div class="card-subtitle">Passions (POW+INT+50)</div>
+          <div id="passions"></div>
+          <div class="card-subtitle">Oaths (POW+CHA+50)</div>
+          <div id="oaths"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Equipment</div>
+          <div class="equip-header"><span>Item</span><span>ENC</span></div>
+          <div id="equipment"></div>
+          <div class="enc-total"><span>Total ENC:</span><span id="total-enc">0</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>Status:</span><span id="enc-status">Unburdened</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMBAT PAGE -->
+  <div class="page" id="page-combat">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Quick Reference</div>
+        <div class="quick-ref">
+          <div class="ref-box"><div class="ref-label">Initiative</div><div class="ref-value" id="ref-init">0</div></div>
+          <div class="ref-box"><div class="ref-label">Action Points</div><div class="ref-value" id="ref-ap">2</div></div>
+          <div class="ref-box"><div class="ref-label">Damage Mod</div><div class="ref-value" id="ref-dmg">+0</div></div>
+          <div class="ref-box"><div class="ref-label">Luck Points</div><div class="ref-value" id="ref-luck">0</div></div>
+        </div>
+        <div class="quick-ref mt-2">
+          <div class="ref-box"><div class="ref-label">Athletics</div><div class="ref-value" id="ref-ath">0</div></div>
+          <div class="ref-box"><div class="ref-label">Brawn</div><div class="ref-value" id="ref-brawn">0</div></div>
+          <div class="ref-box"><div class="ref-label">Endurance</div><div class="ref-value" id="ref-end">0</div></div>
+          <div class="ref-box"><div class="ref-label">Evade</div><div class="ref-value" id="ref-evade">0</div></div>
+        </div>
+        <div class="quick-ref mt-2">
+          <div class="ref-box"><div class="ref-label">Perception</div><div class="ref-value" id="ref-perc">0</div></div>
+          <div class="ref-box"><div class="ref-label">Stealth</div><div class="ref-value" id="ref-stealth">0</div></div>
+          <div class="ref-box"><div class="ref-label">Swim</div><div class="ref-value" id="ref-swim">0</div></div>
+          <div class="ref-box"><div class="ref-label">Willpower</div><div class="ref-value" id="ref-will">0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Hit Locations</div>
+        <table class="data-table">
+          <thead><tr><th>d20</th><th>Location</th><th>Armor</th><th>AP</th><th>HP</th><th>Current</th></tr></thead>
+          <tbody id="hit-locations"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Combat Skills</div>
+      <div id="combat-skills"></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Melee Weapons</div>
+        <table class="data-table">
+          <thead><tr><th>Weapon</th><th>Damage</th><th>Size</th><th>AP/HP</th><th>Effects</th><th>Traits</th></tr></thead>
+          <tbody id="melee-weapons"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Ranged Weapons</div>
+        <table class="data-table">
+          <thead><tr><th>Weapon</th><th>Damage</th><th>Range</th><th>Load</th><th>AP/HP</th><th>Effects</th></tr></thead>
+          <tbody id="ranged-weapons"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Special Abilities</div>
+      <div class="abilities-grid" id="abilities"></div>
+    </div>
+  </div>
+
+  <!-- MAGIC PAGE -->
+  <div class="page" id="page-magic">
+    <div class="card">
+      <div class="card-title">Magic Skills</div>
+      <table class="data-table">
+        <thead><tr><th>Tradition</th><th>Casting Skill</th><th>Base</th><th>%</th><th>Knowledge Skill</th><th>Base</th><th>%</th><th>Deity/Focus</th></tr></thead>
+        <tbody>
+          <tr><td>Divine (Cleric, Ranger, Paladin)</td><td>Channel</td><td>INT+POW</td><td><input type="number"></td><td>Piety</td><td>CHA+POW</td><td><input type="number"></td><td><input type="text" placeholder="Deity"></td></tr>
+          <tr><td>Mage</td><td>Arcane Casting</td><td>INT+POW</td><td><input type="number"></td><td>Arcane Knowledge</td><td>INT×2</td><td><input type="number"></td><td>—</td></tr>
+          <tr><td>Sorcerer</td><td>Arcane Sorcery</td><td>CHA+POW</td><td><input type="number"></td><td>Sorcerous Wisdom</td><td>CHA+INT</td><td><input type="number"></td><td>—</td></tr>
+          <tr><td>Bard</td><td>Musicianship</td><td>DEX+CHA</td><td><input type="number"></td><td>Lyrical Magic</td><td>CHA+POW</td><td><input type="number"></td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="spell-grid" id="spell-lists"></div>
+  </div>
+
+  <!-- NOTES PAGE -->
+  <div class="page" id="page-notes">
+    <div class="notes-grid">
+      <div class="card"><div class="card-title">Character Background</div><textarea class="notes-area" placeholder="Write your character's background and history..."></textarea></div>
+      <div class="card"><div class="card-title">Session Notes</div><textarea class="notes-area" placeholder="Notes from game sessions, important events..."></textarea></div>
+      <div class="card"><div class="card-title">Goals & Motivations</div><textarea class="notes-area" placeholder="Character goals, quests, motivations..."></textarea></div>
+      <div class="card"><div class="card-title">Other Notes</div><textarea class="notes-area" placeholder="Any other notes..."></textarea></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Data
+const ATTRS = ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA'];
+const DERIVED = [
+  ['Action Points', 'action-pts', false],
+  ['Damage Modifier', 'damage-mod', false],
+  ['Experience Modifier', 'exp-mod', false],
+  ['Healing Rate', 'heal-rate', false],
+  ['Movement', 'movement', true],
+  ['Initiative', 'initiative', true],
+  ['Luck Points', 'luck-pts', true],
+  ['Magic Points', 'magic-pts', true]
+];
+const SKILLS = [
+  ['Athletics', 'STR+DEX'], ['Boating', 'STR+CON'], ['Brawn', 'STR+SIZ'], ['Conceal', 'DEX+POW'],
+  ['Customs', 'INT×2+40'], ['Dance', 'DEX+CHA'], ['Deceit', 'INT+CHA'], ['Drive', 'DEX+POW'],
+  ['Endurance', 'CON×2'], ['Evade', 'DEX×2'], ['First Aid', 'INT+DEX'], ['Influence', 'CHA×2'],
+  ['Insight', 'INT+POW'], ['Locale', 'INT×2'], ['Perception', 'INT+POW'], ['Ride', 'DEX+POW'],
+  ['Sing', 'CHA+POW'], ['Stealth', 'DEX+INT'], ['Swim', 'STR+CON'], ['Willpower', 'POW×2']
+];
+const HIT_LOCS = [['1-3','Right Leg'],['4-6','Left Leg'],['7-9','Abdomen'],['10-12','Chest'],['13-15','Right Arm'],['16-18','Left Arm'],['19-20','Head']];
+
+// Navigation
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
+  });
+});
+
+// Logout
+document.getElementById('btn-logout').addEventListener('click', () => {
+  if (confirm('Logout?')) { localStorage.removeItem('mythras_auth'); window.location.href = 'index.html'; }
+});
+
+// Portrait
+document.getElementById('portrait-upload').addEventListener('change', function(e) {
+  if (e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('portrait-img').src = ev.target.result;
+      document.getElementById('portrait-img').classList.remove('hidden');
+      document.getElementById('portrait-label').classList.add('hidden');
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  }
+});
+
+// Generate Attributes
+const attrGrid = document.getElementById('attr-grid');
+ATTRS.forEach(attr => {
+  const box = document.createElement('div');
+  box.className = 'attr-box';
+  box.innerHTML = `<div class="attr-label">${attr}</div><input type="number" class="attr-input" id="attr-${attr.toLowerCase()}">`;
+  attrGrid.appendChild(box);
+});
+
+// Generate Derived Stats
+const derivedDiv = document.getElementById('derived-stats');
+DERIVED.forEach(([label, id, editable]) => {
+  const row = document.createElement('div');
+  row.className = 'stat-row';
+  row.innerHTML = editable 
+    ? `<span class="stat-label">${label}</span><input type="number" class="stat-input" id="${id}">`
+    : `<span class="stat-label">${label}</span><span class="stat-value" id="${id}">—</span>`;
+  derivedDiv.appendChild(row);
+});
+
+// Generate Standard Skills
+const skillsDiv = document.getElementById('standard-skills');
+SKILLS.forEach(([name, formula], i) => {
+  const row = document.createElement('div');
+  row.className = 'skill-row';
+  row.innerHTML = `<span class="skill-name">${name}</span><span class="skill-formula">${formula}</span><span class="skill-base" id="skill-base-${i}">0</span><input type="number" class="skill-total" id="skill-${i}">`;
+  skillsDiv.appendChild(row);
+});
+
+// Generate Professional Skills (8 blank rows)
+const profDiv = document.getElementById('prof-skills');
+for (let i = 0; i < 8; i++) {
+  const row = document.createElement('div');
+  row.className = 'skill-row';
+  row.innerHTML = `<input type="text" class="field-input" placeholder="Skill name" style="font-size:13px"><input type="text" class="field-input" placeholder="Formula" style="font-size:11px;width:70px"><span class="skill-base">0</span><input type="number" class="skill-total">`;
+  profDiv.appendChild(row);
+}
+
+// Generate Languages (5 rows)
+const langDiv = document.getElementById('languages');
+for (let i = 0; i < 5; i++) {
+  const row = document.createElement('div');
+  row.className = 'skill-row';
+  row.innerHTML = `<input type="text" class="field-input" placeholder="${i===0?'Native Tongue':'Language'}" style="font-size:13px"><span class="skill-formula">${i===0?'INT+CHA+40':'INT+CHA'}</span><span class="skill-base">0</span><input type="number" class="skill-total">`;
+  langDiv.appendChild(row);
+}
+
+// Generate Alignments/Passions/Oaths
+['alignments', 'passions', 'oaths'].forEach(type => {
+  const div = document.getElementById(type);
+  const count = type === 'alignments' ? 2 : 4;
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement('div');
+    row.className = 'belief-row';
+    row.innerHTML = `<input type="text" class="belief-input" placeholder="Name"><input type="number" class="belief-input belief-value" placeholder="%">`;
+    div.appendChild(row);
+  }
+});
+
+// Generate Equipment (15 rows)
+const equipDiv = document.getElementById('equipment');
+for (let i = 0; i < 15; i++) {
+  const row = document.createElement('div');
+  row.className = 'equip-row';
+  row.innerHTML = `<input type="text" class="equip-input"><input type="number" class="equip-input" style="text-align:center">`;
+  equipDiv.appendChild(row);
+}
+
+// Generate Hit Locations
+const hitLocBody = document.getElementById('hit-locations');
+HIT_LOCS.forEach(([roll, loc], i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${roll}</td><td>${loc}</td><td><input type="text"></td><td><input type="number"></td><td id="hp-${i}">0</td><td><input type="number"></td>`;
+  hitLocBody.appendChild(tr);
+});
+
+// Generate Combat Skills (5 rows)
+const combatDiv = document.getElementById('combat-skills');
+for (let i = 0; i < 5; i++) {
+  const row = document.createElement('div');
+  row.className = 'combat-row';
+  row.innerHTML = `<input type="text" class="combat-input" placeholder="${i===0?'Unarmed':'Combat Style'}"><input type="number" class="combat-input" placeholder="%"><input type="text" class="combat-input" placeholder="${i===0?'Hands/Feet':'Weapons known'}">`;
+  combatDiv.appendChild(row);
+}
+
+// Generate Melee Weapons (6 rows)
+const meleeBody = document.getElementById('melee-weapons');
+for (let i = 0; i < 6; i++) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td>`;
+  meleeBody.appendChild(tr);
+}
+
+// Generate Ranged Weapons (5 rows)
+const rangedBody = document.getElementById('ranged-weapons');
+for (let i = 0; i < 5; i++) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td>`;
+  rangedBody.appendChild(tr);
+}
+
+// Generate Abilities (24 slots)
+const abilitiesDiv = document.getElementById('abilities');
+for (let i = 0; i < 24; i++) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'ability-input';
+  input.placeholder = 'Ability';
+  abilitiesDiv.appendChild(input);
+}
+
+// Generate Spell Lists
+const spellDiv = document.getElementById('spell-lists');
+['Cantrips', 'Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5'].forEach((title, rank) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  let html = `<div class="card-title">${title}</div>`;
+  html += `<div class="spell-header"><span>May Memorize:</span><input type="number" value="0" style="width:50px;padding:4px;border:1px solid #ddd;border-radius:4px;"></div>`;
+  for (let i = 0; i < 15; i++) {
+    html += `<div class="spell-row"><input type="checkbox"><input type="text" class="spell-input" placeholder="Spell name"><input type="text" class="spell-input" placeholder="MP" style="text-align:center"></div>`;
+  }
+  card.innerHTML = html;
+  spellDiv.appendChild(card);
+});
+
+console.log('Character sheet ready!');
+</script>
 </body>
 </html>
