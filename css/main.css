@@ -1438,13 +1438,13 @@ select:focus {
 /* Column widths */
 .hit-location-table th:nth-child(1),
 .hit-location-table td:nth-child(1) {
-  width: 60px;
+  width: 55px;
   font-size: 1rem;
 }
 
 .hit-location-table th:nth-child(2),
 .hit-location-table td:nth-child(2) {
-  width: 90px;
+  width: 80px;
   text-align: left;
   font-weight: 500;
   font-size: 1rem;
@@ -1452,21 +1452,21 @@ select:focus {
 
 .hit-location-table th:nth-child(3),
 .hit-location-table td:nth-child(3) {
-  width: auto;
+  width: 140px;
 }
 
 .hit-location-table th:nth-child(4),
 .hit-location-table td:nth-child(4) {
-  width: 55px;
+  width: 50px;
 }
 
 .hit-location-table th:nth-child(5),
 .hit-location-table td:nth-child(5) {
-  width: 80px;
+  width: 100px;
 }
 
 .hit-location-table input {
-  width: 100%;
+  width: 40px;
   padding: 0.2rem;
   font-size: 0.85rem;
   text-align: center;
@@ -1475,13 +1475,20 @@ select:focus {
   box-sizing: border-box;
 }
 
+.hit-location-table input.armor-input {
+  width: 100%;
+  text-align: left;
+}
+
 .hit-location-table input:focus {
   outline: none;
   border-color: var(--input-focus);
 }
 
-.hit-location-table input.armor-input {
-  text-align: left;
+.hit-location-table .hp-max-input,
+.hit-location-table .hp-current {
+  width: 40px;
+  display: inline-block;
 }
 
 /* Combat Skills */

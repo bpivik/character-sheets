@@ -724,7 +724,7 @@ const App = {
         <td>${loc.noArmor ? '<span class="no-armor-note">Wings may not have armor</span>' : `<input type="text" class="armor-input" id="loc-${i}-armor" placeholder="">`}</td>
         <td>${loc.noArmor ? '' : `<input type="number" class="ap-input" id="loc-${i}-ap" placeholder="0">`}</td>
         <td>
-          <span class="hp-max" id="loc-${i}-hp"></span>
+          <input type="number" class="hp-max-input" id="loc-${i}-hp" placeholder="">
           /
           <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
         </td>
@@ -1107,8 +1107,12 @@ const App = {
     if (this.character.combat && this.character.combat.hitLocations) {
       this.character.combat.hitLocations.forEach((loc, i) => {
         const armorInput = document.getElementById(`loc-${i}-armor`);
+        const apInput = document.getElementById(`loc-${i}-ap`);
+        const hpInput = document.getElementById(`loc-${i}-hp`);
         const currentInput = document.getElementById(`loc-${i}-current`);
         if (armorInput && loc.armor) armorInput.value = loc.armor;
+        if (apInput && loc.ap) apInput.value = loc.ap;
+        if (hpInput && loc.hp) hpInput.value = loc.hp;
         if (currentInput && loc.current) currentInput.value = loc.current;
       });
     }
@@ -1331,9 +1335,13 @@ const App = {
     const hitLocCount = this.sheetType === 'syrin' ? 9 : 7;
     for (let i = 0; i < hitLocCount; i++) {
       const armorInput = document.getElementById(`loc-${i}-armor`);
+      const apInput = document.getElementById(`loc-${i}-ap`);
+      const hpInput = document.getElementById(`loc-${i}-hp`);
       const currentInput = document.getElementById(`loc-${i}-current`);
       this.character.combat.hitLocations.push({
         armor: armorInput?.value || '',
+        ap: apInput?.value || '',
+        hp: hpInput?.value || '',
         current: currentInput?.value || ''
       });
     }
@@ -1520,10 +1528,12 @@ const App = {
     // Update professional skill base values
     this.recalculateProfessionalSkillBases();
     
-    // Update hit location HPs
+    // Update hit location HPs - only set default if empty
     results.hitLocations.forEach((loc, i) => {
-      const hpSpan = document.getElementById(`loc-${i}-hp`);
-      if (hpSpan) hpSpan.textContent = loc.hp;
+      const hpInput = document.getElementById(`loc-${i}-hp`);
+      if (hpInput && !hpInput.value) {
+        hpInput.value = loc.hp;
+      }
     });
     
     // Update combat quick reference
