@@ -674,8 +674,44 @@ const App = {
       const encInput = row.querySelector('.equipment-enc');
       const rowIndex = i;
       
-      // Autofill ENC on blur and check container visibility
-      nameInput.addEventListener('blur', () => {
+      // Store previous value for container removal detection
+      nameInput.dataset.previousValue = '';
+      
+      // Track value on focus for comparison
+      nameInput.addEventListener('focus', () => {
+        nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+      });
+      
+      // Check for container removal on blur
+      nameInput.addEventListener('blur', async () => {
+        const currentValue = nameInput.value.trim().toLowerCase();
+        const previousValue = nameInput.dataset.previousValue || '';
+        
+        // Check if a container was removed (had value, now empty or different)
+        if (previousValue && (!currentValue || currentValue !== previousValue)) {
+          const removedContainer = this.getContainerIdFromItemName(previousValue);
+          if (removedContainer) {
+            // Check if this container type still exists elsewhere in equipment
+            const stillExists = this.containerStillExistsElsewhere(removedContainer, rowIndex);
+            if (!stillExists) {
+              const hasItems = this.containerHasItems(removedContainer);
+              if (hasItems) {
+                const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
+                if (!handled) {
+                  // User cancelled - restore the value
+                  nameInput.value = previousValue;
+                  nameInput.dataset.previousValue = previousValue;
+                  return;
+                }
+              }
+            }
+          }
+        }
+        
+        // Update previous value
+        nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+        
+        // Normal autofill and update logic
         if (window.EncumbranceData) {
           const itemName = nameInput.value;
           if (itemName.trim() === '') {
@@ -709,6 +745,161 @@ const App = {
         this.scheduleAutoSave();
       });
     }
+  },
+
+  /**
+   * Get container ID from an item name
+   */
+  getContainerIdFromItemName(itemName) {
+    const lowerName = itemName.toLowerCase();
+    for (const [containerId, config] of Object.entries(CONTAINER_CONFIGS)) {
+      if (config.triggers.some(trigger => lowerName.includes(trigger))) {
+        // Special case: check for reinforced backpack vs regular backpack
+        if (containerId === 'backpack' && lowerName.includes('reinforced')) {
+          return 'reinforced-backpack';
+        }
+        return containerId;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Check if container type still exists elsewhere in equipment (excluding a specific row)
+   */
+  containerStillExistsElsewhere(containerId, excludeRowIndex) {
+    const config = CONTAINER_CONFIGS[containerId];
+    if (!config) return false;
+    
+    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
+      if (i === excludeRowIndex) continue;
+      const input = document.getElementById(`equip-${i}-name`);
+      if (input && input.value.trim()) {
+        const itemName = input.value.trim().toLowerCase();
+        if (config.triggers.some(trigger => itemName.includes(trigger))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Check if a container has any items stored
+   */
+  containerHasItems(containerId) {
+    if (!this.character.containers || !this.character.containers[containerId]) {
+      return false;
+    }
+    const items = this.character.containers[containerId];
+    return items.some(item => item.name && item.name.trim() !== '');
+  },
+
+  /**
+   * Get items from a container
+   */
+  getContainerItems(containerId) {
+    if (!this.character.containers || !this.character.containers[containerId]) {
+      return [];
+    }
+    return this.character.containers[containerId].filter(item => item.name && item.name.trim() !== '');
+  },
+
+  /**
+   * Handle container removal with user prompts
+   * Returns true if removal should proceed, false if cancelled
+   */
+  async handleContainerRemoval(containerId, nameInput, previousValue) {
+    const config = CONTAINER_CONFIGS[containerId];
+    const containerName = config ? config.name : 'container';
+    const items = this.getContainerItems(containerId);
+    
+    if (items.length === 0) return true;
+    
+    const itemCount = items.length;
+    const itemList = items.map(i => i.name).join(', ');
+    
+    // First prompt: Move items?
+    const moveItems = confirm(
+      `The ${containerName} contains ${itemCount} item(s):\n${itemList}\n\n` +
+      `Do you want to move these items to your main Equipment list?`
+    );
+    
+    if (moveItems) {
+      // Move items to main equipment
+      const moved = this.moveContainerItemsToEquipment(containerId);
+      if (moved) {
+        // Clear the container
+        this.character.containers[containerId] = [];
+        this.scheduleAutoSave();
+        alert(`${moved} item(s) moved to your Equipment list.`);
+        return true;
+      } else {
+        alert('Not enough empty slots in Equipment to move all items. Please free up some space first.');
+        return false;
+      }
+    } else {
+      // Second prompt: Are you sure you want to delete?
+      const confirmDelete = confirm(
+        `Are you sure you want to permanently delete these items?\n\n` +
+        `${itemList}\n\n` +
+        `This cannot be undone.`
+      );
+      
+      if (confirmDelete) {
+        // Delete the items
+        this.character.containers[containerId] = [];
+        this.scheduleAutoSave();
+        return true;
+      } else {
+        // User said no - cancel the operation
+        return false;
+      }
+    }
+  },
+
+  /**
+   * Move items from a container to main equipment
+   * Returns number of items moved, or 0 if not enough space
+   */
+  moveContainerItemsToEquipment(containerId) {
+    const items = this.getContainerItems(containerId);
+    if (items.length === 0) return 0;
+    
+    // Find empty slots in equipment
+    const emptySlots = [];
+    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
+      const nameInput = document.getElementById(`equip-${i}-name`);
+      if (nameInput && !nameInput.value.trim()) {
+        emptySlots.push(i);
+      }
+    }
+    
+    // Check if we have enough space
+    if (emptySlots.length < items.length) {
+      return 0;
+    }
+    
+    // Move items
+    items.forEach((item, idx) => {
+      const slotIndex = emptySlots[idx];
+      const nameInput = document.getElementById(`equip-${slotIndex}-name`);
+      const encInput = document.getElementById(`equip-${slotIndex}-enc`);
+      
+      if (nameInput) {
+        nameInput.value = item.name;
+        nameInput.dataset.previousValue = item.name.toLowerCase();
+      }
+      if (encInput && item.enc) {
+        encInput.value = item.enc;
+      }
+    });
+    
+    // Update totals
+    this.updateTotalEnc();
+    this.updateContainerButtons();
+    
+    return items.length;
   },
 
   /**
