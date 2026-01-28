@@ -165,9 +165,13 @@ const App = {
     
     // Derived stat inputs (editable ones)
     const derivedFields = [
-      'initiative-original', 'initiative-current',
-      'luck-original', 'luck-current',
-      'magic-points-original', 'magic-points-current'
+      'action-points-current',
+      'damage-mod-current',
+      'exp-mod-current',
+      'healing-rate-current',
+      'initiative-current',
+      'luck-current',
+      'magic-points-current'
     ];
     
     derivedFields.forEach(fieldId => {
@@ -891,11 +895,12 @@ const App = {
     // Derived stats
     const derivedMapping = {
       'movement-base': 'movementBase',
-      'initiative-original': 'initiativeOriginal',
+      'action-points-current': 'actionPointsCurrent',
+      'damage-mod-current': 'damageModCurrent',
+      'exp-mod-current': 'expModCurrent',
+      'healing-rate-current': 'healingRateCurrent',
       'initiative-current': 'initiativeCurrent',
-      'luck-original': 'luckOriginal',
       'luck-current': 'luckCurrent',
-      'magic-points-original': 'magicPointsOriginal',
       'magic-points-current': 'magicPointsCurrent'
     };
     
