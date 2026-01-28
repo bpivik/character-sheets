@@ -535,8 +535,8 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 420px minmax(180px, 240px) 320px;
-  gap: 1rem;
+  grid-template-columns: 400px 1fr 320px;
+  gap: 1.5rem;
   align-items: start;
 }
 
@@ -563,8 +563,8 @@ select:focus {
    ============================================ */
 .attributes-row {
   display: grid;
-  grid-template-columns: 160px 220px;
-  gap: 0.75rem;
+  grid-template-columns: 150px 230px;
+  gap: 1rem;
 }
 
 .attributes-section {
@@ -575,17 +575,17 @@ select:focus {
 }
 
 .attributes-section .section-header {
-  font-size: 1rem;
-  padding: 0.25rem 0.4rem;
+  font-size: 1.05rem;
+  padding: 0.3rem 0.5rem;
   margin-bottom: 0.5rem;
 }
 
 .attributes-section.core-attributes .attribute-row {
   display: grid;
-  grid-template-columns: 45px 1fr;
+  grid-template-columns: 50px 1fr;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.3rem 0;
+  padding: 0.35rem 0;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -595,15 +595,15 @@ select:focus {
 
 .attribute-label {
   font-family: var(--font-header);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-header);
 }
 
 .attribute-input {
   width: 100%;
-  padding: 0.35rem;
-  font-size: 1.05rem;
+  padding: 0.4rem;
+  font-size: 1.1rem;
   font-weight: 600;
   text-align: center;
   border: 1px solid var(--input-border);
@@ -613,15 +613,15 @@ select:focus {
 
 /* Derived Attributes Box */
 .derived-attributes .section-header {
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .derived-attributes .derived-row {
   display: grid;
-  grid-template-columns: 1fr 50px 50px;
+  grid-template-columns: 1fr 55px 55px;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0;
+  padding: 0.35rem 0;
   border-bottom: 1px solid var(--border-light);
 }
 
