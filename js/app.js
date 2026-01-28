@@ -171,7 +171,8 @@ const App = {
       'healing-rate-current',
       'initiative-current',
       'luck-current',
-      'magic-points-current'
+      'magic-points-current',
+      'tenacity-current'
     ];
     
     derivedFields.forEach(fieldId => {
@@ -933,7 +934,8 @@ const App = {
       'healing-rate-current': 'healingRateCurrent',
       'initiative-current': 'initiativeCurrent',
       'luck-current': 'luckCurrent',
-      'magic-points-current': 'magicPointsCurrent'
+      'magic-points-current': 'magicPointsCurrent',
+      'tenacity-current': 'tenacityCurrent'
     };
     
     for (const [fieldId, key] of Object.entries(derivedMapping)) {
@@ -1476,6 +1478,12 @@ const App = {
       if (magicOrig) {
         magicOrig.value = results.derived.magicPoints;
       }
+    }
+    
+    // Tenacity Max is always equal to POW (not affected by lock)
+    const tenacityMax = document.getElementById('tenacity-max');
+    if (tenacityMax) {
+      tenacityMax.value = attrs.POW || '';
     }
     
     // Update skill bases

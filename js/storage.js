@@ -68,7 +68,8 @@ const StorageManager = {
         luckOriginal: '',
         luckCurrent: '',
         magicPointsOriginal: '',
-        magicPointsCurrent: ''
+        magicPointsCurrent: '',
+        tenacityCurrent: ''
       },
       
       // Whether derived original values are locked (user-edited)
