@@ -1442,7 +1442,11 @@ select:focus {
   font-size: 1rem;
 }
 
-.hit-location-table th:nth-child(2),
+.hit-location-table th:nth-child(2) {
+  width: 80px;
+  text-align: left;
+}
+
 .hit-location-table td:nth-child(2) {
   width: 80px;
   text-align: left;
@@ -1586,7 +1590,6 @@ select:focus {
 .weapons-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.72rem;
 }
 
 .weapons-table th,
@@ -1597,8 +1600,10 @@ select:focus {
 
 .weapons-table th {
   background: rgba(0,0,0,0.08);
-  font-weight: 600;
-  font-size: 0.68rem;
+  font-family: var(--font-header);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-header);
 }
 
 .weapons-table input {
