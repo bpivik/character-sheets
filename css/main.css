@@ -1350,7 +1350,7 @@ select:focus {
   padding: 0.5rem;
   background: rgba(255,255,255,0.3);
   border: 1px solid var(--border-light);
-  min-height: 85px;
+  height: 95px;
 }
 
 .ref-label {
@@ -1390,7 +1390,7 @@ select:focus {
   padding: 0.5rem;
   background: rgba(255,255,255,0.3);
   border: 1px solid var(--border-light);
-  min-height: 85px;
+  height: 95px;
 }
 
 .ref-skill-label {
