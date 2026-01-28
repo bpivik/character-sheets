@@ -649,7 +649,7 @@ body {
 .skills-header,
 .section-subheader {
   display: grid;
-  grid-template-columns: minmax(80px, 180px) 60px 35px 38px;
+  grid-template-columns: 1fr 70px 45px 45px;
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -658,7 +658,7 @@ body {
 }
 
 .skills-header.prof-header {
-  grid-template-columns: minmax(80px, 180px) 55px 35px 38px;
+  grid-template-columns: 1fr 55px 45px 45px;
 }
 
 .header-base,
@@ -722,7 +722,7 @@ body {
 /* Belief Rows (Alignment, Passion, Oath) */
 .belief-row {
   display: grid;
-  grid-template-columns: minmax(80px, 180px) 60px 35px 38px;
+  grid-template-columns: 1fr 70px 45px 45px;
   align-items: center;
   gap: 0.15rem;
   padding: 0.1rem 0;
@@ -777,7 +777,7 @@ body {
 /* Language Rows */
 .language-row {
   display: grid;
-  grid-template-columns: minmax(80px, 180px) 50px 35px 38px;
+  grid-template-columns: 1fr 70px 45px 45px;
   align-items: center;
   gap: 0.15rem;
   padding: 0.1rem 0;
@@ -843,7 +843,7 @@ body {
 /* Professional Skills */
 .professional-skill-row {
   display: grid;
-  grid-template-columns: minmax(80px, 180px) 55px 35px 38px;
+  grid-template-columns: 1fr 55px 45px 45px;
   align-items: center;
   gap: 0.15rem;
   padding: 0.1rem 0;
