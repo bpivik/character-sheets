@@ -52,6 +52,49 @@ const SKILL_DEFINITIONS = {
   language: {
     native: { name: 'Native Tongue', formula: 'INT+CHA+40', attrs: ['INT', 'CHA'], bonus: 40 },
     additional: { name: 'Language', formula: 'INT+CHA', attrs: ['INT', 'CHA'] }
+  },
+  
+  // Professional Skills - auto-fill formulas when user types skill name
+  professional: {
+    "acrobatics": { formula: "STR+DEX", attrs: ['STR', 'DEX'] },
+    "acting": { formula: "CHA x2", attrs: ['CHA'], multiplier: 2 },
+    "animal handling": { formula: "POW+CHA", attrs: ['POW', 'CHA'] },
+    "arcane casting": { formula: "INT+POW", attrs: ['INT', 'POW'] },
+    "arcane knowledge": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
+    "arcane sorcery": { formula: "CHA+POW", attrs: ['CHA', 'POW'] },
+    "art": { formula: "POW+CHA", attrs: ['POW', 'CHA'] },
+    "bureaucracy": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
+    "channel": { formula: "INT+POW", attrs: ['INT', 'POW'] },
+    "commerce": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "courtesy": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "craft": { formula: "DEX+INT", attrs: ['DEX', 'INT'] },
+    "culture": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
+    "disguise": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "engineering": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
+    "flying": { formula: "STR+DEX", attrs: ['STR', 'DEX'] },
+    "gambling": { formula: "INT+POW", attrs: ['INT', 'POW'] },
+    "healing": { formula: "INT+POW", attrs: ['INT', 'POW'] },
+    "intimidation": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "language": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "lockpicking": { formula: "DEX x2", attrs: ['DEX'], multiplier: 2 },
+    "lore": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
+    "mechanisms": { formula: "DEX+INT", attrs: ['DEX', 'INT'] },
+    "meditation": { formula: "INT+CON", attrs: ['INT', 'CON'] },
+    "musicianship": { formula: "DEX+CHA", attrs: ['DEX', 'CHA'] },
+    "mysticism": { formula: "POW+CON", attrs: ['POW', 'CON'] },
+    "navigation": { formula: "INT+POW", attrs: ['INT', 'POW'] },
+    "oratory": { formula: "POW+CHA", attrs: ['POW', 'CHA'] },
+    "piety": { formula: "CHA+POW", attrs: ['CHA', 'POW'] },
+    "psychic manipulation": { formula: "POW x2", attrs: ['POW'], multiplier: 2 },
+    "seamanship": { formula: "INT+CON", attrs: ['INT', 'CON'] },
+    "seduction": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "sleight": { formula: "DEX+CHA", attrs: ['DEX', 'CHA'] },
+    "sorcerous wisdom": { formula: "CHA+INT", attrs: ['CHA', 'INT'] },
+    "streetwise": { formula: "POW+CHA", attrs: ['POW', 'CHA'] },
+    "survival": { formula: "CON+POW", attrs: ['CON', 'POW'] },
+    "teach": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
+    "track": { formula: "INT+CON", attrs: ['INT', 'CON'] },
+    "lyrical magic": { formula: "CHA+POW", attrs: ['CHA', 'POW'] }
   }
 };
 

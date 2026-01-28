@@ -434,9 +434,114 @@ const App = {
       container.appendChild(row);
       
       // Add event listeners
-      row.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', () => this.scheduleAutoSave());
+      const nameInput = row.querySelector('.prof-skill-name');
+      const baseInput = row.querySelector('.prof-skill-base');
+      
+      // Auto-fill formula when skill name is entered
+      nameInput.addEventListener('input', (e) => {
+        this.autoFillProfessionalSkillFormula(e.target, baseInput);
+        this.scheduleAutoSave();
       });
+      
+      // Also recalculate base value when formula changes
+      baseInput.addEventListener('input', () => {
+        this.calculateProfessionalSkillBase(i);
+        this.scheduleAutoSave();
+      });
+      
+      row.querySelector('.prof-skill-current').addEventListener('input', () => this.scheduleAutoSave());
+    }
+  },
+
+  /**
+   * Auto-fill professional skill formula based on skill name
+   */
+  autoFillProfessionalSkillFormula(nameInput, baseInput) {
+    // Get the skill name, strip parentheses content, normalize to lowercase
+    const skillName = nameInput.value.replace(/\s*\(.*?\)/g, '').trim().toLowerCase();
+    
+    // Look up the formula in SKILL_DEFINITIONS.professional
+    if (SKILL_DEFINITIONS.professional && SKILL_DEFINITIONS.professional[skillName]) {
+      const skillData = SKILL_DEFINITIONS.professional[skillName];
+      baseInput.value = skillData.formula;
+      
+      // Trigger base value calculation
+      const index = nameInput.id.match(/prof-skill-(\d+)-name/)[1];
+      this.calculateProfessionalSkillBase(parseInt(index));
+    }
+  },
+
+  /**
+   * Calculate professional skill base value from formula
+   */
+  calculateProfessionalSkillBase(index) {
+    const baseInput = document.getElementById(`prof-skill-${index}-base`);
+    const baseValSpan = document.getElementById(`prof-skill-${index}-base-val`);
+    
+    if (!baseInput || !baseValSpan) return;
+    
+    const formula = baseInput.value.trim().toUpperCase();
+    if (!formula) {
+      baseValSpan.textContent = '';
+      return;
+    }
+    
+    // Parse and calculate the formula
+    const result = this.calculateFormulaValue(formula);
+    baseValSpan.textContent = result !== null ? result : '';
+  },
+
+  /**
+   * Calculate a formula like "STR+DEX" or "INT x2" using current attribute values
+   */
+  calculateFormulaValue(formula) {
+    const attrs = {
+      STR: parseInt(document.getElementById('attr-str')?.value) || 0,
+      CON: parseInt(document.getElementById('attr-con')?.value) || 0,
+      SIZ: parseInt(document.getElementById('attr-siz')?.value) || 0,
+      DEX: parseInt(document.getElementById('attr-dex')?.value) || 0,
+      INT: parseInt(document.getElementById('attr-int')?.value) || 0,
+      POW: parseInt(document.getElementById('attr-pow')?.value) || 0,
+      CHA: parseInt(document.getElementById('attr-cha')?.value) || 0
+    };
+    
+    // Handle "X x2" format (e.g., "INT x2", "DEX x2")
+    const multiplierMatch = formula.match(/^([A-Z]{3})\s*[xX×]\s*2$/);
+    if (multiplierMatch) {
+      const attr = multiplierMatch[1];
+      return attrs[attr] ? attrs[attr] * 2 : null;
+    }
+    
+    // Handle "X+Y" format (e.g., "STR+DEX", "INT+POW")
+    const additionMatch = formula.match(/^([A-Z]{3})\s*\+\s*([A-Z]{3})$/);
+    if (additionMatch) {
+      const attr1 = additionMatch[1];
+      const attr2 = additionMatch[2];
+      if (attrs[attr1] !== undefined && attrs[attr2] !== undefined) {
+        return attrs[attr1] + attrs[attr2];
+      }
+    }
+    
+    // Handle "X+Y+N" format (e.g., "INT+CHA+40")
+    const additionBonusMatch = formula.match(/^([A-Z]{3})\s*\+\s*([A-Z]{3})\s*\+\s*(\d+)$/);
+    if (additionBonusMatch) {
+      const attr1 = additionBonusMatch[1];
+      const attr2 = additionBonusMatch[2];
+      const bonus = parseInt(additionBonusMatch[3]);
+      if (attrs[attr1] !== undefined && attrs[attr2] !== undefined) {
+        return attrs[attr1] + attrs[attr2] + bonus;
+      }
+    }
+    
+    return null;
+  },
+
+  /**
+   * Recalculate all professional skill base values
+   */
+  recalculateProfessionalSkillBases() {
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      this.calculateProfessionalSkillBase(i);
     }
   },
 
@@ -996,6 +1101,9 @@ const App = {
       const langBase = document.getElementById(`language-${i}-base`);
       if (langBase) langBase.textContent = results.languages.additional;
     }
+    
+    // Update professional skill base values
+    this.recalculateProfessionalSkillBases();
     
     // Update hit location HPs
     results.hitLocations.forEach((loc, i) => {
