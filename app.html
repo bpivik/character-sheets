@@ -3,547 +3,1141 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mythras Classic Fantasy - Character Sheet</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; background: #f5f5f5; color: #333; line-height: 1.4; }
-    
-    /* NAV */
-    .nav { background: #2c3e50; color: white; padding: 10px 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
-    .nav-brand { font-weight: 700; font-size: 16px; }
-    .nav-tabs { display: flex; gap: 5px; }
-    .nav-tab { background: #34495e; border: none; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-    .nav-tab:hover { background: #4a6278; }
-    .nav-tab.active { background: #3498db; }
-    .nav-controls { display: flex; gap: 8px; margin-left: auto; align-items: center; }
-    .nav select, .nav input { padding: 6px 10px; border: none; border-radius: 4px; font-size: 13px; }
-    .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
-    .btn-blue { background: #3498db; color: white; }
-    .btn-green { background: #27ae60; color: white; }
-    .btn-red { background: #c0392b; color: white; }
-    .btn-gray { background: #7f8c8d; color: white; }
-    .btn:hover { opacity: 0.9; }
-    
-    /* MAIN */
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    .page { display: none; }
-    .page.active { display: block; }
-    
-    /* CARDS */
-    .card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .card-title { font-size: 14px; font-weight: 700; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db; }
-    .card-subtitle { font-size: 12px; font-weight: 600; color: #7f8c8d; margin: 12px 0 6px; }
-    
-    /* GRID LAYOUTS */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .main-layout { display: grid; grid-template-columns: 280px 1fr 300px; gap: 16px; }
-    
-    /* FORM FIELDS */
-    .field { margin-bottom: 8px; }
-    .field-label { font-size: 11px; font-weight: 600; color: #7f8c8d; text-transform: uppercase; margin-bottom: 3px; display: block; }
-    .field-input { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-    .field-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.2); }
-    .field-row { display: flex; gap: 8px; align-items: center; }
-    .field-row .field { flex: 1; margin-bottom: 0; }
-    
-    /* ATTRIBUTES */
-    .attr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .attr-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 10px; text-align: center; }
-    .attr-label { font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 4px; }
-    .attr-input { width: 60px; padding: 8px; font-size: 18px; font-weight: 700; text-align: center; border: 2px solid #3498db; border-radius: 4px; }
-    
-    /* DERIVED STATS */
-    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
-    .stat-row:last-child { border-bottom: none; }
-    .stat-label { font-size: 13px; color: #666; }
-    .stat-value { font-weight: 600; color: #2c3e50; background: #f0f0f0; padding: 2px 10px; border-radius: 4px; min-width: 40px; text-align: center; }
-    .stat-input { width: 50px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
-    
-    /* SKILLS TABLE */
-    .skill-header { display: grid; grid-template-columns: 1fr 70px 50px 60px; gap: 8px; font-size: 11px; font-weight: 600; color: #7f8c8d; text-transform: uppercase; padding: 6px 0; border-bottom: 2px solid #3498db; }
-    .skill-row { display: grid; grid-template-columns: 1fr 70px 50px 60px; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
-    .skill-row:hover { background: #f8f9fa; }
-    .skill-name { font-weight: 500; }
-    .skill-formula { font-size: 11px; color: #999; }
-    .skill-base { font-weight: 600; color: #3498db; text-align: center; }
-    .skill-total { width: 100%; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-weight: 500; }
-    
-    /* BELIEF ROW */
-    .belief-row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
-    .belief-input { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-    .belief-value { text-align: center; }
-    
-    /* EQUIPMENT */
-    .equip-header { display: grid; grid-template-columns: 1fr 60px; gap: 8px; font-size: 11px; font-weight: 600; color: #7f8c8d; padding: 4px 0; border-bottom: 1px solid #ddd; }
-    .equip-row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
-    .equip-input { padding: 3px 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
-    .enc-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid #3498db; font-weight: 600; display: flex; justify-content: space-between; }
-    
-    /* COMBAT */
-    .quick-ref { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .ref-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px; text-align: center; }
-    .ref-label { font-size: 11px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 4px; }
-    .ref-value { font-size: 20px; font-weight: 700; color: #2c3e50; }
-    
-    /* TABLES */
-    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .data-table th { background: #f8f9fa; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left; padding: 8px; border-bottom: 2px solid #3498db; }
-    .data-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
-    .data-table input { width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
-    
-    /* COMBAT SKILLS */
-    .combat-row { display: grid; grid-template-columns: 200px 70px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eee; align-items: center; }
-    .combat-input { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-    
-    /* ABILITIES */
-    .abilities-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .ability-input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
-    
-    /* SPELLS */
-    .spell-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .spell-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .spell-row { display: grid; grid-template-columns: 20px 1fr 45px; gap: 6px; padding: 3px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
-    .spell-input { padding: 3px 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
-    
-    /* NOTES */
-    .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .notes-area { width: 100%; min-height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; line-height: 1.5; resize: vertical; }
-    
-    /* PORTRAIT */
-    .portrait-container { max-width: 500px; margin: 0 auto; }
-    .portrait-frame { aspect-ratio: 3/4; border: 3px solid #3498db; border-radius: 8px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; }
-    .portrait-frame:hover { border-color: #2980b9; background: #ecf0f1; }
-    .portrait-label { text-align: center; color: #7f8c8d; }
-    .portrait-label strong { display: block; font-size: 18px; color: #3498db; margin-bottom: 8px; }
-    .portrait-img { width: 100%; height: 100%; object-fit: contain; position: absolute; }
-    
-    .hidden { display: none !important; }
-    .mt-2 { margin-top: 16px; }
-    
-    @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 800px) { .main-layout, .grid-2, .grid-3, .spell-grid, .notes-grid { grid-template-columns: 1fr; } .quick-ref { grid-template-columns: 1fr 1fr; } }
-  </style>
+  <title>Mythras Classic Fantasy Character Sheet</title>
   <script>
-    (function(){
-      var a = localStorage.getItem('mythras_auth');
-      if (!a) { window.location.href = 'index.html'; return; }
+    // Auth check - redirect to login if not authenticated
+    (function() {
+      const SESSION_HOURS = 24;
+      const authData = localStorage.getItem('mythras_auth');
+      if (!authData) {
+        window.location.href = 'index.html';
+        return;
+      }
       try {
-        var t = JSON.parse(a).timestamp;
-        if ((Date.now() - t) / 3600000 >= 24) {
+        const { timestamp } = JSON.parse(authData);
+        const hoursSinceLogin = (Date.now() - timestamp) / (1000 * 60 * 60);
+        if (hoursSinceLogin >= SESSION_HOURS) {
           localStorage.removeItem('mythras_auth');
           window.location.href = 'index.html';
         }
-      } catch(e) {
+      } catch (e) {
         localStorage.removeItem('mythras_auth');
         window.location.href = 'index.html';
       }
     })();
   </script>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<nav class="nav">
-  <span class="nav-brand">Mythras Classic Fantasy</span>
-  <div class="nav-tabs">
-    <button class="nav-tab active" data-page="portrait">Portrait</button>
-    <button class="nav-tab" data-page="character">Character</button>
-    <button class="nav-tab" data-page="combat">Combat</button>
-    <button class="nav-tab" data-page="magic">Magic</button>
-    <button class="nav-tab" data-page="notes">Notes</button>
-  </div>
-  <div class="nav-controls">
-    <select id="char-select"><option>-- Select Character --</option></select>
-    <button class="btn btn-green">+ New</button>
-    <button class="btn btn-red">Delete</button>
-    <select><option>Human/Demihuman</option><option>Syrin</option></select>
-    <button class="btn btn-blue">💾 Save</button>
-    <button class="btn btn-gray" id="btn-logout">Logout</button>
-  </div>
-</nav>
-
-<div class="container">
-
-  <!-- PORTRAIT PAGE -->
-  <div class="page active" id="page-portrait">
-    <div class="portrait-container">
-      <div class="card">
-        <div class="portrait-frame" onclick="document.getElementById('portrait-upload').click()">
-          <input type="file" id="portrait-upload" accept="image/*" style="display:none">
-          <div class="portrait-label" id="portrait-label">
-            <strong>Click to Upload Portrait</strong>
-            <span>Add a full body image of your character</span>
-          </div>
-          <img id="portrait-img" class="portrait-img hidden">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CHARACTER PAGE -->
-  <div class="page" id="page-character">
+  <div id="app" class="character-sheet" data-sheet-type="human">
     
-    <!-- Header Info -->
-    <div class="card">
-      <div class="grid-4">
-        <div class="field"><label class="field-label">Character Name</label><input type="text" class="field-input" id="char-name" placeholder="Enter name"></div>
-        <div class="field"><label class="field-label">Player</label><input type="text" class="field-input" id="player-name"></div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Species</label><input type="text" class="field-input" id="species"></div>
-          <div class="field"><label class="field-label">Culture</label><input type="text" class="field-input" id="culture"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Primary Class</label><input type="text" class="field-input" id="class1"></div>
-          <div class="field"><label class="field-label">2nd Class</label><input type="text" class="field-input" id="class2"></div>
-        </div>
+    <!-- Navigation Tabs -->
+    <nav class="sheet-navigation no-print">
+      <ul class="tab-list">
+        <li><button class="tab-btn active" data-page="portrait">Portrait</button></li>
+        <li><button class="tab-btn" data-page="main">Character</button></li>
+        <li><button class="tab-btn" data-page="combat">Combat</button></li>
+        <li><button class="tab-btn" data-page="magic1">Magic 1-2</button></li>
+        <li><button class="tab-btn" data-page="magic2">Magic 3-5</button></li>
+        <li><button class="tab-btn" data-page="notes">Notes</button></li>
+      </ul>
+      <div class="sheet-controls">
+        <select id="sheet-type-select" class="sheet-type-selector">
+          <option value="human">Human / Demihuman</option>
+          <option value="syrin">Syrin</option>
+        </select>
+        <button id="btn-save" class="btn btn-primary">Save</button>
+        <button id="btn-load" class="btn btn-secondary">Load</button>
+        <button id="btn-export" class="btn btn-secondary">Export JSON</button>
+        <button id="btn-print" class="btn btn-secondary">Print</button>
+        <button id="btn-logout" class="btn btn-secondary">Logout</button>
       </div>
-      <div class="grid-4 mt-2">
-        <div class="field"><label class="field-label">Rank Name</label><input type="text" class="field-input" id="rank-name"></div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Gender</label><input type="text" class="field-input" id="gender"></div>
-          <div class="field"><label class="field-label">Age</label><input type="number" class="field-input" id="age"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Height</label><input type="text" class="field-input" id="height"></div>
-          <div class="field"><label class="field-label">Weight</label><input type="text" class="field-input" id="weight"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Hair</label><input type="text" class="field-input" id="hair"></div>
-          <div class="field"><label class="field-label">Eyes</label><input type="text" class="field-input" id="eyes"></div>
-        </div>
-      </div>
-      <div class="grid-4 mt-2">
-        <div class="field"><label class="field-label">Handedness</label><input type="text" class="field-input" id="handedness"></div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Rank (Primary)</label><input type="text" class="field-input" id="rank1"></div>
-          <div class="field"><label class="field-label">Rank (2nd)</label><input type="text" class="field-input" id="rank2"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label class="field-label">Tenacity Pts</label><input type="number" class="field-input" id="tenacity-cur"> / <input type="number" class="field-input" id="tenacity-max"></div>
-        </div>
-        <div class="field"><label class="field-label">EXP Rolls</label><input type="number" class="field-input" id="exp-rolls"></div>
-      </div>
-    </div>
+    </nav>
 
-    <!-- Main 3-column layout -->
-    <div class="main-layout">
-      
-      <!-- LEFT: Attributes & Derived -->
-      <div>
-        <div class="card">
-          <div class="card-title">Attributes</div>
-          <div class="attr-grid" id="attr-grid"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Derived Statistics</div>
-          <div id="derived-stats"></div>
+    <!-- ==================== PAGE 1: PORTRAIT ==================== -->
+    <section id="page-portrait" class="sheet-page page-portrait active">
+      <div class="portrait-frame ornate-border">
+        <div class="portrait-container full-body-portrait">
+          <input type="file" id="full-body-upload" accept="image/*" class="image-upload-input">
+          <label for="full-body-upload" class="image-upload-label">
+            <span class="upload-text">Click Here</span>
+            <span class="upload-subtext">to add a full body image of your character.</span>
+          </label>
+          <img id="full-body-image" class="portrait-image hidden" alt="Character full body portrait">
+          <button class="btn-remove-image hidden" data-target="full-body">×</button>
         </div>
       </div>
+    </section>
 
-      <!-- CENTER: Skills -->
-      <div>
-        <div class="card">
-          <div class="card-title">Standard Skills</div>
-          <div class="skill-header"><span>Skill</span><span>Formula</span><span>Base</span><span>Total %</span></div>
-          <div id="standard-skills"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Professional Skills</div>
-          <div id="prof-skills"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Languages</div>
-          <div id="languages"></div>
-        </div>
-      </div>
+    <!-- ==================== PAGE 2: MAIN CHARACTER SHEET ==================== -->
+    <section id="page-main" class="sheet-page page-main">
+      <div class="page-content ornate-border">
+        
+        <!-- Header Row -->
+        <header class="sheet-header">
+          <div class="header-left">
+            <div class="field-row">
+              <label class="field-label field-label-large">Character</label>
+              <input type="text" id="character-name" class="field-input field-input-large" placeholder="">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Species/Culture</label>
+              <input type="text" id="species" class="field-input field-input-half" placeholder="">
+              <span class="field-separator">/</span>
+              <input type="text" id="culture" class="field-input field-input-half" placeholder="">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Class</label>
+              <input type="text" id="class-primary" class="field-input field-input-third" placeholder="">
+              <span class="field-separator">/</span>
+              <input type="text" id="class-secondary" class="field-input field-input-third" placeholder="">
+              <span class="field-separator">/</span>
+              <input type="text" id="class-tertiary" class="field-input field-input-third" placeholder="">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Rank Name</label>
+              <input type="text" id="rank-name" class="field-input" placeholder="">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Gender</label>
+              <input type="text" id="gender" class="field-input" placeholder="">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Age</label>
+              <input type="number" id="age" class="field-input field-input-small" placeholder="">
+              <label class="field-label">Handedness</label>
+              <input type="text" id="handedness" class="field-input field-input-small" placeholder="">
+            </div>
+          </div>
+          
+          <div class="header-center">
+            <div class="field-row">
+              <label class="field-label">Height</label>
+              <input type="text" id="height" class="field-input field-input-small" placeholder="5' 10&quot;">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Weight</label>
+              <input type="number" id="weight" class="field-input field-input-small" placeholder="">
+              <span class="field-suffix">Lb.</span>
+            </div>
+            <div class="field-row">
+              <label class="field-label">Hair</label>
+              <input type="text" id="hair" class="field-input" placeholder="">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Eyes</label>
+              <input type="text" id="eyes" class="field-input" placeholder="">
+            </div>
+            <div class="prereq-skills">
+              <div class="prereq-row">
+                <span class="prereq-icon">🔴</span>
+                <span class="prereq-label">Class Prereq. Skill</span>
+              </div>
+              <div class="prereq-row">
+                <span class="prereq-icon">🟡</span>
+                <span class="prereq-label">Subclass 1 Prereq. Skill</span>
+              </div>
+              <div class="prereq-row">
+                <span class="prereq-icon">🟢</span>
+                <span class="prereq-label">Subclass 2 Prereq. Skill</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="header-right">
+            <div class="rank-section">
+              <div class="rank-header">Rank(s)</div>
+              <div class="rank-row">
+                <span class="rank-label">Primary Class</span>
+                <input type="text" id="rank-primary" class="field-input field-input-small" placeholder="">
+              </div>
+              <div class="rank-row">
+                <span class="rank-label">2nd</span>
+                <input type="text" id="rank-secondary" class="field-input field-input-small" placeholder="">
+                <span class="rank-label">3rd</span>
+                <input type="text" id="rank-tertiary" class="field-input field-input-small" placeholder="">
+              </div>
+            </div>
+            <div class="tenacity-section">
+              <label class="field-label">Tenacity Points</label>
+              <input type="number" id="tenacity-current" class="field-input field-input-tiny" placeholder="">
+              <span class="field-separator">/</span>
+              <input type="number" id="tenacity-max" class="field-input field-input-tiny" placeholder="">
+            </div>
+            <div class="exp-rolls-section">
+              <label class="field-label">EXP Rolls</label>
+              <input type="number" id="exp-rolls" class="field-input field-input-small" placeholder="">
+            </div>
+          </div>
+          
+          <div class="header-logo">
+            <div class="logo-mythras">
+              <span class="logo-text">Mythras</span>
+              <span class="logo-subtext">Classic Fantasy</span>
+            </div>
+            <div class="portrait-thumbnail">
+              <input type="file" id="portrait-upload" accept="image/*" class="image-upload-input">
+              <label for="portrait-upload" class="image-upload-label thumbnail-label">
+                <span class="upload-text-small">Click Here</span>
+                <span class="upload-subtext-small">to add a portrait</span>
+              </label>
+              <img id="portrait-image" class="portrait-image-thumb hidden" alt="Character portrait">
+              <button class="btn-remove-image hidden" data-target="portrait">×</button>
+            </div>
+          </div>
+        </header>
 
-      <!-- RIGHT: Passions & Equipment -->
-      <div>
-        <div class="card">
-          <div class="card-title">Alignments, Passions & Oaths</div>
-          <div class="card-subtitle">Alignments (POW+INT+50)</div>
-          <div id="alignments"></div>
-          <div class="card-subtitle">Passions (POW+INT+50)</div>
-          <div id="passions"></div>
-          <div class="card-subtitle">Oaths (POW+CHA+50)</div>
-          <div id="oaths"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Equipment</div>
-          <div class="equip-header"><span>Item</span><span>ENC</span></div>
-          <div id="equipment"></div>
-          <div class="enc-total"><span>Total ENC:</span><span id="total-enc">0</span></div>
-          <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>Status:</span><span id="enc-status">Unburdened</span></div>
+        <!-- Main Content Grid -->
+        <div class="main-content-grid">
+          
+          <!-- Left Column: Attributes & Skills -->
+          <div class="column-left">
+            
+            <!-- Attributes Section -->
+            <section class="attributes-section">
+              <div class="attribute-row">
+                <label class="attribute-label">STR</label>
+                <input type="number" id="str-value" class="attribute-input" data-attr="STR" placeholder="">
+                <div class="derived-stat">
+                  <span class="derived-label">Action Points</span>
+                  <span class="derived-value" id="action-points-display">2</span>
+                </div>
+              </div>
+              
+              <div class="attribute-row">
+                <label class="attribute-label">CON</label>
+                <input type="number" id="con-value" class="attribute-input" data-attr="CON" placeholder="">
+                <div class="derived-stat">
+                  <span class="derived-label">Damage Mod</span>
+                  <span class="derived-value" id="damage-mod-display">+0</span>
+                </div>
+              </div>
+              
+              <div class="attribute-row">
+                <label class="attribute-label">SIZ</label>
+                <input type="number" id="siz-value" class="attribute-input" data-attr="SIZ" placeholder="">
+                <div class="derived-stat">
+                  <span class="derived-label">Exp Mod</span>
+                  <span class="derived-value" id="exp-mod-display">-1</span>
+                </div>
+              </div>
+              
+              <div class="attribute-row">
+                <label class="attribute-label">DEX</label>
+                <input type="number" id="dex-value" class="attribute-input" data-attr="DEX" placeholder="">
+                <div class="derived-stat">
+                  <span class="derived-label">Healing Rate</span>
+                  <span class="derived-value" id="healing-rate-display">2</span>
+                </div>
+              </div>
+              
+              <div class="attribute-row">
+                <label class="attribute-label">INT</label>
+                <input type="number" id="int-value" class="attribute-input" data-attr="INT" placeholder="">
+                <div class="derived-stat dual-value">
+                  <span class="derived-label">Initiative</span>
+                  <input type="number" id="initiative-original" class="derived-input" placeholder="">
+                  <input type="number" id="initiative-current" class="derived-input" placeholder="">
+                </div>
+              </div>
+              
+              <div class="attribute-row">
+                <label class="attribute-label">POW</label>
+                <input type="number" id="pow-value" class="attribute-input" data-attr="POW" placeholder="">
+                <div class="derived-stat dual-value">
+                  <span class="derived-label">Luck Points</span>
+                  <input type="number" id="luck-original" class="derived-input" placeholder="">
+                  <input type="number" id="luck-current" class="derived-input" placeholder="">
+                </div>
+              </div>
+              
+              <div class="attribute-row">
+                <label class="attribute-label">CHA</label>
+                <input type="number" id="cha-value" class="attribute-input" data-attr="CHA" placeholder="">
+                <div class="derived-stat dual-value">
+                  <span class="derived-label">Magic Points</span>
+                  <input type="number" id="magic-points-original" class="derived-input" placeholder="">
+                  <input type="number" id="magic-points-current" class="derived-input" placeholder="">
+                </div>
+              </div>
+              
+              <div class="movement-row">
+                <span class="movement-label">Movement</span>
+                <input type="number" id="movement-base" class="movement-input" placeholder="20">
+              </div>
+            </section>
+
+            <!-- Standard Skills Section -->
+            <section class="skills-section standard-skills">
+              <h3 class="section-header">Stnd. Skill</h3>
+              <div class="skills-header">
+                <span class="header-base">Base %</span>
+                <span class="header-current">%</span>
+              </div>
+              
+              <div class="skill-row" data-skill="athletics">
+                <span class="skill-name">Athletics</span>
+                <span class="skill-formula">STR+DEX</span>
+                <span class="skill-base" id="athletics-base">0</span>
+                <input type="number" id="athletics-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="boating">
+                <span class="skill-name">Boating</span>
+                <span class="skill-formula">STR+CON</span>
+                <span class="skill-base" id="boating-base">0</span>
+                <input type="number" id="boating-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="brawn">
+                <span class="skill-name">Brawn</span>
+                <span class="skill-formula">STR+SIZ</span>
+                <span class="skill-base" id="brawn-base">0</span>
+                <input type="number" id="brawn-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="conceal">
+                <span class="skill-name">Conceal</span>
+                <span class="skill-formula">DEX+POW</span>
+                <span class="skill-base" id="conceal-base">0</span>
+                <input type="number" id="conceal-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="customs">
+                <span class="skill-name">Customs</span>
+                <span class="skill-formula">INT x2+40</span>
+                <span class="skill-base" id="customs-base">0</span>
+                <input type="number" id="customs-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="dance">
+                <span class="skill-name">Dance</span>
+                <span class="skill-formula">DEX+CHA</span>
+                <span class="skill-base" id="dance-base">0</span>
+                <input type="number" id="dance-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="deceit">
+                <span class="skill-name">Deceit</span>
+                <span class="skill-formula">INT+CHA</span>
+                <span class="skill-base" id="deceit-base">0</span>
+                <input type="number" id="deceit-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="drive">
+                <span class="skill-name">Drive</span>
+                <span class="skill-formula">DEX+POW</span>
+                <span class="skill-base" id="drive-base">0</span>
+                <input type="number" id="drive-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="endurance">
+                <span class="skill-name">Endurance</span>
+                <span class="skill-formula">CON x2</span>
+                <span class="skill-base" id="endurance-base">0</span>
+                <input type="number" id="endurance-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="evade">
+                <span class="skill-name">Evade</span>
+                <span class="skill-formula">DEX x2</span>
+                <span class="skill-base" id="evade-base">0</span>
+                <input type="number" id="evade-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="first-aid">
+                <span class="skill-name">First Aid</span>
+                <span class="skill-formula">INT+DEX</span>
+                <span class="skill-base" id="first-aid-base">0</span>
+                <input type="number" id="first-aid-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="influence">
+                <span class="skill-name">Influence</span>
+                <span class="skill-formula">CHA x2</span>
+                <span class="skill-base" id="influence-base">0</span>
+                <input type="number" id="influence-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="insight">
+                <span class="skill-name">Insight</span>
+                <span class="skill-formula">INT+POW</span>
+                <span class="skill-base" id="insight-base">0</span>
+                <input type="number" id="insight-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="locale">
+                <span class="skill-name">Locale</span>
+                <span class="skill-formula">INT x2</span>
+                <span class="skill-base" id="locale-base">0</span>
+                <input type="number" id="locale-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="perception">
+                <span class="skill-name">Perception</span>
+                <span class="skill-formula">INT+POW</span>
+                <span class="skill-base" id="perception-base">0</span>
+                <input type="number" id="perception-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="ride">
+                <span class="skill-name">Ride</span>
+                <span class="skill-formula">DEX+POW</span>
+                <span class="skill-base" id="ride-base">0</span>
+                <input type="number" id="ride-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="sing">
+                <span class="skill-name">Sing</span>
+                <span class="skill-formula">CHA+POW</span>
+                <span class="skill-base" id="sing-base">0</span>
+                <input type="number" id="sing-current" class="skill-input" placeholder="">
+              </div>
+              
+              <div class="skill-row" data-skill="stealth">
+                <span class="skill-name">Stealth</span>
+                <span class="skill-formula">DEX+INT</span>
+                <span class="skill-base" id="stealth-base">0</span>
+                <input type="number" id="stealth-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="swim">
+                <span class="skill-name">Swim</span>
+                <span class="skill-formula">STR+CON</span>
+                <span class="skill-base" id="swim-base">0</span>
+                <input type="number" id="swim-current" class="skill-input" placeholder="">
+                <span class="enc-indicator" title="Affected by ENC">▲</span>
+              </div>
+              
+              <div class="skill-row" data-skill="willpower">
+                <span class="skill-name">Willpower</span>
+                <span class="skill-formula">POW x2</span>
+                <span class="skill-base" id="willpower-base">0</span>
+                <input type="number" id="willpower-current" class="skill-input" placeholder="">
+              </div>
+            </section>
+
+            <!-- Skill Grade Reference -->
+            <section class="skill-grade-reference">
+              <h4 class="reference-header">Skill Grade</h4>
+              <div class="grade-table">
+                <div class="grade-row"><span>Automatic</span><span>–</span></div>
+                <div class="grade-row"><span>Very Easy</span><span>+40%</span></div>
+                <div class="grade-row"><span>Easy</span><span>+20%</span></div>
+                <div class="grade-row"><span>Standard</span><span>–</span></div>
+                <div class="grade-row"><span>Hard</span><span>-20%</span></div>
+                <div class="grade-row"><span>Formidable</span><span>-40%</span></div>
+                <div class="grade-row"><span>Herculean</span><span>-80%</span></div>
+                <div class="grade-row"><span>Hopeless</span><span>–</span></div>
+              </div>
+              <div class="enc-penalty-note">
+                <span class="enc-indicator">▲</span>
+                <span>= ENC Penalty</span>
+              </div>
+            </section>
+          </div>
+
+          <!-- Center Column: Alignment, Passion, Oath, Professional Skills, Languages -->
+          <div class="column-center">
+            
+            <!-- Alignment Section -->
+            <section class="alignment-section">
+              <h3 class="section-header">Alignment</h3>
+              <div class="section-subheader">
+                <span class="header-base">Base %</span>
+                <span class="header-current">%</span>
+              </div>
+              <div class="belief-row">
+                <input type="text" class="belief-name" id="alignment-1-name" placeholder="">
+                <span class="belief-formula">POW+INT+50</span>
+                <span class="belief-base" id="alignment-1-base">0</span>
+                <input type="number" class="belief-input" id="alignment-1-current" placeholder="">
+              </div>
+              <div class="belief-row">
+                <input type="text" class="belief-name" id="alignment-2-name" placeholder="">
+                <span class="belief-formula">POW+INT+50</span>
+                <span class="belief-base" id="alignment-2-base">0</span>
+                <input type="number" class="belief-input" id="alignment-2-current" placeholder="">
+              </div>
+            </section>
+
+            <!-- Passion Section -->
+            <section class="passion-section">
+              <h3 class="section-header">Passion</h3>
+              <div class="section-subheader">
+                <span class="header-base">Base %</span>
+                <span class="header-current">%</span>
+              </div>
+              <div class="belief-row" data-index="1">
+                <input type="text" class="belief-name" id="passion-1-name" placeholder="">
+                <span class="belief-formula">POW+INT+50</span>
+                <span class="belief-base" id="passion-1-base">0</span>
+                <input type="number" class="belief-input" id="passion-1-current" placeholder="">
+              </div>
+              <div class="belief-row" data-index="2">
+                <input type="text" class="belief-name" id="passion-2-name" placeholder="">
+                <span class="belief-formula">POW+INT+50</span>
+                <span class="belief-base" id="passion-2-base">0</span>
+                <input type="number" class="belief-input" id="passion-2-current" placeholder="">
+              </div>
+              <div class="belief-row" data-index="3">
+                <input type="text" class="belief-name" id="passion-3-name" placeholder="">
+                <span class="belief-formula">POW+INT+50</span>
+                <span class="belief-base" id="passion-3-base">0</span>
+                <input type="number" class="belief-input" id="passion-3-current" placeholder="">
+              </div>
+              <div class="belief-row" data-index="4">
+                <input type="text" class="belief-name" id="passion-4-name" placeholder="">
+                <span class="belief-formula">POW+INT+50</span>
+                <span class="belief-base" id="passion-4-base">0</span>
+                <input type="number" class="belief-input" id="passion-4-current" placeholder="">
+              </div>
+            </section>
+
+            <!-- Oath Section -->
+            <section class="oath-section">
+              <h3 class="section-header">Oath</h3>
+              <div class="section-subheader">
+                <span class="header-base">Base %</span>
+                <span class="header-current">%</span>
+              </div>
+              <div class="belief-row" data-index="1">
+                <input type="text" class="belief-name" id="oath-1-name" placeholder="">
+                <span class="belief-formula">POW+CHA+50</span>
+                <span class="belief-base" id="oath-1-base">0</span>
+                <input type="number" class="belief-input" id="oath-1-current" placeholder="">
+              </div>
+              <div class="belief-row" data-index="2">
+                <input type="text" class="belief-name" id="oath-2-name" placeholder="">
+                <span class="belief-formula">POW+CHA+50</span>
+                <span class="belief-base" id="oath-2-base">0</span>
+                <input type="number" class="belief-input" id="oath-2-current" placeholder="">
+              </div>
+              <div class="belief-row" data-index="3">
+                <input type="text" class="belief-name" id="oath-3-name" placeholder="">
+                <span class="belief-formula">POW+CHA+50</span>
+                <span class="belief-base" id="oath-3-base">0</span>
+                <input type="number" class="belief-input" id="oath-3-current" placeholder="">
+              </div>
+              <div class="belief-row" data-index="4">
+                <input type="text" class="belief-name" id="oath-4-name" placeholder="">
+                <span class="belief-formula">POW+CHA+50</span>
+                <span class="belief-base" id="oath-4-base">0</span>
+                <input type="number" class="belief-input" id="oath-4-current" placeholder="">
+              </div>
+            </section>
+
+            <!-- Professional Skills Section -->
+            <section class="skills-section professional-skills">
+              <h3 class="section-header">Professional Skill</h3>
+              <div class="skills-header">
+                <span class="header-base">Base %</span>
+                <span class="header-current">%</span>
+              </div>
+              <div id="professional-skills-container">
+                <!-- Professional skills are dynamically generated -->
+              </div>
+            </section>
+
+            <!-- Language Section -->
+            <section class="language-section">
+              <h3 class="section-header">Language</h3>
+              <div class="section-subheader">
+                <span class="header-base">Base %</span>
+                <span class="header-current">%</span>
+              </div>
+              <div class="language-row native">
+                <label class="language-label">Native Tongue:</label>
+                <input type="text" class="language-name" id="native-tongue-name" placeholder="">
+                <span class="language-formula">INT+CHA+40</span>
+                <span class="language-base" id="native-tongue-base">0</span>
+                <input type="number" class="language-input" id="native-tongue-current" placeholder="">
+              </div>
+              <div class="language-row">
+                <input type="text" class="language-name" id="language-2-name" placeholder="">
+                <span class="language-formula">INT+CHA</span>
+                <span class="language-base" id="language-2-base">0</span>
+                <input type="number" class="language-input" id="language-2-current" placeholder="">
+              </div>
+              <div class="language-row">
+                <input type="text" class="language-name" id="language-3-name" placeholder="">
+                <span class="language-formula">INT+CHA</span>
+                <span class="language-base" id="language-3-base">0</span>
+                <input type="number" class="language-input" id="language-3-current" placeholder="">
+              </div>
+              <div class="language-row">
+                <input type="text" class="language-name" id="language-4-name" placeholder="">
+                <span class="language-formula">INT+CHA</span>
+                <span class="language-base" id="language-4-base">0</span>
+                <input type="number" class="language-input" id="language-4-current" placeholder="">
+              </div>
+              <div class="language-row">
+                <input type="text" class="language-name" id="language-5-name" placeholder="">
+                <span class="language-formula">INT+CHA</span>
+                <span class="language-base" id="language-5-base">0</span>
+                <input type="number" class="language-input" id="language-5-current" placeholder="">
+              </div>
+            </section>
+          </div>
+
+          <!-- Right Column: Equipment -->
+          <div class="column-right">
+            <section class="equipment-section">
+              <h3 class="section-header">Equipment</h3>
+              <div class="equipment-header">
+                <span class="header-item">Item</span>
+                <span class="header-enc">ENC</span>
+              </div>
+              <div id="equipment-container">
+                <!-- Equipment rows are dynamically generated -->
+              </div>
+              <div class="enc-totals">
+                <div class="enc-toggle">
+                  <label>
+                    <input type="checkbox" id="enc-automation-toggle">
+                    <span>Toggle ENC Automation (Check=OFF)</span>
+                  </label>
+                </div>
+                <div class="enc-status-row">
+                  <span class="enc-status-label">Current ENC Status:</span>
+                  <span class="enc-status-value" id="enc-status">Unburdened</span>
+                </div>
+                <div class="enc-total-row">
+                  <span class="enc-total-label">Total ENC:</span>
+                  <span class="enc-total-value" id="total-enc">0.0</span>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- ==================== PAGE 3: COMBAT ==================== -->
+    <section id="page-combat" class="sheet-page page-combat">
+      <div class="page-content ornate-border">
+        <h2 class="page-title">COMBAT</h2>
+        
+        <!-- Quick Reference Section -->
+        <div class="combat-header-grid">
+          <div class="quick-reference">
+            <h3 class="section-header">Quick Reference Combat Attributes</h3>
+            <div class="quick-ref-row">
+              <div class="quick-ref-item">
+                <span class="ref-label">Initiative (C)</span>
+                <span class="ref-value" id="combat-initiative"></span>
+              </div>
+              <div class="quick-ref-item">
+                <span class="ref-label">Luck Points (C)</span>
+                <span class="ref-value" id="combat-luck"></span>
+              </div>
+              <div class="quick-ref-item">
+                <span class="ref-label">Combat Skill</span>
+                <span class="ref-value" id="combat-skill-ref"></span>
+              </div>
+              <div class="quick-ref-item">
+                <span class="ref-label">Action Points (C)</span>
+                <span class="ref-value" id="combat-action-points"></span>
+              </div>
+            </div>
+            <div class="quick-ref-skills">
+              <div class="ref-skill-row">
+                <span class="ref-skill" id="ref-athletics">Athletics</span>
+                <span class="ref-skill" id="ref-brawn">Brawn</span>
+                <span class="ref-skill" id="ref-endurance">Endurance</span>
+                <span class="ref-skill" id="ref-evade">Evade</span>
+              </div>
+              <div class="ref-skill-row">
+                <span class="ref-skill" id="ref-perception">Perception</span>
+                <span class="ref-skill" id="ref-stealth">Stealth</span>
+                <span class="ref-skill" id="ref-swim">Swim</span>
+                <span class="ref-skill" id="ref-willpower">Willpower</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hit Locations -->
+          <div class="hit-locations">
+            <h3 class="section-header">Hit Locations</h3>
+            <table class="hit-location-table">
+              <thead>
+                <tr>
+                  <th>1d20</th>
+                  <th>Location</th>
+                  <th>Armor</th>
+                  <th>AP</th>
+                  <th>HP/Crnt</th>
+                </tr>
+              </thead>
+              <tbody id="hit-locations-body">
+                <!-- Hit locations are populated based on sheet type -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Combat Skills Section -->
+        <div class="combat-skills-section">
+          <div class="combat-skill-header">
+            <span class="header-label">Combat Skill</span>
+            <span class="header-percent">%</span>
+            <span class="header-weapons">Weapons Known</span>
+            <span class="header-base">Base %</span>
+          </div>
+          <div class="combat-skill-row">
+            <input type="text" class="combat-skill-name" id="combat-skill-1-name" placeholder="">
+            <input type="number" class="combat-skill-percent" id="combat-skill-1-percent" placeholder="">
+            <input type="text" class="combat-weapons-known" id="combat-skill-1-weapons" placeholder="">
+            <span class="combat-base">STR+DEX</span>
+          </div>
+          <div class="combat-skill-row unarmed">
+            <span class="combat-skill-name">Unarmed</span>
+            <input type="number" class="combat-skill-percent" id="unarmed-percent" placeholder="">
+            <span class="combat-weapons-known">Hands/Feet</span>
+            <span class="combat-base">STR+DEX</span>
+          </div>
+        </div>
+
+        <!-- Melee Weapons Table -->
+        <section class="weapons-section melee-weapons">
+          <h3 class="section-header">Melee Weapon</h3>
+          <table class="weapons-table">
+            <thead>
+              <tr>
+                <th>Melee Weapon</th>
+                <th>Hands</th>
+                <th>Damage</th>
+                <th>Size</th>
+                <th>Combat Special Effects</th>
+                <th>AP/HP</th>
+                <th>Weapon Traits</th>
+              </tr>
+            </thead>
+            <tbody id="melee-weapons-body">
+              <!-- 6 melee weapon rows -->
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Ranged Weapons Table -->
+        <section class="weapons-section ranged-weapons">
+          <h3 class="section-header">Ranged Weapon</h3>
+          <table class="weapons-table">
+            <thead>
+              <tr>
+                <th>Ranged Weapon</th>
+                <th>Hands</th>
+                <th>Damage</th>
+                <th>D.M.</th>
+                <th>Range</th>
+                <th>Load</th>
+                <th>Special Effects</th>
+                <th>Impl</th>
+                <th>AP/HP</th>
+                <th>Traits</th>
+              </tr>
+            </thead>
+            <tbody id="ranged-weapons-body">
+              <!-- 5 ranged weapon rows -->
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Movement & Fatigue Grid -->
+        <div class="movement-fatigue-grid">
+          <!-- Movement Section -->
+          <section class="movement-section">
+            <h3 class="section-header">Movement</h3>
+            <div class="movement-grid">
+              <div class="movement-item">
+                <span class="movement-type">Walk<br>(Base x1)</span>
+                <span class="movement-value" id="walk-speed"></span>
+              </div>
+              <div class="movement-item">
+                <span class="movement-type">Run<br>(Base x3)</span>
+                <span class="movement-value" id="run-speed"></span>
+              </div>
+              <div class="movement-item">
+                <span class="movement-type">Sprint<br>(Base x5)</span>
+                <span class="movement-value" id="sprint-speed"></span>
+              </div>
+              <div class="movement-item">
+                <span class="movement-type">Swim<br>(Base x1)</span>
+                <span class="movement-value" id="swim-speed"></span>
+              </div>
+              <div class="movement-item">
+                <span class="movement-type">Climb<br>(Base x1)</span>
+                <span class="movement-value" id="climb-speed"></span>
+              </div>
+            </div>
+            <div class="jump-grid">
+              <div class="jump-item">
+                <span class="jump-type">Vertical Jump<br>(1/2 Height)</span>
+                <span class="jump-value" id="vertical-jump"></span>
+              </div>
+              <div class="jump-item">
+                <span class="jump-type">Horizontal Jump<br>(2x Height)</span>
+                <span class="jump-value" id="horizontal-jump"></span>
+              </div>
+              <div class="jump-item syrin-only">
+                <span class="jump-type">Other Movement<br>(Flying)</span>
+                <input type="text" class="jump-value-input" id="flying-speed" placeholder="">
+              </div>
+            </div>
+          </section>
+
+          <!-- Fatigue States Reference -->
+          <section class="fatigue-section">
+            <h3 class="section-header">Fatigue States</h3>
+            <table class="fatigue-table">
+              <thead>
+                <tr>
+                  <th>State</th>
+                  <th>Skills</th>
+                  <th>Movement</th>
+                  <th>Initiative</th>
+                  <th>AP</th>
+                  <th>Recovery</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Fresh</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+                <tr><td>Winded</td><td>Hard</td><td>–</td><td>–</td><td>–</td><td>15 min.</td></tr>
+                <tr><td>Tired</td><td>Hard</td><td>-5 ft.</td><td>–</td><td>–</td><td>3 Hrs.</td></tr>
+                <tr><td>Wearied</td><td>Formid.</td><td>-5 ft.</td><td>-2</td><td>–</td><td>6 Hrs.</td></tr>
+                <tr><td>Exhausted</td><td>Formid.</td><td>1/2</td><td>-4</td><td>-1</td><td>12 Hrs.</td></tr>
+                <tr><td>Debil</td><td>Herc.</td><td>1/2</td><td>-6</td><td>-2</td><td>18 Hrs.</td></tr>
+                <tr><td>Incap.</td><td>Herc.</td><td>Immobile</td><td>-8</td><td>-3</td><td>24 Hrs.</td></tr>
+                <tr><td>Semi-consc.</td><td>Hopeless</td><td>N/A</td><td>N/A</td><td>N/A</td><td>36 Hrs.</td></tr>
+                <tr><td>Coma</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>48 Hrs.</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+
+        <!-- Special Abilities & Notes -->
+        <div class="abilities-notes-grid">
+          <section class="special-abilities-section">
+            <h3 class="section-header">Special Ability</h3>
+            <div class="abilities-columns">
+              <div class="abilities-column" id="abilities-col-1">
+                <!-- Special abilities column 1 -->
+              </div>
+              <div class="abilities-column" id="abilities-col-2">
+                <!-- Special abilities column 2 -->
+              </div>
+              <div class="abilities-column" id="abilities-col-3">
+                <!-- Special abilities column 3 -->
+              </div>
+            </div>
+            <button class="btn btn-small" id="btn-sort-abilities">Click to alphabetize Special Abilities</button>
+          </section>
+          
+          <section class="combat-notes-section">
+            <h3 class="section-header">Notes</h3>
+            <textarea id="combat-notes" class="notes-textarea" placeholder="Combat notes..."></textarea>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 4: MAGIC (Cantrips, Rank 1-2) ==================== -->
+    <section id="page-magic1" class="sheet-page page-magic">
+      <div class="page-content ornate-border">
+        <h2 class="page-title">MAGIC AND SPELLS</h2>
+        
+        <!-- Magic Skills Table -->
+        <section class="magic-skills-section">
+          <h3 class="section-header">Magic Skills</h3>
+          <table class="magic-skills-table">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Casting Skill</th>
+                <th>Base %</th>
+                <th>%</th>
+                <th>Knowl. Skill</th>
+                <th>Base %</th>
+                <th>%</th>
+                <th>Deity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="magic-class-divine">
+                <td>Divine <span class="class-note">(Cleric, Ranger, Paladin, etc.)</span></td>
+                <td>Channel</td>
+                <td class="base-calc">INT+POW</td>
+                <td><input type="number" id="channel-percent" class="magic-skill-input" placeholder=""></td>
+                <td>Piety</td>
+                <td class="base-calc">CHA+POW</td>
+                <td><input type="number" id="piety-percent" class="magic-skill-input" placeholder=""></td>
+                <td><input type="text" id="deity-name" class="deity-input" placeholder=""></td>
+              </tr>
+              <tr class="magic-class-mage human-only">
+                <td>Mage</td>
+                <td>Arcane Casting</td>
+                <td class="base-calc">INT+POW</td>
+                <td><input type="number" id="arcane-casting-percent" class="magic-skill-input" placeholder=""></td>
+                <td>Arcane Knowledge</td>
+                <td class="base-calc">INT x2</td>
+                <td><input type="number" id="arcane-knowledge-percent" class="magic-skill-input" placeholder=""></td>
+                <td></td>
+              </tr>
+              <tr class="magic-class-sorcerer human-only">
+                <td>Sorcerer</td>
+                <td>Arcane Sorcery</td>
+                <td class="base-calc">CHA+POW</td>
+                <td><input type="number" id="arcane-sorcery-percent" class="magic-skill-input" placeholder=""></td>
+                <td>Sorcerous Wisdom</td>
+                <td class="base-calc">CHA+INT</td>
+                <td><input type="number" id="sorcerous-wisdom-percent" class="magic-skill-input" placeholder=""></td>
+                <td></td>
+              </tr>
+              <tr class="magic-class-bard">
+                <td>Bard</td>
+                <td>Musicianship</td>
+                <td class="base-calc">DEX+CHA</td>
+                <td><input type="number" id="musicianship-percent" class="magic-skill-input" placeholder=""></td>
+                <td>Lyrical Magic</td>
+                <td class="base-calc">CHA+POW</td>
+                <td><input type="number" id="lyrical-magic-percent" class="magic-skill-input" placeholder=""></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="syrin-note syrin-only">Syrin may not become Mages or Sorcerers</p>
+        </section>
+
+        <!-- Spell Lists -->
+        <div class="spell-columns">
+          <!-- Cantrips -->
+          <section class="spell-column cantrips">
+            <h3 class="spell-rank-header">Cantrips</h3>
+            <div class="memorize-count">
+              May Memorize <input type="number" id="cantrips-max" class="memorize-input" value="0"> Spells
+            </div>
+            <table class="spell-table">
+              <thead>
+                <tr>
+                  <th class="col-memorized">M</th>
+                  <th class="col-spell">Spell</th>
+                  <th class="col-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="cantrips-body">
+                <!-- Cantrip rows generated dynamically -->
+              </tbody>
+            </table>
+          </section>
+
+          <!-- Rank 1 Spells -->
+          <section class="spell-column rank1">
+            <h3 class="spell-rank-header">Rank 1 Spells</h3>
+            <div class="memorize-count">
+              May Memorize <input type="number" id="rank1-max" class="memorize-input" value="0"> Spells
+            </div>
+            <table class="spell-table">
+              <thead>
+                <tr>
+                  <th class="col-memorized">M</th>
+                  <th class="col-spell">Spell</th>
+                  <th class="col-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="rank1-body">
+                <!-- Rank 1 spell rows generated dynamically -->
+              </tbody>
+            </table>
+          </section>
+
+          <!-- Rank 2 Spells -->
+          <section class="spell-column rank2">
+            <h3 class="spell-rank-header">Rank 2 Spells</h3>
+            <div class="memorize-count">
+              May Memorize <input type="number" id="rank2-max" class="memorize-input" value="0"> Spells
+            </div>
+            <table class="spell-table">
+              <thead>
+                <tr>
+                  <th class="col-memorized">M</th>
+                  <th class="col-spell">Spell</th>
+                  <th class="col-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="rank2-body">
+                <!-- Rank 2 spell rows generated dynamically -->
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 5: MAGIC (Rank 3-5) ==================== -->
+    <section id="page-magic2" class="sheet-page page-magic">
+      <div class="page-content ornate-border">
+        <h2 class="page-title">MAGIC AND SPELLS</h2>
+        
+        <!-- Magic Skills Table (Repeated for reference) -->
+        <section class="magic-skills-section">
+          <h3 class="section-header">Magic Skills</h3>
+          <table class="magic-skills-table">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Casting Skill</th>
+                <th>%</th>
+                <th>Knowl. Skill</th>
+                <th>Base %</th>
+                <th>%</th>
+                <th>Deity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="magic-class-divine">
+                <td>Divine <span class="class-note">(Cleric, Ranger, Paladin, etc.)</span></td>
+                <td>Channel</td>
+                <td class="magic-skill-ref" data-ref="channel-percent"></td>
+                <td>Piety</td>
+                <td class="base-calc">CHA+POW</td>
+                <td class="magic-skill-ref" data-ref="piety-percent"></td>
+                <td class="magic-skill-ref" data-ref="deity-name"></td>
+              </tr>
+              <tr class="magic-class-mage human-only">
+                <td>Mage</td>
+                <td>Arcane Casting</td>
+                <td class="magic-skill-ref" data-ref="arcane-casting-percent"></td>
+                <td>Arcane Knowledge</td>
+                <td class="base-calc">INT x2</td>
+                <td class="magic-skill-ref" data-ref="arcane-knowledge-percent"></td>
+                <td></td>
+              </tr>
+              <tr class="magic-class-sorcerer human-only">
+                <td>Sorcerer</td>
+                <td>Arcane Sorcery</td>
+                <td class="magic-skill-ref" data-ref="arcane-sorcery-percent"></td>
+                <td>Sorcerous Wisdom</td>
+                <td class="base-calc">CHA+INT</td>
+                <td class="magic-skill-ref" data-ref="sorcerous-wisdom-percent"></td>
+                <td></td>
+              </tr>
+              <tr class="magic-class-bard">
+                <td>Bard</td>
+                <td>Musicianship</td>
+                <td class="magic-skill-ref" data-ref="musicianship-percent"></td>
+                <td>Lyrical Magic</td>
+                <td class="base-calc">CHA+POW</td>
+                <td class="magic-skill-ref" data-ref="lyrical-magic-percent"></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="syrin-note syrin-only">Syrin may not become Mages or Sorcerers</p>
+        </section>
+
+        <!-- Spell Lists -->
+        <div class="spell-columns">
+          <!-- Rank 3 Spells -->
+          <section class="spell-column rank3">
+            <h3 class="spell-rank-header">Rank 3 Spells</h3>
+            <div class="memorize-count">
+              May Memorize <input type="number" id="rank3-max" class="memorize-input" value="0"> Spells
+            </div>
+            <table class="spell-table">
+              <thead>
+                <tr>
+                  <th class="col-memorized">M</th>
+                  <th class="col-spell">Spell</th>
+                  <th class="col-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="rank3-body">
+                <!-- Rank 3 spell rows generated dynamically -->
+              </tbody>
+            </table>
+          </section>
+
+          <!-- Rank 4 Spells -->
+          <section class="spell-column rank4">
+            <h3 class="spell-rank-header">Rank 4 Spells</h3>
+            <div class="memorize-count">
+              May Memorize <input type="number" id="rank4-max" class="memorize-input" value="0"> Spells
+            </div>
+            <table class="spell-table">
+              <thead>
+                <tr>
+                  <th class="col-memorized">M</th>
+                  <th class="col-spell">Spell</th>
+                  <th class="col-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="rank4-body">
+                <!-- Rank 4 spell rows generated dynamically -->
+              </tbody>
+            </table>
+          </section>
+
+          <!-- Rank 5 Spells -->
+          <section class="spell-column rank5">
+            <h3 class="spell-rank-header">Rank 5 Spells</h3>
+            <div class="memorize-count">
+              May Memorize <input type="number" id="rank5-max" class="memorize-input" value="0"> Spells
+            </div>
+            <table class="spell-table">
+              <thead>
+                <tr>
+                  <th class="col-memorized">M</th>
+                  <th class="col-spell">Spell</th>
+                  <th class="col-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="rank5-body">
+                <!-- Rank 5 spell rows generated dynamically -->
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 6: NOTES ==================== -->
+    <section id="page-notes" class="sheet-page page-notes">
+      <div class="page-content ornate-border">
+        <h2 class="page-title">Notes</h2>
+        <textarea id="general-notes" class="notes-textarea full-page" placeholder="General notes, backstory, campaign information..."></textarea>
+      </div>
+    </section>
+
   </div>
 
-  <!-- COMBAT PAGE -->
-  <div class="page" id="page-combat">
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">Quick Reference</div>
-        <div class="quick-ref">
-          <div class="ref-box"><div class="ref-label">Initiative</div><div class="ref-value" id="ref-init">0</div></div>
-          <div class="ref-box"><div class="ref-label">Action Points</div><div class="ref-value" id="ref-ap">2</div></div>
-          <div class="ref-box"><div class="ref-label">Damage Mod</div><div class="ref-value" id="ref-dmg">+0</div></div>
-          <div class="ref-box"><div class="ref-label">Luck Points</div><div class="ref-value" id="ref-luck">0</div></div>
-        </div>
-        <div class="quick-ref mt-2">
-          <div class="ref-box"><div class="ref-label">Athletics</div><div class="ref-value" id="ref-ath">0</div></div>
-          <div class="ref-box"><div class="ref-label">Brawn</div><div class="ref-value" id="ref-brawn">0</div></div>
-          <div class="ref-box"><div class="ref-label">Endurance</div><div class="ref-value" id="ref-end">0</div></div>
-          <div class="ref-box"><div class="ref-label">Evade</div><div class="ref-value" id="ref-evade">0</div></div>
-        </div>
-        <div class="quick-ref mt-2">
-          <div class="ref-box"><div class="ref-label">Perception</div><div class="ref-value" id="ref-perc">0</div></div>
-          <div class="ref-box"><div class="ref-label">Stealth</div><div class="ref-value" id="ref-stealth">0</div></div>
-          <div class="ref-box"><div class="ref-label">Swim</div><div class="ref-value" id="ref-swim">0</div></div>
-          <div class="ref-box"><div class="ref-label">Willpower</div><div class="ref-value" id="ref-will">0</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Hit Locations</div>
-        <table class="data-table">
-          <thead><tr><th>d20</th><th>Location</th><th>Armor</th><th>AP</th><th>HP</th><th>Current</th></tr></thead>
-          <tbody id="hit-locations"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Combat Skills</div>
-      <div id="combat-skills"></div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">Melee Weapons</div>
-        <table class="data-table">
-          <thead><tr><th>Weapon</th><th>Damage</th><th>Size</th><th>AP/HP</th><th>Effects</th><th>Traits</th></tr></thead>
-          <tbody id="melee-weapons"></tbody>
-        </table>
-      </div>
-      <div class="card">
-        <div class="card-title">Ranged Weapons</div>
-        <table class="data-table">
-          <thead><tr><th>Weapon</th><th>Damage</th><th>Range</th><th>Load</th><th>AP/HP</th><th>Effects</th></tr></thead>
-          <tbody id="ranged-weapons"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Special Abilities</div>
-      <div class="abilities-grid" id="abilities"></div>
-    </div>
-  </div>
-
-  <!-- MAGIC PAGE -->
-  <div class="page" id="page-magic">
-    <div class="card">
-      <div class="card-title">Magic Skills</div>
-      <table class="data-table">
-        <thead><tr><th>Tradition</th><th>Casting Skill</th><th>Base</th><th>%</th><th>Knowledge Skill</th><th>Base</th><th>%</th><th>Deity/Focus</th></tr></thead>
-        <tbody>
-          <tr><td>Divine (Cleric, Ranger, Paladin)</td><td>Channel</td><td>INT+POW</td><td><input type="number"></td><td>Piety</td><td>CHA+POW</td><td><input type="number"></td><td><input type="text" placeholder="Deity"></td></tr>
-          <tr><td>Mage</td><td>Arcane Casting</td><td>INT+POW</td><td><input type="number"></td><td>Arcane Knowledge</td><td>INT×2</td><td><input type="number"></td><td>—</td></tr>
-          <tr><td>Sorcerer</td><td>Arcane Sorcery</td><td>CHA+POW</td><td><input type="number"></td><td>Sorcerous Wisdom</td><td>CHA+INT</td><td><input type="number"></td><td>—</td></tr>
-          <tr><td>Bard</td><td>Musicianship</td><td>DEX+CHA</td><td><input type="number"></td><td>Lyrical Magic</td><td>CHA+POW</td><td><input type="number"></td><td>—</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="spell-grid" id="spell-lists"></div>
-  </div>
-
-  <!-- NOTES PAGE -->
-  <div class="page" id="page-notes">
-    <div class="notes-grid">
-      <div class="card"><div class="card-title">Character Background</div><textarea class="notes-area" placeholder="Write your character's background and history..."></textarea></div>
-      <div class="card"><div class="card-title">Session Notes</div><textarea class="notes-area" placeholder="Notes from game sessions, important events..."></textarea></div>
-      <div class="card"><div class="card-title">Goals & Motivations</div><textarea class="notes-area" placeholder="Character goals, quests, motivations..."></textarea></div>
-      <div class="card"><div class="card-title">Other Notes</div><textarea class="notes-area" placeholder="Any other notes..."></textarea></div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-// Data
-const ATTRS = ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA'];
-const DERIVED = [
-  ['Action Points', 'action-pts', false],
-  ['Damage Modifier', 'damage-mod', false],
-  ['Experience Modifier', 'exp-mod', false],
-  ['Healing Rate', 'heal-rate', false],
-  ['Movement', 'movement', true],
-  ['Initiative', 'initiative', true],
-  ['Luck Points', 'luck-pts', true],
-  ['Magic Points', 'magic-pts', true]
-];
-const SKILLS = [
-  ['Athletics', 'STR+DEX'], ['Boating', 'STR+CON'], ['Brawn', 'STR+SIZ'], ['Conceal', 'DEX+POW'],
-  ['Customs', 'INT×2+40'], ['Dance', 'DEX+CHA'], ['Deceit', 'INT+CHA'], ['Drive', 'DEX+POW'],
-  ['Endurance', 'CON×2'], ['Evade', 'DEX×2'], ['First Aid', 'INT+DEX'], ['Influence', 'CHA×2'],
-  ['Insight', 'INT+POW'], ['Locale', 'INT×2'], ['Perception', 'INT+POW'], ['Ride', 'DEX+POW'],
-  ['Sing', 'CHA+POW'], ['Stealth', 'DEX+INT'], ['Swim', 'STR+CON'], ['Willpower', 'POW×2']
-];
-const HIT_LOCS = [['1-3','Right Leg'],['4-6','Left Leg'],['7-9','Abdomen'],['10-12','Chest'],['13-15','Right Arm'],['16-18','Left Arm'],['19-20','Head']];
-
-// Navigation
-document.querySelectorAll('.nav-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('page-' + tab.dataset.page).classList.add('active');
-  });
-});
-
-// Logout
-document.getElementById('btn-logout').addEventListener('click', () => {
-  if (confirm('Logout?')) { localStorage.removeItem('mythras_auth'); window.location.href = 'index.html'; }
-});
-
-// Portrait
-document.getElementById('portrait-upload').addEventListener('change', function(e) {
-  if (e.target.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      document.getElementById('portrait-img').src = ev.target.result;
-      document.getElementById('portrait-img').classList.remove('hidden');
-      document.getElementById('portrait-label').classList.add('hidden');
-    };
-    reader.readAsDataURL(e.target.files[0]);
-  }
-});
-
-// Generate Attributes
-const attrGrid = document.getElementById('attr-grid');
-ATTRS.forEach(attr => {
-  const box = document.createElement('div');
-  box.className = 'attr-box';
-  box.innerHTML = `<div class="attr-label">${attr}</div><input type="number" class="attr-input" id="attr-${attr.toLowerCase()}">`;
-  attrGrid.appendChild(box);
-});
-
-// Generate Derived Stats
-const derivedDiv = document.getElementById('derived-stats');
-DERIVED.forEach(([label, id, editable]) => {
-  const row = document.createElement('div');
-  row.className = 'stat-row';
-  row.innerHTML = editable 
-    ? `<span class="stat-label">${label}</span><input type="number" class="stat-input" id="${id}">`
-    : `<span class="stat-label">${label}</span><span class="stat-value" id="${id}">—</span>`;
-  derivedDiv.appendChild(row);
-});
-
-// Generate Standard Skills
-const skillsDiv = document.getElementById('standard-skills');
-SKILLS.forEach(([name, formula], i) => {
-  const row = document.createElement('div');
-  row.className = 'skill-row';
-  row.innerHTML = `<span class="skill-name">${name}</span><span class="skill-formula">${formula}</span><span class="skill-base" id="skill-base-${i}">0</span><input type="number" class="skill-total" id="skill-${i}">`;
-  skillsDiv.appendChild(row);
-});
-
-// Generate Professional Skills (8 blank rows)
-const profDiv = document.getElementById('prof-skills');
-for (let i = 0; i < 8; i++) {
-  const row = document.createElement('div');
-  row.className = 'skill-row';
-  row.innerHTML = `<input type="text" class="field-input" placeholder="Skill name" style="font-size:13px"><input type="text" class="field-input" placeholder="Formula" style="font-size:11px;width:70px"><span class="skill-base">0</span><input type="number" class="skill-total">`;
-  profDiv.appendChild(row);
-}
-
-// Generate Languages (5 rows)
-const langDiv = document.getElementById('languages');
-for (let i = 0; i < 5; i++) {
-  const row = document.createElement('div');
-  row.className = 'skill-row';
-  row.innerHTML = `<input type="text" class="field-input" placeholder="${i===0?'Native Tongue':'Language'}" style="font-size:13px"><span class="skill-formula">${i===0?'INT+CHA+40':'INT+CHA'}</span><span class="skill-base">0</span><input type="number" class="skill-total">`;
-  langDiv.appendChild(row);
-}
-
-// Generate Alignments/Passions/Oaths
-['alignments', 'passions', 'oaths'].forEach(type => {
-  const div = document.getElementById(type);
-  const count = type === 'alignments' ? 2 : 4;
-  for (let i = 0; i < count; i++) {
-    const row = document.createElement('div');
-    row.className = 'belief-row';
-    row.innerHTML = `<input type="text" class="belief-input" placeholder="Name"><input type="number" class="belief-input belief-value" placeholder="%">`;
-    div.appendChild(row);
-  }
-});
-
-// Generate Equipment (15 rows)
-const equipDiv = document.getElementById('equipment');
-for (let i = 0; i < 15; i++) {
-  const row = document.createElement('div');
-  row.className = 'equip-row';
-  row.innerHTML = `<input type="text" class="equip-input"><input type="number" class="equip-input" style="text-align:center">`;
-  equipDiv.appendChild(row);
-}
-
-// Generate Hit Locations
-const hitLocBody = document.getElementById('hit-locations');
-HIT_LOCS.forEach(([roll, loc], i) => {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td>${roll}</td><td>${loc}</td><td><input type="text"></td><td><input type="number"></td><td id="hp-${i}">0</td><td><input type="number"></td>`;
-  hitLocBody.appendChild(tr);
-});
-
-// Generate Combat Skills (5 rows)
-const combatDiv = document.getElementById('combat-skills');
-for (let i = 0; i < 5; i++) {
-  const row = document.createElement('div');
-  row.className = 'combat-row';
-  row.innerHTML = `<input type="text" class="combat-input" placeholder="${i===0?'Unarmed':'Combat Style'}"><input type="number" class="combat-input" placeholder="%"><input type="text" class="combat-input" placeholder="${i===0?'Hands/Feet':'Weapons known'}">`;
-  combatDiv.appendChild(row);
-}
-
-// Generate Melee Weapons (6 rows)
-const meleeBody = document.getElementById('melee-weapons');
-for (let i = 0; i < 6; i++) {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td>`;
-  meleeBody.appendChild(tr);
-}
-
-// Generate Ranged Weapons (5 rows)
-const rangedBody = document.getElementById('ranged-weapons');
-for (let i = 0; i < 5; i++) {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td>`;
-  rangedBody.appendChild(tr);
-}
-
-// Generate Abilities (24 slots)
-const abilitiesDiv = document.getElementById('abilities');
-for (let i = 0; i < 24; i++) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'ability-input';
-  input.placeholder = 'Ability';
-  abilitiesDiv.appendChild(input);
-}
-
-// Generate Spell Lists
-const spellDiv = document.getElementById('spell-lists');
-['Cantrips', 'Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5'].forEach((title, rank) => {
-  const card = document.createElement('div');
-  card.className = 'card';
-  let html = `<div class="card-title">${title}</div>`;
-  html += `<div class="spell-header"><span>May Memorize:</span><input type="number" value="0" style="width:50px;padding:4px;border:1px solid #ddd;border-radius:4px;"></div>`;
-  for (let i = 0; i < 15; i++) {
-    html += `<div class="spell-row"><input type="checkbox"><input type="text" class="spell-input" placeholder="Spell name"><input type="text" class="spell-input" placeholder="MP" style="text-align:center"></div>`;
-  }
-  card.innerHTML = html;
-  spellDiv.appendChild(card);
-});
-
-console.log('Character sheet ready!');
-</script>
+  <!-- Scripts -->
+  <script src="js/data/skill-definitions.js"></script>
+  <script src="js/calculations.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Logout handler
+    document.getElementById('btn-logout').addEventListener('click', function() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('mythras_auth');
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
 </body>
 </html>
