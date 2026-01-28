@@ -203,36 +203,40 @@
               <div class="attribute-row">
                 <label class="attribute-label">STR</label>
                 <input type="number" id="str-value" class="attribute-input" data-attr="STR" placeholder="">
-                <div class="derived-stat">
+                <div class="derived-stat dual-value">
                   <span class="derived-label">Action Points</span>
-                  <span class="derived-value" id="action-points-display">2</span>
+                  <input type="number" id="action-points-original" class="derived-input" placeholder="">
+                  <input type="number" id="action-points-current" class="derived-input" placeholder="">
                 </div>
               </div>
               
               <div class="attribute-row">
                 <label class="attribute-label">CON</label>
                 <input type="number" id="con-value" class="attribute-input" data-attr="CON" placeholder="">
-                <div class="derived-stat">
+                <div class="derived-stat dual-value">
                   <span class="derived-label">Damage Mod</span>
-                  <span class="derived-value" id="damage-mod-display">+0</span>
+                  <input type="text" id="damage-mod-original" class="derived-input" placeholder="">
+                  <input type="text" id="damage-mod-current" class="derived-input" placeholder="">
                 </div>
               </div>
               
               <div class="attribute-row">
                 <label class="attribute-label">SIZ</label>
                 <input type="number" id="siz-value" class="attribute-input" data-attr="SIZ" placeholder="">
-                <div class="derived-stat">
+                <div class="derived-stat dual-value">
                   <span class="derived-label">Exp Mod</span>
-                  <span class="derived-value" id="exp-mod-display">-1</span>
+                  <input type="number" id="exp-mod-original" class="derived-input" placeholder="">
+                  <input type="number" id="exp-mod-current" class="derived-input" placeholder="">
                 </div>
               </div>
               
               <div class="attribute-row">
                 <label class="attribute-label">DEX</label>
                 <input type="number" id="dex-value" class="attribute-input" data-attr="DEX" placeholder="">
-                <div class="derived-stat">
+                <div class="derived-stat dual-value">
                   <span class="derived-label">Healing Rate</span>
-                  <span class="derived-value" id="healing-rate-display">2</span>
+                  <input type="number" id="healing-rate-original" class="derived-input" placeholder="">
+                  <input type="number" id="healing-rate-current" class="derived-input" placeholder="">
                 </div>
               </div>
               
@@ -276,8 +280,11 @@
             <section class="skills-section standard-skills">
               <h3 class="section-header">Stnd. Skill</h3>
               <div class="skills-header">
+                <span></span>
+                <span></span>
                 <span class="header-base">Base %</span>
                 <span class="header-current">%</span>
+                <span></span>
               </div>
               
               <div class="skill-row" data-skill="athletics">

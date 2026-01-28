@@ -786,11 +786,26 @@ const App = {
     const attrs = this.character.attributes;
     const results = Calculator.recalculateAll(attrs, this.sheetType);
     
-    // Update derived stat displays
-    document.getElementById('action-points-display').textContent = results.derived.actionPoints;
-    document.getElementById('damage-mod-display').textContent = results.derived.damageModifier;
-    document.getElementById('exp-mod-display').textContent = results.derived.expMod;
-    document.getElementById('healing-rate-display').textContent = results.derived.healingRate;
+    // Update derived stat displays - now using input fields
+    const apOrig = document.getElementById('action-points-original');
+    if (apOrig && !apOrig.value) {
+      apOrig.value = results.derived.actionPoints;
+    }
+    
+    const dmgOrig = document.getElementById('damage-mod-original');
+    if (dmgOrig && !dmgOrig.value) {
+      dmgOrig.value = results.derived.damageModifier;
+    }
+    
+    const expOrig = document.getElementById('exp-mod-original');
+    if (expOrig && !expOrig.value) {
+      expOrig.value = results.derived.expMod;
+    }
+    
+    const healOrig = document.getElementById('healing-rate-original');
+    if (healOrig && !healOrig.value) {
+      healOrig.value = results.derived.healingRate;
+    }
     
     // Update calculated initiative/luck/magic if not manually set
     const initOrig = document.getElementById('initiative-original');
@@ -876,7 +891,9 @@ const App = {
     
     const combatAP = document.getElementById('combat-action-points');
     if (combatAP) {
-      combatAP.textContent = document.getElementById('action-points-display').textContent;
+      const apCurrent = document.getElementById('action-points-current');
+      const apOrig = document.getElementById('action-points-original');
+      combatAP.textContent = (apCurrent && apCurrent.value) ? apCurrent.value : (apOrig ? apOrig.value : '');
     }
     
     // Combat-relevant skills

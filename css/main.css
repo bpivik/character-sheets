@@ -667,7 +667,7 @@ body {
 .skills-header,
 .section-subheader {
   display: grid;
-  grid-template-columns: 1fr 90px 60px 60px;
+  grid-template-columns: 1fr 70px 55px 60px 15px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
