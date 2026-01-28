@@ -688,11 +688,11 @@
             <h3 class="section-header">Quick Reference Combat Attributes</h3>
             <div class="quick-ref-row">
               <div class="quick-ref-item">
-                <span class="ref-label">Initiative (C)</span>
+                <span class="ref-label">Current Initiative</span>
                 <span class="ref-value" id="combat-initiative"></span>
               </div>
               <div class="quick-ref-item">
-                <span class="ref-label">Luck Points (C)</span>
+                <span class="ref-label">Current Luck Points</span>
                 <span class="ref-value" id="combat-luck"></span>
               </div>
               <div class="quick-ref-item">
@@ -700,7 +700,7 @@
                 <span class="ref-value" id="combat-skill-ref"></span>
               </div>
               <div class="quick-ref-item">
-                <span class="ref-label">Action Points (C)</span>
+                <span class="ref-label">Current Action Points</span>
                 <span class="ref-value" id="combat-action-points"></span>
               </div>
             </div>
@@ -838,38 +838,46 @@
             <h3 class="section-header">Movement</h3>
             <div class="movement-grid">
               <div class="movement-item">
-                <span class="movement-type">Walk<br>(Base x1)</span>
+                <span class="movement-label">Walk</span>
+                <span class="movement-sublabel">(Base x1)</span>
                 <span class="movement-value" id="walk-speed"></span>
               </div>
               <div class="movement-item">
-                <span class="movement-type">Run<br>(Base x3)</span>
+                <span class="movement-label">Run</span>
+                <span class="movement-sublabel">(Base x3)</span>
                 <span class="movement-value" id="run-speed"></span>
               </div>
               <div class="movement-item">
-                <span class="movement-type">Sprint<br>(Base x5)</span>
+                <span class="movement-label">Sprint</span>
+                <span class="movement-sublabel">(Base x5)</span>
                 <span class="movement-value" id="sprint-speed"></span>
               </div>
               <div class="movement-item">
-                <span class="movement-type">Swim<br>(Base x1)</span>
+                <span class="movement-label">Swim</span>
+                <span class="movement-sublabel">(Base x1)</span>
                 <span class="movement-value" id="swim-speed"></span>
               </div>
               <div class="movement-item">
-                <span class="movement-type">Climb<br>(Base x1)</span>
+                <span class="movement-label">Climb</span>
+                <span class="movement-sublabel">(Base x1)</span>
                 <span class="movement-value" id="climb-speed"></span>
               </div>
             </div>
             <div class="jump-grid">
-              <div class="jump-item">
-                <span class="jump-type">Vertical Jump<br>(1/2 Height)</span>
-                <span class="jump-value" id="vertical-jump"></span>
+              <div class="movement-item">
+                <span class="movement-label">Vertical Jump</span>
+                <span class="movement-sublabel">(1/2 Height)</span>
+                <span class="movement-value" id="vertical-jump"></span>
               </div>
-              <div class="jump-item">
-                <span class="jump-type">Horizontal Jump<br>(2x Height)</span>
-                <span class="jump-value" id="horizontal-jump"></span>
+              <div class="movement-item">
+                <span class="movement-label">Horizontal Jump</span>
+                <span class="movement-sublabel">(2x Height)</span>
+                <span class="movement-value" id="horizontal-jump"></span>
               </div>
-              <div class="jump-item syrin-only">
-                <span class="jump-type">Other Movement<br>(Flying)</span>
-                <input type="text" class="jump-value-input" id="flying-speed" placeholder="">
+              <div class="movement-item syrin-only">
+                <span class="movement-label">Other Movement</span>
+                <span class="movement-sublabel">(Flying)</span>
+                <input type="text" class="movement-value-input" id="flying-speed" placeholder="">
               </div>
             </div>
           </section>
