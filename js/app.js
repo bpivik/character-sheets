@@ -1565,12 +1565,15 @@ const App = {
     // Combat-relevant skills
     const skillRefs = ['athletics', 'brawn', 'endurance', 'evade', 'perception', 'stealth', 'swim', 'willpower'];
     skillRefs.forEach(skill => {
-      const refSpan = document.getElementById(`ref-${skill}`);
+      const refItem = document.getElementById(`ref-${skill}`);
       const skillInput = document.getElementById(`${skill}-current`);
       const skillBase = document.getElementById(`${skill}-base`);
-      if (refSpan && skillInput && skillBase) {
+      if (refItem && skillInput && skillBase) {
         const total = parseInt(skillBase.textContent) + (parseInt(skillInput.value) || 0);
-        refSpan.textContent = `${skill.charAt(0).toUpperCase() + skill.slice(1)} ${total}%`;
+        const valueSpan = refItem.querySelector('.ref-skill-value');
+        if (valueSpan) {
+          valueSpan.textContent = `${total}%`;
+        }
       }
     });
   },
