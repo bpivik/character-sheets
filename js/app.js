@@ -777,9 +777,13 @@ const App = {
         const rowIndex = i;
         if (nameInput) {
           nameInput.addEventListener('blur', () => {
+            console.log('Blur event fired for melee row', rowIndex, 'value:', nameInput.value);
             if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
+              console.log('Calling autofillMeleeWeapon...');
               window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
               this.scheduleAutoSave();
+            } else {
+              console.log('WeaponData not available:', window.WeaponData);
             }
           });
         }
