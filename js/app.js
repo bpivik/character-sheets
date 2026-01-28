@@ -1372,7 +1372,7 @@ const App = {
       const moneyTypes = ['copper', 'silver', 'gold', 'platinum', 'electrum'];
       moneyTypes.forEach(type => {
         const input = document.getElementById(`money-${type}`);
-        if (input && this.character.money[type]) {
+        if (input && this.character.money[type] !== undefined && this.character.money[type] !== '') {
           input.value = this.character.money[type];
         }
       });

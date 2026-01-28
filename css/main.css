@@ -543,7 +543,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 580px 1fr 380px;
+  grid-template-columns: 560px 1fr 420px;
   gap: 1.5rem;
   align-items: start;
 }
@@ -575,6 +575,7 @@ select:focus {
   align-self: start;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
+  min-width: 420px;
 }
 
 /* ============================================
