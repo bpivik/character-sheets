@@ -501,7 +501,7 @@ body {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 300px 1fr 320px;
+  grid-template-columns: 350px 1fr 320px;
   gap: 2rem;
   align-items: start;
 }
@@ -689,7 +689,7 @@ body {
 /* Skill Rows */
 .skill-row {
   display: grid;
-  grid-template-columns: 1fr 70px 50px 55px 15px;
+  grid-template-columns: 1fr 70px 55px 60px 15px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
@@ -715,14 +715,14 @@ body {
   text-align: center;
   font-weight: 600;
   background: rgba(255,255,255,0.5);
-  padding: 0.25rem;
+  padding: 0.3rem;
   font-size: 1.1rem;
   border-radius: 4px;
 }
 
 .skill-input {
   width: 100%;
-  padding: 0.35rem;
+  padding: 0.4rem;
   font-size: 1.1rem;
   text-align: center;
   border: 1px solid var(--input-border);
@@ -757,10 +757,11 @@ body {
 }
 
 .belief-name {
-  padding: 0.1rem 0.2rem;
-  font-size: 0.78rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 1.1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
+  border-radius: 4px;
 }
 
 .belief-name:focus {
@@ -769,26 +770,28 @@ body {
 }
 
 .belief-formula {
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   text-align: right;
 }
 
 .belief-base {
   text-align: center;
-  font-weight: 500;
-  background: rgba(255,255,255,0.4);
-  padding: 0.1rem;
-  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.5);
+  padding: 0.25rem;
+  font-size: 1rem;
+  border-radius: 4px;
 }
 
 .belief-input {
   width: 100%;
-  padding: 0.1rem;
-  font-size: 0.78rem;
+  padding: 0.35rem;
+  font-size: 1.1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
+  border-radius: 4px;
 }
 
 .belief-input:focus {
@@ -816,17 +819,18 @@ body {
 }
 
 .language-label {
-  font-size: 0.68rem;
+  font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .language-name {
-  padding: 0.1rem 0.2rem;
-  font-size: 0.78rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 1.1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   min-width: 0;
+  border-radius: 4px;
 }
 
 .language-name:focus {
@@ -835,26 +839,28 @@ body {
 }
 
 .language-formula {
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   text-align: right;
 }
 
 .language-base {
   text-align: center;
-  font-weight: 500;
-  background: rgba(255,255,255,0.4);
-  padding: 0.1rem;
-  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.5);
+  padding: 0.25rem;
+  font-size: 1rem;
+  border-radius: 4px;
 }
 
 .language-input {
   width: 100%;
-  padding: 0.1rem;
-  font-size: 0.78rem;
+  padding: 0.35rem;
+  font-size: 1.1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
+  border-radius: 4px;
 }
 
 .language-input:focus {
@@ -874,10 +880,11 @@ body {
 }
 
 .prof-skill-name {
-  padding: 0.1rem 0.2rem;
-  font-size: 0.78rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 1.1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
+  border-radius: 4px;
 }
 
 .prof-skill-name:focus {
@@ -886,28 +893,31 @@ body {
 }
 
 .prof-skill-base {
-  padding: 0.1rem 0.2rem;
-  font-size: 0.68rem;
+  padding: 0.35rem;
+  font-size: 0.9rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   text-align: center;
+  border-radius: 4px;
 }
 
 .prof-skill-base-val {
   text-align: center;
-  font-weight: 500;
-  background: rgba(255,255,255,0.4);
-  padding: 0.1rem;
-  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.5);
+  padding: 0.25rem;
+  font-size: 1rem;
+  border-radius: 4px;
 }
 
 .prof-skill-current {
   width: 100%;
-  padding: 0.1rem;
-  font-size: 0.78rem;
+  padding: 0.35rem;
+  font-size: 1.1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
+  border-radius: 4px;
 }
 
 /* Skill Grade Reference */
