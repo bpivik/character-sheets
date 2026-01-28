@@ -968,6 +968,169 @@ const App = {
       // Recalculate base values after loading
       this.recalculateProfessionalSkillBases();
     }
+    
+    // Alignments
+    if (this.character.alignments) {
+      this.character.alignments.forEach((item, i) => {
+        const nameInput = document.getElementById(`alignment-${i+1}-name`);
+        const currentInput = document.getElementById(`alignment-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (currentInput && item.current) currentInput.value = item.current;
+      });
+    }
+    
+    // Passions
+    if (this.character.passions) {
+      this.character.passions.forEach((item, i) => {
+        const nameInput = document.getElementById(`passion-${i+1}-name`);
+        const currentInput = document.getElementById(`passion-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (currentInput && item.current) currentInput.value = item.current;
+      });
+    }
+    
+    // Oaths
+    if (this.character.oaths) {
+      this.character.oaths.forEach((item, i) => {
+        const nameInput = document.getElementById(`oath-${i+1}-name`);
+        const currentInput = document.getElementById(`oath-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (currentInput && item.current) currentInput.value = item.current;
+      });
+    }
+    
+    // Languages
+    if (this.character.languages) {
+      // Native tongue
+      if (this.character.languages[0]) {
+        const nativeName = document.getElementById('native-tongue-name');
+        const nativeCurrent = document.getElementById('native-tongue-current');
+        if (nativeName && this.character.languages[0].name) nativeName.value = this.character.languages[0].name;
+        if (nativeCurrent && this.character.languages[0].current) nativeCurrent.value = this.character.languages[0].current;
+      }
+      // Additional languages
+      for (let i = 1; i < this.character.languages.length; i++) {
+        const item = this.character.languages[i];
+        const nameInput = document.getElementById(`language-${i+1}-name`);
+        const currentInput = document.getElementById(`language-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (currentInput && item.current) currentInput.value = item.current;
+      }
+    }
+    
+    // Combat Skills
+    if (this.character.combat && this.character.combat.skills) {
+      this.character.combat.skills.forEach((skill, i) => {
+        const nameInput = document.getElementById(`combat-skill-${i}-name`);
+        const percentInput = document.getElementById(`combat-skill-${i}-percent`);
+        const weaponsInput = document.getElementById(`combat-skill-${i}-weapons`);
+        if (nameInput && skill.name) nameInput.value = skill.name;
+        if (percentInput && skill.percent) percentInput.value = skill.percent;
+        if (weaponsInput && skill.weapons) weaponsInput.value = skill.weapons;
+      });
+    }
+    
+    // Unarmed
+    if (this.character.combat) {
+      const unarmedInput = document.getElementById('unarmed-percent');
+      if (unarmedInput && this.character.combat.unarmedPercent) {
+        unarmedInput.value = this.character.combat.unarmedPercent;
+      }
+    }
+    
+    // Hit Locations
+    if (this.character.combat && this.character.combat.hitLocations) {
+      this.character.combat.hitLocations.forEach((loc, i) => {
+        const armorInput = document.getElementById(`loc-${i}-armor`);
+        const currentInput = document.getElementById(`loc-${i}-current`);
+        if (armorInput && loc.armor) armorInput.value = loc.armor;
+        if (currentInput && loc.current) currentInput.value = loc.current;
+      });
+    }
+    
+    // Melee Weapons
+    if (this.character.combat && this.character.combat.meleeWeapons) {
+      this.character.combat.meleeWeapons.forEach((weapon, i) => {
+        const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
+        fields.forEach(field => {
+          const input = document.getElementById(`melee-${i}-${field}`);
+          if (input && weapon[field]) input.value = weapon[field];
+        });
+      });
+    }
+    
+    // Ranged Weapons
+    if (this.character.combat && this.character.combat.rangedWeapons) {
+      this.character.combat.rangedWeapons.forEach((weapon, i) => {
+        const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+        fields.forEach(field => {
+          const input = document.getElementById(`ranged-${i}-${field}`);
+          if (input && weapon[field]) input.value = weapon[field];
+        });
+      });
+    }
+    
+    // Special Abilities
+    if (this.character.combat && this.character.combat.specialAbilities) {
+      this.character.combat.specialAbilities.forEach((ability, i) => {
+        const col = Math.floor(i / ABILITY_SLOTS_PER_COLUMN) + 1;
+        const row = i % ABILITY_SLOTS_PER_COLUMN;
+        const input = document.getElementById(`ability-${col}-${row}`);
+        if (input && ability) input.value = ability;
+      });
+    }
+    
+    // Flying Speed
+    if (this.character.combat) {
+      const flyingInput = document.getElementById('flying-speed');
+      if (flyingInput && this.character.combat.flyingSpeed) {
+        flyingInput.value = this.character.combat.flyingSpeed;
+      }
+    }
+    
+    // Magic Skills
+    if (this.character.magic) {
+      const magicFields = {
+        'deity': 'deity',
+        'channel-percent': 'channelPercent',
+        'piety-percent': 'pietyPercent',
+        'arcane-casting-percent': 'arcaneCastingPercent',
+        'arcane-knowledge-percent': 'arcaneKnowledgePercent',
+        'arcane-sorcery-percent': 'arcaneSorceryPercent',
+        'sorcerous-wisdom-percent': 'sorcerousWisdomPercent',
+        'musicianship-percent': 'musicianshipPercent',
+        'lyrical-magic-percent': 'lyricalMagicPercent'
+      };
+      for (const [fieldId, key] of Object.entries(magicFields)) {
+        const input = document.getElementById(fieldId);
+        if (input && this.character.magic[key]) input.value = this.character.magic[key];
+      }
+    }
+    
+    // Spells
+    if (this.character.magic && this.character.magic.spells) {
+      const ranks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+      ranks.forEach(rank => {
+        if (this.character.magic.spells[rank]) {
+          // Max spells
+          const maxInput = document.getElementById(`${rank}-max`);
+          if (maxInput && this.character.magic.spells[rank].max) {
+            maxInput.value = this.character.magic.spells[rank].max;
+          }
+          // Individual spells
+          if (this.character.magic.spells[rank].spells) {
+            this.character.magic.spells[rank].spells.forEach((spell, i) => {
+              const nameInput = document.getElementById(`${rank}-spell-${i}-name`);
+              const costInput = document.getElementById(`${rank}-spell-${i}-cost`);
+              const memCheck = document.getElementById(`${rank}-spell-${i}-mem`);
+              if (nameInput && spell.name) nameInput.value = spell.name;
+              if (costInput && spell.cost) costInput.value = spell.cost;
+              if (memCheck && spell.memorized) memCheck.checked = spell.memorized;
+            });
+          }
+        }
+      });
+    }
   },
 
   /**
@@ -1075,6 +1238,135 @@ const App = {
           current: currentInput.value
         });
       }
+    }
+    
+    // Combat Skills
+    this.character.combat.skills = [];
+    for (let i = 0; i < 2; i++) {
+      const nameInput = document.getElementById(`combat-skill-${i}-name`);
+      const percentInput = document.getElementById(`combat-skill-${i}-percent`);
+      const weaponsInput = document.getElementById(`combat-skill-${i}-weapons`);
+      if (nameInput) {
+        this.character.combat.skills.push({
+          name: nameInput?.value || '',
+          percent: percentInput?.value || '',
+          weapons: weaponsInput?.value || ''
+        });
+      }
+    }
+    
+    // Unarmed
+    const unarmedInput = document.getElementById('unarmed-percent');
+    if (unarmedInput) {
+      this.character.combat.unarmedPercent = unarmedInput.value;
+    }
+    
+    // Hit Locations
+    this.character.combat.hitLocations = [];
+    const hitLocCount = this.sheetType === 'syrin' ? 9 : 7;
+    for (let i = 0; i < hitLocCount; i++) {
+      const armorInput = document.getElementById(`loc-${i}-armor`);
+      const currentInput = document.getElementById(`loc-${i}-current`);
+      this.character.combat.hitLocations.push({
+        armor: armorInput?.value || '',
+        current: currentInput?.value || ''
+      });
+    }
+    
+    // Melee Weapons
+    this.character.combat.meleeWeapons = [];
+    for (let i = 0; i < 6; i++) {
+      const weapon = {};
+      const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
+      fields.forEach(field => {
+        const input = document.getElementById(`melee-${i}-${field}`);
+        weapon[field] = input?.value || '';
+      });
+      this.character.combat.meleeWeapons.push(weapon);
+    }
+    
+    // Ranged Weapons
+    this.character.combat.rangedWeapons = [];
+    for (let i = 0; i < 5; i++) {
+      const weapon = {};
+      const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+      fields.forEach(field => {
+        const input = document.getElementById(`ranged-${i}-${field}`);
+        weapon[field] = input?.value || '';
+      });
+      this.character.combat.rangedWeapons.push(weapon);
+    }
+    
+    // Special Abilities
+    this.character.combat.specialAbilities = [];
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < ABILITY_SLOTS_PER_COLUMN; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input) {
+          this.character.combat.specialAbilities.push(input.value);
+        }
+      }
+    }
+    
+    // Combat Notes
+    const combatNotes = document.getElementById('combat-notes');
+    if (combatNotes) {
+      this.character.combat.notes = combatNotes.value;
+    }
+    
+    // Flying Speed
+    const flyingInput = document.getElementById('flying-speed');
+    if (flyingInput) {
+      this.character.combat.flyingSpeed = flyingInput.value;
+    }
+    
+    // Magic Skills
+    const magicFields = {
+      'deity': 'deity',
+      'channel-percent': 'channelPercent',
+      'piety-percent': 'pietyPercent',
+      'arcane-casting-percent': 'arcaneCastingPercent',
+      'arcane-knowledge-percent': 'arcaneKnowledgePercent',
+      'arcane-sorcery-percent': 'arcaneSorceryPercent',
+      'sorcerous-wisdom-percent': 'sorcerousWisdomPercent',
+      'musicianship-percent': 'musicianshipPercent',
+      'lyrical-magic-percent': 'lyricalMagicPercent'
+    };
+    for (const [fieldId, key] of Object.entries(magicFields)) {
+      const input = document.getElementById(fieldId);
+      if (input) {
+        this.character.magic[key] = input.value;
+      }
+    }
+    
+    // Spells
+    const ranks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    ranks.forEach(rank => {
+      // Max spells
+      const maxInput = document.getElementById(`${rank}-max`);
+      if (maxInput) {
+        this.character.magic.spells[rank].max = maxInput.value;
+      }
+      // Individual spells
+      this.character.magic.spells[rank].spells = [];
+      for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
+        const nameInput = document.getElementById(`${rank}-spell-${i}-name`);
+        const costInput = document.getElementById(`${rank}-spell-${i}-cost`);
+        const memCheck = document.getElementById(`${rank}-spell-${i}-mem`);
+        if (nameInput) {
+          this.character.magic.spells[rank].spells.push({
+            name: nameInput?.value || '',
+            cost: costInput?.value || '',
+            memorized: memCheck?.checked || false
+          });
+        }
+      }
+    });
+    
+    // General Notes
+    const generalNotes = document.getElementById('general-notes');
+    if (generalNotes) {
+      this.character.notes = generalNotes.value;
     }
   },
 
