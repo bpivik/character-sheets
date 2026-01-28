@@ -487,32 +487,35 @@ select:focus {
 /* Rank Section */
 .rank-section {
   border: 1px solid var(--border-light);
-  padding: 0.4rem;
+  padding: 0.5rem;
   background: rgba(255,255,255,0.3);
+  border-radius: 4px;
 }
 
 .rank-header {
   font-family: var(--font-header);
   font-weight: 600;
-  font-size: 0.85rem;
-  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
 }
 
 .rank-row {
   display: grid;
-  grid-template-columns: 75px 50px;
+  grid-template-columns: 85px 55px;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  margin-bottom: 0.2rem;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
 }
 
 .rank-row.dual {
-  grid-template-columns: 30px 50px 30px 50px;
+  grid-template-columns: 30px 55px 35px 55px;
+  gap: 0.5rem;
 }
 
 .rank-label {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 /* Tenacity & EXP */
