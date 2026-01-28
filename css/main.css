@@ -450,7 +450,7 @@ body {
 /* Rank Section */
 .rank-section {
   border: 1px solid var(--border-light);
-  padding: 0.5rem;
+  padding: 0.4rem;
   background: rgba(255,255,255,0.3);
 }
 
@@ -462,16 +462,20 @@ body {
 }
 
 .rank-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 75px 50px;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.8rem;
   margin-bottom: 0.2rem;
 }
 
+.rank-row.dual {
+  grid-template-columns: 30px 50px 30px 50px;
+}
+
 .rank-label {
   font-size: 0.75rem;
-  min-width: 70px;
 }
 
 /* Tenacity & EXP */
@@ -488,7 +492,7 @@ body {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 220px minmax(280px, 420px) 220px;
+  grid-template-columns: 220px minmax(280px, 420px) 1fr;
   gap: 0.75rem;
 }
 
@@ -637,22 +641,27 @@ body {
 
 .skills-header,
 .section-subheader {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr 60px 35px 38px;
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 0.15rem;
 }
 
+.skills-header.prof-header {
+  grid-template-columns: 1fr 55px 35px 38px;
+}
+
+.section-subheader .header-spacer {
+  /* Empty first column */
+}
+
 .header-base {
-  width: 45px;
   text-align: center;
 }
 
 .header-current {
-  width: 45px;
   text-align: center;
 }
 
