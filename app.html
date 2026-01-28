@@ -189,32 +189,6 @@
               <img id="portrait-image" class="portrait-image-thumb hidden" alt="Character portrait">
               <button class="btn-remove-image hidden" data-target="portrait">×</button>
             </div>
-            
-            <!-- Equipment Section moved here -->
-            <section class="equipment-section-header">
-              <h3 class="section-header">Equipment</h3>
-              <div class="equipment-header">
-                <span class="header-item">Item</span>
-                <span class="header-enc">ENC</span>
-              </div>
-              <div id="equipment-container-header">
-                <!-- Equipment rows are dynamically generated -->
-              </div>
-              <div class="enc-totals">
-                <div class="enc-toggle">
-                  <input type="checkbox" id="enc-automation-toggle">
-                  <label for="enc-automation-toggle">Toggle ENC Automation (Check=OFF)</label>
-                </div>
-                <div class="enc-total-row">
-                  <span>Current ENC Status:</span>
-                  <span id="enc-status-display">Unburdened</span>
-                </div>
-                <div class="enc-total-row">
-                  <span>Total ENC:</span>
-                  <span id="total-enc-display">0.0</span>
-                </div>
-              </div>
-            </section>
           </div>
         </header>
 
@@ -627,6 +601,36 @@
                 <span class="language-formula">INT+CHA</span>
                 <span class="language-base" id="language-5-base">0</span>
                 <input type="number" class="language-input" id="language-5-current" placeholder="">
+              </div>
+            </section>
+          </div>
+
+          <!-- Right Column: Equipment -->
+          <div class="column-right">
+            <section class="equipment-section">
+              <h3 class="section-header">Equipment</h3>
+              <div class="equipment-header">
+                <span class="header-item">Item</span>
+                <span class="header-enc">ENC</span>
+              </div>
+              <div id="equipment-container">
+                <!-- Equipment rows are dynamically generated -->
+              </div>
+              <div class="enc-totals">
+                <div class="enc-toggle">
+                  <label>
+                    <input type="checkbox" id="enc-automation-toggle">
+                    <span>Toggle ENC Automation (Check=OFF)</span>
+                  </label>
+                </div>
+                <div class="enc-status-row">
+                  <span class="enc-status-label">Current ENC Status:</span>
+                  <span class="enc-status-value" id="enc-status">Unburdened</span>
+                </div>
+                <div class="enc-total-row">
+                  <span class="enc-total-label">Total ENC:</span>
+                  <span class="enc-total-value" id="total-enc">0.0</span>
+                </div>
               </div>
             </section>
           </div>

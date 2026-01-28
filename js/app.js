@@ -407,7 +407,7 @@ const App = {
    * Generate equipment rows
    */
   generateEquipmentRows() {
-    const container = document.getElementById('equipment-container-header');
+    const container = document.getElementById('equipment-container');
     if (!container) return;
     
     container.innerHTML = '';
