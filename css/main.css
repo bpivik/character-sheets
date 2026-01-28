@@ -543,7 +543,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 610px 1fr 320px;
+  grid-template-columns: 580px 1fr 380px;
   gap: 1.5rem;
   align-items: start;
 }
@@ -1249,7 +1249,7 @@ select:focus {
 
 .money-input {
   width: 100%;
-  max-width: 60px;
+  max-width: 70px;
   padding: 0.25rem;
   font-size: 0.9rem;
   text-align: center;
