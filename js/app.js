@@ -1124,7 +1124,7 @@ const App = {
         const currentInput = document.getElementById(`loc-${i}-current`);
         if (armorInput && loc.armor) armorInput.value = loc.armor;
         if (apInput && loc.ap) apInput.value = loc.ap;
-        if (hpInput && loc.hp) hpInput.value = loc.hp;
+        if (hpInput && loc.hp !== undefined && loc.hp !== '') hpInput.value = loc.hp;
         if (currentInput && loc.current) currentInput.value = loc.current;
       });
     }
@@ -1538,13 +1538,8 @@ const App = {
     // Update professional skill base values
     this.recalculateProfessionalSkillBases();
     
-    // Update hit location HPs - only set default if empty
-    results.hitLocations.forEach((loc, i) => {
-      const hpInput = document.getElementById(`loc-${i}-hp`);
-      if (hpInput && !hpInput.value) {
-        hpInput.value = loc.hp;
-      }
-    });
+    // Note: Hit location HP values are user-editable and saved/loaded from storage
+    // They are not auto-calculated from attributes
     
     // Update combat quick reference
     this.updateCombatQuickRef();
