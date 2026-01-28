@@ -24,6 +24,14 @@ body {
 /* Global Input Alignment */
 input[type="number"] {
   text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 input[type="text"] {
@@ -535,7 +543,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 560px 1fr 320px;
+  grid-template-columns: 610px 1fr 320px;
   gap: 1.5rem;
   align-items: start;
 }
@@ -585,12 +593,12 @@ select:focus {
 }
 
 .attributes-section.core-attributes {
-  width: 280px;
+  width: 310px;
   flex-shrink: 0;
 }
 
 .attributes-section.derived-attributes {
-  width: 260px;
+  width: 280px;
   flex-shrink: 0;
 }
 
@@ -673,17 +681,6 @@ select:focus {
 }
 
 /* Remove spinner buttons from all number inputs */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none !important;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-
 .derived-editable {
   background: var(--input-bg);
   border-color: var(--btn-primary-bg);
