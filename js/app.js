@@ -826,6 +826,18 @@ const App = {
         `;
         rangedBody.appendChild(tr);
         
+        // Add autofill listener for ranged weapon name field
+        const nameInput = tr.querySelector(`#ranged-${i}-name`);
+        const rowIndex = i;
+        if (nameInput) {
+          nameInput.addEventListener('blur', () => {
+            if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
+              window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
+              this.scheduleAutoSave();
+            }
+          });
+        }
+        
         tr.querySelectorAll('input').forEach(input => {
           input.addEventListener('input', () => this.scheduleAutoSave());
         });

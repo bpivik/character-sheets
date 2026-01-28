@@ -124,6 +124,58 @@ const MELEE_WEAPON_DATA = {
   "xyston": ["2H", "1d10", "L", "Impale", 4, 10, "Set, Double Ended"]
 };
 
+// Ranged Weapon Database
+// Format: [Hands, Damage, DmgMod, Range, Load, Special Effects, Impale Size, AP, HP, Traits]
+const RANGED_WEAPON_DATA = {
+  "atlatl": ["1H", "–", "+1 Step", "0/+30/+60", "–", "–", "–", 1, 4, "Primitive"],
+  "arbalest": ["2H", "1d12", "N", "270/540/1080", "4", "Impale, Sunder", "S", 4, 10, "–"],
+  "blowgun": ["1H", "–", "N", "30/60/90", "1", "Impale", "–", 1, 4, "–"],
+  "bolas": ["1H", "1d4", "N", "30/75/150", "–", "Entangle", "–", 2, 2, "–"],
+  "composite short bow": ["2H", "1d6", "Y", "50/325/650", "2", "Impale", "S", 4, 5, "–"],
+  "composite shortbow": ["2H", "1d6", "Y", "50/325/650", "2", "Impale", "S", 4, 5, "–"],
+  "composite long bow": ["2H", "1d8", "Y", "50/400/800", "2", "Impale", "S", 4, 8, "–"],
+  "composite longbow": ["2H", "1d8", "Y", "50/400/800", "2", "Impale", "S", 4, 8, "–"],
+  "recurve bow": ["2H", "1d8", "Y", "45/375/750", "2", "Impale", "S", 4, 8, "–"],
+  "dagger": ["1H", "1d4", "Y", "15/30/60", "–", "Impale", "S", 4, 6, "–"],
+  "dart": ["1H", "1d4", "Y", "15/30/60", "–", "Impale", "S", 2, 1, "–"],
+  "discus": ["1H", "1d4+1", "Y", "5/20/40", "–", "Stun Location", "–", 2, 3, "–"],
+  "hand crossbow": ["1H", "1d4", "N", "30/60/150", "2", "Impale", "S", 4, 3, "Dark Elf"],
+  "hatchet": ["1H", "1d6", "Y", "30/60/90", "–", "Bleed", "–", 4, 6, "–"],
+  "heavy crossbow": ["2H", "1d10", "N", "60/450/900", "4", "Impale, Sunder", "S", 4, 8, "–"],
+  "crossbow, heavy": ["2H", "1d10", "N", "60/450/900", "4", "Impale, Sunder", "S", 4, 8, "–"],
+  "handaxe": ["1H", "1d6", "Y", "30/60/90", "–", "Bleed", "–", 4, 6, "Primitive"],
+  "hand axe": ["1H", "1d6", "Y", "30/60/90", "–", "Bleed", "–", 4, 6, "Primitive"],
+  "heavy crossbow, repeating": ["2H", "1d10", "N", "60/450/900", "–", "Impale, Sunder", "S", 4, 8, "Dwarf, Repeating"],
+  "repeating heavy crossbow": ["2H", "1d10", "N", "60/450/900", "–", "Impale, Sunder", "S", 4, 8, "Dwarf, Repeating"],
+  "javelin": ["1H", "1d8+1", "Y", "30/60/150", "–", "Impale, Pin Weapon (Shield)", "M", 3, 8, "–"],
+  "light crossbow": ["2H", "1d8", "N", "60/300/600", "3", "Impale", "S", 4, 5, "–"],
+  "crossbow, light": ["2H", "1d8", "N", "60/300/600", "3", "Impale", "S", 4, 5, "–"],
+  "crossbow": ["2H", "1d8", "N", "60/300/600", "3", "Impale", "S", 4, 5, "–"],
+  "repeating light crossbow": ["2H", "1d8", "N", "60/300/600", "–", "Impale", "S", 4, 5, "Dwarf, Repeating"],
+  "longbow": ["2H", "1d8", "Y", "45/375/750", "2", "Impale", "S", 4, 7, "–"],
+  "long bow": ["2H", "1d8", "Y", "45/375/750", "2", "Impale", "S", 4, 7, "–"],
+  "bow, long": ["2H", "1d8", "Y", "45/375/750", "2", "Impale", "S", 4, 7, "–"],
+  "bow": ["2H", "1d6", "Y", "45/300/600", "2", "Impale", "S", 4, 4, "–"],
+  "net": ["1H", "–", "N", "10/15/30", "–", "Entangle", "–", 2, 20, "–"],
+  "primitive bow": ["2H", "1d6-1", "Y", "30/150/300", "2", "Impale", "S", 3, 3, "Stone"],
+  "short bow": ["2H", "1d6", "Y", "45/300/600", "2", "Impale", "S", 4, 4, "–"],
+  "bow, short": ["2H", "1d6", "Y", "45/300/600", "2", "Impale", "S", 4, 4, "–"],
+  "shortbow": ["2H", "1d6", "Y", "45/300/600", "2", "Impale", "S", 4, 4, "–"],
+  "shortspear": ["1H", "1d8", "Y", "30/45/90", "–", "Impale", "M", 4, 5, "–"],
+  "short spear": ["1H", "1d8", "Y", "30/45/90", "–", "Impale", "M", 4, 5, "–"],
+  "spear": ["1H", "1d8", "Y", "30/45/90", "–", "Impale", "M", 4, 5, "–"],
+  "sling": ["1H", "1d6", "N", "30/450/900", "3", "Stun Location", "–", 1, 2, "–"],
+  "staff sling": ["2H", "2d6", "N", "15/75/150", "4", "Stun Location", "–", 3, 6, "–"],
+  "stone": ["1H", "1d3", "Y", "15/75/150", "–", "Stun Location", "–", 0, 0, "–"],
+  "rock": ["1H", "1d3", "Y", "15/75/150", "–", "Stun Location", "–", 0, 0, "–"],
+  "stone hatchet": ["1H", "1d6-1", "Y", "15/30/60", "–", "Bleed, Impale, Stun Location", "S", 2, 4, "–"],
+  "stone shortspear": ["1H", "1d8-1", "Y", "30/45/90", "–", "Impale", "M", 4, 5, "–"],
+  "stone short spear": ["1H", "1d8-1", "Y", "30/45/90", "–", "Impale", "M", 4, 5, "–"],
+  "trident": ["1H", "1d8", "Y", "30/45/90", "–", "Impale", "M", 4, 10, "Barbed"],
+  "throwing knife": ["1H", "1d4", "Y", "15/30/60", "–", "Impale", "S", 4, 6, "–"],
+  "throwing axe": ["1H", "1d6", "Y", "30/60/90", "–", "Bleed", "–", 4, 6, "–"]
+};
+
 // Weapon index for fuzzy matching (built on first lookup)
 let weaponIndexBuilt = false;
 let weaponIndex = [];
@@ -529,13 +581,124 @@ function combineClassWeapons(classes) {
   return result;
 }
 
+// Ranged weapon index for fuzzy matching (built on first lookup)
+let rangedIndexBuilt = false;
+let rangedIndex = [];
+
+/**
+ * Build ranged weapon index for fuzzy matching
+ */
+function buildRangedWeaponIndex() {
+  if (rangedIndexBuilt) return;
+  
+  rangedIndex = [];
+  
+  for (const k in RANGED_WEAPON_DATA) {
+    if (!RANGED_WEAPON_DATA.hasOwnProperty(k)) continue;
+    const sq = squeeze(k);
+    rangedIndex.push({ key: k, squeeze: sq });
+  }
+  
+  // Sort by squeeze length (longest first) to avoid partial matches
+  rangedIndex.sort((a, b) => b.squeeze.length - a.squeeze.length);
+  rangedIndexBuilt = true;
+}
+
+/**
+ * Find the best ranged weapon key from user input
+ */
+function findRangedWeaponKey(userText) {
+  buildRangedWeaponIndex();
+  const z = squeeze(userText);
+  
+  if (!z) return null;
+  
+  // Look for exact key squeezes as substrings (longest-first)
+  for (let i = 0; i < rangedIndex.length; i++) {
+    const it = rangedIndex[i];
+    if (z.indexOf(it.squeeze) !== -1) {
+      return it.key;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Autofill ranged weapon fields based on weapon name
+ * @param {number} index - The weapon row index (0-4)
+ * @param {string} weaponName - The name entered by user
+ */
+function autofillRangedWeapon(index, weaponName) {
+  if (!weaponName || weaponName.trim() === '') {
+    // Clear all fields when name is emptied
+    clearRangedWeaponFields(index);
+    return false;
+  }
+  
+  const resolvedKey = findRangedWeaponKey(weaponName);
+  if (!resolvedKey || !(resolvedKey in RANGED_WEAPON_DATA)) {
+    return false;
+  }
+  
+  const data = RANGED_WEAPON_DATA[resolvedKey];
+  // data format: [Hands, Damage, DmgMod, Range, Load, Special Effects, Impale Size, AP, HP, Traits]
+  
+  const handsInput = document.getElementById(`ranged-${index}-hands`);
+  const damageInput = document.getElementById(`ranged-${index}-damage`);
+  const dmInput = document.getElementById(`ranged-${index}-dm`);
+  const rangeInput = document.getElementById(`ranged-${index}-range`);
+  const loadInput = document.getElementById(`ranged-${index}-load`);
+  const effectsInput = document.getElementById(`ranged-${index}-effects`);
+  const implInput = document.getElementById(`ranged-${index}-impl`);
+  const aphpInput = document.getElementById(`ranged-${index}-aphp`);
+  const traitsInput = document.getElementById(`ranged-${index}-traits`);
+  
+  // For ranged weapons, only add damage mod if D.M. = "Y"
+  let finalDamage = data[1];
+  if (data[2] === 'Y') {
+    finalDamage = composeDamage(data[1]);
+  }
+  
+  const aphpValue = `${data[7]}/${data[8]}`;
+  
+  // Fill fields (only if empty)
+  if (handsInput && !handsInput.value.trim()) handsInput.value = data[0];
+  if (damageInput && !damageInput.value.trim()) damageInput.value = finalDamage;
+  if (dmInput && !dmInput.value.trim()) dmInput.value = data[2];
+  if (rangeInput && !rangeInput.value.trim()) rangeInput.value = data[3];
+  if (loadInput && !loadInput.value.trim()) loadInput.value = data[4];
+  if (effectsInput && !effectsInput.value.trim()) effectsInput.value = data[5];
+  if (implInput && !implInput.value.trim()) implInput.value = data[6];
+  if (aphpInput && !aphpInput.value.trim()) aphpInput.value = aphpValue;
+  if (traitsInput && !traitsInput.value.trim()) traitsInput.value = data[9];
+  
+  return true;
+}
+
+/**
+ * Clear all ranged weapon fields for a row
+ * @param {number} index - The weapon row index (0-4)
+ */
+function clearRangedWeaponFields(index) {
+  const fields = ['hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+  fields.forEach(field => {
+    const input = document.getElementById(`ranged-${index}-${field}`);
+    if (input) input.value = '';
+  });
+}
+
 // Export for use in app.js
 window.WeaponData = {
   MELEE_WEAPON_DATA,
+  RANGED_WEAPON_DATA,
   CLASS_WEAPONS_DATA,
   findWeaponKey,
+  findRangedWeaponKey,
   autofillMeleeWeapon,
+  autofillRangedWeapon,
   clearMeleeWeaponFields,
+  clearRangedWeaponFields,
   composeDamage,
   getClassWeapons,
   combineClassWeapons

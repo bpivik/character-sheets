@@ -1627,7 +1627,7 @@ select:focus {
 .melee-weapons .weapons-table th:nth-child(2),
 .melee-weapons .weapons-table td:nth-child(2) { width: 6%; text-align: center; } /* Hands - smaller, centered */
 .melee-weapons .weapons-table th:nth-child(3),
-.melee-weapons .weapons-table td:nth-child(3) { width: 10%; } /* Damage */
+.melee-weapons .weapons-table td:nth-child(3) { width: 10%; text-align: center; } /* Damage - centered */
 .melee-weapons .weapons-table th:nth-child(4),
 .melee-weapons .weapons-table td:nth-child(4) { width: 5%; text-align: center; } /* Size - smaller, centered */
 .melee-weapons .weapons-table th:nth-child(5),
@@ -1638,8 +1638,41 @@ select:focus {
 .melee-weapons .weapons-table td:nth-child(7) { width: 28%; } /* Weapon Traits - wider */
 
 .melee-weapons .weapons-table td:nth-child(2) input,
+.melee-weapons .weapons-table td:nth-child(3) input,
 .melee-weapons .weapons-table td:nth-child(4) input,
 .melee-weapons .weapons-table td:nth-child(6) input {
+  text-align: center;
+}
+
+/* Ranged Weapons Table Column Widths */
+.ranged-weapons .weapons-table th:nth-child(1),
+.ranged-weapons .weapons-table td:nth-child(1) { width: 16%; } /* Ranged Weapon name - larger */
+.ranged-weapons .weapons-table th:nth-child(2),
+.ranged-weapons .weapons-table td:nth-child(2) { width: 5%; text-align: center; } /* Hands - smaller, centered */
+.ranged-weapons .weapons-table th:nth-child(3),
+.ranged-weapons .weapons-table td:nth-child(3) { width: 8%; text-align: center; } /* Damage - centered */
+.ranged-weapons .weapons-table th:nth-child(4),
+.ranged-weapons .weapons-table td:nth-child(4) { width: 6%; text-align: center; } /* Damage Mod Y/N - smaller, centered */
+.ranged-weapons .weapons-table th:nth-child(5),
+.ranged-weapons .weapons-table td:nth-child(5) { width: 10%; text-align: center; } /* Range - smaller, centered */
+.ranged-weapons .weapons-table th:nth-child(6),
+.ranged-weapons .weapons-table td:nth-child(6) { width: 5%; text-align: center; } /* Load - smaller, centered */
+.ranged-weapons .weapons-table th:nth-child(7),
+.ranged-weapons .weapons-table td:nth-child(7) { width: 20%; } /* Special Effects - larger */
+.ranged-weapons .weapons-table th:nth-child(8),
+.ranged-weapons .weapons-table td:nth-child(8) { width: 6%; text-align: center; } /* Impale Size - centered */
+.ranged-weapons .weapons-table th:nth-child(9),
+.ranged-weapons .weapons-table td:nth-child(9) { width: 6%; text-align: center; } /* AP/HP - smaller, centered */
+.ranged-weapons .weapons-table th:nth-child(10),
+.ranged-weapons .weapons-table td:nth-child(10) { width: 18%; } /* Traits - larger */
+
+.ranged-weapons .weapons-table td:nth-child(2) input,
+.ranged-weapons .weapons-table td:nth-child(3) input,
+.ranged-weapons .weapons-table td:nth-child(4) input,
+.ranged-weapons .weapons-table td:nth-child(5) input,
+.ranged-weapons .weapons-table td:nth-child(6) input,
+.ranged-weapons .weapons-table td:nth-child(8) input,
+.ranged-weapons .weapons-table td:nth-child(9) input {
   text-align: center;
 }
 
