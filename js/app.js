@@ -170,7 +170,7 @@ const App = {
         // Add blur listener for class fields to update combat skill name
         if (classFields.includes(fieldId)) {
           field.addEventListener('blur', () => {
-            this.updateCombatSkillName();
+            this.updateCombatSkillName(true); // Force update when classes change
             this.scheduleAutoSave();
           });
         }
@@ -1627,32 +1627,18 @@ const App = {
   /**
    * Update combat skill name from class fields
    * Combines Primary/Secondary/Tertiary classes with "/" separator
+   * @param {boolean} forceUpdate - If true, overwrites existing value (used when classes change)
    */
-  updateCombatSkillName() {
-    console.log('updateCombatSkillName called');
+  updateCombatSkillName(forceUpdate = false) {
     const primaryClass = document.getElementById('class-primary');
     const secondaryClass = document.getElementById('class-secondary');
     const tertiaryClass = document.getElementById('class-tertiary');
     const combatSkillName = document.getElementById('combat-skill-1-name');
     
-    console.log('Fields found:', { primaryClass, secondaryClass, tertiaryClass, combatSkillName });
-    console.log('Values:', { 
-      primary: primaryClass?.value, 
-      secondary: secondaryClass?.value, 
-      tertiary: tertiaryClass?.value,
-      combatSkill: combatSkillName?.value 
-    });
+    if (!combatSkillName) return;
     
-    if (!combatSkillName) {
-      console.log('No combat skill name field found');
-      return;
-    }
-    
-    // Only auto-fill if the field is empty
-    if (combatSkillName.value.trim()) {
-      console.log('Combat skill name already has value, skipping');
-      return;
-    }
+    // Only auto-fill if the field is empty, unless forceUpdate is true
+    if (!forceUpdate && combatSkillName.value.trim()) return;
     
     const classes = [];
     if (primaryClass && primaryClass.value.trim()) {
@@ -1665,11 +1651,11 @@ const App = {
       classes.push(tertiaryClass.value.trim());
     }
     
-    console.log('Classes array:', classes);
-    
     if (classes.length > 0) {
       combatSkillName.value = classes.join('/');
-      console.log('Set combat skill name to:', combatSkillName.value);
+    } else if (forceUpdate) {
+      // Clear if all classes are empty and we're forcing update
+      combatSkillName.value = '';
     }
   },
 
