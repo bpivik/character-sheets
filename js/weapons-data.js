@@ -311,6 +311,125 @@ function getClassWeapons(className) {
   return CLASS_WEAPONS_DATA[key] || null;
 }
 
+// Basic melee weapons list (for reference when combining)
+const BASIC_MELEE_WEAPONS = [
+  'club', 'dagger', 'great club', 'greatclub', 'hand axe', 'handaxe', 'hatchet', 
+  'longspear', 'mace', 'heavy mace', 'mace, heavy', 'morning star', 'morningstar',
+  'quarterstaff', 'bo stick', 'shortspear', 'sickle', 
+  'stone axe', 'stone greataxe', 'stone hatchet', 'stone knife', 'stone shortspear', 'stone sickle'
+];
+
+// Martial melee weapons list
+const MARTIAL_MELEE_WEAPONS = [
+  'ball & chain', 'ball and chain', 'bastard sword', 'battleaxe', 'battle axe', 'bill',
+  'broadsword', 'chain', 'falchion', 'flail', 'heavy flail', 'flail, heavy',
+  'garrote', 'glaive', 'rhomphaia', 'great axe', 'greataxe', 'great hammer', 'greathammer',
+  'great sword', 'greatsword', 'halberd', 'poleaxe', 'horseman\'s flail', 'horseman\'s mace',
+  'horseman\'s military pick', 'jo stick', 'knife', 'lance', 'longsword', 'long sword',
+  'main gauche', 'military pick', 'heavy military pick', 'military pick, heavy',
+  'net', 'pike', 'sarissa', 'rapier', 'saber', 'scimitar', 'shortsword', 'short sword',
+  'trident', 'war hammer', 'warhammer', 'whip', 'xyston'
+];
+
+// Shield types
+const SHIELDS = ['buckler', 'heater', 'kite', 'tower', 'wooden shield', 'target'];
+
+// Ranged weapons
+const RANGED_WEAPONS = [
+  'bow', 'shortbow', 'longbow', 'crossbow', 'light crossbow', 'heavy crossbow', 
+  'hand crossbow', 'sling', 'dart', 'javelin', 'atlatl', 'staff sling'
+];
+
+/**
+ * Parse a weapons string into categories and specific weapons
+ */
+function parseWeaponsString(weaponsStr) {
+  const result = {
+    allWeapons: false,
+    allMelee: false,
+    allBasicMelee: false,
+    allShields: false,
+    allShieldsExceptTower: false,
+    specificWeapons: [],
+    specificShields: [],
+    ranged: [],
+    restrictions: []
+  };
+  
+  if (!weaponsStr) return result;
+  
+  const lower = weaponsStr.toLowerCase();
+  
+  // Check for broad categories
+  if (lower.includes('all armor, weapons, and shields') || lower.includes('all weapons and shields')) {
+    result.allWeapons = true;
+    result.allShields = true;
+    return result;
+  }
+  
+  if (lower.includes('all melee weapons')) {
+    result.allMelee = true;
+  }
+  
+  if (lower.includes('all basic melee weapons')) {
+    result.allBasicMelee = true;
+  }
+  
+  if (lower.includes('all shields (except tower)')) {
+    result.allShieldsExceptTower = true;
+  } else if (lower.includes('all shields')) {
+    result.allShields = true;
+  }
+  
+  // Check for restrictions
+  if (lower.includes('no ranged weapons')) {
+    result.restrictions.push('no ranged');
+  }
+  if (lower.includes('no polearms')) {
+    result.restrictions.push('no polearms');
+  }
+  if (lower.includes('no two-handed weapons')) {
+    result.restrictions.push('no two-handed');
+  }
+  
+  // Parse individual weapons - split by commas and "and"
+  const weaponsList = weaponsStr
+    .replace(/\.$/, '')
+    .replace(/ and /gi, ', ')
+    .replace(/ plus /gi, ', ')
+    .split(',')
+    .map(w => w.trim().toLowerCase())
+    .filter(w => w && w.length > 1);
+  
+  weaponsList.forEach(weapon => {
+    // Skip category phrases
+    if (weapon.includes('all ') || weapon.includes('only') || weapon.includes('no ')) return;
+    
+    // Check if it's a shield
+    if (SHIELDS.some(s => weapon.includes(s))) {
+      if (!result.specificShields.includes(weapon)) {
+        result.specificShields.push(weapon);
+      }
+      return;
+    }
+    
+    // Check if it's ranged
+    if (RANGED_WEAPONS.some(r => weapon.includes(r))) {
+      if (!result.ranged.includes(weapon)) {
+        result.ranged.push(weapon);
+      }
+      return;
+    }
+    
+    // It's a melee weapon
+    if (!result.specificWeapons.includes(weapon)) {
+      result.specificWeapons.push(weapon);
+    }
+  });
+  
+  return result;
+}
+
 /**
  * Combine weapons from multiple classes
  * @param {string[]} classes - Array of class names
@@ -320,35 +439,94 @@ function combineClassWeapons(classes) {
   if (!classes || classes.length === 0) return '';
   
   // Filter out empty classes and get their weapons
-  const classWeapons = classes
-    .filter(c => c && c.trim())
-    .map(c => ({
-      name: c.trim(),
-      weapons: getClassWeapons(c)
-    }))
-    .filter(c => c.weapons);
+  const validClasses = classes.filter(c => c && c.trim());
   
-  if (classWeapons.length === 0) return '';
+  if (validClasses.length === 0) return '';
   
   // If only one class, just return its weapons
-  if (classWeapons.length === 1) {
-    return classWeapons[0].weapons;
+  if (validClasses.length === 1) {
+    return getClassWeapons(validClasses[0]) || '';
   }
   
-  // Check if any class has "All armor, weapons, and shields" or "All weapons and shields"
-  const allWeaponsClass = classWeapons.find(c => 
-    c.weapons.toLowerCase().includes('all armor, weapons, and shields') ||
-    c.weapons.toLowerCase() === 'all weapons and shields.'
-  );
+  // Parse each class's weapons
+  const parsedList = validClasses.map(c => ({
+    name: c.trim(),
+    weapons: getClassWeapons(c),
+    parsed: parseWeaponsString(getClassWeapons(c))
+  })).filter(c => c.weapons);
   
-  if (allWeaponsClass) {
-    return allWeaponsClass.weapons;
+  if (parsedList.length === 0) return '';
+  
+  // Combine the parsed results
+  const combined = {
+    allWeapons: false,
+    allMelee: false,
+    allBasicMelee: false,
+    allShields: false,
+    allShieldsExceptTower: false,
+    specificWeapons: new Set(),
+    ranged: new Set(),
+    restrictions: []
+  };
+  
+  parsedList.forEach(p => {
+    if (p.parsed.allWeapons) combined.allWeapons = true;
+    if (p.parsed.allMelee) combined.allMelee = true;
+    if (p.parsed.allBasicMelee) combined.allBasicMelee = true;
+    if (p.parsed.allShields) combined.allShields = true;
+    if (p.parsed.allShieldsExceptTower) combined.allShieldsExceptTower = true;
+    
+    p.parsed.specificWeapons.forEach(w => combined.specificWeapons.add(w));
+    p.parsed.ranged.forEach(r => combined.ranged.add(r));
+  });
+  
+  // If someone has all weapons, that's the answer
+  if (combined.allWeapons) {
+    return "All weapons and shields.";
   }
   
-  // Otherwise, combine with class labels
-  return classWeapons
-    .map(c => `${c.name}: ${c.weapons}`)
-    .join(' | ');
+  // Build the output
+  const parts = [];
+  
+  // Melee section
+  if (combined.allMelee) {
+    parts.push("All melee weapons");
+  } else if (combined.allBasicMelee) {
+    // Filter out basic weapons from specific list, keep martial
+    const martialWeapons = [...combined.specificWeapons].filter(w => {
+      const isBasic = BASIC_MELEE_WEAPONS.some(b => w.includes(b) || b.includes(w));
+      return !isBasic;
+    });
+    
+    if (martialWeapons.length > 0) {
+      parts.push("All basic melee weapons, " + martialWeapons.join(', '));
+    } else {
+      parts.push("All basic melee weapons");
+    }
+  } else if (combined.specificWeapons.size > 0) {
+    parts.push([...combined.specificWeapons].join(', '));
+  }
+  
+  // Shields section
+  if (combined.allShields) {
+    parts.push("all shields");
+  } else if (combined.allShieldsExceptTower) {
+    parts.push("all shields (except Tower)");
+  }
+  
+  // Ranged section
+  if (combined.ranged.size > 0) {
+    parts.push([...combined.ranged].join(', '));
+  }
+  
+  // Capitalize first letter and add period
+  let result = parts.join('; ');
+  if (result) {
+    result = result.charAt(0).toUpperCase() + result.slice(1);
+    if (!result.endsWith('.')) result += '.';
+  }
+  
+  return result;
 }
 
 // Export for use in app.js
