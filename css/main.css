@@ -670,12 +670,13 @@ select:focus {
   border-color: var(--input-focus);
 }
 
-.derived-readonly {
+.derived-input.derived-readonly {
   background: rgba(255,255,255,0.5);
   color: var(--text-primary);
   font-weight: 600;
   cursor: default;
-  border-color: transparent;
+  border: 1px solid transparent;
+}
 }
 
 .derived-editable {
