@@ -153,8 +153,11 @@ const SKILL_GRADES = [
 // Number of spell slots per rank
 const SPELL_SLOTS_PER_RANK = 50;
 
-// Number of equipment slots
-const EQUIPMENT_SLOTS = 12;
+// Number of equipment slots (visible in scrollable area)
+const EQUIPMENT_SLOTS = 30;
+
+// Number of backpack slots
+const BACKPACK_SLOTS = 12;
 
 // Number of professional skill slots
 const PROFESSIONAL_SKILL_SLOTS = 15;

@@ -36,6 +36,8 @@ const App = {
     // Generate dynamic content
     this.generateProfessionalSkills();
     this.generateEquipmentRows();
+    this.generateBackpackRows();
+    this.setupBackpackModal();
     this.generateHitLocations();
     this.generateWeaponRows();
     this.generateSpecialAbilities();
@@ -479,6 +481,67 @@ const App = {
     }
   },
 
+  generateBackpackRows() {
+    const container = document.getElementById('backpack-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    for (let i = 0; i < BACKPACK_SLOTS; i++) {
+      const row = document.createElement('div');
+      row.className = 'equipment-row';
+      row.innerHTML = `
+        <input type="text" class="equipment-name" id="backpack-${i}-name" placeholder="">
+        <input type="number" class="equipment-enc" id="backpack-${i}-enc" placeholder="" step="0.1">
+      `;
+      container.appendChild(row);
+      
+      // Add event listeners for auto-save
+      row.querySelector('.equipment-name').addEventListener('input', () => {
+        this.scheduleAutoSave();
+      });
+      
+      row.querySelector('.equipment-enc').addEventListener('input', () => {
+        this.scheduleAutoSave();
+      });
+    }
+  },
+
+  setupBackpackModal() {
+    const openBtn = document.getElementById('btn-open-backpack');
+    const closeBtn = document.getElementById('btn-close-backpack');
+    const saveBtn = document.getElementById('btn-save-backpack');
+    const modal = document.getElementById('backpack-modal');
+    
+    if (openBtn && modal) {
+      openBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+      });
+    }
+    
+    if (closeBtn && modal) {
+      closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+    }
+    
+    if (saveBtn && modal) {
+      saveBtn.addEventListener('click', () => {
+        this.saveCharacter();
+        modal.classList.add('hidden');
+      });
+    }
+    
+    // Close modal when clicking outside
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+        }
+      });
+    }
+  },
+
   /**
    * Generate hit location rows based on sheet type
    */
@@ -745,6 +808,26 @@ const App = {
     if (encToggle) {
       encToggle.checked = !this.character.encAutomation;
     }
+    
+    // Equipment
+    if (this.character.equipment) {
+      this.character.equipment.forEach((item, i) => {
+        const nameInput = document.getElementById(`equip-${i}-name`);
+        const encInput = document.getElementById(`equip-${i}-enc`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (encInput && item.enc) encInput.value = item.enc;
+      });
+    }
+    
+    // Backpack
+    if (this.character.backpack) {
+      this.character.backpack.forEach((item, i) => {
+        const nameInput = document.getElementById(`backpack-${i}-name`);
+        const encInput = document.getElementById(`backpack-${i}-enc`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (encInput && item.enc) encInput.value = item.enc;
+      });
+    }
   },
 
   /**
@@ -753,6 +836,32 @@ const App = {
   collectFormData() {
     // This is called before save/export to ensure all data is captured
     // Most data is already saved via event listeners, but this catches anything missed
+    
+    // Equipment
+    this.character.equipment = [];
+    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
+      const nameInput = document.getElementById(`equip-${i}-name`);
+      const encInput = document.getElementById(`equip-${i}-enc`);
+      if (nameInput && encInput) {
+        this.character.equipment.push({
+          name: nameInput.value,
+          enc: encInput.value
+        });
+      }
+    }
+    
+    // Backpack
+    this.character.backpack = [];
+    for (let i = 0; i < BACKPACK_SLOTS; i++) {
+      const nameInput = document.getElementById(`backpack-${i}-name`);
+      const encInput = document.getElementById(`backpack-${i}-enc`);
+      if (nameInput && encInput) {
+        this.character.backpack.push({
+          name: nameInput.value,
+          enc: encInput.value
+        });
+      }
+    }
     
     // Alignments
     for (let i = 1; i <= 2; i++) {

@@ -625,7 +625,7 @@
                 <span class="header-item">Item</span>
                 <span class="header-enc">ENC</span>
               </div>
-              <div id="equipment-container">
+              <div id="equipment-container" class="equipment-scrollable">
                 <!-- Equipment rows are dynamically generated -->
               </div>
               <div class="enc-totals">
@@ -645,10 +645,37 @@
                 </div>
               </div>
             </section>
+            
+            <!-- Backpack Button -->
+            <button type="button" class="btn btn-backpack" id="btn-open-backpack">
+              Backpack
+            </button>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Backpack Modal Overlay -->
+    <div id="backpack-modal" class="modal-overlay hidden">
+      <div class="modal-content backpack-modal">
+        <div class="modal-header">
+          <h3>Backpack Contents</h3>
+          <button type="button" class="btn-modal-close" id="btn-close-backpack">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="equipment-header">
+            <span class="header-item">Item</span>
+            <span class="header-enc">ENC</span>
+          </div>
+          <div id="backpack-container">
+            <!-- Backpack rows are dynamically generated -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="btn-save-backpack">Save & Close</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ==================== PAGE 3: COMBAT ==================== -->
     <section id="page-combat" class="sheet-page page-combat">

@@ -102,6 +102,7 @@ const StorageManager = {
       
       // Equipment
       equipment: [],
+      backpack: [],
       encAutomation: true,
       
       // Combat
