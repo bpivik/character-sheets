@@ -46,8 +46,9 @@ const App = {
     // Populate form with loaded data
     this.populateForm();
     
-    // Update combat skill name from classes (if not already set)
+    // Update combat skill name and weapons from classes (if not already set)
     this.updateCombatSkillName();
+    this.updateWeaponsKnown();
     
     // Initial calculations
     this.recalculateAll();
@@ -167,10 +168,11 @@ const App = {
           this.scheduleAutoSave();
         });
         
-        // Add blur listener for class fields to update combat skill name
+        // Add blur listener for class fields to update combat skill name and weapons known
         if (classFields.includes(fieldId)) {
           field.addEventListener('blur', () => {
             this.updateCombatSkillName(true); // Force update when classes change
+            this.updateWeaponsKnown(true); // Force update when classes change
             this.scheduleAutoSave();
           });
         }
@@ -1656,6 +1658,44 @@ const App = {
     } else if (forceUpdate) {
       // Clear if all classes are empty and we're forcing update
       combatSkillName.value = '';
+    }
+  },
+
+  /**
+   * Update weapons known from class fields
+   * Combines weapons from all classes
+   * @param {boolean} forceUpdate - If true, overwrites existing value (used when classes change)
+   */
+  updateWeaponsKnown(forceUpdate = false) {
+    const primaryClass = document.getElementById('class-primary');
+    const secondaryClass = document.getElementById('class-secondary');
+    const tertiaryClass = document.getElementById('class-tertiary');
+    const weaponsKnown = document.getElementById('combat-skill-1-weapons');
+    
+    if (!weaponsKnown) return;
+    
+    // Only auto-fill if the field is empty, unless forceUpdate is true
+    if (!forceUpdate && weaponsKnown.value.trim()) return;
+    
+    // Check if WeaponData is available
+    if (!window.WeaponData || !window.WeaponData.combineClassWeapons) return;
+    
+    const classes = [];
+    if (primaryClass && primaryClass.value.trim()) {
+      classes.push(primaryClass.value.trim());
+    }
+    if (secondaryClass && secondaryClass.value.trim()) {
+      classes.push(secondaryClass.value.trim());
+    }
+    if (tertiaryClass && tertiaryClass.value.trim()) {
+      classes.push(tertiaryClass.value.trim());
+    }
+    
+    if (classes.length > 0) {
+      weaponsKnown.value = window.WeaponData.combineClassWeapons(classes);
+    } else if (forceUpdate) {
+      // Clear if all classes are empty and we're forcing update
+      weaponsKnown.value = '';
     }
   },
 

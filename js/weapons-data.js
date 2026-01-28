@@ -3,6 +3,22 @@
    Melee weapon autofill database
    ============================================ */
 
+// Class Weapons Proficiencies
+const CLASS_WEAPONS_DATA = {
+  "bard": "Bastard sword, broadsword, club, dagger, dart, falchion, javelin, knife, longsword, rapier, scimitar, shortsword, sling, spear, and staff.",
+  "berserker": "All armor, weapons, and shields.",
+  "cavalier": "All melee weapons and shields. No ranged weapons, polearms, or two-handed weapons.",
+  "cleric": "All shields (except Tower), all basic melee weapons.",
+  "druid": "Club, dagger, dart, hammer, sickle, scimitar, wooden shield, sling, spear, staff, staff sling, and whip.",
+  "fighter": "All armor, weapons, and shields.",
+  "mage": "Daggers, darts, slings, quarterstaffs, and light crossbows only.",
+  "monk": "Atlatl, bo stick, caltrop, club, crossbow, dagger, falchion, garrote, hatchet, javelin, jo stick, knife, polearm, quarterstaff, spear, and staff.",
+  "paladin": "All armor, weapons, and shields.",
+  "ranger": "All weapons and shields.",
+  "rogue": "All shields (except Tower), all basic melee weapons, plus hand crossbows, longswords, rapiers, and shortswords.",
+  "sorcerer": "Daggers, darts, slings, quarterstaffs, and light crossbows only."
+};
+
 // Weapon data format: [Hands, Damage, Size, Combat Effects, AP, HP, Traits]
 const MELEE_WEAPON_DATA = {
   "ball & chain": ["2H", "1d6+1", "M", "Bash, Entangle, Stun Location", 2, 6, "Flexible"],
@@ -284,11 +300,65 @@ function clearMeleeWeaponFields(index) {
   });
 }
 
+/**
+ * Get weapons proficiency for a single class
+ * @param {string} className - The class name
+ * @returns {string|null} - Weapons description or null if not found
+ */
+function getClassWeapons(className) {
+  if (!className) return null;
+  const key = className.trim().toLowerCase();
+  return CLASS_WEAPONS_DATA[key] || null;
+}
+
+/**
+ * Combine weapons from multiple classes
+ * @param {string[]} classes - Array of class names
+ * @returns {string} - Combined weapons description
+ */
+function combineClassWeapons(classes) {
+  if (!classes || classes.length === 0) return '';
+  
+  // Filter out empty classes and get their weapons
+  const classWeapons = classes
+    .filter(c => c && c.trim())
+    .map(c => ({
+      name: c.trim(),
+      weapons: getClassWeapons(c)
+    }))
+    .filter(c => c.weapons);
+  
+  if (classWeapons.length === 0) return '';
+  
+  // If only one class, just return its weapons
+  if (classWeapons.length === 1) {
+    return classWeapons[0].weapons;
+  }
+  
+  // Check if any class has "All armor, weapons, and shields" or "All weapons and shields"
+  const allWeaponsClass = classWeapons.find(c => 
+    c.weapons.toLowerCase().includes('all armor, weapons, and shields') ||
+    c.weapons.toLowerCase() === 'all weapons and shields.'
+  );
+  
+  if (allWeaponsClass) {
+    return allWeaponsClass.weapons;
+  }
+  
+  // Otherwise, combine with class labels
+  return classWeapons
+    .map(c => `${c.name}: ${c.weapons}`)
+    .join(' | ');
+}
+
 // Export for use in app.js
 window.WeaponData = {
   MELEE_WEAPON_DATA,
+  CLASS_WEAPONS_DATA,
   findWeaponKey,
   autofillMeleeWeapon,
   clearMeleeWeaponFields,
-  composeDamage
+  composeDamage,
+  getClassWeapons,
+  combineClassWeapons
 };
