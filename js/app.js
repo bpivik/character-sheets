@@ -191,6 +191,7 @@ const App = {
       input.addEventListener('input', (e) => {
         const skillKey = e.target.id.replace('-current', '');
         this.character.standardSkills[skillKey] = e.target.value;
+        this.updateCombatQuickRef();
         this.scheduleAutoSave();
       });
     });
@@ -206,6 +207,18 @@ const App = {
           } else {
             this.character.notes = e.target.value;
           }
+          this.scheduleAutoSave();
+        });
+      }
+    });
+    
+    // Combat skill inputs
+    const combatSkillFields = ['combat-skill-1-name', 'combat-skill-1-percent', 'combat-skill-1-weapons', 'unarmed-percent'];
+    combatSkillFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('input', () => {
+          this.updateCombatQuickRef();
           this.scheduleAutoSave();
         });
       }
@@ -1084,15 +1097,14 @@ const App = {
     }
     
     // Combat Skills
-    if (this.character.combat && this.character.combat.skills) {
-      this.character.combat.skills.forEach((skill, i) => {
-        const nameInput = document.getElementById(`combat-skill-${i}-name`);
-        const percentInput = document.getElementById(`combat-skill-${i}-percent`);
-        const weaponsInput = document.getElementById(`combat-skill-${i}-weapons`);
-        if (nameInput && skill.name) nameInput.value = skill.name;
-        if (percentInput && skill.percent) percentInput.value = skill.percent;
-        if (weaponsInput && skill.weapons) weaponsInput.value = skill.weapons;
-      });
+    if (this.character.combat && this.character.combat.skills && this.character.combat.skills[0]) {
+      const skill = this.character.combat.skills[0];
+      const nameInput = document.getElementById('combat-skill-1-name');
+      const percentInput = document.getElementById('combat-skill-1-percent');
+      const weaponsInput = document.getElementById('combat-skill-1-weapons');
+      if (nameInput && skill.name) nameInput.value = skill.name;
+      if (percentInput && skill.percent) percentInput.value = skill.percent;
+      if (weaponsInput && skill.weapons) weaponsInput.value = skill.weapons;
     }
     
     // Unarmed
@@ -1311,17 +1323,15 @@ const App = {
     
     // Combat Skills
     this.character.combat.skills = [];
-    for (let i = 0; i < 2; i++) {
-      const nameInput = document.getElementById(`combat-skill-${i}-name`);
-      const percentInput = document.getElementById(`combat-skill-${i}-percent`);
-      const weaponsInput = document.getElementById(`combat-skill-${i}-weapons`);
-      if (nameInput) {
-        this.character.combat.skills.push({
-          name: nameInput?.value || '',
-          percent: percentInput?.value || '',
-          weapons: weaponsInput?.value || ''
-        });
-      }
+    const nameInput = document.getElementById('combat-skill-1-name');
+    const percentInput = document.getElementById('combat-skill-1-percent');
+    const weaponsInput = document.getElementById('combat-skill-1-weapons');
+    if (nameInput) {
+      this.character.combat.skills.push({
+        name: nameInput?.value || '',
+        percent: percentInput?.value || '',
+        weapons: weaponsInput?.value || ''
+      });
     }
     
     // Unarmed
@@ -1572,17 +1582,22 @@ const App = {
       combatAP.textContent = (apCurrent && apCurrent.value) ? apCurrent.value : (apOrig ? apOrig.value : '');
     }
     
-    // Combat-relevant skills
+    // Combat Skill from combat page
+    const combatSkillRef = document.getElementById('combat-skill-ref');
+    const combatSkillPercent = document.getElementById('combat-skill-1-percent');
+    if (combatSkillRef && combatSkillPercent) {
+      combatSkillRef.textContent = combatSkillPercent.value ? `${combatSkillPercent.value}%` : '-';
+    }
+    
+    // Combat-relevant skills - show the user's entered % value from Character page
     const skillRefs = ['athletics', 'brawn', 'endurance', 'evade', 'perception', 'stealth', 'swim', 'willpower'];
     skillRefs.forEach(skill => {
       const refItem = document.getElementById(`ref-${skill}`);
       const skillInput = document.getElementById(`${skill}-current`);
-      const skillBase = document.getElementById(`${skill}-base`);
-      if (refItem && skillInput && skillBase) {
-        const total = parseInt(skillBase.textContent) + (parseInt(skillInput.value) || 0);
+      if (refItem) {
         const valueSpan = refItem.querySelector('.ref-skill-value');
         if (valueSpan) {
-          valueSpan.textContent = `${total}%`;
+          valueSpan.textContent = skillInput && skillInput.value ? `${skillInput.value}%` : '-';
         }
       }
     });
