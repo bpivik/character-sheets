@@ -852,9 +852,23 @@ select:focus {
 }
 
 /* Belief Rows (Alignment, Passion, Oath) */
+.alignment-section .section-subheader,
+.passion-section .section-subheader,
+.oath-section .section-subheader {
+  display: grid;
+  grid-template-columns: 1fr 80px 55px 60px;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr 70px 55px 60px;
+  grid-template-columns: 1fr 80px 55px 60px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
