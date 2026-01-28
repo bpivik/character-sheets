@@ -547,6 +547,10 @@ select:focus {
   gap: 1.5rem;
 }
 
+.column-center {
+  max-width: 320px;
+}
+
 .column-right {
   display: flex;
   flex-direction: column;
@@ -735,7 +739,7 @@ select:focus {
 .oath-section,
 .language-section {
   background: rgba(255,255,255,0.2);
-  padding: 1.25rem;
+  padding: 0.75rem;
   border: 1px solid var(--border-light);
   border-radius: 8px;
 }
@@ -834,11 +838,11 @@ select:focus {
 /* Belief Rows (Alignment, Passion, Oath) */
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr 90px 60px 60px;
+  grid-template-columns: 1fr 70px 45px 45px;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0;
-  font-size: 1.1rem;
+  gap: 0.3rem;
+  padding: 0.3rem 0;
+  font-size: 1rem;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -847,8 +851,8 @@ select:focus {
 }
 
 .belief-name {
-  padding: 0.4rem 0.5rem;
-  font-size: 1.1rem;
+  padding: 0.3rem 0.4rem;
+  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   border-radius: 4px;
@@ -860,7 +864,7 @@ select:focus {
 }
 
 .belief-formula {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   text-align: right;
 }
