@@ -855,8 +855,8 @@ select:focus {
 .alignment-section .section-subheader,
 .passion-section .section-subheader,
 .oath-section .section-subheader {
-  display: grid;
-  grid-template-columns: 1fr 80px 55px 60px;
+  display: grid !important;
+  grid-template-columns: 1fr 80px 55px 60px !important;
   gap: 0.5rem;
   font-size: 0.85rem;
   font-weight: 600;
