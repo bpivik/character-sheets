@@ -238,6 +238,8 @@ function composeDamage(baseDamage) {
  */
 function autofillMeleeWeapon(index, weaponName) {
   if (!weaponName || weaponName.trim() === '') {
+    // Clear all fields when name is emptied
+    clearMeleeWeaponFields(index);
     return false;
   }
   
