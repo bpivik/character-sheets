@@ -269,12 +269,20 @@ function findWeaponKey(userText) {
 
 /**
  * Get character's damage modifier
+ * Reads from damage-mod-current if set, otherwise damage-mod-original
  */
 function getDamageMod() {
-  const dmgModSpan = document.getElementById('damage-mod');
-  if (!dmgModSpan) return '';
+  // First check current (user override), then original (calculated)
+  const dmgCurrent = document.getElementById('damage-mod-current');
+  const dmgOriginal = document.getElementById('damage-mod-original');
   
-  let t = (dmgModSpan.textContent || '').trim();
+  let t = '';
+  if (dmgCurrent && dmgCurrent.value.trim()) {
+    t = dmgCurrent.value.trim();
+  } else if (dmgOriginal && dmgOriginal.value.trim()) {
+    t = dmgOriginal.value.trim();
+  }
+  
   if (!t) return '';
   
   // Collapse spaces
@@ -326,12 +334,16 @@ function autofillMeleeWeapon(index, weaponName) {
   const aphpInput = document.getElementById(`melee-${index}-aphp`);
   const traitsInput = document.getElementById(`melee-${index}-traits`);
   
-  const composedDamage = composeDamage(data[1]);
+  const baseDamage = data[1];
+  const composedDamage = composeDamage(baseDamage);
   const aphpValue = `${data[4]}/${data[5]}`;
   
   // Fill fields (only if empty)
   if (handsInput && !handsInput.value.trim()) handsInput.value = data[0];
-  if (damageInput && !damageInput.value.trim()) damageInput.value = composedDamage;
+  if (damageInput && !damageInput.value.trim()) {
+    damageInput.value = composedDamage;
+    damageInput.dataset.baseDamage = baseDamage; // Store base damage for recalculation
+  }
   if (sizeInput && !sizeInput.value.trim()) sizeInput.value = data[2];
   if (effectsInput && !effectsInput.value.trim()) effectsInput.value = data[3];
   if (aphpInput && !aphpInput.value.trim()) aphpInput.value = aphpValue;
@@ -348,7 +360,12 @@ function clearMeleeWeaponFields(index) {
   const fields = ['hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
   fields.forEach(field => {
     const input = document.getElementById(`melee-${index}-${field}`);
-    if (input) input.value = '';
+    if (input) {
+      input.value = '';
+      if (field === 'damage') {
+        delete input.dataset.baseDamage;
+      }
+    }
   });
 }
 
@@ -654,17 +671,21 @@ function autofillRangedWeapon(index, weaponName) {
   const aphpInput = document.getElementById(`ranged-${index}-aphp`);
   const traitsInput = document.getElementById(`ranged-${index}-traits`);
   
+  const baseDamage = data[1];
   // For ranged weapons, only add damage mod if D.M. = "Y"
-  let finalDamage = data[1];
+  let finalDamage = baseDamage;
   if (data[2] === 'Y') {
-    finalDamage = composeDamage(data[1]);
+    finalDamage = composeDamage(baseDamage);
   }
   
   const aphpValue = `${data[7]}/${data[8]}`;
   
   // Fill fields (only if empty)
   if (handsInput && !handsInput.value.trim()) handsInput.value = data[0];
-  if (damageInput && !damageInput.value.trim()) damageInput.value = finalDamage;
+  if (damageInput && !damageInput.value.trim()) {
+    damageInput.value = finalDamage;
+    damageInput.dataset.baseDamage = baseDamage; // Store base damage for recalculation
+  }
   if (dmInput && !dmInput.value.trim()) dmInput.value = data[2];
   if (rangeInput && !rangeInput.value.trim()) rangeInput.value = data[3];
   if (loadInput && !loadInput.value.trim()) loadInput.value = data[4];
@@ -684,8 +705,42 @@ function clearRangedWeaponFields(index) {
   const fields = ['hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
   fields.forEach(field => {
     const input = document.getElementById(`ranged-${index}-${field}`);
-    if (input) input.value = '';
+    if (input) {
+      input.value = '';
+      if (field === 'damage') {
+        delete input.dataset.baseDamage;
+      }
+    }
   });
+}
+
+/**
+ * Update all weapon damage displays based on current damage modifier
+ * Called when damage modifier changes on Character page
+ */
+function updateAllWeaponDamage() {
+  // Update melee weapons (always add damage modifier)
+  for (let i = 0; i < 6; i++) {
+    const damageInput = document.getElementById(`melee-${i}-damage`);
+    if (damageInput && damageInput.dataset.baseDamage) {
+      damageInput.value = composeDamage(damageInput.dataset.baseDamage);
+    }
+  }
+  
+  // Update ranged weapons (only if D.M. = Y)
+  for (let i = 0; i < 5; i++) {
+    const damageInput = document.getElementById(`ranged-${i}-damage`);
+    const dmInput = document.getElementById(`ranged-${i}-dm`);
+    
+    if (damageInput && damageInput.dataset.baseDamage) {
+      const useDamageMod = dmInput && dmInput.value.toUpperCase() === 'Y';
+      if (useDamageMod) {
+        damageInput.value = composeDamage(damageInput.dataset.baseDamage);
+      } else {
+        damageInput.value = damageInput.dataset.baseDamage;
+      }
+    }
+  }
 }
 
 // Export for use in app.js
@@ -701,5 +756,6 @@ window.WeaponData = {
   clearRangedWeaponFields,
   composeDamage,
   getClassWeapons,
-  combineClassWeapons
+  combineClassWeapons,
+  updateAllWeaponDamage
 };

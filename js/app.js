@@ -92,12 +92,19 @@ const App = {
     selector.value = this.sheetType;
     
     selector.addEventListener('change', (e) => {
+      // Save current hit location data before regenerating
+      this.saveHitLocationsToCharacter();
+      
       this.sheetType = e.target.value;
       this.character.sheetType = this.sheetType;
       document.getElementById('app').dataset.sheetType = this.sheetType;
       
       // Regenerate hit locations for new type
       this.generateHitLocations();
+      
+      // Restore hit location data
+      this.loadHitLocationsFromCharacter();
+      
       this.recalculateAll();
       this.scheduleAutoSave();
     });
@@ -198,6 +205,13 @@ const App = {
           const key = this.camelCase(fieldId);
           this.character.derived[key] = e.target.value;
           this.scheduleAutoSave();
+          
+          // Update weapon damages when damage modifier changes
+          if (fieldId === 'damage-mod-current') {
+            if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+              window.WeaponData.updateAllWeaponDamage();
+            }
+          }
         });
       }
     });
@@ -768,6 +782,51 @@ const App = {
   },
 
   /**
+   * Save hit locations data to character object
+   */
+  saveHitLocationsToCharacter() {
+    if (!this.character.combat) this.character.combat = {};
+    this.character.combat.hitLocations = [];
+    
+    // Save up to 9 locations (max for syrin)
+    for (let i = 0; i < 9; i++) {
+      const armorInput = document.getElementById(`loc-${i}-armor`);
+      const apInput = document.getElementById(`loc-${i}-ap`);
+      const hpInput = document.getElementById(`loc-${i}-hp`);
+      const currentInput = document.getElementById(`loc-${i}-current`);
+      
+      // Only save if we found at least the HP input (always exists)
+      if (hpInput || currentInput) {
+        this.character.combat.hitLocations.push({
+          armor: armorInput?.value || '',
+          ap: apInput?.value || '',
+          hp: hpInput?.value || '',
+          current: currentInput?.value || ''
+        });
+      }
+    }
+  },
+
+  /**
+   * Load hit locations data from character object
+   */
+  loadHitLocationsFromCharacter() {
+    if (!this.character.combat || !this.character.combat.hitLocations) return;
+    
+    this.character.combat.hitLocations.forEach((loc, i) => {
+      const armorInput = document.getElementById(`loc-${i}-armor`);
+      const apInput = document.getElementById(`loc-${i}-ap`);
+      const hpInput = document.getElementById(`loc-${i}-hp`);
+      const currentInput = document.getElementById(`loc-${i}-current`);
+      
+      if (armorInput && loc.armor) armorInput.value = loc.armor;
+      if (apInput && loc.ap) apInput.value = loc.ap;
+      if (hpInput && loc.hp !== undefined && loc.hp !== '') hpInput.value = loc.hp;
+      if (currentInput && loc.current) currentInput.value = loc.current;
+    });
+  },
+
+  /**
    * Generate weapon table rows
    */
   generateWeaponRows() {
@@ -1176,6 +1235,10 @@ const App = {
         fields.forEach(field => {
           const input = document.getElementById(`melee-${i}-${field}`);
           if (input && weapon[field]) input.value = weapon[field];
+          // Restore baseDamage data attribute for damage field
+          if (field === 'damage' && input && weapon.baseDamage) {
+            input.dataset.baseDamage = weapon.baseDamage;
+          }
         });
       });
     }
@@ -1187,6 +1250,10 @@ const App = {
         fields.forEach(field => {
           const input = document.getElementById(`ranged-${i}-${field}`);
           if (input && weapon[field]) input.value = weapon[field];
+          // Restore baseDamage data attribute for damage field
+          if (field === 'damage' && input && weapon.baseDamage) {
+            input.dataset.baseDamage = weapon.baseDamage;
+          }
         });
       });
     }
@@ -1404,6 +1471,10 @@ const App = {
       fields.forEach(field => {
         const input = document.getElementById(`melee-${i}-${field}`);
         weapon[field] = input?.value || '';
+        // Save baseDamage data attribute for damage field
+        if (field === 'damage' && input?.dataset?.baseDamage) {
+          weapon.baseDamage = input.dataset.baseDamage;
+        }
       });
       this.character.combat.meleeWeapons.push(weapon);
     }
@@ -1416,6 +1487,10 @@ const App = {
       fields.forEach(field => {
         const input = document.getElementById(`ranged-${i}-${field}`);
         weapon[field] = input?.value || '';
+        // Save baseDamage data attribute for damage field
+        if (field === 'damage' && input?.dataset?.baseDamage) {
+          weapon.baseDamage = input.dataset.baseDamage;
+        }
       });
       this.character.combat.rangedWeapons.push(weapon);
     }
@@ -1592,6 +1667,11 @@ const App = {
     
     // Update total ENC
     this.updateTotalEnc();
+    
+    // Update weapon damages with current damage modifier
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
   },
 
   /**
