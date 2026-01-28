@@ -510,7 +510,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: sticky;
+  top: 80px;
   align-self: start;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
 }
 
 /* ============================================
@@ -949,12 +953,13 @@ body {
   border-radius: 8px;
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .equipment-header {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
@@ -969,13 +974,13 @@ body {
 }
 
 .header-enc {
-  width: 50px;
+  width: 60px;
   text-align: center;
 }
 
 #equipment-container {
   overflow-y: auto;
-  max-height: 400px;
+  flex: 1;
 }
 
 .equipment-row {
