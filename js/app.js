@@ -1629,15 +1629,30 @@ const App = {
    * Combines Primary/Secondary/Tertiary classes with "/" separator
    */
   updateCombatSkillName() {
+    console.log('updateCombatSkillName called');
     const primaryClass = document.getElementById('class-primary');
     const secondaryClass = document.getElementById('class-secondary');
     const tertiaryClass = document.getElementById('class-tertiary');
     const combatSkillName = document.getElementById('combat-skill-1-name');
     
-    if (!combatSkillName) return;
+    console.log('Fields found:', { primaryClass, secondaryClass, tertiaryClass, combatSkillName });
+    console.log('Values:', { 
+      primary: primaryClass?.value, 
+      secondary: secondaryClass?.value, 
+      tertiary: tertiaryClass?.value,
+      combatSkill: combatSkillName?.value 
+    });
+    
+    if (!combatSkillName) {
+      console.log('No combat skill name field found');
+      return;
+    }
     
     // Only auto-fill if the field is empty
-    if (combatSkillName.value.trim()) return;
+    if (combatSkillName.value.trim()) {
+      console.log('Combat skill name already has value, skipping');
+      return;
+    }
     
     const classes = [];
     if (primaryClass && primaryClass.value.trim()) {
@@ -1650,8 +1665,11 @@ const App = {
       classes.push(tertiaryClass.value.trim());
     }
     
+    console.log('Classes array:', classes);
+    
     if (classes.length > 0) {
       combatSkillName.value = classes.join('/');
+      console.log('Set combat skill name to:', combatSkillName.value);
     }
   },
 
