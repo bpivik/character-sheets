@@ -535,7 +535,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 570px 1fr 320px;
+  grid-template-columns: 490px 1fr 320px;
   gap: 1.5rem;
   align-items: start;
 }
@@ -585,7 +585,7 @@ select:focus {
 }
 
 .attributes-section.core-attributes {
-  width: 300px;
+  width: 220px;
   flex-shrink: 0;
 }
 
@@ -595,9 +595,10 @@ select:focus {
 }
 
 .attributes-section .section-header {
-  font-size: 1.05rem;
-  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.4rem;
   margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
 }
 
 .attributes-section.core-attributes .attribute-row {
