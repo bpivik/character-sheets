@@ -41,8 +41,19 @@ const StorageManager = {
         expRolls: ''
       },
       
-      // Attributes
+      // Attributes (original values)
       attributes: {
+        STR: '',
+        CON: '',
+        SIZ: '',
+        DEX: '',
+        INT: '',
+        POW: '',
+        CHA: ''
+      },
+      
+      // Attributes (current values - for temporary changes)
+      attributesCurrent: {
         STR: '',
         CON: '',
         SIZ: '',
@@ -55,6 +66,7 @@ const StorageManager = {
       // Derived Stats (some are editable)
       derived: {
         movementBase: '20',
+        movementCurrent: '',
         actionPointsOriginal: '',
         actionPointsCurrent: '',
         damageModOriginal: '',
@@ -72,8 +84,8 @@ const StorageManager = {
         tenacityCurrent: ''
       },
       
-      // Whether derived original values are locked (user-edited)
-      derivedLocked: false,
+      // Whether original values are locked (user-edited)
+      originalsLocked: false,
       
       // Standard Skills (current values - base is calculated)
       standardSkills: {},

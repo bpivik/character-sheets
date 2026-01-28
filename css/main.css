@@ -607,12 +607,30 @@ select:focus {
   margin-bottom: 0.5rem;
 }
 
+/* Characteristics header row */
+.characteristics-header {
+  display: grid;
+  grid-template-columns: 55px 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.char-header-orig,
+.char-header-curr {
+  text-align: center;
+}
+
 .attributes-section.core-attributes .attribute-row {
   display: grid;
-  grid-template-columns: 55px 1fr;
+  grid-template-columns: 55px 1fr 1fr;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.4rem 0;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -622,20 +640,33 @@ select:focus {
 
 .attribute-label {
   font-family: var(--font-header);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-header);
 }
 
 .attribute-input {
   width: 100%;
-  padding: 0.5rem;
-  font-size: 1.2rem;
+  padding: 0.35rem;
+  font-size: 1rem;
   font-weight: 600;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   border-radius: 4px;
+}
+
+.attribute-input.char-original {
+  background: rgba(255,255,255,0.5);
+  color: var(--text-primary);
+  cursor: default;
+  border: 1px solid transparent;
+}
+
+.attribute-input.char-original.editable {
+  background: var(--input-bg);
+  border: 1px solid var(--btn-primary-bg);
+  cursor: text;
 }
 
 /* Derived Attributes Box */
@@ -681,11 +712,37 @@ select:focus {
   border: 1px solid transparent !important;
 }
 
-/* Remove spinner buttons from all number inputs */
-.derived-editable {
-  background: var(--input-bg);
-  border-color: var(--btn-primary-bg);
+.derived-input.derived-editable {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--btn-primary-bg) !important;
   cursor: text;
+}
+
+/* Unlock Button Row */
+.unlock-button-row {
+  margin-top: 0.75rem;
+}
+
+.btn-unlock {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-unlock:hover {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0.2));
+  border-color: var(--text-header);
+}
+
+.btn-unlock.unlocked {
+  background: linear-gradient(to bottom, rgba(180, 80, 80, 0.3), rgba(180, 80, 80, 0.1));
+  border-color: var(--accent-rust);
 }
 
 .btn-small {
@@ -703,43 +760,6 @@ select:focus {
   outline: none;
   border-color: var(--input-focus);
   box-shadow: 0 0 0 2px rgba(74, 60, 42, 0.2);
-}
-  cursor: text;
-}
-
-.btn-small {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.85rem;
-  margin-top: 0.75rem;
-}
-
-.btn-warning {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.movement-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding-top: 0.5rem;
-  margin-top: 0.25rem;
-  border-top: 1px solid var(--border-gold);
-}
-
-.movement-label {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.movement-input {
-  width: 55px;
-  padding: 0.35rem;
-  font-size: 1rem;
-  text-align: center;
-  border: 1px solid var(--input-border);
-  background: var(--input-bg);
-  border-radius: 4px;
 }
 
 /* ============================================

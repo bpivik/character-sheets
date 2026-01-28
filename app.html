@@ -203,37 +203,45 @@
               <!-- Core Attributes Box -->
               <section class="attributes-section core-attributes">
                 <h3 class="section-header">Characteristics</h3>
+                <div class="characteristics-header">
+                  <span></span>
+                  <span class="char-header-orig">Orig</span>
+                  <span class="char-header-curr">Curr</span>
+                </div>
                 <div class="attribute-row">
                   <label class="attribute-label">STR</label>
-                  <input type="number" id="str-value" class="attribute-input" data-attr="STR" placeholder="">
+                  <input type="number" id="str-original" class="attribute-input char-original" data-attr="STR" placeholder="" readonly>
+                  <input type="number" id="str-current" class="attribute-input char-current" data-attr="STR" placeholder="">
                 </div>
                 <div class="attribute-row">
                   <label class="attribute-label">CON</label>
-                  <input type="number" id="con-value" class="attribute-input" data-attr="CON" placeholder="">
+                  <input type="number" id="con-original" class="attribute-input char-original" data-attr="CON" placeholder="" readonly>
+                  <input type="number" id="con-current" class="attribute-input char-current" data-attr="CON" placeholder="">
                 </div>
                 <div class="attribute-row">
                   <label class="attribute-label">SIZ</label>
-                  <input type="number" id="siz-value" class="attribute-input" data-attr="SIZ" placeholder="">
+                  <input type="number" id="siz-original" class="attribute-input char-original" data-attr="SIZ" placeholder="" readonly>
+                  <input type="number" id="siz-current" class="attribute-input char-current" data-attr="SIZ" placeholder="">
                 </div>
                 <div class="attribute-row">
                   <label class="attribute-label">DEX</label>
-                  <input type="number" id="dex-value" class="attribute-input" data-attr="DEX" placeholder="">
+                  <input type="number" id="dex-original" class="attribute-input char-original" data-attr="DEX" placeholder="" readonly>
+                  <input type="number" id="dex-current" class="attribute-input char-current" data-attr="DEX" placeholder="">
                 </div>
                 <div class="attribute-row">
                   <label class="attribute-label">INT</label>
-                  <input type="number" id="int-value" class="attribute-input" data-attr="INT" placeholder="">
+                  <input type="number" id="int-original" class="attribute-input char-original" data-attr="INT" placeholder="" readonly>
+                  <input type="number" id="int-current" class="attribute-input char-current" data-attr="INT" placeholder="">
                 </div>
                 <div class="attribute-row">
                   <label class="attribute-label">POW</label>
-                  <input type="number" id="pow-value" class="attribute-input" data-attr="POW" placeholder="">
+                  <input type="number" id="pow-original" class="attribute-input char-original" data-attr="POW" placeholder="" readonly>
+                  <input type="number" id="pow-current" class="attribute-input char-current" data-attr="POW" placeholder="">
                 </div>
                 <div class="attribute-row">
                   <label class="attribute-label">CHA</label>
-                  <input type="number" id="cha-value" class="attribute-input" data-attr="CHA" placeholder="">
-                </div>
-                <div class="movement-row">
-                  <span class="movement-label">Movement</span>
-                  <input type="number" id="movement-base" class="movement-input" placeholder="20">
+                  <input type="number" id="cha-original" class="attribute-input char-original" data-attr="CHA" placeholder="" readonly>
+                  <input type="number" id="cha-current" class="attribute-input char-current" data-attr="CHA" placeholder="">
                 </div>
               </section>
               
@@ -275,8 +283,19 @@
                   <input type="number" id="magic-points-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="magic-points-current" class="derived-input" placeholder="">
                 </div>
-                <button type="button" id="edit-derived-btn" class="btn btn-small btn-secondary">Edit Original Values</button>
+                <div class="derived-row">
+                  <span class="derived-label">Movement</span>
+                  <input type="number" id="movement-original" class="derived-input derived-readonly" placeholder="20" readonly>
+                  <input type="number" id="movement-current" class="derived-input" placeholder="">
+                </div>
               </section>
+            </div>
+            
+            <!-- Unlock Button spanning both sections -->
+            <div class="unlock-button-row">
+              <button type="button" id="unlock-originals-btn" class="btn btn-unlock">
+                🔒 Unlock Original Attributes and Characteristics
+              </button>
             </div>
 
             <!-- Standard Skills Section -->
