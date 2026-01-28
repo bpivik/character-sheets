@@ -535,7 +535,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 400px 1fr 320px;
+  grid-template-columns: 450px 1fr 320px;
   gap: 1.5rem;
   align-items: start;
 }
@@ -547,8 +547,10 @@ select:focus {
   gap: 1.5rem;
 }
 
-.column-center {
-  max-width: 320px;
+.column-left .skills-section,
+.column-left .skill-grade-reference,
+.column-left .enc-penalty-note {
+  max-width: 446px;
 }
 
 .column-right {
@@ -566,8 +568,7 @@ select:focus {
    Attributes Section - Two Box Layout
    ============================================ */
 .attributes-row {
-  display: grid;
-  grid-template-columns: 150px 230px;
+  display: flex;
   gap: 1rem;
 }
 
@@ -576,6 +577,16 @@ select:focus {
   padding: 0.75rem;
   border: 1px solid var(--border-light);
   border-radius: 8px;
+}
+
+.attributes-section.core-attributes {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.attributes-section.derived-attributes {
+  width: 250px;
+  flex-shrink: 0;
 }
 
 .attributes-section .section-header {
@@ -622,9 +633,9 @@ select:focus {
 
 .derived-attributes .derived-row {
   display: grid;
-  grid-template-columns: 1fr 55px 55px;
+  grid-template-columns: 1fr 60px 60px;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   padding: 0.35rem 0;
   border-bottom: 1px solid var(--border-light);
 }
