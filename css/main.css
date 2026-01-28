@@ -1621,6 +1621,28 @@ select:focus {
   border-color: var(--input-focus);
 }
 
+/* Melee Weapons Table Column Widths */
+.melee-weapons .weapons-table th:nth-child(1),
+.melee-weapons .weapons-table td:nth-child(1) { width: 18%; } /* Melee Weapon name */
+.melee-weapons .weapons-table th:nth-child(2),
+.melee-weapons .weapons-table td:nth-child(2) { width: 6%; text-align: center; } /* Hands - smaller, centered */
+.melee-weapons .weapons-table th:nth-child(3),
+.melee-weapons .weapons-table td:nth-child(3) { width: 10%; } /* Damage */
+.melee-weapons .weapons-table th:nth-child(4),
+.melee-weapons .weapons-table td:nth-child(4) { width: 5%; text-align: center; } /* Size - smaller, centered */
+.melee-weapons .weapons-table th:nth-child(5),
+.melee-weapons .weapons-table td:nth-child(5) { width: 25%; } /* Combat Special Effects - wider */
+.melee-weapons .weapons-table th:nth-child(6),
+.melee-weapons .weapons-table td:nth-child(6) { width: 8%; text-align: center; } /* AP/HP - smaller, centered */
+.melee-weapons .weapons-table th:nth-child(7),
+.melee-weapons .weapons-table td:nth-child(7) { width: 28%; } /* Weapon Traits - wider */
+
+.melee-weapons .weapons-table td:nth-child(2) input,
+.melee-weapons .weapons-table td:nth-child(4) input,
+.melee-weapons .weapons-table td:nth-child(6) input {
+  text-align: center;
+}
+
 /* Movement & Fatigue Grid */
 .movement-fatigue-grid {
   display: grid;

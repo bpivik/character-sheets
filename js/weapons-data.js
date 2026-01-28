@@ -237,23 +237,16 @@ function composeDamage(baseDamage) {
  * @param {string} weaponName - The name entered by user
  */
 function autofillMeleeWeapon(index, weaponName) {
-  console.log('autofillMeleeWeapon called:', index, weaponName);
-  
   if (!weaponName || weaponName.trim() === '') {
-    console.log('Empty weapon name, skipping');
     return false;
   }
   
   const resolvedKey = findWeaponKey(weaponName);
-  console.log('Resolved weapon key:', resolvedKey);
-  
   if (!resolvedKey || !(resolvedKey in MELEE_WEAPON_DATA)) {
-    console.log('No match found in weapon data');
     return false;
   }
   
   const data = MELEE_WEAPON_DATA[resolvedKey];
-  console.log('Weapon data:', data);
   // data format: [Hands, Damage, Size, Combat Effects, AP, HP, Traits]
   
   const handsInput = document.getElementById(`melee-${index}-hands`);
@@ -263,36 +256,16 @@ function autofillMeleeWeapon(index, weaponName) {
   const aphpInput = document.getElementById(`melee-${index}-aphp`);
   const traitsInput = document.getElementById(`melee-${index}-traits`);
   
-  console.log('Found inputs:', { handsInput, damageInput, sizeInput, effectsInput, aphpInput, traitsInput });
-  
   const composedDamage = composeDamage(data[1]);
   const aphpValue = `${data[4]}/${data[5]}`;
   
   // Fill fields (only if empty)
-  if (handsInput && !handsInput.value.trim()) {
-    handsInput.value = data[0];
-    console.log('Set hands to:', data[0]);
-  }
-  if (damageInput && !damageInput.value.trim()) {
-    damageInput.value = composedDamage;
-    console.log('Set damage to:', composedDamage);
-  }
-  if (sizeInput && !sizeInput.value.trim()) {
-    sizeInput.value = data[2];
-    console.log('Set size to:', data[2]);
-  }
-  if (effectsInput && !effectsInput.value.trim()) {
-    effectsInput.value = data[3];
-    console.log('Set effects to:', data[3]);
-  }
-  if (aphpInput && !aphpInput.value.trim()) {
-    aphpInput.value = aphpValue;
-    console.log('Set aphp to:', aphpValue);
-  }
-  if (traitsInput && !traitsInput.value.trim()) {
-    traitsInput.value = data[6];
-    console.log('Set traits to:', data[6]);
-  }
+  if (handsInput && !handsInput.value.trim()) handsInput.value = data[0];
+  if (damageInput && !damageInput.value.trim()) damageInput.value = composedDamage;
+  if (sizeInput && !sizeInput.value.trim()) sizeInput.value = data[2];
+  if (effectsInput && !effectsInput.value.trim()) effectsInput.value = data[3];
+  if (aphpInput && !aphpInput.value.trim()) aphpInput.value = aphpValue;
+  if (traitsInput && !traitsInput.value.trim()) traitsInput.value = data[6];
   
   return true;
 }
