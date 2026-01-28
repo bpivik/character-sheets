@@ -630,10 +630,6 @@ select:focus {
 }
 
 /* Derived Attributes Box */
-.derived-attributes .section-header {
-  font-size: 1.05rem;
-}
-
 .derived-attributes .derived-row {
   display: grid;
   grid-template-columns: 1fr 60px 60px;
@@ -679,13 +675,13 @@ select:focus {
 /* Remove spinner buttons from all number inputs */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+  -webkit-appearance: none !important;
   margin: 0;
 }
 
 input[type="number"] {
   -moz-appearance: textfield;
-}
+  appearance: textfield;
 }
 
 .derived-editable {
