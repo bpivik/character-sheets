@@ -46,6 +46,9 @@ const App = {
     // Populate form with loaded data
     this.populateForm();
     
+    // Update combat skill name from classes (if not already set)
+    this.updateCombatSkillName();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -152,6 +155,9 @@ const App = {
       'tenacity-current', 'tenacity-max', 'exp-rolls'
     ];
     
+    // Class fields need special handling to update combat skill name
+    const classFields = ['class-primary', 'class-secondary', 'class-tertiary'];
+    
     infoFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
@@ -160,6 +166,14 @@ const App = {
           this.character.info[key] = e.target.value;
           this.scheduleAutoSave();
         });
+        
+        // Add blur listener for class fields to update combat skill name
+        if (classFields.includes(fieldId)) {
+          field.addEventListener('blur', () => {
+            this.updateCombatSkillName();
+            this.scheduleAutoSave();
+          });
+        }
       }
     });
     
@@ -1608,6 +1622,37 @@ const App = {
         }
       }
     });
+  },
+
+  /**
+   * Update combat skill name from class fields
+   * Combines Primary/Secondary/Tertiary classes with "/" separator
+   */
+  updateCombatSkillName() {
+    const primaryClass = document.getElementById('class-primary');
+    const secondaryClass = document.getElementById('class-secondary');
+    const tertiaryClass = document.getElementById('class-tertiary');
+    const combatSkillName = document.getElementById('combat-skill-1-name');
+    
+    if (!combatSkillName) return;
+    
+    // Only auto-fill if the field is empty
+    if (combatSkillName.value.trim()) return;
+    
+    const classes = [];
+    if (primaryClass && primaryClass.value.trim()) {
+      classes.push(primaryClass.value.trim());
+    }
+    if (secondaryClass && secondaryClass.value.trim()) {
+      classes.push(secondaryClass.value.trim());
+    }
+    if (tertiaryClass && tertiaryClass.value.trim()) {
+      classes.push(tertiaryClass.value.trim());
+    }
+    
+    if (classes.length > 0) {
+      combatSkillName.value = classes.join('/');
+    }
   },
 
   /**
