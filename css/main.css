@@ -9,7 +9,7 @@
 }
 
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 body {
@@ -291,8 +291,8 @@ body {
 .header-logo {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: stretch;
+  gap: 0.4rem;
 }
 
 .logo-mythras {
@@ -302,7 +302,7 @@ body {
 .logo-text {
   display: block;
   font-family: var(--font-header);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   color: var(--text-header);
   letter-spacing: 0.1em;
 }
@@ -310,17 +310,18 @@ body {
 .logo-subtext {
   display: block;
   font-family: var(--font-header);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
 .portrait-thumbnail {
   position: relative;
-  width: 120px;
-  height: 150px;
+  width: 100px;
+  height: 125px;
   background: var(--portrait-bg);
   border: 1px solid var(--border-gold);
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .thumbnail-label {
@@ -330,14 +331,14 @@ body {
 
 .upload-text-small {
   font-family: var(--font-header);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-link);
   display: block;
   margin-bottom: 0.25rem;
 }
 
 .upload-subtext-small {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-style: italic;
   display: block;
 }
@@ -349,6 +350,24 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Equipment in header */
+.equipment-section-header {
+  background: rgba(255,255,255,0.2);
+  padding: 0.4rem;
+  border: 1px solid var(--border-light);
+  margin-top: 0.4rem;
+}
+
+.equipment-section-header .section-header {
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+#equipment-container-header {
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 /* Field Rows */
@@ -492,8 +511,8 @@ body {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 190px minmax(250px, 350px) minmax(180px, 250px);
-  gap: 0.5rem;
+  grid-template-columns: 200px 1fr;
+  gap: 0.75rem;
   align-items: start;
 }
 
@@ -502,13 +521,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.column-right {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-self: start;
 }
 
 /* ============================================
@@ -672,8 +684,8 @@ body {
   grid-template-columns: auto 55px 32px 36px 10px;
   align-items: center;
   gap: 0.15rem;
-  padding: 0.08rem 0;
-  font-size: 0.82rem;
+  padding: 0.1rem 0;
+  font-size: 0.9rem;
   border-bottom: 1px dotted var(--border-light);
 }
 
@@ -686,7 +698,7 @@ body {
 }
 
 .skill-formula {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   text-align: right;
 }
@@ -696,13 +708,13 @@ body {
   font-weight: 500;
   background: rgba(255,255,255,0.4);
   padding: 0.08rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .skill-input {
   width: 100%;
-  padding: 0.08rem;
-  font-size: 0.82rem;
+  padding: 0.1rem;
+  font-size: 0.9rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -725,8 +737,8 @@ body {
   grid-template-columns: 1fr 70px 45px 45px;
   align-items: center;
   gap: 0.15rem;
-  padding: 0.1rem 0;
-  font-size: 0.82rem;
+  padding: 0.12rem 0;
+  font-size: 0.9rem;
   border-bottom: 1px dotted var(--border-light);
 }
 
