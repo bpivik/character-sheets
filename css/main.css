@@ -288,6 +288,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .header-logo {
@@ -358,13 +360,16 @@ body {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .field-label {
   font-weight: 600;
   font-size: 1rem;
-  min-width: 100px;
-  flex-shrink: 0;
+  min-width: 0;
+  flex-shrink: 1;
+  white-space: nowrap;
 }
 
 .field-label-large {
@@ -374,7 +379,7 @@ body {
 }
 
 .field-input {
-  flex: 1;
+  flex: 1 1 auto;
   padding: 0.5rem 0.75rem;
   font-family: var(--font-body);
   font-size: 1.1rem;
@@ -405,12 +410,14 @@ body {
 
 .field-input-small {
   width: 80px;
-  flex: none;
+  min-width: 50px;
+  flex: 0 1 80px;
 }
 
 .field-input-tiny {
   width: 60px;
-  flex: none;
+  min-width: 40px;
+  flex: 0 1 60px;
   text-align: center;
 }
 
