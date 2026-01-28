@@ -68,15 +68,15 @@ body {
 /* Clean white background for content */
 .page-content {
   background: var(--bg-parchment);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 /* Remove ornate border effects */
 .ornate-border {
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .ornate-border::before,
