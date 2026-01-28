@@ -207,3 +207,32 @@ const PROFESSIONAL_SKILL_SLOTS = 15;
 
 // Number of special ability slots per column
 const ABILITY_SLOTS_PER_COLUMN = 25;
+
+// Container configurations: id, display name, max capacity (Things), triggers (item names that activate it)
+const CONTAINER_CONFIGS = {
+  'backpack': {
+    name: 'Backpack',
+    maxEnc: 10,
+    triggers: ['backpack']
+  },
+  'reinforced-backpack': {
+    name: 'Reinforced Backpack',
+    maxEnc: 15,
+    triggers: ['reinforced backpack', 'backpack, reinforced']
+  },
+  'large-sack': {
+    name: 'Large Sack',
+    maxEnc: 10,
+    triggers: ['large sack', 'sack, large']
+  },
+  'small-sack': {
+    name: 'Small Sack',
+    maxEnc: 3,
+    triggers: ['small sack', 'sack, small']
+  },
+  'satchel': {
+    name: 'Slingbag/Satchel',
+    maxEnc: 6,
+    triggers: ['slingbag', 'satchel', 'slingbag/satchel']
+  }
+};

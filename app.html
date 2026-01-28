@@ -628,7 +628,39 @@
               <div id="equipment-container" class="equipment-scrollable">
                 <!-- Equipment rows are dynamically generated -->
               </div>
+              
+              <!-- Money Section -->
+              <div class="money-section">
+                <h4 class="money-header">Money</h4>
+                <div class="money-grid">
+                  <div class="money-row">
+                    <label for="money-copper">Copper:</label>
+                    <input type="number" id="money-copper" class="money-input" placeholder="0" min="0">
+                  </div>
+                  <div class="money-row">
+                    <label for="money-silver">Silver:</label>
+                    <input type="number" id="money-silver" class="money-input" placeholder="0" min="0">
+                  </div>
+                  <div class="money-row">
+                    <label for="money-gold">Gold:</label>
+                    <input type="number" id="money-gold" class="money-input" placeholder="0" min="0">
+                  </div>
+                  <div class="money-row">
+                    <label for="money-platinum">Platinum:</label>
+                    <input type="number" id="money-platinum" class="money-input" placeholder="0" min="0">
+                  </div>
+                  <div class="money-row">
+                    <label for="money-electrum">Electrum:</label>
+                    <input type="number" id="money-electrum" class="money-input" placeholder="0" min="0">
+                  </div>
+                </div>
+              </div>
+              
               <div class="enc-totals">
+                <div class="enc-money-row">
+                  <span class="enc-money-label">Money ENC:</span>
+                  <span class="enc-money-value" id="money-enc">0</span>
+                </div>
                 <div class="enc-toggle">
                   <label>
                     <input type="checkbox" id="enc-automation-toggle">
@@ -646,33 +678,54 @@
               </div>
             </section>
             
-            <!-- Backpack Button -->
-            <button type="button" class="btn btn-backpack" id="btn-open-backpack">
-              Backpack
-            </button>
+            <!-- Container Buttons (dynamically shown based on equipment) -->
+            <div class="container-buttons" id="container-buttons">
+              <button type="button" class="btn btn-container hidden" id="btn-open-backpack" data-container="backpack">
+                Backpack (10)
+              </button>
+              <button type="button" class="btn btn-container hidden" id="btn-open-reinforced-backpack" data-container="reinforced-backpack">
+                Reinforced Backpack (15)
+              </button>
+              <button type="button" class="btn btn-container hidden" id="btn-open-large-sack" data-container="large-sack">
+                Large Sack (10)
+              </button>
+              <button type="button" class="btn btn-container hidden" id="btn-open-small-sack" data-container="small-sack">
+                Small Sack (3)
+              </button>
+              <button type="button" class="btn btn-container hidden" id="btn-open-satchel" data-container="satchel">
+                Slingbag/Satchel (6)
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Backpack Modal Overlay -->
-    <div id="backpack-modal" class="modal-overlay hidden">
-      <div class="modal-content backpack-modal">
+    <!-- Container Modal Overlay (used for Backpack, Sacks, Satchel) -->
+    <div id="container-modal" class="modal-overlay hidden">
+      <div class="modal-content container-modal">
         <div class="modal-header">
-          <h3>Backpack Contents</h3>
-          <button type="button" class="btn-modal-close" id="btn-close-backpack">&times;</button>
+          <h3 id="container-modal-title">Container Contents</h3>
+          <button type="button" class="btn-modal-close" id="btn-close-container">&times;</button>
         </div>
         <div class="modal-body">
+          <div class="container-capacity-bar">
+            <span class="capacity-label">Capacity:</span>
+            <span class="capacity-current" id="container-current-enc">0</span>
+            <span class="capacity-separator">/</span>
+            <span class="capacity-max" id="container-max-enc">10</span>
+            <span class="capacity-unit">Things</span>
+          </div>
           <div class="equipment-header">
             <span class="header-item">Item</span>
             <span class="header-enc">ENC</span>
           </div>
-          <div id="backpack-container">
-            <!-- Backpack rows are dynamically generated -->
+          <div id="container-items">
+            <!-- Container rows are dynamically generated -->
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="btn-save-backpack">Save & Close</button>
+          <button type="button" class="btn btn-primary" id="btn-save-container">Save & Close</button>
         </div>
       </div>
     </div>

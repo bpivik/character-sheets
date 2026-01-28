@@ -36,12 +36,14 @@ const App = {
     // Generate dynamic content
     this.generateProfessionalSkills();
     this.generateEquipmentRows();
-    this.generateBackpackRows();
-    this.setupBackpackModal();
+    this.setupContainerModal();
     this.generateHitLocations();
     this.generateWeaponRows();
     this.generateSpecialAbilities();
     this.generateSpellRows();
+    
+    // Setup money listeners
+    this.setupMoneyListeners();
     
     // Populate form with loaded data
     this.populateForm();
@@ -49,6 +51,9 @@ const App = {
     // Update combat skill name and weapons from classes (if not already set)
     this.updateCombatSkillName();
     this.updateWeaponsKnown();
+    
+    // Update container button visibility
+    this.updateContainerButtons();
     
     // Initial calculations
     this.recalculateAll();
@@ -669,7 +674,7 @@ const App = {
       const encInput = row.querySelector('.equipment-enc');
       const rowIndex = i;
       
-      // Autofill ENC on blur
+      // Autofill ENC on blur and check container visibility
       nameInput.addEventListener('blur', () => {
         if (window.EncumbranceData) {
           const itemName = nameInput.value;
@@ -679,11 +684,13 @@ const App = {
             window.EncumbranceData.autofillEquipmentEnc('equip', rowIndex, itemName);
           }
           this.updateTotalEnc();
+          this.updateContainerButtons();
           this.scheduleAutoSave();
         }
       });
       
       nameInput.addEventListener('input', () => {
+        this.updateContainerButtons();
         this.scheduleAutoSave();
       });
       
@@ -704,18 +711,192 @@ const App = {
     }
   },
 
-  generateBackpackRows() {
-    const container = document.getElementById('backpack-container');
+  /**
+   * Setup money input listeners
+   */
+  setupMoneyListeners() {
+    const moneyTypes = ['copper', 'silver', 'gold', 'platinum', 'electrum'];
+    moneyTypes.forEach(type => {
+      const input = document.getElementById(`money-${type}`);
+      if (input) {
+        input.addEventListener('input', () => {
+          this.updateMoneyEnc();
+          this.updateTotalEnc();
+          this.scheduleAutoSave();
+        });
+      }
+    });
+  },
+
+  /**
+   * Calculate and display money ENC
+   * Every 100 coins = 1 Thing (ENC)
+   */
+  updateMoneyEnc() {
+    const moneyTypes = ['copper', 'silver', 'gold', 'platinum', 'electrum'];
+    let totalCoins = 0;
+    
+    moneyTypes.forEach(type => {
+      const input = document.getElementById(`money-${type}`);
+      if (input && input.value) {
+        totalCoins += parseInt(input.value) || 0;
+      }
+    });
+    
+    const moneyEnc = Math.floor(totalCoins / 100);
+    const moneyEncDisplay = document.getElementById('money-enc');
+    if (moneyEncDisplay) {
+      moneyEncDisplay.textContent = moneyEnc;
+    }
+    
+    return moneyEnc;
+  },
+
+  /**
+   * Get list of equipment item names (lowercased)
+   */
+  getEquipmentItemNames() {
+    const items = [];
+    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
+      const input = document.getElementById(`equip-${i}-name`);
+      if (input && input.value.trim()) {
+        items.push(input.value.trim().toLowerCase());
+      }
+    }
+    return items;
+  },
+
+  /**
+   * Check if any equipment item matches a trigger
+   */
+  hasContainerItem(triggers) {
+    const items = this.getEquipmentItemNames();
+    return items.some(item => 
+      triggers.some(trigger => item.includes(trigger))
+    );
+  },
+
+  /**
+   * Update container button visibility based on equipment
+   */
+  updateContainerButtons() {
+    for (const [containerId, config] of Object.entries(CONTAINER_CONFIGS)) {
+      const btn = document.getElementById(`btn-open-${containerId}`);
+      if (btn) {
+        // Check if we need to exclude this container (e.g., don't show backpack if reinforced backpack exists)
+        let shouldShow = this.hasContainerItem(config.triggers);
+        
+        // Special case: don't show regular backpack if reinforced backpack is present
+        if (containerId === 'backpack') {
+          const hasReinforced = this.hasContainerItem(CONTAINER_CONFIGS['reinforced-backpack'].triggers);
+          if (hasReinforced) shouldShow = false;
+        }
+        
+        btn.classList.toggle('hidden', !shouldShow);
+      }
+    }
+  },
+
+  /**
+   * Current active container type
+   */
+  activeContainer: null,
+
+  /**
+   * Setup container modal
+   */
+  setupContainerModal() {
+    const modal = document.getElementById('container-modal');
+    const closeBtn = document.getElementById('btn-close-container');
+    const saveBtn = document.getElementById('btn-save-container');
+    
+    // Setup click handlers for all container buttons
+    for (const containerId of Object.keys(CONTAINER_CONFIGS)) {
+      const btn = document.getElementById(`btn-open-${containerId}`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          this.openContainer(containerId);
+        });
+      }
+    }
+    
+    // Close button
+    if (closeBtn && modal) {
+      closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        this.activeContainer = null;
+      });
+    }
+    
+    // Save & Close button
+    if (saveBtn && modal) {
+      saveBtn.addEventListener('click', () => {
+        this.saveContainerData();
+        modal.classList.add('hidden');
+        this.activeContainer = null;
+      });
+    }
+    
+    // Click outside to close
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.saveContainerData();
+          modal.classList.add('hidden');
+          this.activeContainer = null;
+        }
+      });
+    }
+  },
+
+  /**
+   * Open a container modal
+   */
+  openContainer(containerId) {
+    const config = CONTAINER_CONFIGS[containerId];
+    if (!config) return;
+    
+    this.activeContainer = containerId;
+    
+    const modal = document.getElementById('container-modal');
+    const title = document.getElementById('container-modal-title');
+    const maxEnc = document.getElementById('container-max-enc');
+    const itemsContainer = document.getElementById('container-items');
+    
+    if (title) title.textContent = `${config.name} Contents`;
+    if (maxEnc) maxEnc.textContent = config.maxEnc;
+    
+    // Generate rows for this container
+    this.generateContainerRows(containerId, config.maxEnc);
+    
+    // Load saved data
+    this.loadContainerData(containerId);
+    
+    // Update capacity display
+    this.updateContainerCapacity();
+    
+    // Show modal
+    if (modal) modal.classList.remove('hidden');
+  },
+
+  /**
+   * Generate rows for container modal
+   */
+  generateContainerRows(containerId, maxEnc) {
+    const container = document.getElementById('container-items');
     if (!container) return;
     
     container.innerHTML = '';
     
-    for (let i = 0; i < BACKPACK_SLOTS; i++) {
+    // Use maxEnc as rough guide for row count (can hold items up to that total)
+    const rowCount = Math.max(maxEnc, 10);
+    
+    for (let i = 0; i < rowCount; i++) {
       const row = document.createElement('div');
       row.className = 'equipment-row';
       row.innerHTML = `
-        <input type="text" class="equipment-name" id="backpack-${i}-name" placeholder="">
-        <input type="number" class="equipment-enc" id="backpack-${i}-enc" placeholder="" step="0.1">
+        <input type="text" class="equipment-name" id="container-${i}-name" placeholder="">
+        <input type="number" class="equipment-enc" id="container-${i}-enc" placeholder="" step="0.1">
       `;
       container.appendChild(row);
       
@@ -728,57 +909,88 @@ const App = {
         if (window.EncumbranceData) {
           const itemName = nameInput.value;
           if (itemName.trim() === '') {
-            window.EncumbranceData.clearEquipmentEncIfEmpty('backpack', rowIndex, itemName);
+            window.EncumbranceData.clearEquipmentEncIfEmpty('container', rowIndex, itemName);
           } else {
-            window.EncumbranceData.autofillEquipmentEnc('backpack', rowIndex, itemName);
+            window.EncumbranceData.autofillEquipmentEnc('container', rowIndex, itemName);
           }
-          this.scheduleAutoSave();
+          this.updateContainerCapacity();
         }
       });
       
-      nameInput.addEventListener('input', () => {
-        this.scheduleAutoSave();
-      });
-      
       encInput.addEventListener('input', () => {
-        this.scheduleAutoSave();
+        this.updateContainerCapacity();
       });
     }
   },
 
-  setupBackpackModal() {
-    const openBtn = document.getElementById('btn-open-backpack');
-    const closeBtn = document.getElementById('btn-close-backpack');
-    const saveBtn = document.getElementById('btn-save-backpack');
-    const modal = document.getElementById('backpack-modal');
+  /**
+   * Update container capacity display
+   */
+  updateContainerCapacity() {
+    if (!this.activeContainer) return;
     
-    if (openBtn && modal) {
-      openBtn.addEventListener('click', () => {
-        modal.classList.remove('hidden');
+    const config = CONTAINER_CONFIGS[this.activeContainer];
+    const currentDisplay = document.getElementById('container-current-enc');
+    const capacityBar = document.querySelector('.container-capacity-bar');
+    
+    let totalEnc = 0;
+    const container = document.getElementById('container-items');
+    if (container) {
+      container.querySelectorAll('.equipment-enc').forEach(input => {
+        totalEnc += parseFloat(input.value) || 0;
       });
     }
     
-    if (closeBtn && modal) {
-      closeBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
+    if (currentDisplay) {
+      currentDisplay.textContent = totalEnc.toFixed(1);
+    }
+    
+    // Add over-capacity class if exceeded
+    if (capacityBar) {
+      capacityBar.classList.toggle('over-capacity', totalEnc > config.maxEnc);
+    }
+  },
+
+  /**
+   * Save container data to character
+   */
+  saveContainerData() {
+    if (!this.activeContainer) return;
+    
+    if (!this.character.containers) {
+      this.character.containers = {};
+    }
+    
+    const items = [];
+    const container = document.getElementById('container-items');
+    if (container) {
+      container.querySelectorAll('.equipment-row').forEach((row, i) => {
+        const nameInput = row.querySelector('.equipment-name');
+        const encInput = row.querySelector('.equipment-enc');
+        items.push({
+          name: nameInput?.value || '',
+          enc: encInput?.value || ''
+        });
       });
     }
     
-    if (saveBtn && modal) {
-      saveBtn.addEventListener('click', () => {
-        this.saveCharacter();
-        modal.classList.add('hidden');
-      });
-    }
+    this.character.containers[this.activeContainer] = items;
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Load container data from character
+   */
+  loadContainerData(containerId) {
+    if (!this.character.containers || !this.character.containers[containerId]) return;
     
-    // Close modal when clicking outside
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.classList.add('hidden');
-        }
-      });
-    }
+    const items = this.character.containers[containerId];
+    items.forEach((item, i) => {
+      const nameInput = document.getElementById(`container-${i}-name`);
+      const encInput = document.getElementById(`container-${i}-enc`);
+      if (nameInput && item.name) nameInput.value = item.name;
+      if (encInput && item.enc) encInput.value = item.enc;
+    });
   },
 
   /**
@@ -1155,14 +1367,16 @@ const App = {
       });
     }
     
-    // Backpack
-    if (this.character.backpack) {
-      this.character.backpack.forEach((item, i) => {
-        const nameInput = document.getElementById(`backpack-${i}-name`);
-        const encInput = document.getElementById(`backpack-${i}-enc`);
-        if (nameInput && item.name) nameInput.value = item.name;
-        if (encInput && item.enc) encInput.value = item.enc;
+    // Money
+    if (this.character.money) {
+      const moneyTypes = ['copper', 'silver', 'gold', 'platinum', 'electrum'];
+      moneyTypes.forEach(type => {
+        const input = document.getElementById(`money-${type}`);
+        if (input && this.character.money[type]) {
+          input.value = this.character.money[type];
+        }
       });
+      this.updateMoneyEnc();
     }
     
     // Professional Skills
@@ -1374,18 +1588,14 @@ const App = {
       }
     }
     
-    // Backpack
-    this.character.backpack = [];
-    for (let i = 0; i < BACKPACK_SLOTS; i++) {
-      const nameInput = document.getElementById(`backpack-${i}-name`);
-      const encInput = document.getElementById(`backpack-${i}-enc`);
-      if (nameInput && encInput) {
-        this.character.backpack.push({
-          name: nameInput.value,
-          enc: encInput.value
-        });
-      }
-    }
+    // Money
+    this.character.money = {
+      copper: document.getElementById('money-copper')?.value || '',
+      silver: document.getElementById('money-silver')?.value || '',
+      gold: document.getElementById('money-gold')?.value || '',
+      platinum: document.getElementById('money-platinum')?.value || '',
+      electrum: document.getElementById('money-electrum')?.value || ''
+    };
     
     // Alignments
     for (let i = 1; i <= 2; i++) {
@@ -1858,12 +2068,18 @@ const App = {
     }
     
     let total = 0;
+    
+    // Equipment ENC
     for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
       const encInput = document.getElementById(`equip-${i}-enc`);
       if (encInput && encInput.value) {
         total += parseFloat(encInput.value) || 0;
       }
     }
+    
+    // Money ENC (every 100 coins = 1 Thing)
+    const moneyEnc = this.updateMoneyEnc();
+    total += moneyEnc;
     
     const totalDisplay = document.getElementById('total-enc');
     if (totalDisplay) {
