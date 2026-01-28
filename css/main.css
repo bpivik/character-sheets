@@ -535,29 +535,17 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 220px 280px 1fr 320px;
-  gap: 1rem 1.5rem;
+  grid-template-columns: 570px 1fr 320px;
+  gap: 1.5rem;
   align-items: start;
 }
 
-/* Left column spans first 2 grid columns */
 .column-left {
-  grid-column: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Center column spans columns 2-3 (aligns with Attributes, extends to Equipment) */
-.column-center {
-  grid-column: 2 / 4;
-  grid-row: 1;
-}
-
-/* Right column is column 4 */
-.column-right {
-  grid-column: 4;
-  grid-row: 1 / 3;
-}
-
-.column-left,
 .column-center {
   display: flex;
   flex-direction: column;
@@ -567,7 +555,7 @@ select:focus {
 .column-left .skills-section,
 .column-left .skill-grade-reference,
 .column-left .enc-penalty-note {
-  /* Skills section spans full width of left column (both grid cols) */
+  /* Skills section uses full width of left column */
 }
 
 .column-right {
@@ -597,12 +585,12 @@ select:focus {
 }
 
 .attributes-section.core-attributes {
-  width: 200px;
+  width: 300px;
   flex-shrink: 0;
 }
 
 .attributes-section.derived-attributes {
-  width: 280px;
+  width: 250px;
   flex-shrink: 0;
 }
 
