@@ -496,13 +496,13 @@ const App = {
    */
   calculateFormulaValue(formula) {
     const attrs = {
-      STR: parseInt(document.getElementById('attr-str')?.value) || 0,
-      CON: parseInt(document.getElementById('attr-con')?.value) || 0,
-      SIZ: parseInt(document.getElementById('attr-siz')?.value) || 0,
-      DEX: parseInt(document.getElementById('attr-dex')?.value) || 0,
-      INT: parseInt(document.getElementById('attr-int')?.value) || 0,
-      POW: parseInt(document.getElementById('attr-pow')?.value) || 0,
-      CHA: parseInt(document.getElementById('attr-cha')?.value) || 0
+      STR: parseInt(document.getElementById('str-value')?.value) || 0,
+      CON: parseInt(document.getElementById('con-value')?.value) || 0,
+      SIZ: parseInt(document.getElementById('siz-value')?.value) || 0,
+      DEX: parseInt(document.getElementById('dex-value')?.value) || 0,
+      INT: parseInt(document.getElementById('int-value')?.value) || 0,
+      POW: parseInt(document.getElementById('pow-value')?.value) || 0,
+      CHA: parseInt(document.getElementById('cha-value')?.value) || 0
     };
     
     // Handle "X x2" format (e.g., "INT x2", "DEX x2")
