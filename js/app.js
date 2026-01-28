@@ -374,6 +374,41 @@ const App = {
         this.sortSpecialAbilities();
       });
     }
+    
+    // Edit derived values button
+    const editDerivedBtn = document.getElementById('edit-derived-btn');
+    if (editDerivedBtn) {
+      editDerivedBtn.addEventListener('click', () => {
+        this.toggleDerivedEditing();
+      });
+    }
+  },
+  
+  /**
+   * Toggle editing of derived original values
+   */
+  toggleDerivedEditing() {
+    const derivedInputs = document.querySelectorAll('.derived-readonly');
+    const btn = document.getElementById('edit-derived-btn');
+    
+    const isCurrentlyReadonly = derivedInputs[0]?.hasAttribute('readonly');
+    
+    derivedInputs.forEach(input => {
+      if (isCurrentlyReadonly) {
+        input.removeAttribute('readonly');
+        input.classList.add('derived-editable');
+      } else {
+        input.setAttribute('readonly', '');
+        input.classList.remove('derived-editable');
+        // Recalculate to restore calculated values
+        this.recalculateAll();
+      }
+    });
+    
+    if (btn) {
+      btn.textContent = isCurrentlyReadonly ? 'Lock Original Values' : 'Edit Original Values';
+      btn.classList.toggle('btn-warning', isCurrentlyReadonly);
+    }
   },
 
   /**
@@ -786,40 +821,39 @@ const App = {
     const attrs = this.character.attributes;
     const results = Calculator.recalculateAll(attrs, this.sheetType);
     
-    // Update derived stat displays - now using input fields
+    // Update derived stat displays - always update original values (they're readonly)
     const apOrig = document.getElementById('action-points-original');
-    if (apOrig && !apOrig.value) {
+    if (apOrig) {
       apOrig.value = results.derived.actionPoints;
     }
     
     const dmgOrig = document.getElementById('damage-mod-original');
-    if (dmgOrig && !dmgOrig.value) {
+    if (dmgOrig) {
       dmgOrig.value = results.derived.damageModifier;
     }
     
     const expOrig = document.getElementById('exp-mod-original');
-    if (expOrig && !expOrig.value) {
+    if (expOrig) {
       expOrig.value = results.derived.expMod;
     }
     
     const healOrig = document.getElementById('healing-rate-original');
-    if (healOrig && !healOrig.value) {
+    if (healOrig) {
       healOrig.value = results.derived.healingRate;
     }
     
-    // Update calculated initiative/luck/magic if not manually set
     const initOrig = document.getElementById('initiative-original');
-    if (initOrig && !initOrig.value) {
+    if (initOrig) {
       initOrig.value = results.derived.initiative;
     }
     
     const luckOrig = document.getElementById('luck-original');
-    if (luckOrig && !luckOrig.value) {
+    if (luckOrig) {
       luckOrig.value = results.derived.luckPoints;
     }
     
     const magicOrig = document.getElementById('magic-points-original');
-    if (magicOrig && !magicOrig.value) {
+    if (magicOrig) {
       magicOrig.value = results.derived.magicPoints;
     }
     

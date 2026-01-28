@@ -21,6 +21,34 @@ body {
   background: var(--bg-outer);
 }
 
+/* Global Input Alignment */
+input[type="number"] {
+  text-align: center;
+}
+
+input[type="text"] {
+  text-align: left;
+}
+
+/* Standard input sizing for consistency across all pages */
+input[type="text"],
+input[type="number"],
+select {
+  padding: 0.4rem 0.5rem;
+  font-size: 1rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  border-radius: 4px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px rgba(74, 60, 42, 0.15);
+}
+
 /* ============================================
    Navigation
    ============================================ */
@@ -501,7 +529,7 @@ body {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 350px 1fr 320px;
+  grid-template-columns: minmax(400px, 500px) 1fr 320px;
   gap: 2rem;
   align-items: start;
 }
@@ -525,8 +553,14 @@ body {
 }
 
 /* ============================================
-   Attributes Section
+   Attributes Section - Two Box Layout
    ============================================ */
+.attributes-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 .attributes-section {
   background: rgba(255,255,255,0.2);
   padding: 1.25rem;
@@ -534,16 +568,16 @@ body {
   border-radius: 8px;
 }
 
-.attribute-row {
+.attributes-section.core-attributes .attribute-row {
   display: grid;
-  grid-template-columns: 50px 70px 1fr;
+  grid-template-columns: 50px 1fr;
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border-light);
 }
 
-.attribute-row:last-of-type {
+.attributes-section.core-attributes .attribute-row:last-of-type {
   border-bottom: none;
 }
 
@@ -565,55 +599,91 @@ body {
   border-radius: 6px;
 }
 
+/* Derived Attributes Box */
+.derived-attributes .derived-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.derived-attributes .derived-row:last-of-type {
+  border-bottom: none;
+}
+
+.derived-attributes .derived-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.derived-input {
+  width: 100%;
+  padding: 0.4rem;
+  font-size: 1rem;
+  text-align: center;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  border-radius: 4px;
+}
+
+.derived-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.derived-readonly {
+  background: rgba(255,255,255,0.5);
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.derived-editable {
+  background: var(--input-bg);
+  border-color: var(--btn-primary-bg);
+  cursor: text;
+}
+
+.btn-small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.btn-warning {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
 .attribute-input:focus {
   outline: none;
   border-color: var(--input-focus);
   box-shadow: 0 0 0 2px rgba(74, 60, 42, 0.2);
 }
 
-.derived-stat {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-size: 0.78rem;
-}
-
-.derived-label {
-  flex: 1;
-  color: var(--text-secondary);
-}
-
-.derived-value {
-  font-weight: 600;
-  min-width: 30px;
-  text-align: center;
-  padding: 0.1rem 0.2rem;
+.derived-readonly {
   background: rgba(255,255,255,0.5);
-  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  cursor: default;
 }
 
-.derived-stat.dual-value {
-  display: grid;
-  grid-template-columns: 1fr 40px 40px;
-  gap: 0.2rem;
-}
-
-.dual-value .derived-label {
-  font-size: 0.7rem;
-}
-
-.derived-input {
-  width: 100%;
-  padding: 0.15rem;
-  font-size: 0.8rem;
-  text-align: center;
-  border: 1px solid var(--input-border);
+.derived-editable {
   background: var(--input-bg);
+  border-color: var(--btn-primary-bg);
+  cursor: text;
 }
 
-.derived-input:focus {
-  outline: none;
-  border-color: var(--input-focus);
+.btn-small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.btn-warning {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
 
 .movement-row {

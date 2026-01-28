@@ -39,8 +39,8 @@
     <!-- Navigation Tabs -->
     <nav class="sheet-navigation no-print">
       <ul class="tab-list">
-        <li><button class="tab-btn active" data-page="portrait">Portrait</button></li>
-        <li><button class="tab-btn" data-page="main">Character</button></li>
+        <li><button class="tab-btn" data-page="portrait">Portrait</button></li>
+        <li><button class="tab-btn active" data-page="main">Character</button></li>
         <li><button class="tab-btn" data-page="combat">Combat</button></li>
         <li><button class="tab-btn" data-page="magic1">Magic 1-2</button></li>
         <li><button class="tab-btn" data-page="magic2">Magic 3-5</button></li>
@@ -60,7 +60,7 @@
     </nav>
 
     <!-- ==================== PAGE 1: PORTRAIT ==================== -->
-    <section id="page-portrait" class="sheet-page page-portrait active">
+    <section id="page-portrait" class="sheet-page page-portrait">
       <div class="portrait-frame ornate-border">
         <div class="portrait-container full-body-portrait">
           <input type="file" id="full-body-upload" accept="image/*" class="image-upload-input">
@@ -75,7 +75,7 @@
     </section>
 
     <!-- ==================== PAGE 2: MAIN CHARACTER SHEET ==================== -->
-    <section id="page-main" class="sheet-page page-main">
+    <section id="page-main" class="sheet-page page-main active">
       <div class="page-content ornate-border">
         
         <!-- Header Row -->
@@ -198,83 +198,86 @@
           <!-- Left Column: Attributes & Skills -->
           <div class="column-left">
             
-            <!-- Attributes Section -->
-            <section class="attributes-section">
-              <div class="attribute-row">
-                <label class="attribute-label">STR</label>
-                <input type="number" id="str-value" class="attribute-input" data-attr="STR" placeholder="">
-                <div class="derived-stat dual-value">
+            <!-- Attributes Row - Two boxes side by side -->
+            <div class="attributes-row">
+              <!-- Core Attributes Box -->
+              <section class="attributes-section core-attributes">
+                <h3 class="section-header">Attributes</h3>
+                <div class="attribute-row">
+                  <label class="attribute-label">STR</label>
+                  <input type="number" id="str-value" class="attribute-input" data-attr="STR" placeholder="">
+                </div>
+                <div class="attribute-row">
+                  <label class="attribute-label">CON</label>
+                  <input type="number" id="con-value" class="attribute-input" data-attr="CON" placeholder="">
+                </div>
+                <div class="attribute-row">
+                  <label class="attribute-label">SIZ</label>
+                  <input type="number" id="siz-value" class="attribute-input" data-attr="SIZ" placeholder="">
+                </div>
+                <div class="attribute-row">
+                  <label class="attribute-label">DEX</label>
+                  <input type="number" id="dex-value" class="attribute-input" data-attr="DEX" placeholder="">
+                </div>
+                <div class="attribute-row">
+                  <label class="attribute-label">INT</label>
+                  <input type="number" id="int-value" class="attribute-input" data-attr="INT" placeholder="">
+                </div>
+                <div class="attribute-row">
+                  <label class="attribute-label">POW</label>
+                  <input type="number" id="pow-value" class="attribute-input" data-attr="POW" placeholder="">
+                </div>
+                <div class="attribute-row">
+                  <label class="attribute-label">CHA</label>
+                  <input type="number" id="cha-value" class="attribute-input" data-attr="CHA" placeholder="">
+                </div>
+                <div class="movement-row">
+                  <span class="movement-label">Movement</span>
+                  <input type="number" id="movement-base" class="movement-input" placeholder="20">
+                </div>
+              </section>
+              
+              <!-- Derived Attributes Box -->
+              <section class="attributes-section derived-attributes">
+                <h3 class="section-header">Derived Stats</h3>
+                <div class="derived-row">
                   <span class="derived-label">Action Points</span>
-                  <input type="number" id="action-points-original" class="derived-input" placeholder="">
+                  <input type="number" id="action-points-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="action-points-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="attribute-row">
-                <label class="attribute-label">CON</label>
-                <input type="number" id="con-value" class="attribute-input" data-attr="CON" placeholder="">
-                <div class="derived-stat dual-value">
+                <div class="derived-row">
                   <span class="derived-label">Damage Mod</span>
-                  <input type="text" id="damage-mod-original" class="derived-input" placeholder="">
+                  <input type="text" id="damage-mod-original" class="derived-input derived-readonly" readonly>
                   <input type="text" id="damage-mod-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="attribute-row">
-                <label class="attribute-label">SIZ</label>
-                <input type="number" id="siz-value" class="attribute-input" data-attr="SIZ" placeholder="">
-                <div class="derived-stat dual-value">
+                <div class="derived-row">
                   <span class="derived-label">Exp Mod</span>
-                  <input type="number" id="exp-mod-original" class="derived-input" placeholder="">
+                  <input type="number" id="exp-mod-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="exp-mod-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="attribute-row">
-                <label class="attribute-label">DEX</label>
-                <input type="number" id="dex-value" class="attribute-input" data-attr="DEX" placeholder="">
-                <div class="derived-stat dual-value">
+                <div class="derived-row">
                   <span class="derived-label">Healing Rate</span>
-                  <input type="number" id="healing-rate-original" class="derived-input" placeholder="">
+                  <input type="number" id="healing-rate-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="healing-rate-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="attribute-row">
-                <label class="attribute-label">INT</label>
-                <input type="number" id="int-value" class="attribute-input" data-attr="INT" placeholder="">
-                <div class="derived-stat dual-value">
+                <div class="derived-row">
                   <span class="derived-label">Initiative</span>
-                  <input type="number" id="initiative-original" class="derived-input" placeholder="">
+                  <input type="number" id="initiative-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="initiative-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="attribute-row">
-                <label class="attribute-label">POW</label>
-                <input type="number" id="pow-value" class="attribute-input" data-attr="POW" placeholder="">
-                <div class="derived-stat dual-value">
+                <div class="derived-row">
                   <span class="derived-label">Luck Points</span>
-                  <input type="number" id="luck-original" class="derived-input" placeholder="">
+                  <input type="number" id="luck-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="luck-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="attribute-row">
-                <label class="attribute-label">CHA</label>
-                <input type="number" id="cha-value" class="attribute-input" data-attr="CHA" placeholder="">
-                <div class="derived-stat dual-value">
+                <div class="derived-row">
                   <span class="derived-label">Magic Points</span>
-                  <input type="number" id="magic-points-original" class="derived-input" placeholder="">
+                  <input type="number" id="magic-points-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="magic-points-current" class="derived-input" placeholder="">
                 </div>
-              </div>
-              
-              <div class="movement-row">
-                <span class="movement-label">Movement</span>
-                <input type="number" id="movement-base" class="movement-input" placeholder="20">
-              </div>
-            </section>
+                <button type="button" id="edit-derived-btn" class="btn btn-small btn-secondary">Edit Original Values</button>
+              </section>
+            </div>
 
             <!-- Standard Skills Section -->
             <section class="skills-section standard-skills">
