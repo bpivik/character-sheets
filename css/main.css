@@ -1018,12 +1018,13 @@ select:focus {
 }
 
 .prof-skill-base {
-  padding: 0.35rem;
-  font-size: 0.75rem;
+  padding: 0.2rem !important;
+  font-size: 0.7rem !important;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   text-align: center;
   border-radius: 4px;
+  width: 100%;
 }
 
 .prof-skill-base-val {
