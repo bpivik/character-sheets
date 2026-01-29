@@ -2268,7 +2268,7 @@ select:focus {
 
 .col-cost {
   width: auto;
-  min-width: 140px;
+  min-width: 100px;
   text-align: center;
 }
 
