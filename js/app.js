@@ -2930,24 +2930,35 @@ const App = {
   },
   
   /**
-   * Update prereq keys on magic casting skills
+   * Update prereq keys on magic casting and knowledge skills
    */
   updateMagicPrereqKeys() {
     if (!window.ClassRankData) return;
     
-    // Get current classes
-    const classes = [
-      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
-      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
-      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
-    ].filter(c => c);
+    // Get current classes and ranks
+    const primaryClass = document.getElementById('class-primary')?.value?.trim() || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
+    const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim() || '';
     
-    // Mapping of magic skill to classes that use it
+    const primaryRank = parseInt(document.getElementById('rank-primary')?.value, 10) || 0;
+    const secondaryRank = parseInt(document.getElementById('rank-secondary')?.value, 10) || 0;
+    const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
+    
+    // Get rank requirements for each class slot
+    const primaryReq = primaryClass ? window.ClassRankData.getNextRankRequirement(primaryRank, 'primary') : null;
+    const secondaryReq = secondaryClass ? window.ClassRankData.getNextRankRequirement(secondaryRank, 'secondary') : null;
+    const tertiaryReq = tertiaryClass ? window.ClassRankData.getNextRankRequirement(tertiaryRank, 'tertiary') : null;
+    
+    // Mapping of magic skill to classes that use it (both casting and knowledge skills)
     const skillClassMapping = {
-      'channel': ['cleric', 'druid', 'paladin', 'ranger'],
+      'channel': ['cleric', 'druid', 'paladin', 'ranger', 'anti-paladin'],
+      'piety': ['cleric', 'druid', 'paladin', 'ranger', 'anti-paladin'],
       'arcane-casting': ['mage', 'magic-user'],
+      'arcane-knowledge': ['mage', 'magic-user'],
       'arcane-sorcery': ['sorcerer'],
-      'musicianship': ['bard']
+      'sorcerous-wisdom': ['sorcerer'],
+      'musicianship': ['bard'],
+      'lyrical-magic': ['bard']
     };
     
     // Clear all prereq key slots first
@@ -2955,15 +2966,31 @@ const App = {
       slot.innerHTML = '';
     });
     
-    // For each class the character has, add prereq keys to their casting skill
-    classes.forEach((className, index) => {
+    // Helper to get tooltip for a class
+    const getTooltip = (className, rank, req, keyColor) => {
+      const colorName = keyColor === 'gold' ? 'Gold' : (keyColor === 'silver' ? 'Silver' : 'Blue');
+      if (req) {
+        return `${className}: Rank ${req.nextRank} requires ${req.percentRequired}% (${colorName})`;
+      } else {
+        return `${className}: Max Rank (${colorName})`;
+      }
+    };
+    
+    // Process each class
+    const classData = [
+      { className: primaryClass, rank: primaryRank, req: primaryReq, keyColor: 'gold' },
+      { className: secondaryClass, rank: secondaryRank, req: secondaryReq, keyColor: 'silver' },
+      { className: tertiaryClass, rank: tertiaryRank, req: tertiaryReq, keyColor: 'blue' }
+    ];
+    
+    classData.forEach(({ className, rank, req, keyColor }) => {
+      if (!className) return;
+      
       const normalized = window.ClassRankData.normalizeClassName(className);
       
       for (const [skill, classesForSkill] of Object.entries(skillClassMapping)) {
         if (classesForSkill.includes(normalized)) {
-          // This class uses this casting skill - add the appropriate key
-          const keyColor = index === 0 ? 'gold' : (index === 1 ? 'silver' : 'blue');
-          const tooltip = `${className} prerequisite`;
+          const tooltip = getTooltip(className, rank, req, keyColor);
           
           // Add to both page 1 and page 2
           document.querySelectorAll(`.prereq-key-slot[data-skill="${skill}"]`).forEach(slot => {
