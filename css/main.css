@@ -497,6 +497,16 @@ select:focus {
   color: var(--text-secondary);
 }
 
+.prereq-label.clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.prereq-label.clickable:hover {
+  color: var(--accent-color);
+}
+
 /* Rank Section */
 .rank-section {
   padding: 0.5rem;

@@ -333,6 +333,16 @@ function isPrereqForClass(skillName, className) {
 }
 
 /**
+ * Get all prerequisite skills for a class
+ * @param {string} className - The class name
+ * @returns {Array} Array of skill names
+ */
+function getPrereqSkillsForClass(className) {
+  const normClass = normalizeClassName(className);
+  return CLASS_PREREQ_SKILLS[normClass] || [];
+}
+
+/**
  * Get which class slots (primary, secondary, tertiary) have this skill as prereq
  * @param {string} skillName - The skill name
  * @param {string} primaryClass - Primary class
@@ -531,6 +541,7 @@ window.ClassRankData = {
   canCombineClasses,
   validateMulticlass,
   isPrereqForClass,
+  getPrereqSkillsForClass,
   getPrereqKeysForSkill,
   getNextRankRequirement,
   getSpellMemorization,

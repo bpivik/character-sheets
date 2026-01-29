@@ -70,6 +70,9 @@ const App = {
     // Update container button visibility
     this.updateContainerButtons();
     
+    // Setup prereq label click handlers
+    this.setupPrereqLabelClicks();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -3013,25 +3016,215 @@ const App = {
       let html = '';
       if (keys.primary) {
         const tooltip = primaryReq 
-          ? `${primaryClass}: Rank ${primaryReq.nextRank} requires ${primaryReq.percentRequired}%`
+          ? `${primaryClass}: Rank ${primaryReq.nextRank} requires ${primaryReq.skillsNeeded} skills at ${primaryReq.percentRequired}%`
           : `${primaryClass}: Max Rank`;
         html += this.getPrereqKeySvg('gold', tooltip);
       }
       if (keys.secondary) {
         const tooltip = secondaryReq 
-          ? `${secondaryClass}: Rank ${secondaryReq.nextRank} requires ${secondaryReq.percentRequired}%`
+          ? `${secondaryClass}: Rank ${secondaryReq.nextRank} requires ${secondaryReq.skillsNeeded} skills at ${secondaryReq.percentRequired}%`
           : `${secondaryClass}: Max Rank`;
         html += this.getPrereqKeySvg('silver', tooltip);
       }
       if (keys.tertiary) {
         const tooltip = tertiaryReq 
-          ? `${tertiaryClass}: Rank ${tertiaryReq.nextRank} requires ${tertiaryReq.percentRequired}%`
+          ? `${tertiaryClass}: Rank ${tertiaryReq.nextRank} requires ${tertiaryReq.skillsNeeded} skills at ${tertiaryReq.percentRequired}%`
           : `${tertiaryClass}: Max Rank`;
         html += this.getPrereqKeySvg('blue', tooltip);
       }
       
       container.innerHTML = html;
     });
+  },
+  
+  /**
+   * Setup click handlers for prerequisite skill labels
+   */
+  setupPrereqLabelClicks() {
+    const labels = document.querySelectorAll('.prereq-label.clickable');
+    labels.forEach(label => {
+      label.addEventListener('click', () => {
+        const classSlot = label.dataset.classSlot;
+        this.showPrereqStatus(classSlot);
+      });
+    });
+  },
+  
+  /**
+   * Show prerequisite skill status popup for a class slot
+   */
+  showPrereqStatus(classSlot) {
+    if (!window.ClassRankData) return;
+    
+    // Get class name and rank for this slot
+    const classInput = document.getElementById(`class-${classSlot}`);
+    const rankInput = document.getElementById(`rank-${classSlot}`);
+    
+    const className = classInput?.value?.trim() || '';
+    const currentRank = parseInt(rankInput?.value, 10) || 0;
+    
+    if (!className) {
+      alert('No class selected for this slot.');
+      return;
+    }
+    
+    // Get next rank requirement
+    const req = window.ClassRankData.getNextRankRequirement(currentRank, classSlot);
+    
+    if (!req) {
+      alert(`${className} is at maximum rank (Rank 5).`);
+      return;
+    }
+    
+    // Get prereq skills for this class
+    const prereqSkills = window.ClassRankData.getPrereqSkillsForClass(className);
+    
+    if (!prereqSkills || prereqSkills.length === 0) {
+      alert(`No prerequisite skills defined for ${className}.`);
+      return;
+    }
+    
+    // Collect current skill values from the character sheet
+    const skillStatus = this.getPrereqSkillStatus(prereqSkills, req.percentRequired);
+    
+    // Build message
+    const slotName = classSlot === 'primary' ? 'Class' : 
+                     classSlot === 'secondary' ? 'Subclass 1' : 'Subclass 2';
+    
+    let message = `${className} (${slotName})\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `Current Rank: ${currentRank}\n`;
+    message += `Next Rank: ${req.nextRank}\n`;
+    message += `Requires: ${req.skillsNeeded} skills at ${req.percentRequired}%\n\n`;
+    
+    const metCount = skillStatus.filter(s => s.met).length;
+    message += `Progress: ${metCount}/${req.skillsNeeded} skills met\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    // Skills that meet the requirement
+    const metSkills = skillStatus.filter(s => s.met);
+    const unmetSkills = skillStatus.filter(s => !s.met);
+    
+    if (metSkills.length > 0) {
+      message += `✓ SKILLS AT ${req.percentRequired}%+:\n`;
+      metSkills.forEach(s => {
+        message += `   ${s.name}: ${s.value}%\n`;
+      });
+      message += '\n';
+    }
+    
+    if (unmetSkills.length > 0) {
+      message += `✗ SKILLS BELOW ${req.percentRequired}%:\n`;
+      unmetSkills.forEach(s => {
+        const needed = req.percentRequired - s.value;
+        message += `   ${s.name}: ${s.value}% (need +${needed}%)\n`;
+      });
+    }
+    
+    if (metCount >= req.skillsNeeded) {
+      message += `\n★ READY TO ADVANCE TO RANK ${req.nextRank}! ★`;
+    }
+    
+    alert(message);
+  },
+  
+  /**
+   * Get current values of prerequisite skills
+   */
+  getPrereqSkillStatus(prereqSkills, requiredPercent) {
+    const status = [];
+    
+    prereqSkills.forEach(skillName => {
+      const normalizedSkill = skillName.toLowerCase().trim();
+      let skillValue = 0;
+      
+      // Check professional skills
+      for (let i = 0; i < 15; i++) {
+        const nameInput = document.getElementById(`prof-skill-${i}-name`);
+        const totalInput = document.getElementById(`prof-skill-${i}-total`);
+        
+        if (nameInput && totalInput) {
+          const name = nameInput.value?.trim().toLowerCase() || '';
+          if (name === normalizedSkill) {
+            skillValue = parseInt(totalInput.value, 10) || 0;
+            break;
+          }
+        }
+      }
+      
+      // Check standard skills if not found in professional
+      if (skillValue === 0) {
+        const standardSkillMap = {
+          'athletics': 'athletics-total',
+          'boating': 'boating-total',
+          'brawn': 'brawn-total',
+          'conceal': 'conceal-total',
+          'customs': 'customs-total',
+          'dance': 'dance-total',
+          'deceit': 'deceit-total',
+          'drive': 'drive-total',
+          'endurance': 'endurance-total',
+          'evade': 'evade-total',
+          'first aid': 'firstaid-total',
+          'influence': 'influence-total',
+          'insight': 'insight-total',
+          'locale': 'locale-total',
+          'perception': 'perception-total',
+          'ride': 'ride-total',
+          'sing': 'sing-total',
+          'stealth': 'stealth-total',
+          'swim': 'swim-total',
+          'unarmed': 'unarmed-total',
+          'willpower': 'willpower-total'
+        };
+        
+        const inputId = standardSkillMap[normalizedSkill];
+        if (inputId) {
+          const input = document.getElementById(inputId);
+          skillValue = parseInt(input?.value, 10) || 0;
+        }
+      }
+      
+      // Check combat skill
+      if (skillValue === 0 && normalizedSkill === 'combat skill') {
+        const combatTotal = document.getElementById('combat-skill-total');
+        skillValue = parseInt(combatTotal?.value, 10) || 0;
+      }
+      
+      // Check magic skills
+      if (skillValue === 0) {
+        const magicSkillMap = {
+          'channel': 'channel-total',
+          'piety': 'piety-total',
+          'arcane casting': 'arcane-casting-total',
+          'arcane knowledge': 'arcane-knowledge-total',
+          'arcane sorcery': 'arcane-sorcery-total',
+          'sorcerous wisdom': 'sorcerous-wisdom-total',
+          'musicianship': 'musicianship-total',
+          'lyrical magic': 'lyrical-magic-total'
+        };
+        
+        const inputId = magicSkillMap[normalizedSkill];
+        if (inputId) {
+          const input = document.getElementById(inputId);
+          skillValue = parseInt(input?.value, 10) || 0;
+        }
+      }
+      
+      status.push({
+        name: skillName,
+        value: skillValue,
+        met: skillValue >= requiredPercent
+      });
+    });
+    
+    // Sort: met skills first, then by value descending
+    status.sort((a, b) => {
+      if (a.met !== b.met) return b.met - a.met;
+      return b.value - a.value;
+    });
+    
+    return status;
   },
   
   /**
