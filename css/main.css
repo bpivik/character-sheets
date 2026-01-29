@@ -2182,9 +2182,9 @@ select:focus {
 }
 
 .memorize-input {
-  width: 30px;
-  padding: 0.1rem;
-  font-size: 0.72rem;
+  width: 45px;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
