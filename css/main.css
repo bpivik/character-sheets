@@ -643,7 +643,7 @@ select:focus {
 /* Derived Attributes Box */
 .derived-header {
   display: grid;
-  grid-template-columns: 1fr 70px;
+  grid-template-columns: 1fr 70px 70px;
   gap: 0.4rem;
   padding: 0.25rem 0;
   margin-bottom: 0.25rem;
@@ -653,6 +653,7 @@ select:focus {
   text-transform: uppercase;
 }
 
+.derived-header-orig,
 .derived-header-curr {
   text-align: center;
 }
@@ -705,6 +706,21 @@ select:focus {
 }
 
 .derived-input.derived-editable {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--btn-primary-bg) !important;
+  cursor: text;
+}
+
+/* Characteristics readonly/editable states */
+.attribute-input.char-readonly {
+  background: rgba(255,255,255,0.5) !important;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: default;
+  border: 1px solid transparent !important;
+}
+
+.attribute-input.char-editable {
   background: var(--input-bg) !important;
   border: 1px solid var(--btn-primary-bg) !important;
   cursor: text;

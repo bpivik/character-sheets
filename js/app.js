@@ -439,10 +439,11 @@ const App = {
   },
   
   /**
-   * Toggle editing of original Attribute values
+   * Toggle editing of Characteristics and original Attribute values
    */
   toggleOriginalsEditing() {
     const derivedOriginals = document.querySelectorAll('.derived-readonly');
+    const charInputs = document.querySelectorAll('.char-readonly, .char-editable');
     const btn = document.getElementById('unlock-originals-btn');
     
     const isCurrentlyReadonly = derivedOriginals[0]?.hasAttribute('readonly');
@@ -455,6 +456,19 @@ const App = {
       } else {
         input.setAttribute('readonly', '');
         input.classList.remove('derived-editable');
+      }
+    });
+    
+    // Toggle Characteristics
+    charInputs.forEach(input => {
+      if (isCurrentlyReadonly) {
+        input.removeAttribute('readonly');
+        input.classList.remove('char-readonly');
+        input.classList.add('char-editable');
+      } else {
+        input.setAttribute('readonly', '');
+        input.classList.remove('char-editable');
+        input.classList.add('char-readonly');
       }
     });
     
