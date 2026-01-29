@@ -324,6 +324,20 @@ const App = {
       const field = document.getElementById(fieldId);
       if (field) {
         field.addEventListener('input', () => {
+          // For percent fields, handle ENC penalty
+          if (fieldId === 'combat-skill-1-percent' || fieldId === 'unarmed-percent') {
+            // If field has a penalty applied, update the original value
+            if (field.classList.contains('enc-penalized-value')) {
+              const currentStatus = Calculator.getEncStatus(this.character.derived.totalEnc || 0, this.character.characteristics.str || 0);
+              const penaltyPercent = currentStatus.penaltyPercent || 0;
+              // User entered penalized value, calculate what original should be
+              const enteredValue = parseInt(field.value) || 0;
+              field.dataset.originalValue = enteredValue + penaltyPercent;
+            } else {
+              // No penalty, original = current
+              field.dataset.originalValue = field.value;
+            }
+          }
           this.updateCombatQuickRef();
           this.scheduleAutoSave();
         });
@@ -2779,6 +2793,35 @@ const App = {
         input.title = '';
       }
     }
+    
+    // Update Combat Skill and Unarmed (both are STR+DEX based)
+    const combatSkillInputs = document.querySelectorAll('.enc-affected-combat');
+    combatSkillInputs.forEach(input => {
+      // Store original value if not already stored
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || parseInt(input.value) || 0;
+      
+      // Remove previous penalty classes
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty');
+      
+      if (hasPenalty && originalValue > 0) {
+        // Apply penalty and show penalized value
+        const penalizedValue = Math.max(0, originalValue - penaltyPercent);
+        input.value = penalizedValue;
+        input.classList.add('enc-penalized-value');
+        if (isBurdened) {
+          input.classList.add('enc-burdened-penalty');
+        }
+        input.title = `Original: ${originalValue}%, Penalized: ${penalizedValue}%`;
+      } else if (input.dataset.originalValue !== undefined) {
+        // Restore original value
+        input.value = input.dataset.originalValue;
+        input.title = '';
+      }
+    });
   },
 
   /**

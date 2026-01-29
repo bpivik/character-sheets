@@ -831,20 +831,23 @@
         <!-- Combat Skills Section -->
         <div class="combat-skills-section">
           <div class="combat-skill-header">
-            <span class="header-label">Combat Skill <span class="enc-indicator" title="Affected by ENC"></span></span>
+            <span class="header-label">Combat Skill</span>
             <span class="header-percent">%</span>
+            <span class="header-enc"></span>
             <span class="header-weapons">Weapons Known</span>
             <span class="header-base">Base %</span>
           </div>
           <div class="combat-skill-row">
             <input type="text" class="combat-skill-name" id="combat-skill-1-name" placeholder="">
-            <input type="number" class="combat-skill-percent" id="combat-skill-1-percent" placeholder="">
+            <input type="number" class="combat-skill-percent enc-affected-combat" id="combat-skill-1-percent" placeholder="">
+            <span class="enc-indicator" title="Affected by ENC"></span>
             <input type="text" class="combat-weapons-known" id="combat-skill-1-weapons" placeholder="">
             <span class="combat-base">STR+DEX</span>
           </div>
           <div class="combat-skill-row unarmed">
             <span class="combat-skill-name">Unarmed</span>
-            <input type="number" class="combat-skill-percent" id="unarmed-percent" placeholder="">
+            <input type="number" class="combat-skill-percent enc-affected-combat" id="unarmed-percent" placeholder="">
+            <span class="enc-indicator" title="Affected by ENC"></span>
             <span class="combat-weapons-known">Hands/Feet</span>
             <span class="combat-base">STR+DEX</span>
           </div>

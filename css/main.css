@@ -1695,7 +1695,7 @@ select:focus {
 
 .combat-skill-header {
   display: grid;
-  grid-template-columns: 200px 55px 1fr 65px;
+  grid-template-columns: 200px 55px 12px 1fr 65px;
   gap: 0.4rem;
   font-size: 0.72rem;
   font-weight: 600;
@@ -1706,12 +1706,16 @@ select:focus {
 
 .combat-skill-row {
   display: grid;
-  grid-template-columns: 200px 55px 1fr 65px;
+  grid-template-columns: 200px 55px 12px 1fr 65px;
   gap: 0.4rem;
   padding: 0.2rem 0.3rem;
   border: 1px solid var(--border-light);
   border-top: none;
   font-size: 0.82rem;
+}
+
+.combat-skill-row .enc-indicator {
+  align-self: center;
 }
 
 .combat-skill-name {
