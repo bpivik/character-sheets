@@ -135,16 +135,7 @@ const App = {
       });
     });
     
-    // Movement inputs (original and current)
-    const movementOriginal = document.getElementById('movement-original');
-    if (movementOriginal) {
-      movementOriginal.addEventListener('input', (e) => {
-        this.character.derived.movementBase = e.target.value;
-        this.updateMovementDisplay();
-        this.scheduleAutoSave();
-      });
-    }
-    
+    // Movement input (current only)
     const movementCurrent = document.getElementById('movement-current');
     if (movementCurrent) {
       movementCurrent.addEventListener('input', (e) => {
@@ -499,8 +490,7 @@ const App = {
       'healing-rate-original': 'healingRateOriginal',
       'initiative-original': 'initiativeOriginal',
       'luck-original': 'luckOriginal',
-      'magic-points-original': 'magicPointsOriginal',
-      'movement-original': 'movementBase'
+      'magic-points-original': 'magicPointsOriginal'
     };
     
     for (const [fieldId, key] of Object.entries(fields)) {
@@ -1507,12 +1497,6 @@ const App = {
       }
     }
     
-    // Movement base (original)
-    const movementOriginal = document.getElementById('movement-original');
-    if (movementOriginal && this.character.derived.movementBase !== undefined) {
-      movementOriginal.value = this.character.derived.movementBase;
-    }
-    
     // Restore locked original values if locked
     if (this.character.originalsLocked) {
       const originalMapping = {
@@ -1522,8 +1506,7 @@ const App = {
         'healing-rate-original': 'healingRateOriginal',
         'initiative-original': 'initiativeOriginal',
         'luck-original': 'luckOriginal',
-        'magic-points-original': 'magicPointsOriginal',
-        'movement-original': 'movementBase'
+        'magic-points-original': 'magicPointsOriginal'
       };
       
       for (const [fieldId, key] of Object.entries(originalMapping)) {
