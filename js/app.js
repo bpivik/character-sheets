@@ -157,15 +157,16 @@ const App = {
   /**
    * Update sheet type based on species field
    */
-  updateSheetTypeFromSpecies() {
+  updateSheetTypeFromSpecies(previousSpecies = null) {
     const speciesInput = document.getElementById('species');
-    const species = speciesInput?.value?.trim().toLowerCase() || '';
+    const species = speciesInput?.value?.trim() || '';
+    const speciesLower = species.toLowerCase();
     
     // Determine if Syrin
-    const isSyrin = species.indexOf('syrin') !== -1;
+    const isSyrin = speciesLower.indexOf('syrin') !== -1;
     const newSheetType = isSyrin ? 'syrin' : 'human';
     
-    // Only update if changed
+    // Update sheet type if changed
     if (this.sheetType !== newSheetType) {
       // Save current hit location data before regenerating
       this.saveHitLocationsToCharacter();
@@ -183,19 +184,133 @@ const App = {
       
       // Restore hit location data
       this.loadHitLocationsFromCharacter();
-      
-      // Auto-set flying speed for Syrin
-      const flyingInput = document.getElementById('flying-speed');
-      if (flyingInput) {
-        if (isSyrin && !flyingInput.value) {
-          flyingInput.value = '20';
-        } else if (!isSyrin) {
-          flyingInput.value = '';
-        }
-      }
-      
-      this.recalculateAll();
     }
+    
+    // Handle species-specific features
+    this.updateSpeciesFeatures(species, previousSpecies);
+    
+    this.recalculateAll();
+  },
+  
+  /**
+   * Update species-specific features (movement, flying, abilities)
+   */
+  updateSpeciesFeatures(newSpecies, previousSpecies = null) {
+    if (!window.SpeciesData) return;
+    
+    const newSpeciesLower = newSpecies?.toLowerCase().trim() || '';
+    const prevSpeciesLower = previousSpecies?.toLowerCase().trim() || '';
+    
+    // Get species data
+    const newData = window.SpeciesData.getSpecies(newSpeciesLower);
+    const prevData = previousSpecies ? window.SpeciesData.getSpecies(prevSpeciesLower) : null;
+    
+    // Update movement rate
+    const movementInput = document.getElementById('movement-current');
+    if (movementInput && newData) {
+      movementInput.value = newData.movement;
+    }
+    
+    // Update flying speed
+    const flyingInput = document.getElementById('flying-speed');
+    if (flyingInput) {
+      if (newData && newData.flyingSpeed) {
+        flyingInput.value = newData.flyingSpeed + "'";
+      } else {
+        flyingInput.value = '';
+      }
+    }
+    
+    // Remove previous species abilities (if species changed)
+    if (prevData && prevData.abilities && prevData.abilities.length > 0) {
+      this.removeSpeciesAbilities(prevData.abilities);
+    }
+    
+    // Add new species abilities
+    if (newData && newData.abilities && newData.abilities.length > 0) {
+      this.populateSpeciesAbilities(newData.abilities);
+    }
+    
+    this.updateAllAbilityTooltips();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Populate species abilities (only if not already present with fuzzy matching)
+   */
+  populateSpeciesAbilities(abilities) {
+    if (!abilities || abilities.length === 0) return;
+    
+    const existingAbilities = this.getAllSpecialAbilities();
+    
+    abilities.forEach(ability => {
+      // Check if ability already exists (with fuzzy matching for notes)
+      const alreadyExists = existingAbilities.some(existing => 
+        this.abilityMatchesFuzzy(existing, ability)
+      );
+      
+      if (!alreadyExists) {
+        this.addSpecialAbility(ability, 'species');
+      }
+    });
+  },
+  
+  /**
+   * Remove species abilities (only if they match exactly or with fuzzy matching)
+   */
+  removeSpeciesAbilities(abilities) {
+    if (!abilities || abilities.length === 0) return;
+    
+    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
+    
+    for (let i = 0; i < totalSlots; i++) {
+      const input = document.getElementById(`ability-1-${i}`);
+      if (!input || !input.value.trim()) continue;
+      
+      const currentAbility = input.value.trim();
+      
+      // Check if this ability matches any species ability (with fuzzy matching)
+      const isSpeciesAbility = abilities.some(baseAbility => 
+        this.abilityMatchesFuzzy(currentAbility, baseAbility)
+      );
+      
+      // Only remove if it's a species ability and not granted by class
+      if (isSpeciesAbility && input.dataset.classAbility !== 'species') {
+        // Check if granted by another source (class)
+        if (!input.dataset.classAbility) {
+          input.value = '';
+          input.title = 'Enter a Special Ability name';
+          input.classList.remove('duplicate-warning');
+        }
+      } else if (isSpeciesAbility && input.dataset.classAbility === 'species') {
+        input.value = '';
+        input.title = 'Enter a Special Ability name';
+        input.classList.remove('duplicate-warning');
+        delete input.dataset.classAbility;
+      }
+    }
+  },
+  
+  /**
+   * Check if an ability matches another with fuzzy matching for notes
+   * e.g., "Spell-Like Abilities (Produce Flame)" matches "Spell-Like Abilities"
+   */
+  abilityMatchesFuzzy(abilityWithNotes, baseAbility) {
+    if (!abilityWithNotes || !baseAbility) return false;
+    
+    const normalizedInput = abilityWithNotes.toLowerCase().trim();
+    const normalizedBase = baseAbility.toLowerCase().trim();
+    
+    // Exact match
+    if (normalizedInput === normalizedBase) return true;
+    
+    // Input starts with the base ability
+    if (normalizedInput.startsWith(normalizedBase)) return true;
+    
+    // Base starts with the input (for reverse matching)
+    if (normalizedBase.startsWith(normalizedInput)) return true;
+    
+    return false;
   },
 
   /**
@@ -341,8 +456,19 @@ const App = {
         
         // Add blur listener for species field to update sheet type
         if (fieldId === 'species') {
+          // Store initial species value
+          field.dataset.previousValue = field.value || '';
+          
           field.addEventListener('blur', () => {
-            this.updateSheetTypeFromSpecies();
+            const previousSpecies = field.dataset.previousValue || '';
+            const currentSpecies = field.value || '';
+            
+            // Only update if species actually changed
+            if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
+              this.updateSheetTypeFromSpecies(previousSpecies);
+              field.dataset.previousValue = currentSpecies;
+            }
+            
             this.updateMagicVisibility();
             this.scheduleAutoSave();
           });
