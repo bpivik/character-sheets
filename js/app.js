@@ -3053,7 +3053,7 @@ const App = {
   
   /**
    * Update class spell lists when class or rank changes
-   * Auto-populates spells for classes like Cleric based on their rank
+   * Auto-populates spells for classes like Cleric, Druid, Paladin, Ranger based on their rank
    */
   updateClassSpells(previousClasses = null) {
     if (!window.ClassSpellLists) return;
@@ -3074,22 +3074,14 @@ const App = {
       }
     ].filter(c => c.name);
     
-    // Determine which spell-granting classes are present
-    const spellGrantingClasses = ['cleric']; // Will expand with mage, druid, etc.
-    
+    // Use ClassSpellLists to determine which classes grant spells
     const activeSpellClasses = currentClasses.filter(c => 
-      spellGrantingClasses.includes(c.name)
+      window.ClassSpellLists.isSpellGrantingClass(c.name)
     );
-    
-    // Get max rank among spell-granting classes
-    let maxRank = 0;
-    activeSpellClasses.forEach(c => {
-      if (c.rank > maxRank) maxRank = c.rank;
-    });
     
     // Check if previous classes had any spell-granting classes that are now gone
     const previousSpellClasses = previousClasses ? 
-      previousClasses.filter(c => spellGrantingClasses.includes(c.name)) : [];
+      previousClasses.filter(c => window.ClassSpellLists.isSpellGrantingClass(c.name)) : [];
     
     // Classes that were removed
     const removedClasses = previousSpellClasses.filter(prev => 
