@@ -225,6 +225,45 @@ function validateMulticlass(primary, secondary, tertiary) {
 // CLASS PREREQUISITE SKILLS
 // ============================================
 
+// Rank advancement requirements (primary class)
+// { skillsNeeded: number, percentRequired: number }
+const RANK_REQUIREMENTS = [
+  { rank: 1, skills: 5, percent: 40 },   // Rank 0 → 1
+  { rank: 2, skills: 5, percent: 70 },   // Rank 1 → 2
+  { rank: 3, skills: 4, percent: 90 },   // Rank 2 → 3
+  { rank: 4, skills: 3, percent: 110 },  // Rank 3 → 4
+  { rank: 5, skills: 2, percent: 130 }   // Rank 4 → 5
+];
+
+// Modifiers for secondary/tertiary classes
+const CLASS_SLOT_MODIFIERS = {
+  primary: 0,
+  secondary: 10,
+  tertiary: 20
+};
+
+/**
+ * Get the requirement to advance to the next rank
+ * @param {number} currentRank - Current rank (0-5)
+ * @param {string} classSlot - 'primary', 'secondary', or 'tertiary'
+ * @returns {object|null} { nextRank, skillsNeeded, percentRequired } or null if max rank
+ */
+function getNextRankRequirement(currentRank, classSlot) {
+  const rank = parseInt(currentRank, 10) || 0;
+  if (rank >= 5) return null; // Already max rank
+  
+  const baseReq = RANK_REQUIREMENTS[rank];
+  if (!baseReq) return null;
+  
+  const modifier = CLASS_SLOT_MODIFIERS[classSlot] || 0;
+  
+  return {
+    nextRank: baseReq.rank,
+    skillsNeeded: baseReq.skills,
+    percentRequired: baseReq.percent + modifier
+  };
+}
+
 const CLASS_PREREQ_SKILLS = {
   "anti-paladin": [
     "Channel", "Combat Skill", "Courtesy", "Influence", "Insight", "Piety", "Ride", "Willpower"
@@ -316,6 +355,8 @@ window.ClassRankData = {
   NO_MULTICLASS,
   FORBIDDEN_COMBINATIONS,
   CLASS_PREREQ_SKILLS,
+  RANK_REQUIREMENTS,
+  CLASS_SLOT_MODIFIERS,
   normalizeClassName,
   normalizeSkillName,
   getComboKey,
@@ -326,5 +367,6 @@ window.ClassRankData = {
   canCombineClasses,
   validateMulticlass,
   isPrereqForClass,
-  getPrereqKeysForSkill
+  getPrereqKeysForSkill,
+  getNextRankRequirement
 };

@@ -227,10 +227,11 @@ const App = {
           });
         }
         
-        // Add blur listener for rank fields to update rank name
+        // Add blur listener for rank fields to update rank name and prereq keys
         if (rankFields.includes(fieldId)) {
           field.addEventListener('blur', () => {
             this.updateRankName();
+            this.updatePrereqKeys();
             this.scheduleAutoSave();
           });
         }
@@ -2557,6 +2558,15 @@ const App = {
     const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
     const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim() || '';
     
+    const primaryRank = parseInt(document.getElementById('rank-primary')?.value, 10) || 0;
+    const secondaryRank = parseInt(document.getElementById('rank-secondary')?.value, 10) || 0;
+    const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
+    
+    // Get rank requirements for each class slot
+    const primaryReq = primaryClass ? window.ClassRankData.getNextRankRequirement(primaryRank, 'primary') : null;
+    const secondaryReq = secondaryClass ? window.ClassRankData.getNextRankRequirement(secondaryRank, 'secondary') : null;
+    const tertiaryReq = tertiaryClass ? window.ClassRankData.getNextRankRequirement(tertiaryRank, 'tertiary') : null;
+    
     // Find all prereq-keys containers
     const allPrereqContainers = document.querySelectorAll('.prereq-keys');
     
@@ -2572,13 +2582,22 @@ const App = {
       // Build key icons HTML
       let html = '';
       if (keys.primary) {
-        html += this.getPrereqKeySvg('gold');
+        const tooltip = primaryReq 
+          ? `${primaryClass}: Rank ${primaryReq.nextRank} requires ${primaryReq.percentRequired}%`
+          : `${primaryClass}: Max Rank`;
+        html += this.getPrereqKeySvg('gold', tooltip);
       }
       if (keys.secondary) {
-        html += this.getPrereqKeySvg('silver');
+        const tooltip = secondaryReq 
+          ? `${secondaryClass}: Rank ${secondaryReq.nextRank} requires ${secondaryReq.percentRequired}%`
+          : `${secondaryClass}: Max Rank`;
+        html += this.getPrereqKeySvg('silver', tooltip);
       }
       if (keys.tertiary) {
-        html += this.getPrereqKeySvg('blue');
+        const tooltip = tertiaryReq 
+          ? `${tertiaryClass}: Rank ${tertiaryReq.nextRank} requires ${tertiaryReq.percentRequired}%`
+          : `${tertiaryClass}: Max Rank`;
+        html += this.getPrereqKeySvg('blue', tooltip);
       }
       
       container.innerHTML = html;
@@ -2588,7 +2607,7 @@ const App = {
   /**
    * Get SVG for a prereq key icon
    */
-  getPrereqKeySvg(color) {
+  getPrereqKeySvg(color, tooltip = '') {
     const colors = {
       gold: { gradient: ['#F5D98A', '#D4A84B', '#B8860B'], stroke: '#8B6914' },
       silver: { gradient: ['#E8E8E8', '#B8B8B8', '#888888'], stroke: '#666666' },
@@ -2597,8 +2616,10 @@ const App = {
     
     const c = colors[color] || colors.gold;
     const uniqueId = `key-${color}-${Math.random().toString(36).substr(2, 9)}`;
+    const titleEl = tooltip ? `<title>${tooltip}</title>` : '';
     
     return `<svg class="prereq-key" viewBox="0 0 32 32">
+      ${titleEl}
       <defs>
         <linearGradient id="${uniqueId}" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" style="stop-color:${c.gradient[0]}"/>
