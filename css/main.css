@@ -2036,7 +2036,7 @@ select:focus {
   padding: 0.4rem;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 150px);
+  align-self: stretch;
 }
 
 .abilities-sidebar .section-header {
