@@ -1728,6 +1728,7 @@ const App = {
         const nameInput = document.getElementById(`prof-skill-${i}-name`);
         const baseInput = document.getElementById(`prof-skill-${i}-base`);
         const currentInput = document.getElementById(`prof-skill-${i}-current`);
+        const prereqKeys = document.getElementById(`prof-skill-${i}-prereq`);
         if (nameInput && skill.name) nameInput.value = skill.name;
         if (baseInput && skill.base) baseInput.value = skill.base;
         if (currentInput && skill.current) {
@@ -1735,6 +1736,8 @@ const App = {
           // Store as original value for ENC penalty system
           currentInput.dataset.originalValue = skill.current;
         }
+        // Update prereq-keys data attribute
+        if (prereqKeys && skill.name) prereqKeys.dataset.skillName = skill.name;
         // Update ENC indicator visibility
         this.updateProfSkillEncIndicator(i);
       });
