@@ -45,6 +45,9 @@ const App = {
     // Setup money listeners
     this.setupMoneyListeners();
     
+    // Setup magic skill sync between pages
+    this.setupMagicSkillSync();
+    
     // Populate form with loaded data
     this.populateForm();
     
@@ -2860,6 +2863,145 @@ const App = {
         }
       }
     }
+    
+    // Hide/show spell columns based on memorization values
+    this.updateSpellColumnVisibility();
+    
+    // Hide/show Ranks 3-5 tab based on whether any rank 3-5 spells are available
+    this.updateMagic2TabVisibility();
+    
+    // Update prereq keys on magic skills
+    this.updateMagicPrereqKeys();
+  },
+  
+  /**
+   * Hide spell columns that have 0 memorization
+   */
+  updateSpellColumnVisibility() {
+    const columnMapping = {
+      'cantrips': '.spell-column.cantrips',
+      'rank1': '.spell-column.rank1',
+      'rank2': '.spell-column.rank2',
+      'rank3': '.spell-column.rank3',
+      'rank4': '.spell-column.rank4',
+      'rank5': '.spell-column.rank5'
+    };
+    
+    for (const [rank, selector] of Object.entries(columnMapping)) {
+      const maxInput = document.getElementById(`${rank}-max`);
+      const column = document.querySelector(selector);
+      if (maxInput && column) {
+        const maxVal = parseInt(maxInput.value, 10) || 0;
+        if (maxVal === 0) {
+          column.style.display = 'none';
+        } else {
+          column.style.display = '';
+        }
+      }
+    }
+  },
+  
+  /**
+   * Hide Ranks 3-5 Spells tab if all rank 3, 4, 5 memorization is 0
+   */
+  updateMagic2TabVisibility() {
+    const rank3Max = parseInt(document.getElementById('rank3-max')?.value, 10) || 0;
+    const rank4Max = parseInt(document.getElementById('rank4-max')?.value, 10) || 0;
+    const rank5Max = parseInt(document.getElementById('rank5-max')?.value, 10) || 0;
+    
+    const magic2Tab = document.querySelector('.tab-btn[data-page="magic2"]');
+    if (magic2Tab) {
+      if (rank3Max === 0 && rank4Max === 0 && rank5Max === 0) {
+        magic2Tab.style.display = 'none';
+        // If currently on magic2 page, switch to magic1
+        if (magic2Tab.classList.contains('active')) {
+          const magic1Tab = document.querySelector('.tab-btn[data-page="magic1"]');
+          if (magic1Tab) {
+            magic1Tab.click();
+          }
+        }
+      } else {
+        magic2Tab.style.display = '';
+      }
+    }
+  },
+  
+  /**
+   * Update prereq keys on magic casting skills
+   */
+  updateMagicPrereqKeys() {
+    if (!window.ClassRankData) return;
+    
+    // Get current classes
+    const classes = [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c);
+    
+    // Mapping of magic skill to classes that use it
+    const skillClassMapping = {
+      'channel': ['cleric', 'druid', 'paladin', 'ranger'],
+      'arcane-casting': ['mage', 'magic-user'],
+      'arcane-sorcery': ['sorcerer'],
+      'musicianship': ['bard']
+    };
+    
+    // Clear all prereq key slots first
+    document.querySelectorAll('.prereq-key-slot').forEach(slot => {
+      slot.innerHTML = '';
+    });
+    
+    // For each class the character has, add prereq keys to their casting skill
+    classes.forEach((className, index) => {
+      const normalized = window.ClassRankData.normalizeClassName(className);
+      
+      for (const [skill, classesForSkill] of Object.entries(skillClassMapping)) {
+        if (classesForSkill.includes(normalized)) {
+          // This class uses this casting skill - add the appropriate key
+          const keyColor = index === 0 ? 'gold' : (index === 1 ? 'silver' : 'blue');
+          const tooltip = `${className} prerequisite`;
+          
+          // Add to both page 1 and page 2
+          document.querySelectorAll(`.prereq-key-slot[data-skill="${skill}"]`).forEach(slot => {
+            slot.innerHTML += this.getPrereqKeySvg(keyColor, tooltip);
+          });
+        }
+      }
+    });
+  },
+  
+  /**
+   * Set up syncing between magic skill inputs on page 1 and page 2
+   */
+  setupMagicSkillSync() {
+    const syncInputs = document.querySelectorAll('.sync-magic');
+    
+    syncInputs.forEach(input => {
+      const syncTargetId = input.dataset.sync;
+      const syncTarget = document.getElementById(syncTargetId);
+      
+      if (syncTarget) {
+        // Sync from page 2 to page 1
+        input.addEventListener('input', () => {
+          syncTarget.value = input.value;
+          // Also save to character data
+          const key = this.camelCase(syncTargetId);
+          if (this.character.magic) {
+            this.character.magic[key] = input.value;
+          }
+          this.scheduleAutoSave();
+        });
+        
+        // Sync from page 1 to page 2
+        syncTarget.addEventListener('input', () => {
+          input.value = syncTarget.value;
+        });
+        
+        // Initial sync
+        input.value = syncTarget.value;
+      }
+    });
   },
   
   /**

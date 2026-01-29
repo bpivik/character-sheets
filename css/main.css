@@ -2129,6 +2129,23 @@ select:focus {
   border-color: var(--input-focus);
 }
 
+/* Casting skill name with prereq key */
+.casting-skill-name {
+  margin-right: 0.25rem;
+}
+
+.prereq-key-slot {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.prereq-key-slot .prereq-key {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+}
+
 .deity-input {
   width: 100%;
   padding: 0.35rem 0.3rem;
