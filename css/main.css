@@ -2050,6 +2050,15 @@ select:focus {
   border-color: var(--input-focus);
 }
 
+.ability-input.duplicate-warning {
+  background-color: #fff3cd;
+  border-color: #ffc107;
+}
+
+.ability-input.duplicate-warning:focus {
+  border-color: #e0a800;
+}
+
 .notes-textarea {
   width: 100%;
   min-height: 120px;

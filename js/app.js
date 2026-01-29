@@ -1614,7 +1614,7 @@ const App = {
   },
 
   /**
-   * Generate special ability inputs
+   * Generate special ability inputs with duplicate warning, auto-fill descriptions, and tooltips
    */
   generateSpecialAbilities() {
     for (let col = 1; col <= 3; col++) {
@@ -1629,8 +1629,117 @@ const App = {
         input.className = 'ability-input';
         input.id = `ability-${col}-${i}`;
         input.placeholder = '';
+        
+        // Set default tooltip
+        input.title = 'Enter a Special Ability name';
+        
+        // Handle ability changes
+        input.addEventListener('blur', (e) => {
+          this.handleAbilityChange(e.target);
+        });
+        
         input.addEventListener('input', () => this.scheduleAutoSave());
         container.appendChild(input);
+      }
+    }
+  },
+  
+  /**
+   * Handle ability input change - check duplicates, update tooltip
+   */
+  handleAbilityChange(input) {
+    const value = input.value.trim();
+    
+    if (!value) {
+      // Reset tooltip for empty input
+      input.title = 'Enter a Special Ability name';
+      input.classList.remove('duplicate-warning');
+      return;
+    }
+    
+    // Check for duplicates
+    const isDuplicate = this.checkAbilityDuplicate(input);
+    
+    if (isDuplicate) {
+      input.classList.add('duplicate-warning');
+    } else {
+      input.classList.remove('duplicate-warning');
+    }
+    
+    // Update tooltip with ability description
+    this.updateAbilityTooltip(input);
+  },
+  
+  /**
+   * Check if ability is duplicated elsewhere
+   * @returns {boolean} true if duplicate found
+   */
+  checkAbilityDuplicate(currentInput) {
+    const currentValue = currentInput.value.trim().toLowerCase();
+    if (!currentValue) return false;
+    
+    // Check all other ability inputs
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < ABILITY_SLOTS_PER_COLUMN; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (!input || input === currentInput) continue;
+        
+        const otherValue = input.value.trim().toLowerCase();
+        if (otherValue === currentValue) {
+          // Show warning
+          const keepDuplicate = confirm(
+            `This ability "${currentInput.value}" already exists in another slot.\n\n` +
+            `Do you want to keep this duplicate?\n\n` +
+            `Click OK to keep, Cancel to clear this entry.`
+          );
+          
+          if (!keepDuplicate) {
+            currentInput.value = '';
+            currentInput.title = 'Enter a Special Ability name';
+            this.scheduleAutoSave();
+            return false;
+          }
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+  
+  /**
+   * Update tooltip with ability description
+   */
+  updateAbilityTooltip(input) {
+    const value = input.value.trim();
+    
+    if (!value) {
+      input.title = 'Enter a Special Ability name';
+      return;
+    }
+    
+    // Look up description from AbilityDescriptions
+    if (window.AbilityDescriptions) {
+      const description = AbilityDescriptions.getDescription(value);
+      if (description) {
+        input.title = description;
+      } else {
+        input.title = value; // Just show the ability name if no description
+      }
+    } else {
+      input.title = value;
+    }
+  },
+  
+  /**
+   * Update all ability tooltips (called on load)
+   */
+  updateAllAbilityTooltips() {
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < ABILITY_SLOTS_PER_COLUMN; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          this.updateAbilityTooltip(input);
+        }
       }
     }
   },
@@ -1664,6 +1773,9 @@ const App = {
         }
       }
     }
+    
+    // Update tooltips after sorting
+    this.updateAllAbilityTooltips();
     
     this.scheduleAutoSave();
   },
@@ -2031,6 +2143,8 @@ const App = {
         const input = document.getElementById(`ability-${col}-${row}`);
         if (input && ability) input.value = ability;
       });
+      // Update tooltips after loading abilities
+      this.updateAllAbilityTooltips();
     }
     
     // Flying Speed
