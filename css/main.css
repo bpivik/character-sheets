@@ -110,6 +110,7 @@ select:focus {
 }
 
 .sheet-type-selector {
+  display: none; /* Sheet type is now automatic based on species */
   padding: 0.4rem 0.6rem;
   font-family: var(--font-body);
   border: 1px solid var(--border-gold);

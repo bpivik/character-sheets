@@ -2715,9 +2715,6 @@ const App = {
     const needsMage = !isSyrin && classes.some(c => MAGE_CLASSES.includes(c));
     const needsSorcerer = !isSyrin && classes.some(c => SORCERER_CLASSES.includes(c));
     const needsBard = classes.some(c => BARD_CLASSES.includes(c));
-    const needsMage = classes.some(c => MAGE_CLASSES.includes(c));
-    const needsSorcerer = classes.some(c => SORCERER_CLASSES.includes(c));
-    const needsBard = classes.some(c => BARD_CLASSES.includes(c));
     
     // Check if any magic is needed
     const needsAnyMagic = needsDivine || needsMage || needsSorcerer || needsBard;
