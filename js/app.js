@@ -470,10 +470,10 @@ const App = {
     
     if (btn) {
       if (isCurrentlyReadonly) {
-        btn.textContent = '🔓 Lock Original Attributes';
+        btn.textContent = '🔓 Lock Characteristics and Original Attributes';
         btn.classList.add('unlocked');
       } else {
-        btn.textContent = '🔒 Unlock Original Attributes';
+        btn.textContent = '🔒 Unlock Characteristics and Original Attributes';
         btn.classList.remove('unlocked');
       }
     }
@@ -1519,7 +1519,7 @@ const App = {
       // Update button state to show locked
       const btn = document.getElementById('unlock-originals-btn');
       if (btn) {
-        btn.textContent = '🔒 Unlock Original Attributes';
+        btn.textContent = '🔒 Unlock Characteristics and Original Attributes';
         btn.classList.remove('unlocked');
       }
     }
