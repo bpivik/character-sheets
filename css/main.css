@@ -885,24 +885,24 @@ select:focus {
   border-bottom-color: #c41e3a;
 }
 
+.enc-indicator.enc-burdened {
+  border-bottom-color: #1e90ff;
+}
+
 /* ENC Status styling */
+.enc-extremely-unburdened,
+.enc-unburdened {
+  color: #228b22 !important;
+  font-weight: 600;
+}
+
 .enc-burdened {
-  color: #b8860b !important;
+  color: #1e90ff !important;
   font-weight: 700;
 }
 
-.enc-heavily-burdened {
-  color: #ff8c00 !important;
-  font-weight: 700;
-}
-
-.enc-overloaded {
+.enc-overburdened {
   color: #c41e3a !important;
-  font-weight: 700;
-}
-
-.enc-immobilized {
-  color: #8b0000 !important;
   font-weight: 700;
 }
 
@@ -916,6 +916,26 @@ select:focus {
   color: #c41e3a !important;
   background-color: rgba(196, 30, 58, 0.1) !important;
   font-weight: 600;
+}
+
+.enc-penalized-value.enc-burdened-penalty {
+  color: #1e90ff !important;
+  background-color: rgba(30, 144, 255, 0.1) !important;
+}
+
+/* Initiative/Movement penalty styling */
+.enc-penalty-init-move {
+  font-weight: 600;
+}
+
+.enc-penalty-init-move.burdened {
+  color: #1e90ff !important;
+  background-color: rgba(30, 144, 255, 0.1) !important;
+}
+
+.enc-penalty-init-move.overburdened {
+  color: #c41e3a !important;
+  background-color: rgba(196, 30, 58, 0.1) !important;
 }
 
 /* Belief Rows (Alignment, Passion, Oath) */

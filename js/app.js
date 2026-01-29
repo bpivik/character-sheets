@@ -144,7 +144,18 @@ const App = {
     const movementCurrent = document.getElementById('movement-current');
     if (movementCurrent) {
       movementCurrent.addEventListener('input', (e) => {
-        this.character.derived.movementCurrent = e.target.value;
+        // Handle ENC penalty
+        if (e.target.classList.contains('enc-penalty-init-move')) {
+          // User is editing while penalized - update original value
+          e.target.dataset.originalValue = e.target.value;
+          // Re-apply penalty after a short delay
+          setTimeout(() => this.updateTotalEnc(), 10);
+        } else if (e.target.dataset.originalValue !== undefined) {
+          e.target.dataset.originalValue = e.target.value;
+        }
+        
+        this.character.derived.movementCurrent = e.target.dataset.originalValue || e.target.value;
+        this.updateMovementDisplay();
         this.scheduleAutoSave();
       });
     }
@@ -212,7 +223,21 @@ const App = {
       if (field) {
         field.addEventListener('input', (e) => {
           const key = this.camelCase(fieldId);
-          this.character.derived[key] = e.target.value;
+          
+          // Handle ENC penalty for initiative
+          if (fieldId === 'initiative-current' && e.target.classList.contains('enc-penalty-init-move')) {
+            // User is editing while penalized - update original value
+            e.target.dataset.originalValue = e.target.value;
+            // Re-apply penalty after a short delay
+            setTimeout(() => this.updateTotalEnc(), 10);
+          } else if (fieldId === 'initiative-current') {
+            // Normal edit - also update originalValue if it exists
+            if (e.target.dataset.originalValue !== undefined) {
+              e.target.dataset.originalValue = e.target.value;
+            }
+          }
+          
+          this.character.derived[key] = e.target.dataset.originalValue || e.target.value;
           this.scheduleAutoSave();
           
           // Update weapon damages when damage modifier changes
@@ -1560,6 +1585,10 @@ const App = {
       const field = document.getElementById(fieldId);
       if (field && this.character.derived[key] !== undefined) {
         field.value = this.character.derived[key];
+        // Store as original value for ENC penalty system (initiative and movement)
+        if (fieldId === 'initiative-current' || fieldId === 'movement-current') {
+          field.dataset.originalValue = this.character.derived[key];
+        }
       }
     }
     
@@ -2318,14 +2347,29 @@ const App = {
    * Update movement display
    */
   updateMovementDisplay() {
-    const baseMovement = parseInt(this.character.derived.movementBase) || 0;
+    // Use current movement value (from the movement-current input)
+    const movementCurrent = document.getElementById('movement-current');
+    const baseMovement = parseInt(movementCurrent?.value) || parseInt(this.character.derived.movementCurrent) || parseInt(this.character.derived.movementBase) || 0;
     const speeds = Calculator.calculateMovement(baseMovement);
     
-    document.getElementById('walk-speed').textContent = `${speeds.walk}'`;
-    document.getElementById('run-speed').textContent = `${speeds.run}'`;
-    document.getElementById('sprint-speed').textContent = `${speeds.sprint}'`;
-    document.getElementById('swim-speed').textContent = `${speeds.swim}'`;
-    document.getElementById('climb-speed').textContent = `${speeds.climb}'`;
+    const walkEl = document.getElementById('walk-speed');
+    const runEl = document.getElementById('run-speed');
+    const sprintEl = document.getElementById('sprint-speed');
+    const swimEl = document.getElementById('swim-speed');
+    const climbEl = document.getElementById('climb-speed');
+    
+    // Remove any penalty styling
+    [walkEl, runEl, sprintEl, swimEl, climbEl].forEach(el => {
+      if (el) {
+        el.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened');
+      }
+    });
+    
+    if (walkEl) walkEl.textContent = `${speeds.walk}'`;
+    if (runEl) runEl.textContent = `${speeds.run}'`;
+    if (sprintEl) sprintEl.textContent = `${speeds.sprint}'`;
+    if (swimEl) swimEl.textContent = `${speeds.swim}'`;
+    if (climbEl) climbEl.textContent = `${speeds.climb}'`;
   },
 
   /**
@@ -2374,15 +2418,15 @@ const App = {
       statusDisplay.textContent = status.name;
       
       // Add visual styling based on burden level
-      statusDisplay.classList.remove('enc-burdened', 'enc-heavily-burdened', 'enc-overloaded', 'enc-immobilized');
-      if (status.name === 'Burdened') {
+      statusDisplay.classList.remove('enc-extremely-unburdened', 'enc-unburdened', 'enc-burdened', 'enc-overburdened');
+      if (status.name === 'Extremely Unburdened') {
+        statusDisplay.classList.add('enc-extremely-unburdened');
+      } else if (status.name === 'Unburdened') {
+        statusDisplay.classList.add('enc-unburdened');
+      } else if (status.name === 'Burdened') {
         statusDisplay.classList.add('enc-burdened');
-      } else if (status.name === 'Heavily Burdened') {
-        statusDisplay.classList.add('enc-heavily-burdened');
-      } else if (status.name === 'Overloaded') {
-        statusDisplay.classList.add('enc-overloaded');
-      } else if (status.name === 'Immobilized') {
-        statusDisplay.classList.add('enc-immobilized');
+      } else if (status.name === 'Overburdened') {
+        statusDisplay.classList.add('enc-overburdened');
       }
     }
     
@@ -2394,10 +2438,14 @@ const App = {
    * Update ENC penalty display and affected skills visual feedback
    */
   updateEncPenaltyDisplay(status) {
+    const isBurdened = status.name === 'Burdened';
+    const isOverburdened = status.name === 'Overburdened';
+    const hasPenalty = isBurdened || isOverburdened;
+    
     // Update the ENC penalty note text
     const penaltyNote = document.querySelector('.enc-penalty-note span:last-child');
     if (penaltyNote) {
-      if (status.penalty) {
+      if (hasPenalty) {
         penaltyNote.textContent = `= ENC Penalty: ${status.penaltyText}`;
         penaltyNote.classList.add('enc-penalty-active');
       } else {
@@ -2409,17 +2457,115 @@ const App = {
     // Update tooltip on all enc-indicators
     const indicators = document.querySelectorAll('.enc-indicator');
     indicators.forEach(indicator => {
-      if (status.penalty) {
+      indicator.classList.remove('enc-penalty-active', 'enc-burdened');
+      if (hasPenalty) {
         indicator.title = `Affected by ENC: ${status.penaltyText}`;
-        indicator.classList.add('enc-penalty-active');
+        if (isBurdened) {
+          indicator.classList.add('enc-burdened');
+        } else {
+          indicator.classList.add('enc-penalty-active');
+        }
       } else {
         indicator.title = 'Affected by ENC';
-        indicator.classList.remove('enc-penalty-active');
       }
     });
     
+    // Update Initiative and Movement current values
+    this.updateEncInitiativeAndMovement(status);
+    
     // Update Standard Skill percentages that have enc-indicator
     this.updateEncAffectedSkillValues(status);
+  },
+  
+  /**
+   * Update Initiative and Movement current values based on ENC status
+   */
+  updateEncInitiativeAndMovement(status) {
+    const isBurdened = status.name === 'Burdened';
+    const isOverburdened = status.name === 'Overburdened';
+    const hasPenalty = isBurdened || isOverburdened;
+    const penaltyClass = isBurdened ? 'burdened' : 'overburdened';
+    
+    // Initiative Current
+    const initCurrent = document.getElementById('initiative-current');
+    if (initCurrent) {
+      // Store original if not already stored
+      if (initCurrent.dataset.originalValue === undefined && initCurrent.value) {
+        initCurrent.dataset.originalValue = initCurrent.value;
+      }
+      
+      const originalInit = parseInt(initCurrent.dataset.originalValue) || parseInt(initCurrent.value) || 0;
+      
+      initCurrent.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened');
+      
+      if (hasPenalty && status.initiativePenalty > 0) {
+        const penalizedInit = originalInit - status.initiativePenalty;
+        initCurrent.value = penalizedInit;
+        initCurrent.classList.add('enc-penalty-init-move', penaltyClass);
+        initCurrent.title = `Original: ${originalInit}, ENC Penalty: -${status.initiativePenalty}`;
+      } else if (initCurrent.dataset.originalValue !== undefined) {
+        initCurrent.value = initCurrent.dataset.originalValue;
+        initCurrent.title = '';
+      }
+      
+      // Update combat quick ref
+      this.updateCombatQuickRef();
+    }
+    
+    // Movement Current
+    const moveCurrent = document.getElementById('movement-current');
+    if (moveCurrent) {
+      // Store original if not already stored
+      if (moveCurrent.dataset.originalValue === undefined && moveCurrent.value) {
+        moveCurrent.dataset.originalValue = moveCurrent.value;
+      }
+      
+      const originalMove = parseInt(moveCurrent.dataset.originalValue) || parseInt(moveCurrent.value) || 0;
+      
+      moveCurrent.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened');
+      
+      if (hasPenalty && status.movementPenalty > 0) {
+        const penalizedMove = Math.max(0, originalMove - status.movementPenalty);
+        moveCurrent.value = penalizedMove;
+        moveCurrent.classList.add('enc-penalty-init-move', penaltyClass);
+        moveCurrent.title = `Original: ${originalMove}', ENC Penalty: -${status.movementPenalty}'`;
+        
+        // Update movement display with penalized value
+        this.updateMovementDisplayWithPenalty(penalizedMove, penaltyClass);
+      } else if (moveCurrent.dataset.originalValue !== undefined) {
+        moveCurrent.value = moveCurrent.dataset.originalValue;
+        moveCurrent.title = '';
+        
+        // Restore normal movement display
+        this.updateMovementDisplay();
+      }
+    }
+  },
+  
+  /**
+   * Update movement speed display with ENC penalty styling
+   */
+  updateMovementDisplayWithPenalty(baseMove, penaltyClass) {
+    const speeds = Calculator.calculateMovement(baseMove);
+    
+    const walkEl = document.getElementById('walk-speed');
+    const runEl = document.getElementById('run-speed');
+    const sprintEl = document.getElementById('sprint-speed');
+    const swimEl = document.getElementById('swim-speed');
+    const climbEl = document.getElementById('climb-speed');
+    
+    [walkEl, runEl, sprintEl, swimEl, climbEl].forEach(el => {
+      if (el) {
+        el.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened');
+        el.classList.add('enc-penalty-init-move', penaltyClass);
+      }
+    });
+    
+    if (walkEl) walkEl.textContent = `${speeds.walk}'`;
+    if (runEl) runEl.textContent = `${speeds.run}'`;
+    if (sprintEl) sprintEl.textContent = `${speeds.sprint}'`;
+    if (swimEl) swimEl.textContent = `${speeds.swim}'`;
+    if (climbEl) climbEl.textContent = `${speeds.climb}'`;
   },
   
   /**
@@ -2427,6 +2573,9 @@ const App = {
    */
   updateEncAffectedSkillValues(status) {
     const penaltyPercent = status.penaltyPercent || 0;
+    const isBurdened = status.name === 'Burdened';
+    const isOverburdened = status.name === 'Overburdened';
+    const hasPenalty = isBurdened || isOverburdened;
     
     // Find all Standard Skills with enc-indicator (those have STR/DEX in formula)
     document.querySelectorAll('.skill-row').forEach(row => {
@@ -2443,16 +2592,21 @@ const App = {
       
       const originalValue = parseInt(input.dataset.originalValue) || parseInt(input.value) || 0;
       
-      if (penaltyPercent > 0 && originalValue > 0) {
+      // Remove previous penalty classes
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty');
+      
+      if (hasPenalty && originalValue > 0) {
         // Apply penalty and show penalized value
         const penalizedValue = Math.max(0, originalValue - penaltyPercent);
         input.value = penalizedValue;
         input.classList.add('enc-penalized-value');
+        if (isBurdened) {
+          input.classList.add('enc-burdened-penalty');
+        }
         input.title = `Original: ${originalValue}%, Penalized: ${penalizedValue}%`;
       } else if (input.dataset.originalValue !== undefined) {
         // Restore original value
         input.value = input.dataset.originalValue;
-        input.classList.remove('enc-penalized-value');
         input.title = '';
       }
     });
@@ -2472,16 +2626,21 @@ const App = {
       
       const originalValue = parseInt(input.dataset.originalValue) || parseInt(input.value) || 0;
       
-      if (penaltyPercent > 0 && originalValue > 0) {
+      // Remove previous penalty classes
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty');
+      
+      if (hasPenalty && originalValue > 0) {
         // Apply penalty and show penalized value
         const penalizedValue = Math.max(0, originalValue - penaltyPercent);
         input.value = penalizedValue;
         input.classList.add('enc-penalized-value');
+        if (isBurdened) {
+          input.classList.add('enc-burdened-penalty');
+        }
         input.title = `Original: ${originalValue}%, Penalized: ${penalizedValue}%`;
       } else if (input.dataset.originalValue !== undefined) {
         // Restore original value
         input.value = input.dataset.originalValue;
-        input.classList.remove('enc-penalized-value');
         input.title = '';
       }
     }

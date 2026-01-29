@@ -135,18 +135,39 @@ const Calculator = {
 
   /**
    * Get Encumbrance status based on total ENC and STR
-   * Returns the full status object with penalty info
+   * Returns the full status object with penalty info plus calculated penalties
    */
   getEncStatus(totalEnc, STR) {
-    const threshold = this.calculateEncThreshold(STR);
-    const ratio = threshold > 0 ? totalEnc / threshold : 0;
+    const strVal = parseInt(STR) || 0;
+    const ratio = strVal > 0 ? totalEnc / strVal : 0;
     
+    // Find base status
+    let baseStatus = ENC_STATUS[ENC_STATUS.length - 1];
     for (const status of ENC_STATUS) {
       if (ratio <= status.threshold) {
-        return status;
+        baseStatus = status;
+        break;
       }
     }
-    return ENC_STATUS[ENC_STATUS.length - 1]; // Immobilized
+    
+    // Calculate specific penalties for Burdened/Overburdened
+    let initiativePenalty = 0;
+    let movementPenalty = 0;
+    const thingsOverStr = Math.max(0, totalEnc - strVal);
+    
+    if (baseStatus.name === 'Burdened' || baseStatus.name === 'Overburdened') {
+      // For each Thing over STR, reduce Initiative by 1
+      initiativePenalty = Math.floor(thingsOverStr);
+      // For every 6 Things over STR, reduce Movement by 5 feet
+      movementPenalty = Math.floor(thingsOverStr / 6) * 5;
+    }
+    
+    return {
+      ...baseStatus,
+      initiativePenalty,
+      movementPenalty,
+      thingsOverStr
+    };
   },
 
   /**
