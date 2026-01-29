@@ -2019,51 +2019,34 @@ select:focus {
   grid-column: 1 / -1;
 }
 
-/* Combat page with abilities sidebar layout */
-.combat-with-abilities-layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 0.75rem;
-}
-
-.combat-main-content {
-  min-width: 0;
-}
-
-.abilities-sidebar {
-  background: rgba(255,255,255,0.3);
-  border: 1px solid var(--border-light);
-  padding: 0.4rem;
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-}
-
-.abilities-sidebar .section-header {
-  font-size: 0.85rem;
-  margin-bottom: 0.3rem;
-  text-align: center;
-}
-
-.abilities-single-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  overflow-y: auto;
-  flex: 1;
-  margin-bottom: 0.3rem;
-}
-
-.abilities-sidebar .btn-small {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.4rem;
-}
-
+/* Special Abilities - bottom layout with scroll */
 .abilities-columns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
   margin-bottom: 0.5rem;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+/* Scrollbar styling for abilities */
+.abilities-columns::-webkit-scrollbar {
+  width: 8px;
+}
+
+.abilities-columns::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+.abilities-columns::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 4px;
+}
+
+.abilities-columns::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dark);
 }
 
 .abilities-column {

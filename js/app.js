@@ -261,32 +261,33 @@ const App = {
   removeSpeciesAbilities(abilities) {
     if (!abilities || abilities.length === 0) return;
     
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (!input || !input.value.trim()) continue;
-      
-      const currentAbility = input.value.trim();
-      
-      // Check if this ability matches any species ability (with fuzzy matching)
-      const isSpeciesAbility = abilities.some(baseAbility => 
-        this.abilityMatchesFuzzy(currentAbility, baseAbility)
-      );
-      
-      // Only remove if it's a species ability and not granted by class
-      if (isSpeciesAbility && input.dataset.classAbility !== 'species') {
-        // Check if granted by another source (class)
-        if (!input.dataset.classAbility) {
+    // 3 columns x 20 rows
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (!input || !input.value.trim()) continue;
+        
+        const currentAbility = input.value.trim();
+        
+        // Check if this ability matches any species ability (with fuzzy matching)
+        const isSpeciesAbility = abilities.some(baseAbility => 
+          this.abilityMatchesFuzzy(currentAbility, baseAbility)
+        );
+        
+        // Only remove if it's a species ability and not granted by class
+        if (isSpeciesAbility && input.dataset.classAbility !== 'species') {
+          // Check if granted by another source (class)
+          if (!input.dataset.classAbility) {
+            input.value = '';
+            input.title = 'Enter a Special Ability name';
+            input.classList.remove('duplicate-warning');
+          }
+        } else if (isSpeciesAbility && input.dataset.classAbility === 'species') {
           input.value = '';
           input.title = 'Enter a Special Ability name';
           input.classList.remove('duplicate-warning');
+          delete input.dataset.classAbility;
         }
-      } else if (isSpeciesAbility && input.dataset.classAbility === 'species') {
-        input.value = '';
-        input.title = 'Enter a Special Ability name';
-        input.classList.remove('duplicate-warning');
-        delete input.dataset.classAbility;
       }
     }
   },
@@ -1748,34 +1749,34 @@ const App = {
   },
 
   /**
-   * Generate special ability inputs - single column layout
+   * Generate special ability inputs - 3 column layout with 20 rows each
    */
   generateSpecialAbilities() {
-    const container = document.getElementById('abilities-col-1');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    // Generate all ability slots in one column (75 total = 3 x 25)
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'ability-input';
-      input.id = `ability-1-${i}`;
-      input.placeholder = '';
+    for (let col = 1; col <= 3; col++) {
+      const container = document.getElementById(`abilities-col-${col}`);
+      if (!container) continue;
       
-      // Set default tooltip
-      input.title = 'Enter a Special Ability name';
+      container.innerHTML = '';
       
-      // Handle ability changes
-      input.addEventListener('blur', (e) => {
-        this.handleAbilityChange(e.target);
-      });
-      
-      input.addEventListener('input', () => this.scheduleAutoSave());
-      container.appendChild(input);
+      // 20 rows per column = 60 total abilities
+      for (let i = 0; i < 20; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ability-input';
+        input.id = `ability-${col}-${i}`;
+        input.placeholder = '';
+        
+        // Set default tooltip
+        input.title = 'Enter a Special Ability name';
+        
+        // Handle ability changes
+        input.addEventListener('blur', (e) => {
+          this.handleAbilityChange(e.target);
+        });
+        
+        input.addEventListener('input', () => this.scheduleAutoSave());
+        container.appendChild(input);
+      }
     }
   },
   
@@ -1813,29 +1814,29 @@ const App = {
     const currentValue = currentInput.value.trim().toLowerCase();
     if (!currentValue) return false;
     
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    
-    // Check all other ability inputs in single column
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (!input || input === currentInput) continue;
-      
-      const otherValue = input.value.trim().toLowerCase();
-      if (otherValue === currentValue) {
-        // Show warning
-        const keepDuplicate = confirm(
-          `This ability "${currentInput.value}" already exists in another slot.\n\n` +
-          `Do you want to keep this duplicate?\n\n` +
-          `Click OK to keep, Cancel to clear this entry.`
-        );
+    // Check all other ability inputs (3 columns, 20 rows each)
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (!input || input === currentInput) continue;
         
-        if (!keepDuplicate) {
-          currentInput.value = '';
-          currentInput.title = 'Enter a Special Ability name';
-          this.scheduleAutoSave();
-          return false;
+        const otherValue = input.value.trim().toLowerCase();
+        if (otherValue === currentValue) {
+          // Show warning
+          const keepDuplicate = confirm(
+            `This ability "${currentInput.value}" already exists in another slot.\n\n` +
+            `Do you want to keep this duplicate?\n\n` +
+            `Click OK to keep, Cancel to clear this entry.`
+          );
+          
+          if (!keepDuplicate) {
+            currentInput.value = '';
+            currentInput.title = 'Enter a Special Ability name';
+            this.scheduleAutoSave();
+            return false;
+          }
+          return true;
         }
-        return true;
       }
     }
     return false;
@@ -1869,11 +1870,12 @@ const App = {
    * Update all ability tooltips (called on load)
    */
   updateAllAbilityTooltips() {
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (input && input.value.trim()) {
-        this.updateAbilityTooltip(input);
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          this.updateAbilityTooltip(input);
+        }
       }
     }
   },
@@ -1882,25 +1884,29 @@ const App = {
    * Sort special abilities alphabetically
    */
   sortSpecialAbilities() {
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    
-    // Collect all abilities
+    // Collect all abilities from 3 columns
     const abilities = [];
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (input && input.value.trim()) {
-        abilities.push(input.value.trim());
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          abilities.push(input.value.trim());
+        }
       }
     }
     
     // Sort alphabetically
     abilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     
-    // Redistribute
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (input) {
-        input.value = abilities[i] || '';
+    // Redistribute across columns
+    let index = 0;
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input) {
+          input.value = abilities[index] || '';
+          index++;
+        }
       }
     }
     
@@ -2262,10 +2268,12 @@ const App = {
       });
     }
     
-    // Special Abilities
+    // Special Abilities (3 columns x 20 rows = 60 total)
     if (this.character.combat && this.character.combat.specialAbilities) {
       this.character.combat.specialAbilities.forEach((ability, i) => {
-        const input = document.getElementById(`ability-1-${i}`);
+        const col = Math.floor(i / 20) + 1;
+        const row = i % 20;
+        const input = document.getElementById(`ability-${col}-${row}`);
         if (input && ability) input.value = ability;
       });
       // Update tooltips after loading abilities
@@ -2513,13 +2521,14 @@ const App = {
       this.character.combat.rangedWeapons.push(weapon);
     }
     
-    // Special Abilities
+    // Special Abilities (3 columns x 20 rows = 60 total)
     this.character.combat.specialAbilities = [];
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (input) {
-        this.character.combat.specialAbilities.push(input.value);
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input) {
+          this.character.combat.specialAbilities.push(input.value);
+        }
       }
     }
     
@@ -3761,25 +3770,25 @@ const App = {
     // Normalize class abilities for comparison
     const normalizedClassAbilities = classAbilities.map(a => a.toLowerCase().trim());
     
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    
-    // Check each ability slot
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (!input || !input.value.trim()) continue;
-      
-      const ability = input.value.toLowerCase().trim();
-      
-      // Check if this ability belongs to the removed class
-      if (normalizedClassAbilities.includes(ability)) {
-        // Check if another class also grants this ability
-        const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className);
+    // Check each ability slot (3 columns x 20 rows)
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (!input || !input.value.trim()) continue;
         
-        if (!otherClassesGrant) {
-          input.value = '';
-          input.title = 'Enter a Special Ability name';
-          input.classList.remove('duplicate-warning');
-          delete input.dataset.classAbility;
+        const ability = input.value.toLowerCase().trim();
+        
+        // Check if this ability belongs to the removed class
+        if (normalizedClassAbilities.includes(ability)) {
+          // Check if another class also grants this ability
+          const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className);
+          
+          if (!otherClassesGrant) {
+            input.value = '';
+            input.title = 'Enter a Special Ability name';
+            input.classList.remove('duplicate-warning');
+            delete input.dataset.classAbility;
+          }
         }
       }
     }
@@ -3879,11 +3888,12 @@ const App = {
    */
   getAllSpecialAbilities() {
     const abilities = [];
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (input && input.value.trim()) {
-        abilities.push(input.value.trim());
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          abilities.push(input.value.trim());
+        }
       }
     }
     return abilities;
@@ -3893,17 +3903,18 @@ const App = {
    * Add a special ability to the first empty slot
    */
   addSpecialAbility(abilityName, sourceClass = null) {
-    const totalSlots = ABILITY_SLOTS_PER_COLUMN * 3;
-    // Find first empty slot
-    for (let i = 0; i < totalSlots; i++) {
-      const input = document.getElementById(`ability-1-${i}`);
-      if (input && !input.value.trim()) {
-        input.value = abilityName;
-        if (sourceClass) {
-          input.dataset.classAbility = sourceClass.toLowerCase();
+    // Find first empty slot (3 columns x 20 rows)
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && !input.value.trim()) {
+          input.value = abilityName;
+          if (sourceClass) {
+            input.dataset.classAbility = sourceClass.toLowerCase();
+          }
+          this.updateAbilityTooltip(input);
+          return true;
         }
-        this.updateAbilityTooltip(input);
-        return true;
       }
     }
     return false; // No empty slots
