@@ -51,6 +51,7 @@ const App = {
     // Update combat skill name and weapons from classes (if not already set)
     this.updateCombatSkillName();
     this.updateWeaponsKnown();
+    this.updateRankName();
     
     // Update container button visibility
     this.updateContainerButtons();
@@ -186,12 +187,26 @@ const App = {
     // Class fields need special handling to update combat skill name
     const classFields = ['class-primary', 'class-secondary', 'class-tertiary'];
     
+    // Rank fields need to update rank name
+    const rankFields = ['rank-primary', 'rank-secondary', 'rank-tertiary'];
+    
     infoFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
         field.addEventListener('input', (e) => {
           const key = this.camelCase(fieldId);
           this.character.info[key] = e.target.value;
+          
+          // Clamp rank values to 0-5
+          if (rankFields.includes(fieldId)) {
+            let val = parseInt(e.target.value, 10);
+            if (!isNaN(val)) {
+              val = Math.max(0, Math.min(5, val));
+              e.target.value = val;
+              this.character.info[key] = val;
+            }
+          }
+          
           this.scheduleAutoSave();
         });
         
@@ -200,6 +215,15 @@ const App = {
           field.addEventListener('blur', () => {
             this.updateCombatSkillName(true); // Force update when classes change
             this.updateWeaponsKnown(true); // Force update when classes change
+            this.updateRankName(); // Update rank name when classes change
+            this.scheduleAutoSave();
+          });
+        }
+        
+        // Add blur listener for rank fields to update rank name
+        if (rankFields.includes(fieldId)) {
+          field.addEventListener('blur', () => {
+            this.updateRankName();
             this.scheduleAutoSave();
           });
         }
@@ -2341,6 +2365,117 @@ const App = {
       // Clear if all classes are empty and we're forcing update
       weaponsKnown.value = '';
     }
+  },
+
+  /**
+   * Update rank name based on class and rank
+   * For single class: uses standard rank titles
+   * For multiclass: offers evocative name choices
+   */
+  updateRankName() {
+    if (!window.ClassRankData) return;
+    
+    const primaryClass = document.getElementById('class-primary')?.value?.trim() || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
+    const rankPrimary = document.getElementById('rank-primary')?.value || '';
+    const rankNameField = document.getElementById('rank-name');
+    
+    if (!rankNameField) return;
+    
+    // Check if we have a multiclass combo with evocative names
+    if (primaryClass && secondaryClass) {
+      const evocativeOptions = window.ClassRankData.getEvocativeNames(primaryClass, secondaryClass);
+      
+      if (evocativeOptions && evocativeOptions.length > 0) {
+        // Check if current value is already one of the evocative options
+        const currentValue = rankNameField.value.trim();
+        if (!evocativeOptions.includes(currentValue)) {
+          // Show dropdown to select evocative name
+          this.showEvocativeNameSelector(evocativeOptions, rankNameField);
+        }
+        return;
+      }
+    }
+    
+    // Single class: use standard rank title
+    if (primaryClass && rankPrimary !== '') {
+      const rankIndex = parseInt(rankPrimary, 10);
+      const title = window.ClassRankData.getRankTitle(primaryClass, rankIndex);
+      
+      // Only auto-fill if empty or matches a standard title
+      const currentValue = rankNameField.value.trim();
+      const isStandardTitle = this.isStandardRankTitle(currentValue);
+      
+      if (!currentValue || isStandardTitle) {
+        rankNameField.value = title;
+      }
+    }
+  },
+  
+  /**
+   * Check if a value is a standard rank title (not a custom name)
+   */
+  isStandardRankTitle(value) {
+    if (!value || !window.ClassRankData) return false;
+    
+    for (const titles of Object.values(window.ClassRankData.CLASS_RANK_TITLES)) {
+      if (titles.includes(value)) return true;
+    }
+    return false;
+  },
+  
+  /**
+   * Show evocative name selector dropdown
+   */
+  showEvocativeNameSelector(options, targetField) {
+    // Remove any existing selector
+    const existingSelector = document.getElementById('evocative-name-selector');
+    if (existingSelector) existingSelector.remove();
+    
+    // Create dropdown
+    const selector = document.createElement('div');
+    selector.id = 'evocative-name-selector';
+    selector.className = 'evocative-selector';
+    selector.innerHTML = `
+      <div class="evocative-header">Choose an Evocative Name:</div>
+      <div class="evocative-options">
+        ${options.map(opt => `<div class="evocative-option" data-value="${opt}">${opt}</div>`).join('')}
+      </div>
+      <div class="evocative-cancel">Cancel</div>
+    `;
+    
+    // Position near the rank name field
+    const rect = targetField.getBoundingClientRect();
+    selector.style.position = 'fixed';
+    selector.style.top = `${rect.bottom + 5}px`;
+    selector.style.left = `${rect.left}px`;
+    selector.style.zIndex = '10000';
+    
+    document.body.appendChild(selector);
+    
+    // Add click handlers
+    selector.querySelectorAll('.evocative-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        targetField.value = opt.dataset.value;
+        this.character.info.rankName = opt.dataset.value;
+        this.scheduleAutoSave();
+        selector.remove();
+      });
+    });
+    
+    selector.querySelector('.evocative-cancel').addEventListener('click', () => {
+      selector.remove();
+    });
+    
+    // Close on click outside
+    setTimeout(() => {
+      document.addEventListener('click', function closeSelector(e) {
+        if (!selector.contains(e.target) && e.target !== targetField) {
+          selector.remove();
+          document.removeEventListener('click', closeSelector);
+        }
+      });
+    }, 100);
   },
 
   /**
