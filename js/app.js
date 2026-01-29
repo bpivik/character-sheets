@@ -383,7 +383,8 @@ const App = {
     // Skill current values
     document.querySelectorAll('.skill-input').forEach(input => {
       input.addEventListener('input', (e) => {
-        const skillKey = e.target.id.replace('-current', '');
+        const skillKeyKebab = e.target.id.replace('-current', '');
+        const skillKey = this.camelCase(skillKeyKebab);
         
         // If there's an active penalty and user is editing, update the original value
         if (e.target.classList.contains('enc-penalized-value')) {
@@ -1668,13 +1669,16 @@ const App = {
         const datalist = tr.querySelector(`#${rank}-${i}-datalist`);
         
         // Populate datalist with spell options for this rank (if spell data available)
-        if (window.SpellData && window.SpellData.SPELLS_BY_RANK && datalist) {
-          const spells = window.SpellData.SPELLS_BY_RANK[rank] || [];
-          spells.forEach(spell => {
-            const option = document.createElement('option');
-            option.value = spell.name;
-            datalist.appendChild(option);
-          });
+        if (window.SpellData && datalist) {
+          const rankKey = rank;
+          const spellList = window.SpellData[rankKey];
+          if (spellList) {
+            Object.keys(spellList).forEach(spellName => {
+              const option = document.createElement('option');
+              option.value = spellName;
+              datalist.appendChild(option);
+            });
+          }
         }
         
         // Auto-fill cost when spell name is selected/entered
@@ -1682,7 +1686,9 @@ const App = {
           nameInput.addEventListener('change', () => {
             const spellName = nameInput.value.trim();
             if (spellName && window.SpellData) {
-              const cost = window.SpellData.getSpellCost(spellName, rank);
+              // Convert rank key to number for getSpellCost
+              const rankNum = rank === 'cantrips' ? 0 : parseInt(rank.replace('rank', ''), 10);
+              const cost = window.SpellData.getSpellCost(spellName, rankNum);
               if (cost) {
                 costInput.value = cost;
               }
