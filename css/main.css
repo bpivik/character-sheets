@@ -2436,6 +2436,97 @@ select:focus {
   background: #a93226;
 }
 
+/* Rank Prompt Dialog */
+.rank-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rank-prompt-dialog {
+  background: white;
+  border: 3px solid var(--primary-gold);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.rank-prompt-title {
+  font-family: var(--font-header);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-header);
+  margin-bottom: 0.75rem;
+}
+
+.rank-prompt-message {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.rank-prompt-input {
+  width: 80px;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  text-align: center;
+  border: 2px solid var(--input-border);
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+}
+
+.rank-prompt-input:focus {
+  outline: none;
+  border-color: var(--primary-gold);
+}
+
+.rank-prompt-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.rank-prompt-cancel,
+.rank-prompt-ok {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rank-prompt-cancel {
+  background: #e0e0e0;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.rank-prompt-cancel:hover {
+  background: #d0d0d0;
+}
+
+.rank-prompt-ok {
+  background: var(--primary-gold);
+  color: white;
+  border: none;
+}
+
+.rank-prompt-ok:hover {
+  background: #9a7b0a;
+}
+
 /* Disabled fields for non-multiclass classes */
 .field-disabled {
   background-color: #e9e9e9 !important;

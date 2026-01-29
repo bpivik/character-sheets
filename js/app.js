@@ -270,7 +270,33 @@ const App = {
         
         // Add blur listener for class fields to validate and update
         if (classFields.includes(fieldId)) {
+          // Store previous value to detect changes
+          field.addEventListener('focus', (e) => {
+            e.target.dataset.previousValue = e.target.value;
+          });
+          
           field.addEventListener('blur', () => {
+            const previousValue = field.dataset.previousValue || '';
+            const currentValue = field.value.trim();
+            
+            // Determine corresponding rank field
+            const rankFieldId = fieldId.replace('class-', 'rank-');
+            const rankField = document.getElementById(rankFieldId);
+            
+            // If class was cleared, clear the rank too
+            if (!currentValue && previousValue) {
+              if (rankField) {
+                rankField.value = '';
+                const rankKey = this.camelCase(rankFieldId);
+                this.character.info[rankKey] = '';
+              }
+            }
+            
+            // If class was added (new value entered), prompt for rank
+            if (currentValue && !previousValue) {
+              this.promptForRank(currentValue, rankFieldId);
+            }
+            
             // Validate multiclass restrictions
             this.validateAndUpdateClasses(fieldId);
             this.updateCombatSkillName(true);
@@ -2913,6 +2939,84 @@ const App = {
         warning.remove();
       }
     }, 5000);
+  },
+
+  /**
+   * Prompt user to enter a rank for a newly entered class
+   */
+  promptForRank(className, rankFieldId) {
+    // Remove any existing prompt
+    const existingPrompt = document.getElementById('rank-prompt');
+    if (existingPrompt) existingPrompt.remove();
+    
+    // Create prompt popup
+    const prompt = document.createElement('div');
+    prompt.id = 'rank-prompt';
+    prompt.className = 'rank-prompt-overlay';
+    prompt.innerHTML = `
+      <div class="rank-prompt-dialog">
+        <div class="rank-prompt-title">Enter Rank</div>
+        <div class="rank-prompt-message">What Rank do you have for ${className}?</div>
+        <input type="number" id="rank-prompt-input" class="rank-prompt-input" min="0" max="5" value="0" autofocus>
+        <div class="rank-prompt-buttons">
+          <button class="rank-prompt-cancel">Cancel</button>
+          <button class="rank-prompt-ok">OK</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(prompt);
+    
+    const input = prompt.querySelector('#rank-prompt-input');
+    const okBtn = prompt.querySelector('.rank-prompt-ok');
+    const cancelBtn = prompt.querySelector('.rank-prompt-cancel');
+    
+    // Focus the input
+    setTimeout(() => input.focus(), 50);
+    
+    // OK handler
+    const handleOk = () => {
+      let val = parseInt(input.value, 10);
+      if (isNaN(val)) val = 0;
+      val = Math.max(0, Math.min(5, val));
+      
+      const rankField = document.getElementById(rankFieldId);
+      if (rankField) {
+        rankField.value = val;
+        const rankKey = this.camelCase(rankFieldId);
+        this.character.info[rankKey] = val;
+        this.updateRankName();
+        this.updatePrereqKeys();
+        this.updateSpellMemorization();
+        this.scheduleAutoSave();
+      }
+      prompt.remove();
+    };
+    
+    okBtn.addEventListener('click', handleOk);
+    
+    // Cancel handler
+    cancelBtn.addEventListener('click', () => {
+      prompt.remove();
+    });
+    
+    // Enter key handler
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        handleOk();
+      } else if (e.key === 'Escape') {
+        prompt.remove();
+      }
+    });
+    
+    // Clamp value on input
+    input.addEventListener('input', () => {
+      let val = parseInt(input.value, 10);
+      if (!isNaN(val)) {
+        val = Math.max(0, Math.min(5, val));
+        input.value = val;
+      }
+    });
   },
 
   /**
