@@ -2168,6 +2168,27 @@ select:focus {
   margin-top: 0.25rem;
 }
 
+/* Spell Actions */
+.spell-actions {
+  margin-bottom: 0.5rem;
+  text-align: right;
+}
+
+.btn-alphabetize {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-dark);
+  color: var(--text-dark);
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-alphabetize:hover {
+  background: var(--bg-dark);
+  color: white;
+}
+
 /* Spell Columns */
 .spell-columns {
   display: grid;

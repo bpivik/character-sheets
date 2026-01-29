@@ -636,6 +636,20 @@ const App = {
       });
     }
     
+    // Alphabetize spells buttons (on both magic pages)
+    const alphabetizeBtn = document.getElementById('btn-alphabetize-spells');
+    if (alphabetizeBtn) {
+      alphabetizeBtn.addEventListener('click', () => {
+        this.alphabetizeAllSpells();
+      });
+    }
+    const alphabetizeBtnP2 = document.getElementById('btn-alphabetize-spells-p2');
+    if (alphabetizeBtnP2) {
+      alphabetizeBtnP2.addEventListener('click', () => {
+        this.alphabetizeAllSpells();
+      });
+    }
+    
     // Unlock originals button (for Attributes only)
     const unlockOriginalsBtn = document.getElementById('unlock-originals-btn');
     if (unlockOriginalsBtn) {
@@ -3202,6 +3216,77 @@ const App = {
       }
     }
     return spells;
+  },
+  
+  /**
+   * Alphabetize all spells across all ranks
+   */
+  alphabetizeAllSpells() {
+    const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
+    rankKeys.forEach(rankKey => {
+      this.alphabetizeSpellsInRank(rankKey);
+    });
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Alphabetize spells within a single rank
+   */
+  alphabetizeSpellsInRank(rankKey) {
+    // Collect all spell data from this rank
+    const spells = [];
+    for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
+      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+      const costInput = document.getElementById(`${rankKey}-${i}-cost`);
+      const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
+      
+      if (nameInput && nameInput.value.trim()) {
+        spells.push({
+          name: nameInput.value.trim(),
+          cost: costInput ? costInput.value : '',
+          memorized: memCheck ? memCheck.checked : false,
+          classSpell: nameInput.dataset.classSpell || null,
+          title: nameInput.title || ''
+        });
+      }
+    }
+    
+    // Sort alphabetically by name (case-insensitive)
+    spells.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    
+    // Clear all slots first
+    for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
+      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+      const costInput = document.getElementById(`${rankKey}-${i}-cost`);
+      const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
+      
+      if (nameInput) {
+        nameInput.value = '';
+        nameInput.title = '';
+        delete nameInput.dataset.classSpell;
+      }
+      if (costInput) costInput.value = '';
+      if (memCheck) memCheck.checked = false;
+    }
+    
+    // Repopulate in sorted order
+    spells.forEach((spell, i) => {
+      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+      const costInput = document.getElementById(`${rankKey}-${i}-cost`);
+      const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
+      
+      if (nameInput) {
+        nameInput.value = spell.name;
+        nameInput.title = spell.title;
+        if (spell.classSpell) {
+          nameInput.dataset.classSpell = spell.classSpell;
+        }
+      }
+      if (costInput) costInput.value = spell.cost;
+      if (memCheck) memCheck.checked = spell.memorized;
+    });
   },
   
   /**
