@@ -2008,17 +2008,15 @@ select:focus {
 }
 
 /* Special Abilities & Notes */
-.abilities-notes-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1rem;
-}
-
-.special-abilities-section,
-.combat-notes-section {
+.special-abilities-section {
   background: rgba(255,255,255,0.2);
   padding: 0.5rem;
   border: 1px solid var(--border-light);
+  width: 100%;
+}
+
+.special-abilities-section.full-width {
+  grid-column: 1 / -1;
 }
 
 .abilities-columns {
@@ -2026,8 +2024,6 @@ select:focus {
   grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
   margin-bottom: 0.5rem;
-  max-height: 300px;
-  overflow-y: auto;
 }
 
 .abilities-column {
@@ -2369,8 +2365,7 @@ select:focus {
   }
   
   .combat-header-grid,
-  .movement-fatigue-grid,
-  .abilities-notes-grid {
+  .movement-fatigue-grid {
     grid-template-columns: 1fr;
   }
   

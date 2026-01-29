@@ -424,16 +424,12 @@ const App = {
     });
     
     // Notes
-    const notesFields = ['combat-notes', 'general-notes'];
+    const notesFields = ['general-notes'];
     notesFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
         field.addEventListener('input', (e) => {
-          if (fieldId === 'combat-notes') {
-            this.character.combat.notes = e.target.value;
-          } else {
-            this.character.notes = e.target.value;
-          }
+          this.character.notes = e.target.value;
           this.scheduleAutoSave();
         });
       }
@@ -1958,9 +1954,6 @@ const App = {
     }
     
     // Notes
-    const combatNotes = document.getElementById('combat-notes');
-    if (combatNotes) combatNotes.value = this.character.combat.notes || '';
-    
     const generalNotes = document.getElementById('general-notes');
     if (generalNotes) generalNotes.value = this.character.notes || '';
     
@@ -2397,12 +2390,6 @@ const App = {
           this.character.combat.specialAbilities.push(input.value);
         }
       }
-    }
-    
-    // Combat Notes
-    const combatNotes = document.getElementById('combat-notes');
-    if (combatNotes) {
-      this.character.combat.notes = combatNotes.value;
     }
     
     // Flying Speed
