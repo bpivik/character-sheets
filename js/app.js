@@ -2623,6 +2623,17 @@ const App = {
       document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
     ].filter(c => c);
     
+    // If no classes selected, show everything (default state)
+    if (classes.length === 0) {
+      document.querySelectorAll('.magic-class-divine, .magic-class-mage, .magic-class-sorcerer, .magic-class-bard').forEach(row => {
+        row.style.display = '';
+      });
+      document.querySelectorAll('.tab-btn[data-page="magic1"], .tab-btn[data-page="magic2"]').forEach(tab => {
+        tab.parentElement.style.display = '';
+      });
+      return;
+    }
+    
     // Check which magic types are needed
     const needsDivine = classes.some(c => DIVINE_CLASSES.includes(c));
     const needsMage = classes.some(c => MAGE_CLASSES.includes(c));
