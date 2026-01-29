@@ -279,11 +279,18 @@ const App = {
           // Store previous value to detect changes
           field.addEventListener('focus', (e) => {
             e.target.dataset.previousValue = e.target.value;
+            // Store all previous classes for spell tracking
+            e.target.dataset.previousClasses = JSON.stringify([
+              { name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '', rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0 },
+              { name: document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '', rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0 },
+              { name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '', rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0 }
+            ].filter(c => c.name));
           });
           
           field.addEventListener('blur', () => {
             const previousValue = field.dataset.previousValue || '';
             const currentValue = field.value.trim();
+            const previousClasses = field.dataset.previousClasses ? JSON.parse(field.dataset.previousClasses) : null;
             
             // Determine corresponding rank field
             const rankFieldId = fieldId.replace('class-', 'rank-');
@@ -311,6 +318,7 @@ const App = {
             this.updatePrereqKeys();
             this.updateMagicVisibility();
             this.updateSpellMemorization();
+            this.updateClassSpells(previousClasses);
             this.scheduleAutoSave();
           });
         }
@@ -330,6 +338,7 @@ const App = {
             this.updateRankName();
             this.updatePrereqKeys();
             this.updateSpellMemorization();
+            this.updateClassSpells();
             this.scheduleAutoSave();
           });
         }
@@ -1692,6 +1701,17 @@ const App = {
               if (cost) {
                 costInput.value = cost;
               }
+              // Update tooltip with spell description
+              const description = window.SpellData.getSpellDescription(spellName);
+              if (description) {
+                nameInput.title = description;
+              } else {
+                nameInput.title = '';
+              }
+            } else {
+              // Spell name was cleared - also clear the cost and tooltip
+              costInput.value = '';
+              nameInput.title = '';
             }
             this.scheduleAutoSave();
           });
@@ -2050,7 +2070,20 @@ const App = {
               const nameInput = document.getElementById(`${rank}-${i}-name`);
               const costInput = document.getElementById(`${rank}-${i}-cost`);
               const memCheck = document.getElementById(`${rank}-${i}-mem`);
-              if (nameInput && spell.name) nameInput.value = spell.name;
+              if (nameInput && spell.name) {
+                nameInput.value = spell.name;
+                // Restore classSpell marker if present
+                if (spell.classSpell) {
+                  nameInput.dataset.classSpell = spell.classSpell;
+                }
+                // Set tooltip with spell description
+                if (window.SpellData) {
+                  const description = window.SpellData.getSpellDescription(spell.name);
+                  if (description) {
+                    nameInput.title = description;
+                  }
+                }
+              }
               if (costInput && spell.cost) costInput.value = spell.cost;
               if (memCheck && spell.memorized) memCheck.checked = spell.memorized;
             });
@@ -2295,7 +2328,8 @@ const App = {
           this.character.magic.spells[rank].spells.push({
             name: nameInput?.value || '',
             cost: costInput?.value || '',
-            memorized: memCheck?.checked || false
+            memorized: memCheck?.checked || false,
+            classSpell: nameInput.dataset.classSpell || null
           });
         }
       }
@@ -3005,6 +3039,170 @@ const App = {
         }
       }
     });
+  },
+  
+  /**
+   * Update class spell lists when class or rank changes
+   * Auto-populates spells for classes like Cleric based on their rank
+   */
+  updateClassSpells(previousClasses = null) {
+    if (!window.ClassSpellLists) return;
+    
+    // Get current classes and ranks
+    const currentClasses = [
+      {
+        name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+        rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0
+      },
+      {
+        name: document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+        rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0
+      },
+      {
+        name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '',
+        rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
+      }
+    ].filter(c => c.name);
+    
+    // Determine which spell-granting classes are present
+    const spellGrantingClasses = ['cleric']; // Will expand with mage, druid, etc.
+    
+    const activeSpellClasses = currentClasses.filter(c => 
+      spellGrantingClasses.includes(c.name)
+    );
+    
+    // Get max rank among spell-granting classes
+    let maxRank = 0;
+    activeSpellClasses.forEach(c => {
+      if (c.rank > maxRank) maxRank = c.rank;
+    });
+    
+    // Check if previous classes had any spell-granting classes that are now gone
+    const previousSpellClasses = previousClasses ? 
+      previousClasses.filter(c => spellGrantingClasses.includes(c.name)) : [];
+    
+    // Classes that were removed
+    const removedClasses = previousSpellClasses.filter(prev => 
+      !activeSpellClasses.some(curr => curr.name === prev.name)
+    );
+    
+    // Remove spells for classes that are no longer present
+    removedClasses.forEach(removedClass => {
+      this.removeClassSpells(removedClass.name);
+    });
+    
+    // Add/update spells for active spell-granting classes
+    activeSpellClasses.forEach(activeClass => {
+      this.populateClassSpells(activeClass.name, activeClass.rank);
+    });
+  },
+  
+  /**
+   * Populate spells for a specific class up to the given rank
+   */
+  populateClassSpells(className, maxRank) {
+    if (!window.ClassSpellLists || !window.SpellData) return;
+    
+    const classSpells = window.ClassSpellLists.getSpellsForClassAndRank(className, maxRank);
+    if (!classSpells) return;
+    
+    const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
+    rankKeys.forEach(rankKey => {
+      const spellsForRank = classSpells[rankKey];
+      if (!spellsForRank || spellsForRank.length === 0) return;
+      
+      // Get current spells in this rank (to avoid duplicates)
+      const existingSpells = this.getExistingSpellsInRank(rankKey);
+      
+      // Find available slots and add spells
+      let slotIndex = 0;
+      spellsForRank.forEach(spellName => {
+        // Skip if spell already exists in this rank
+        if (existingSpells.some(s => s.toLowerCase() === spellName.toLowerCase())) {
+          return;
+        }
+        
+        // Find next empty slot
+        while (slotIndex < 60) {
+          const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
+          if (nameInput && !nameInput.value.trim()) {
+            // Found empty slot - add the spell
+            nameInput.value = spellName;
+            
+            // Mark as class spell for later removal
+            nameInput.dataset.classSpell = className;
+            
+            // Auto-fill cost
+            const rankNum = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10);
+            const cost = window.SpellData.getSpellCost(spellName, rankNum);
+            const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
+            if (costInput && cost) {
+              costInput.value = cost;
+            }
+            
+            // Set tooltip
+            const description = window.SpellData.getSpellDescription(spellName);
+            if (description) {
+              nameInput.title = description;
+            }
+            
+            slotIndex++;
+            break;
+          }
+          slotIndex++;
+        }
+      });
+    });
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Remove all spells granted by a specific class
+   */
+  removeClassSpells(className) {
+    const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
+    rankKeys.forEach(rankKey => {
+      for (let i = 0; i < 60; i++) {
+        const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+        if (nameInput && nameInput.dataset.classSpell === className) {
+          // Clear this spell
+          nameInput.value = '';
+          nameInput.title = '';
+          delete nameInput.dataset.classSpell;
+          
+          // Clear cost too
+          const costInput = document.getElementById(`${rankKey}-${i}-cost`);
+          if (costInput) {
+            costInput.value = '';
+          }
+          
+          // Clear memorized checkbox
+          const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
+          if (memCheck) {
+            memCheck.checked = false;
+          }
+        }
+      }
+    });
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Get list of existing spells in a rank
+   */
+  getExistingSpellsInRank(rankKey) {
+    const spells = [];
+    for (let i = 0; i < 60; i++) {
+      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+      if (nameInput && nameInput.value.trim()) {
+        spells.push(nameInput.value.trim());
+      }
+    }
+    return spells;
   },
   
   /**
