@@ -209,7 +209,18 @@ const AbilityDescriptions = {
   "weapon precision": "When using small weapons, Dmg Mod is based on STR+DEX.",
   "weapon specialization": "Specialize in 1 weapon. See description. Weapon:",
   "wild casting": "Cast spells while shape changed.",
-  "woodland languages": "Add 1 Language of woodland species at INT+CHA+40."
+  "woodland languages": "Add 1 Language of woodland species at INT+CHA+40.",
+  
+  // Additional class abilities
+  "fascinate": "Use Musicianship to entrance creatures within 90'. See description.",
+  "inspire courage i": "Allies get +5% to all skills for 1 Round. See description.",
+  "commanding presence": "Allies within 30' gain +10% to Willpower rolls.",
+  "tactical shift": "As a free action, allow one ally to move 5' without provoking attacks.",
+  "commander": "Grant an ally an immediate extra action. See description.",
+  "battle captain": "Grant multiple allies immediate actions. See description.",
+  "war marshal": "Coordinate large-scale tactical movements. See description.",
+  "lord commander": "Supreme battlefield command abilities. See description.",
+  "legendary master": "Ultimate weapon mastery. See description."
 };
 
 /**

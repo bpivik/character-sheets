@@ -322,6 +322,7 @@ const App = {
             // Update class spells after a brief delay to ensure rank is set
             setTimeout(() => {
               this.updateClassSpells(previousClasses);
+              this.updateClassAbilities(previousClasses);
             }, 50);
             
             this.scheduleAutoSave();
@@ -344,6 +345,7 @@ const App = {
             this.updatePrereqKeys();
             this.updateSpellMemorization();
             this.updateClassSpells();
+            this.updateClassAbilities();
             this.scheduleAutoSave();
           });
         }
@@ -2565,6 +2567,9 @@ const App = {
     // Populate class spells (for spell-granting classes like Cleric)
     // Don't remove any spells on init - just add missing ones
     this.updateClassSpells(null);
+    
+    // Populate class abilities
+    this.updateClassAbilities(null);
   },
 
   /**
@@ -3380,6 +3385,401 @@ const App = {
       if (costInput) costInput.value = spell.cost;
       if (memCheck) memCheck.checked = spell.memorized;
     });
+  },
+  
+  // ==================== CLASS ABILITIES AUTO-POPULATION ====================
+  
+  /**
+   * Update class abilities when class or rank changes
+   * Auto-populates special abilities based on class and rank
+   */
+  updateClassAbilities(previousClasses = null) {
+    if (!window.ClassAbilities) return;
+    
+    // Get current classes and ranks
+    const currentClasses = [
+      {
+        name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+        rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0
+      },
+      {
+        name: document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+        rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0
+      },
+      {
+        name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '',
+        rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
+      }
+    ].filter(c => c.name && c.rank > 0);
+    
+    // Get classes that grant abilities
+    const activeAbilityClasses = currentClasses.filter(c => 
+      window.ClassAbilities.isAbilityGrantingClass(c.name)
+    );
+    
+    // Check previous classes
+    const previousAbilityClasses = previousClasses ? 
+      previousClasses.filter(c => window.ClassAbilities.isAbilityGrantingClass(c.name)) : [];
+    
+    // Classes that were removed
+    const removedClasses = previousAbilityClasses.filter(prev => 
+      !activeAbilityClasses.some(curr => curr.name === prev.name)
+    );
+    
+    // Remove abilities for classes that are no longer present
+    removedClasses.forEach(removedClass => {
+      this.removeClassAbilities(removedClass.name);
+    });
+    
+    // Add/update abilities for active classes
+    activeAbilityClasses.forEach(activeClass => {
+      this.populateClassAbilities(activeClass.name, activeClass.rank);
+    });
+  },
+  
+  /**
+   * Populate abilities for a specific class up to the given rank
+   */
+  populateClassAbilities(className, rank) {
+    if (!window.ClassAbilities) return;
+    
+    const abilities = window.ClassAbilities.getAbilitiesForClassAndRank(className, rank);
+    if (!abilities || abilities.length === 0) return;
+    
+    // Get existing abilities
+    const existingAbilities = this.getAllSpecialAbilities();
+    
+    // Add each ability if not already present
+    abilities.forEach(ability => {
+      const normalizedAbility = ability.toLowerCase().trim();
+      const alreadyExists = existingAbilities.some(
+        existing => existing.toLowerCase().trim() === normalizedAbility
+      );
+      
+      if (!alreadyExists) {
+        this.addSpecialAbility(ability, className);
+      }
+    });
+    
+    // Handle special actions
+    this.handleClassSpecialActions(className, rank);
+    
+    this.updateAllAbilityTooltips();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Handle special class actions (Druid language, Monk unarmed, Sorcerer familiar)
+   */
+  handleClassSpecialActions(className, rank) {
+    if (!window.ClassAbilities) return;
+    
+    const classKey = className.toLowerCase().trim();
+    
+    // Check all ranks up to current for special actions
+    for (let r = 1; r <= rank; r++) {
+      const actions = window.ClassAbilities.getSpecialActions(className, r);
+      if (!actions) continue;
+      
+      // Add language (Druid)
+      if (actions.addLanguage) {
+        this.addLanguageIfNotExists(actions.addLanguage);
+      }
+      
+      // Add/update Unarmed weapon (Monk)
+      if (actions.addUnarmed) {
+        this.addOrUpdateUnarmedWeapon(actions.addUnarmed);
+      }
+      if (actions.changeUnarmedDamage) {
+        this.updateUnarmedDamage(actions.changeUnarmedDamage);
+      }
+      
+      // Add spell (Sorcerer Familiar)
+      if (actions.addSpell) {
+        this.addSpellIfNotExists(actions.addSpell.rank, actions.addSpell.spell);
+      }
+    }
+  },
+  
+  /**
+   * Add a language to the first empty language slot
+   */
+  addLanguageIfNotExists(languageName) {
+    // Check if language already exists
+    for (let i = 1; i <= 4; i++) {
+      const nameInput = document.getElementById(`language-${i}-name`);
+      if (nameInput && nameInput.value.toLowerCase().trim() === languageName.toLowerCase().trim()) {
+        return; // Already exists
+      }
+    }
+    
+    // Find first empty slot
+    for (let i = 1; i <= 4; i++) {
+      const nameInput = document.getElementById(`language-${i}-name`);
+      if (nameInput && !nameInput.value.trim()) {
+        nameInput.value = languageName;
+        nameInput.dataset.classLanguage = 'druid';
+        return;
+      }
+    }
+  },
+  
+  /**
+   * Add or update Unarmed weapon for Monk
+   */
+  addOrUpdateUnarmedWeapon(damage) {
+    // Find first melee weapon slot or existing Unarmed
+    for (let i = 1; i <= 5; i++) {
+      const nameInput = document.getElementById(`melee-${i}-name`);
+      if (!nameInput) continue;
+      
+      if (nameInput.value.toLowerCase().trim() === 'unarmed') {
+        // Update existing damage
+        const damageInput = document.getElementById(`melee-${i}-damage`);
+        if (damageInput) {
+          damageInput.value = damage + '+DM';
+          damageInput.dataset.monkDamage = 'true';
+        }
+        return;
+      }
+    }
+    
+    // Not found, add to first empty slot
+    for (let i = 1; i <= 5; i++) {
+      const nameInput = document.getElementById(`melee-${i}-name`);
+      if (!nameInput) continue;
+      
+      if (!nameInput.value.trim()) {
+        nameInput.value = 'Unarmed';
+        nameInput.dataset.classWeapon = 'monk';
+        
+        const damageInput = document.getElementById(`melee-${i}-damage`);
+        if (damageInput) {
+          damageInput.value = damage + '+DM';
+          damageInput.dataset.monkDamage = 'true';
+        }
+        
+        // Set size to S
+        const sizeInput = document.getElementById(`melee-${i}-size`);
+        if (sizeInput) sizeInput.value = 'S';
+        
+        // Set reach to T (touch)
+        const reachInput = document.getElementById(`melee-${i}-reach`);
+        if (reachInput) reachInput.value = 'T';
+        
+        return;
+      }
+    }
+  },
+  
+  /**
+   * Update Unarmed weapon damage (Monk rank progression)
+   */
+  updateUnarmedDamage(damage) {
+    for (let i = 1; i <= 5; i++) {
+      const nameInput = document.getElementById(`melee-${i}-name`);
+      if (!nameInput) continue;
+      
+      if (nameInput.value.toLowerCase().trim() === 'unarmed') {
+        const damageInput = document.getElementById(`melee-${i}-damage`);
+        if (damageInput) {
+          damageInput.value = damage + '+DM';
+        }
+        return;
+      }
+    }
+  },
+  
+  /**
+   * Add a spell if it doesn't already exist
+   */
+  addSpellIfNotExists(rankKey, spellName) {
+    // Check if spell already exists in this rank
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    const normalizedSpell = spellName.toLowerCase().trim();
+    
+    if (existingSpells.some(s => s.toLowerCase().trim() === normalizedSpell)) {
+      return; // Already exists
+    }
+    
+    // Find first empty slot
+    for (let i = 0; i < 60; i++) {
+      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+      if (nameInput && !nameInput.value.trim()) {
+        nameInput.value = spellName;
+        nameInput.dataset.classSpell = 'sorcerer';
+        
+        // Set tooltip
+        if (window.SpellData && window.SpellData.descriptions) {
+          const desc = window.SpellData.descriptions[normalizedSpell];
+          if (desc) nameInput.title = desc;
+        }
+        
+        return;
+      }
+    }
+  },
+  
+  /**
+   * Remove abilities granted by a class
+   */
+  removeClassAbilities(className) {
+    if (!window.ClassAbilities) return;
+    
+    const classAbilities = window.ClassAbilities.getAllAbilitiesForClass(className);
+    if (!classAbilities || classAbilities.length === 0) return;
+    
+    // Normalize class abilities for comparison
+    const normalizedClassAbilities = classAbilities.map(a => a.toLowerCase().trim());
+    
+    // Check each ability slot
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < ABILITY_SLOTS_PER_COLUMN; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (!input || !input.value.trim()) continue;
+        
+        const ability = input.value.toLowerCase().trim();
+        
+        // Check if this ability belongs to the removed class
+        if (normalizedClassAbilities.includes(ability)) {
+          // Check if another class also grants this ability
+          const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className);
+          
+          if (!otherClassesGrant) {
+            input.value = '';
+            input.title = 'Enter a Special Ability name';
+            input.classList.remove('duplicate-warning');
+            delete input.dataset.classAbility;
+          }
+        }
+      }
+    }
+    
+    // Handle removal of special class features
+    this.removeClassSpecialFeatures(className);
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Check if an ability is granted by another active class
+   */
+  abilityGrantedByOtherClass(abilityName, excludeClass) {
+    if (!window.ClassAbilities) return false;
+    
+    const currentClasses = [
+      { name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '', 
+        rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0 },
+      { name: document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '', 
+        rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0 },
+      { name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '', 
+        rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0 }
+    ].filter(c => c.name && c.rank > 0 && c.name !== excludeClass.toLowerCase());
+    
+    const normalizedAbility = abilityName.toLowerCase().trim();
+    
+    for (const cls of currentClasses) {
+      const abilities = window.ClassAbilities.getAbilitiesForClassAndRank(cls.name, cls.rank);
+      if (abilities.some(a => a.toLowerCase().trim() === normalizedAbility)) {
+        return true;
+      }
+    }
+    
+    return false;
+  },
+  
+  /**
+   * Remove special class features when class is dropped
+   */
+  removeClassSpecialFeatures(className) {
+    const classKey = className.toLowerCase().trim();
+    
+    // Remove Druid's Cant language
+    if (classKey === 'druid') {
+      for (let i = 1; i <= 4; i++) {
+        const nameInput = document.getElementById(`language-${i}-name`);
+        if (nameInput && nameInput.dataset.classLanguage === 'druid') {
+          nameInput.value = '';
+          delete nameInput.dataset.classLanguage;
+        }
+      }
+    }
+    
+    // Remove Monk's Unarmed weapon
+    if (classKey === 'monk') {
+      for (let i = 1; i <= 5; i++) {
+        const nameInput = document.getElementById(`melee-${i}-name`);
+        if (nameInput && nameInput.dataset.classWeapon === 'monk') {
+          nameInput.value = '';
+          delete nameInput.dataset.classWeapon;
+          
+          const damageInput = document.getElementById(`melee-${i}-damage`);
+          if (damageInput) {
+            damageInput.value = '';
+            delete damageInput.dataset.monkDamage;
+          }
+          
+          const sizeInput = document.getElementById(`melee-${i}-size`);
+          if (sizeInput) sizeInput.value = '';
+          
+          const reachInput = document.getElementById(`melee-${i}-reach`);
+          if (reachInput) reachInput.value = '';
+        }
+      }
+    }
+    
+    // Remove Sorcerer's Familiar spell
+    if (classKey === 'sorcerer') {
+      for (let i = 0; i < 60; i++) {
+        const nameInput = document.getElementById(`rank1-${i}-name`);
+        if (nameInput && nameInput.value.toLowerCase().trim() === 'familiar' && 
+            nameInput.dataset.classSpell === 'sorcerer') {
+          nameInput.value = '';
+          nameInput.title = '';
+          delete nameInput.dataset.classSpell;
+          
+          const costInput = document.getElementById(`rank1-${i}-cost`);
+          if (costInput) costInput.value = '';
+        }
+      }
+    }
+  },
+  
+  /**
+   * Get all current special abilities
+   */
+  getAllSpecialAbilities() {
+    const abilities = [];
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < ABILITY_SLOTS_PER_COLUMN; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          abilities.push(input.value.trim());
+        }
+      }
+    }
+    return abilities;
+  },
+  
+  /**
+   * Add a special ability to the first empty slot
+   */
+  addSpecialAbility(abilityName, sourceClass = null) {
+    // Find first empty slot
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < ABILITY_SLOTS_PER_COLUMN; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && !input.value.trim()) {
+          input.value = abilityName;
+          if (sourceClass) {
+            input.dataset.classAbility = sourceClass.toLowerCase();
+          }
+          this.updateAbilityTooltip(input);
+          return true;
+        }
+      }
+    }
+    return false; // No empty slots
   },
   
   /**
