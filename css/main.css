@@ -837,14 +837,15 @@ select:focus {
 
 .prereq-keys {
   display: flex;
-  gap: 2px;
+  gap: 1px;
   justify-content: flex-end;
-  min-width: 42px;
+  align-items: center;
 }
 
 .prereq-keys .prereq-key {
   width: 12px;
   height: 12px;
+  flex-shrink: 0;
 }
 
 .skill-name {
