@@ -911,6 +911,13 @@ select:focus {
   font-weight: 600;
 }
 
+/* Penalized skill value styling */
+.enc-penalized-value {
+  color: #c41e3a !important;
+  background-color: rgba(196, 30, 58, 0.1) !important;
+  font-weight: 600;
+}
+
 /* Belief Rows (Alignment, Passion, Oath) */
 .alignment-section .section-subheader,
 .passion-section .section-subheader,

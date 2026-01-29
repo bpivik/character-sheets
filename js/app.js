@@ -229,7 +229,25 @@ const App = {
     document.querySelectorAll('.skill-input').forEach(input => {
       input.addEventListener('input', (e) => {
         const skillKey = e.target.id.replace('-current', '');
-        this.character.standardSkills[skillKey] = e.target.value;
+        
+        // If there's an active penalty and user is editing, update the original value
+        if (e.target.classList.contains('enc-penalized-value')) {
+          // User is editing a penalized field - treat the input as the NEW original
+          // and re-apply penalty
+          const newOriginal = e.target.value;
+          e.target.dataset.originalValue = newOriginal;
+          this.character.standardSkills[skillKey] = newOriginal;
+          
+          // Re-apply penalty display after a short delay
+          setTimeout(() => this.updateTotalEnc(), 10);
+        } else {
+          // Normal edit - also update originalValue if it exists
+          if (e.target.dataset.originalValue !== undefined) {
+            e.target.dataset.originalValue = e.target.value;
+          }
+          this.character.standardSkills[skillKey] = e.target.value;
+        }
+        
         this.updateCombatQuickRef();
         this.scheduleAutoSave();
       });
@@ -562,7 +580,16 @@ const App = {
         this.scheduleAutoSave();
       });
       
-      currentInput.addEventListener('input', () => {
+      currentInput.addEventListener('input', (e) => {
+        // If there's an active penalty and user is editing, update the original value
+        if (e.target.classList.contains('enc-penalized-value')) {
+          const newOriginal = e.target.value;
+          e.target.dataset.originalValue = newOriginal;
+          // Re-apply penalty display after a short delay
+          setTimeout(() => this.updateTotalEnc(), 10);
+        } else if (e.target.dataset.originalValue !== undefined) {
+          e.target.dataset.originalValue = e.target.value;
+        }
         this.updateProfessionalSkillData(i);
         this.scheduleAutoSave();
       });
@@ -594,7 +621,9 @@ const App = {
     
     const name = document.getElementById(`prof-skill-${index}-name`)?.value || '';
     const base = document.getElementById(`prof-skill-${index}-base`)?.value || '';
-    const current = document.getElementById(`prof-skill-${index}-current`)?.value || '';
+    const currentInput = document.getElementById(`prof-skill-${index}-current`);
+    // Use originalValue if available (for ENC penalty system), otherwise use displayed value
+    const current = currentInput?.dataset.originalValue || currentInput?.value || '';
     
     this.character.professionalSkills[index] = { name, base, current };
   },
@@ -1566,6 +1595,8 @@ const App = {
       const input = document.getElementById(`${this.kebabCase(skillKey)}-current`);
       if (input && this.character.standardSkills[skillKey] !== undefined) {
         input.value = this.character.standardSkills[skillKey];
+        // Store as original value for ENC penalty system
+        input.dataset.originalValue = this.character.standardSkills[skillKey];
       }
     }
     
@@ -1620,7 +1651,11 @@ const App = {
         const currentInput = document.getElementById(`prof-skill-${i}-current`);
         if (nameInput && skill.name) nameInput.value = skill.name;
         if (baseInput && skill.base) baseInput.value = skill.base;
-        if (currentInput && skill.current) currentInput.value = skill.current;
+        if (currentInput && skill.current) {
+          currentInput.value = skill.current;
+          // Store as original value for ENC penalty system
+          currentInput.dataset.originalValue = skill.current;
+        }
         // Update ENC indicator visibility
         this.updateProfSkillEncIndicator(i);
       });
@@ -2382,6 +2417,74 @@ const App = {
         indicator.classList.remove('enc-penalty-active');
       }
     });
+    
+    // Update Standard Skill percentages that have enc-indicator
+    this.updateEncAffectedSkillValues(status);
+  },
+  
+  /**
+   * Update skill percentage displays for ENC-affected skills
+   */
+  updateEncAffectedSkillValues(status) {
+    const penaltyPercent = status.penaltyPercent || 0;
+    
+    // Find all Standard Skills with enc-indicator (those have STR/DEX in formula)
+    document.querySelectorAll('.skill-row').forEach(row => {
+      const indicator = row.querySelector('.enc-indicator');
+      if (!indicator) return; // Skip skills without indicator
+      
+      const input = row.querySelector('.skill-input');
+      if (!input) return;
+      
+      // Store original value if not already stored
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || parseInt(input.value) || 0;
+      
+      if (penaltyPercent > 0 && originalValue > 0) {
+        // Apply penalty and show penalized value
+        const penalizedValue = Math.max(0, originalValue - penaltyPercent);
+        input.value = penalizedValue;
+        input.classList.add('enc-penalized-value');
+        input.title = `Original: ${originalValue}%, Penalized: ${penalizedValue}%`;
+      } else if (input.dataset.originalValue !== undefined) {
+        // Restore original value
+        input.value = input.dataset.originalValue;
+        input.classList.remove('enc-penalized-value');
+        input.title = '';
+      }
+    });
+    
+    // Update Professional Skills with STR/DEX in formula
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const encIndicator = document.getElementById(`prof-skill-${i}-enc`);
+      if (!encIndicator || encIndicator.style.display === 'none') continue;
+      
+      const input = document.getElementById(`prof-skill-${i}-current`);
+      if (!input) continue;
+      
+      // Store original value if not already stored
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || parseInt(input.value) || 0;
+      
+      if (penaltyPercent > 0 && originalValue > 0) {
+        // Apply penalty and show penalized value
+        const penalizedValue = Math.max(0, originalValue - penaltyPercent);
+        input.value = penalizedValue;
+        input.classList.add('enc-penalized-value');
+        input.title = `Original: ${originalValue}%, Penalized: ${penalizedValue}%`;
+      } else if (input.dataset.originalValue !== undefined) {
+        // Restore original value
+        input.value = input.dataset.originalValue;
+        input.classList.remove('enc-penalized-value');
+        input.title = '';
+      }
+    }
   },
 
   /**
