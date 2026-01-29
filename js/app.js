@@ -122,9 +122,9 @@ const App = {
    * Set up attribute input listeners
    */
   setupAttributeListeners() {
-    // Attribute inputs now have original and current
-    const charOriginals = document.querySelectorAll('.char-original');
-    charOriginals.forEach(input => {
+    // Attribute inputs (single value for Characteristics)
+    const attrInputs = document.querySelectorAll('.attribute-input');
+    attrInputs.forEach(input => {
       input.addEventListener('input', (e) => {
         const attr = e.target.dataset.attr;
         if (attr) {
@@ -135,19 +135,7 @@ const App = {
       });
     });
     
-    const charCurrents = document.querySelectorAll('.char-current');
-    charCurrents.forEach(input => {
-      input.addEventListener('input', (e) => {
-        const attr = e.target.dataset.attr;
-        if (attr) {
-          this.character.attributesCurrent = this.character.attributesCurrent || {};
-          this.character.attributesCurrent[attr] = e.target.value;
-          this.scheduleAutoSave();
-        }
-      });
-    });
-    
-    // Movement inputs (now original and current)
+    // Movement inputs (original and current)
     const movementOriginal = document.getElementById('movement-original');
     if (movementOriginal) {
       movementOriginal.addEventListener('input', (e) => {
@@ -450,7 +438,7 @@ const App = {
       });
     }
     
-    // Unlock originals button (for both Characteristics and Attributes)
+    // Unlock originals button (for Attributes only)
     const unlockOriginalsBtn = document.getElementById('unlock-originals-btn');
     if (unlockOriginalsBtn) {
       unlockOriginalsBtn.addEventListener('click', () => {
@@ -460,26 +448,13 @@ const App = {
   },
   
   /**
-   * Toggle editing of original values (Characteristics and Attributes)
+   * Toggle editing of original Attribute values
    */
   toggleOriginalsEditing() {
-    // Get both characteristic originals and derived originals
-    const charOriginals = document.querySelectorAll('.char-original');
     const derivedOriginals = document.querySelectorAll('.derived-readonly');
     const btn = document.getElementById('unlock-originals-btn');
     
-    const isCurrentlyReadonly = charOriginals[0]?.hasAttribute('readonly');
-    
-    // Toggle Characteristics
-    charOriginals.forEach(input => {
-      if (isCurrentlyReadonly) {
-        input.removeAttribute('readonly');
-        input.classList.add('editable');
-      } else {
-        input.setAttribute('readonly', '');
-        input.classList.remove('editable');
-      }
-    });
+    const isCurrentlyReadonly = derivedOriginals[0]?.hasAttribute('readonly');
     
     // Toggle Derived Attributes
     derivedOriginals.forEach(input => {
@@ -497,7 +472,6 @@ const App = {
     
     // If we just locked, save the current original values
     if (!isCurrentlyReadonly) {
-      this.saveCharacteristicOriginalValues();
       this.saveDerivedOriginalValues();
     }
     
@@ -505,26 +479,13 @@ const App = {
     
     if (btn) {
       if (isCurrentlyReadonly) {
-        btn.textContent = '🔓 Lock Original Attributes and Characteristics';
+        btn.textContent = '🔓 Lock Original Attributes';
         btn.classList.add('unlocked');
       } else {
-        btn.textContent = '🔒 Unlock Original Attributes and Characteristics';
+        btn.textContent = '🔒 Unlock Original Attributes';
         btn.classList.remove('unlocked');
       }
     }
-  },
-
-  /**
-   * Save the current characteristic original values to character data
-   */
-  saveCharacteristicOriginalValues() {
-    const attrs = ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA'];
-    attrs.forEach(attr => {
-      const input = document.getElementById(`${attr.toLowerCase()}-original`);
-      if (input) {
-        this.character.attributes[attr] = input.value;
-      }
-    });
   },
 
   /**
@@ -653,15 +614,14 @@ const App = {
    * Calculate a formula like "STR+DEX" or "INT x2" using current attribute values
    */
   calculateFormulaValue(formula) {
-    // Use original values for calculations (these are the base stats)
     const attrs = {
-      STR: parseInt(document.getElementById('str-original')?.value) || 0,
-      CON: parseInt(document.getElementById('con-original')?.value) || 0,
-      SIZ: parseInt(document.getElementById('siz-original')?.value) || 0,
-      DEX: parseInt(document.getElementById('dex-original')?.value) || 0,
-      INT: parseInt(document.getElementById('int-original')?.value) || 0,
-      POW: parseInt(document.getElementById('pow-original')?.value) || 0,
-      CHA: parseInt(document.getElementById('cha-original')?.value) || 0
+      STR: parseInt(document.getElementById('str-value')?.value) || 0,
+      CON: parseInt(document.getElementById('con-value')?.value) || 0,
+      SIZ: parseInt(document.getElementById('siz-value')?.value) || 0,
+      DEX: parseInt(document.getElementById('dex-value')?.value) || 0,
+      INT: parseInt(document.getElementById('int-value')?.value) || 0,
+      POW: parseInt(document.getElementById('pow-value')?.value) || 0,
+      CHA: parseInt(document.getElementById('cha-value')?.value) || 0
     };
     
     // Handle "X x2" format (e.g., "INT x2", "DEX x2")
@@ -1519,15 +1479,11 @@ const App = {
       }
     }
     
-    // Attributes (now have original and current)
+    // Attributes (single value)
     for (const attr of ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA']) {
-      const originalInput = document.getElementById(`${attr.toLowerCase()}-original`);
-      const currentInput = document.getElementById(`${attr.toLowerCase()}-current`);
-      if (originalInput && this.character.attributes[attr] !== undefined) {
-        originalInput.value = this.character.attributes[attr];
-      }
-      if (currentInput && this.character.attributesCurrent && this.character.attributesCurrent[attr] !== undefined) {
-        currentInput.value = this.character.attributesCurrent[attr];
+      const input = document.getElementById(`${attr.toLowerCase()}-value`);
+      if (input && this.character.attributes[attr] !== undefined) {
+        input.value = this.character.attributes[attr];
       }
     }
     
@@ -1580,7 +1536,7 @@ const App = {
       // Update button state to show locked
       const btn = document.getElementById('unlock-originals-btn');
       if (btn) {
-        btn.textContent = '🔒 Unlock Original Attributes and Characteristics';
+        btn.textContent = '🔒 Unlock Original Attributes';
         btn.classList.remove('unlocked');
       }
     }
