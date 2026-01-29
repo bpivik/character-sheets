@@ -55,6 +55,7 @@ const App = {
     this.updateCombatSkillName();
     this.updateWeaponsKnown();
     this.updateRankName();
+    this.updatePrereqKeys();
     
     // Update container button visibility
     this.updateContainerButtons();
@@ -221,6 +222,7 @@ const App = {
             this.updateCombatSkillName(true);
             this.updateWeaponsKnown(true);
             this.updateRankName();
+            this.updatePrereqKeys();
             this.scheduleAutoSave();
           });
         }
@@ -619,6 +621,7 @@ const App = {
       const row = document.createElement('div');
       row.className = 'professional-skill-row';
       row.innerHTML = `
+        <span class="prereq-keys" id="prof-skill-${i}-prereq" data-skill-name=""></span>
         <input type="text" class="prof-skill-name" id="prof-skill-${i}-name" placeholder="">
         <input type="text" class="prof-skill-base" id="prof-skill-${i}-base" placeholder="">
         <span class="prof-skill-base-val" id="prof-skill-${i}-base-val"></span>
@@ -631,12 +634,16 @@ const App = {
       const nameInput = row.querySelector('.prof-skill-name');
       const baseInput = row.querySelector('.prof-skill-base');
       const currentInput = row.querySelector('.prof-skill-current');
+      const prereqKeys = row.querySelector('.prereq-keys');
       
       // Auto-fill formula when skill name is entered
       nameInput.addEventListener('input', (e) => {
         this.autoFillProfessionalSkillFormula(e.target, baseInput);
         this.updateProfessionalSkillData(i);
         this.updateProfSkillEncIndicator(i);
+        // Update prereq keys data attribute
+        prereqKeys.dataset.skillName = e.target.value.trim();
+        this.updatePrereqKeys();
         this.scheduleAutoSave();
       });
       
@@ -2535,6 +2542,70 @@ const App = {
         }
       }
     });
+  },
+  
+  /**
+   * Update prerequisite key icons on all skills based on current classes
+   */
+  updatePrereqKeys() {
+    if (!window.ClassRankData) return;
+    
+    const primaryClass = document.getElementById('class-primary')?.value?.trim() || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
+    const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim() || '';
+    
+    // Find all prereq-keys containers
+    const allPrereqContainers = document.querySelectorAll('.prereq-keys');
+    
+    allPrereqContainers.forEach(container => {
+      const skillName = container.dataset.skillName;
+      if (!skillName) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      const keys = window.ClassRankData.getPrereqKeysForSkill(skillName, primaryClass, secondaryClass, tertiaryClass);
+      
+      // Build key icons HTML
+      let html = '';
+      if (keys.primary) {
+        html += this.getPrereqKeySvg('gold');
+      }
+      if (keys.secondary) {
+        html += this.getPrereqKeySvg('silver');
+      }
+      if (keys.tertiary) {
+        html += this.getPrereqKeySvg('blue');
+      }
+      
+      container.innerHTML = html;
+    });
+  },
+  
+  /**
+   * Get SVG for a prereq key icon
+   */
+  getPrereqKeySvg(color) {
+    const colors = {
+      gold: { gradient: ['#F5D98A', '#D4A84B', '#B8860B'], stroke: '#8B6914' },
+      silver: { gradient: ['#E8E8E8', '#B8B8B8', '#888888'], stroke: '#666666' },
+      blue: { gradient: ['#6A9FD4', '#3A6EA5', '#1E4D78'], stroke: '#1A3A5C' }
+    };
+    
+    const c = colors[color] || colors.gold;
+    const uniqueId = `key-${color}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return `<svg class="prereq-key" viewBox="0 0 32 32">
+      <defs>
+        <linearGradient id="${uniqueId}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${c.gradient[0]}"/>
+          <stop offset="50%" style="stop-color:${c.gradient[1]}"/>
+          <stop offset="100%" style="stop-color:${c.gradient[2]}"/>
+        </linearGradient>
+      </defs>
+      <path d="M20 4a8 8 0 00-7.2 11.5L4 24.3V28h3.7l8.8-8.8A8 8 0 1020 4zm0 12a4 4 0 110-8 4 4 0 010 8z" fill="url(#${uniqueId})" stroke="${c.stroke}" stroke-width="1"/>
+      <rect x="17" y="6" width="6" height="6" rx="1" transform="rotate(45 20 9)" fill="none" stroke="${c.stroke}" stroke-width="1.5"/>
+    </svg>`;
   },
   
   /**

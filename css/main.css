@@ -801,7 +801,7 @@ select:focus {
 .skills-header,
 .section-subheader {
   display: grid;
-  grid-template-columns: 1fr 70px 55px 60px 15px;
+  grid-template-columns: 42px 1fr 70px 55px 60px 15px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -812,7 +812,7 @@ select:focus {
 }
 
 .skills-header.prof-header {
-  grid-template-columns: 1fr 80px 55px 60px;
+  grid-template-columns: 42px 1fr 80px 55px 60px;
 }
 
 .header-base,
@@ -823,7 +823,7 @@ select:focus {
 /* Skill Rows */
 .skill-row {
   display: grid;
-  grid-template-columns: 1fr 70px 55px 60px 15px;
+  grid-template-columns: 42px 1fr 70px 55px 60px 15px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
@@ -833,6 +833,18 @@ select:focus {
 
 .skill-row:last-child {
   border-bottom: none;
+}
+
+.prereq-keys {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-start;
+  min-width: 42px;
+}
+
+.prereq-keys .prereq-key {
+  width: 12px;
+  height: 12px;
 }
 
 .skill-name {
@@ -1083,12 +1095,18 @@ select:focus {
 /* Professional Skills */
 .professional-skill-row {
   display: grid;
-  grid-template-columns: 1fr 80px 55px 60px 20px;
+  grid-template-columns: 42px 1fr 80px 55px 60px 20px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
   font-size: 1.1rem;
   border-bottom: 1px solid var(--border-light);
+}
+
+.professional-skill-row .prereq-keys {
+  display: flex;
+  gap: 2px;
+  min-width: 42px;
 }
 
 .prof-enc-indicator {
@@ -1695,7 +1713,7 @@ select:focus {
 
 .combat-skill-header {
   display: grid;
-  grid-template-columns: 200px 55px 12px 1fr 65px;
+  grid-template-columns: 42px 200px 55px 12px 1fr 65px;
   gap: 0.4rem;
   font-size: 0.72rem;
   font-weight: 600;
@@ -1706,7 +1724,7 @@ select:focus {
 
 .combat-skill-row {
   display: grid;
-  grid-template-columns: 200px 55px 12px 1fr 65px;
+  grid-template-columns: 42px 200px 55px 12px 1fr 65px;
   gap: 0.4rem;
   padding: 0.2rem 0.3rem;
   border: 1px solid var(--border-light);
@@ -1716,6 +1734,12 @@ select:focus {
 
 .combat-skill-row .enc-indicator {
   align-self: center;
+}
+
+.combat-skill-row .prereq-keys {
+  display: flex;
+  gap: 2px;
+  align-items: center;
 }
 
 .combat-skill-name {

@@ -221,18 +221,110 @@ function validateMulticlass(primary, secondary, tertiary) {
   return { valid: errors.length === 0, errors };
 }
 
+// ============================================
+// CLASS PREREQUISITE SKILLS
+// ============================================
+
+const CLASS_PREREQ_SKILLS = {
+  "anti-paladin": [
+    "Channel", "Combat Skill", "Courtesy", "Influence", "Insight", "Piety", "Ride", "Willpower"
+  ],
+  "bard": [
+    "Athletics", "Influence", "Lore", "Lyrical Magic", "Musicianship", "Perception", "Seduction", "Sing", "Stealth", "Streetwise", "Survival"
+  ],
+  "berserker": [
+    "Athletics", "Brawn", "Combat Skill", "Endurance", "Evade", "Survival", "Unarmed"
+  ],
+  "cavalier": [
+    "Bureaucracy", "Combat Skill", "Courtesy", "Customs", "Endurance", "Influence", "Ride", "Willpower"
+  ],
+  "cleric": [
+    "Channel", "Combat Skill", "First Aid", "Influence", "Insight", "Piety", "Willpower"
+  ],
+  "druid": [
+    "Animal Handling", "Channel", "First Aid", "Locale", "Perception", "Piety", "Survival", "Willpower"
+  ],
+  "fighter": [
+    "Combat Skill", "Craft", "Endurance", "Evade", "Lore", "Unarmed"
+  ],
+  "mage": [
+    "Arcane Casting", "Arcane Knowledge", "Influence", "Insight", "Lore", "Perception", "Willpower"
+  ],
+  "monk": [
+    "Acrobatics", "Athletics", "Combat Skill", "Evade", "Insight", "Meditation", "Mysticism", "Stealth", "Unarmed", "Willpower"
+  ],
+  "paladin": [
+    "Channel", "Combat Skill", "Courtesy", "Influence", "Insight", "Piety", "Ride", "Willpower"
+  ],
+  "ranger": [
+    "Animal Handling", "Athletics", "Channel", "Combat Skill", "Endurance", "Perception", "Piety", "Stealth", "Survival"
+  ],
+  "rogue": [
+    "Athletics", "Combat Skill", "Deceit", "Evade", "Lockpicking", "Mechanisms", "Sleight", "Stealth", "Streetwise"
+  ],
+  "sorcerer": [
+    "Deceit", "Influence", "Insight", "Lore", "Perception", "Arcane Sorcery", "Sorcerous Wisdom", "Willpower"
+  ],
+  "warlord": [
+    "Combat Skill", "Command", "Endurance", "Insight", "Oratory", "Lore"
+  ]
+};
+
+/**
+ * Normalize skill name for matching (lowercase, trim)
+ */
+function normalizeSkillName(name) {
+  return String(name || "").toLowerCase().trim();
+}
+
+/**
+ * Check if a skill is a prerequisite for a given class
+ * @param {string} skillName - The skill name to check
+ * @param {string} className - The class name to check against
+ * @returns {boolean}
+ */
+function isPrereqForClass(skillName, className) {
+  const normClass = normalizeClassName(className);
+  const normSkill = normalizeSkillName(skillName);
+  
+  const prereqs = CLASS_PREREQ_SKILLS[normClass];
+  if (!prereqs) return false;
+  
+  return prereqs.some(p => normalizeSkillName(p) === normSkill);
+}
+
+/**
+ * Get which class slots (primary, secondary, tertiary) have this skill as prereq
+ * @param {string} skillName - The skill name
+ * @param {string} primaryClass - Primary class
+ * @param {string} secondaryClass - Secondary class (optional)
+ * @param {string} tertiaryClass - Tertiary class (optional)
+ * @returns {object} { primary: boolean, secondary: boolean, tertiary: boolean }
+ */
+function getPrereqKeysForSkill(skillName, primaryClass, secondaryClass, tertiaryClass) {
+  return {
+    primary: primaryClass ? isPrereqForClass(skillName, primaryClass) : false,
+    secondary: secondaryClass ? isPrereqForClass(skillName, secondaryClass) : false,
+    tertiary: tertiaryClass ? isPrereqForClass(skillName, tertiaryClass) : false
+  };
+}
+
 // Export for use in app.js
 window.ClassRankData = {
   CLASS_RANK_TITLES,
   EVOCATIVE_NAMES,
   NO_MULTICLASS,
   FORBIDDEN_COMBINATIONS,
+  CLASS_PREREQ_SKILLS,
   normalizeClassName,
+  normalizeSkillName,
   getComboKey,
   getRankTitle,
   getEvocativeNames,
   hasEvocativeNames,
   canClassMulticlass,
   canCombineClasses,
-  validateMulticlass
+  validateMulticlass,
+  isPrereqForClass,
+  getPrereqKeysForSkill
 };
