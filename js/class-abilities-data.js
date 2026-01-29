@@ -147,7 +147,9 @@ ClassAbilities.getSpecialActions = function(className, rank) {
  */
 ClassAbilities.isAbilityGrantingClass = function(className) {
   const classKey = className.toLowerCase().trim();
-  return this.hasOwnProperty(classKey);
+  const classData = this[classKey];
+  // Must be an object with rank properties, not a function
+  return classData && typeof classData === 'object' && (classData.rank1 || classData.specialActions);
 };
 
 /**

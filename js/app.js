@@ -162,7 +162,7 @@ const App = {
     const species = speciesInput?.value?.trim().toLowerCase() || '';
     
     // Determine if Syrin
-    const isSyrin = species === 'syrin';
+    const isSyrin = species.indexOf('syrin') !== -1;
     const newSheetType = isSyrin ? 'syrin' : 'human';
     
     // Only update if changed
@@ -183,6 +183,16 @@ const App = {
       
       // Restore hit location data
       this.loadHitLocationsFromCharacter();
+      
+      // Auto-set flying speed for Syrin
+      const flyingInput = document.getElementById('flying-speed');
+      if (flyingInput) {
+        if (isSyrin && !flyingInput.value) {
+          flyingInput.value = '20';
+        } else if (!isSyrin) {
+          flyingInput.value = '';
+        }
+      }
       
       this.recalculateAll();
     }
