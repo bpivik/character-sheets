@@ -58,6 +58,9 @@ const App = {
     this.updatePrereqKeys();
     this.updateMagicVisibility();
     
+    // Restore last viewed page (after magic visibility so we don't restore hidden pages)
+    this.restoreCurrentPage();
+    
     // Update container button visibility
     this.updateContainerButtons();
     
@@ -90,6 +93,13 @@ const App = {
           }
         });
         
+        // Save current page to localStorage
+        try {
+          localStorage.setItem('mythras-current-page', targetPage);
+        } catch (e) {
+          // Ignore storage errors
+        }
+        
         // Update weapon damages when switching to Combat page
         if (targetPage === 'combat' && window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
@@ -97,23 +107,70 @@ const App = {
       });
     });
   },
+  
+  /**
+   * Restore the last viewed page from localStorage
+   */
+  restoreCurrentPage() {
+    try {
+      const savedPage = localStorage.getItem('mythras-current-page');
+      if (savedPage) {
+        const tab = document.querySelector(`.tab-btn[data-page="${savedPage}"]`);
+        const page = document.getElementById(`page-${savedPage}`);
+        
+        // Only restore if tab is visible (not hidden due to magic class restrictions)
+        if (tab && page && tab.parentElement.style.display !== 'none') {
+          document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.sheet-page').forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          page.classList.add('active');
+        }
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+  },
 
   /**
-   * Set up sheet type selector (Human/Syrin)
+   * Set up sheet type based on species (auto-detect Syrin)
    */
   setupSheetTypeSelector() {
     const selector = document.getElementById('sheet-type-select');
-    if (!selector) return;
+    if (selector) {
+      // Hide the selector - it's now automatic based on species
+      selector.style.display = 'none';
+    }
     
-    selector.value = this.sheetType;
+    // Set initial sheet type based on species
+    this.updateSheetTypeFromSpecies();
     
-    selector.addEventListener('change', (e) => {
+    // Set initial sheet type on app element
+    document.getElementById('app').dataset.sheetType = this.sheetType;
+  },
+  
+  /**
+   * Update sheet type based on species field
+   */
+  updateSheetTypeFromSpecies() {
+    const speciesInput = document.getElementById('species');
+    const species = speciesInput?.value?.trim().toLowerCase() || '';
+    
+    // Determine if Syrin
+    const isSyrin = species === 'syrin';
+    const newSheetType = isSyrin ? 'syrin' : 'human';
+    
+    // Only update if changed
+    if (this.sheetType !== newSheetType) {
       // Save current hit location data before regenerating
       this.saveHitLocationsToCharacter();
       
-      this.sheetType = e.target.value;
+      this.sheetType = newSheetType;
       this.character.sheetType = this.sheetType;
       document.getElementById('app').dataset.sheetType = this.sheetType;
+      
+      // Update the hidden selector value (for consistency)
+      const selector = document.getElementById('sheet-type-select');
+      if (selector) selector.value = this.sheetType;
       
       // Regenerate hit locations for new type
       this.generateHitLocations();
@@ -122,11 +179,7 @@ const App = {
       this.loadHitLocationsFromCharacter();
       
       this.recalculateAll();
-      this.scheduleAutoSave();
-    });
-    
-    // Set initial sheet type
-    document.getElementById('app').dataset.sheetType = this.sheetType;
+    }
   },
 
   /**
@@ -224,6 +277,15 @@ const App = {
             this.updateWeaponsKnown(true);
             this.updateRankName();
             this.updatePrereqKeys();
+            this.updateMagicVisibility();
+            this.scheduleAutoSave();
+          });
+        }
+        
+        // Add blur listener for species field to update sheet type
+        if (fieldId === 'species') {
+          field.addEventListener('blur', () => {
+            this.updateSheetTypeFromSpecies();
             this.updateMagicVisibility();
             this.scheduleAutoSave();
           });
@@ -2616,6 +2678,10 @@ const App = {
     const SORCERER_CLASSES = ['sorcerer'];
     const BARD_CLASSES = ['bard'];
     
+    // Check if Syrin (Syrin cannot be Mages or Sorcerers)
+    const species = document.getElementById('species')?.value?.trim().toLowerCase() || '';
+    const isSyrin = species === 'syrin';
+    
     // Get all selected classes (normalized to lowercase)
     const classes = [
       document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
@@ -2623,10 +2689,14 @@ const App = {
       document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
     ].filter(c => c);
     
-    // If no classes selected, show everything (default state)
+    // If no classes selected, show everything (default state) but respect Syrin restrictions
     if (classes.length === 0) {
-      document.querySelectorAll('.magic-class-divine, .magic-class-mage, .magic-class-sorcerer, .magic-class-bard').forEach(row => {
+      document.querySelectorAll('.magic-class-divine, .magic-class-bard').forEach(row => {
         row.style.display = '';
+      });
+      // Mage and Sorcerer rows hidden for Syrin
+      document.querySelectorAll('.magic-class-mage, .magic-class-sorcerer').forEach(row => {
+        row.style.display = isSyrin ? 'none' : '';
       });
       document.querySelectorAll('.tab-btn[data-page="magic1"], .tab-btn[data-page="magic2"]').forEach(tab => {
         tab.parentElement.style.display = '';
@@ -2636,6 +2706,10 @@ const App = {
     
     // Check which magic types are needed
     const needsDivine = classes.some(c => DIVINE_CLASSES.includes(c));
+    // Syrin cannot be Mages or Sorcerers
+    const needsMage = !isSyrin && classes.some(c => MAGE_CLASSES.includes(c));
+    const needsSorcerer = !isSyrin && classes.some(c => SORCERER_CLASSES.includes(c));
+    const needsBard = classes.some(c => BARD_CLASSES.includes(c));
     const needsMage = classes.some(c => MAGE_CLASSES.includes(c));
     const needsSorcerer = classes.some(c => SORCERER_CLASSES.includes(c));
     const needsBard = classes.some(c => BARD_CLASSES.includes(c));
