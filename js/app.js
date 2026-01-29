@@ -45,11 +45,14 @@ const App = {
     // Setup money listeners
     this.setupMoneyListeners();
     
-    // Setup magic skill sync between pages
+    // Setup magic skill sync between pages (sets up listeners)
     this.setupMagicSkillSync();
     
     // Populate form with loaded data
     this.populateForm();
+    
+    // Sync magic skill values after form is populated
+    this.syncMagicSkillValues();
     
     // Validate multiclass restrictions (without showing warnings on load)
     this.updateMulticlassFieldStates();
@@ -2997,8 +3000,21 @@ const App = {
         syncTarget.addEventListener('input', () => {
           input.value = syncTarget.value;
         });
-        
-        // Initial sync
+      }
+    });
+  },
+  
+  /**
+   * Sync magic skill values from page 1 to page 2 (call after populateForm)
+   */
+  syncMagicSkillValues() {
+    const syncInputs = document.querySelectorAll('.sync-magic');
+    
+    syncInputs.forEach(input => {
+      const syncTargetId = input.dataset.sync;
+      const syncTarget = document.getElementById(syncTargetId);
+      
+      if (syncTarget) {
         input.value = syncTarget.value;
       }
     });
@@ -3151,13 +3167,9 @@ const App = {
       }
     });
     
-    // Clamp value on input
-    input.addEventListener('input', () => {
-      let val = parseInt(input.value, 10);
-      if (!isNaN(val)) {
-        val = Math.max(0, Math.min(5, val));
-        input.value = val;
-      }
+    // Select all text when focused so user can just type
+    input.addEventListener('focus', () => {
+      input.select();
     });
   },
 
