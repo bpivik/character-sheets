@@ -875,7 +875,7 @@ select:focus {
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 10px solid #333;
+  border-bottom: 10px solid #333;
   vertical-align: middle;
   margin-left: 2px;
 }
@@ -1089,7 +1089,8 @@ select:focus {
 .enc-penalty-note .enc-indicator {
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 12px solid #333;
+  border-bottom: 12px solid #333;
+  border-top: none;
 }
 
 .skill-grade-reference {
