@@ -2022,7 +2022,7 @@ select:focus {
 /* Combat page with abilities sidebar layout */
 .combat-with-abilities-layout {
   display: grid;
-  grid-template-columns: 1fr 200px;
+  grid-template-columns: 1fr 280px;
   gap: 0.75rem;
 }
 
