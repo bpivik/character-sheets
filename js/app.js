@@ -278,6 +278,7 @@ const App = {
             this.updateRankName();
             this.updatePrereqKeys();
             this.updateMagicVisibility();
+            this.updateSpellMemorization();
             this.scheduleAutoSave();
           });
         }
@@ -296,6 +297,7 @@ const App = {
           field.addEventListener('blur', () => {
             this.updateRankName();
             this.updatePrereqKeys();
+            this.updateSpellMemorization();
             this.scheduleAutoSave();
           });
         }
@@ -1972,9 +1974,9 @@ const App = {
           // Individual spells
           if (this.character.magic.spells[rank].spells) {
             this.character.magic.spells[rank].spells.forEach((spell, i) => {
-              const nameInput = document.getElementById(`${rank}-spell-${i}-name`);
-              const costInput = document.getElementById(`${rank}-spell-${i}-cost`);
-              const memCheck = document.getElementById(`${rank}-spell-${i}-mem`);
+              const nameInput = document.getElementById(`${rank}-${i}-name`);
+              const costInput = document.getElementById(`${rank}-${i}-cost`);
+              const memCheck = document.getElementById(`${rank}-${i}-mem`);
               if (nameInput && spell.name) nameInput.value = spell.name;
               if (costInput && spell.cost) costInput.value = spell.cost;
               if (memCheck && spell.memorized) memCheck.checked = spell.memorized;
@@ -2213,9 +2215,9 @@ const App = {
       // Individual spells
       this.character.magic.spells[rank].spells = [];
       for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
-        const nameInput = document.getElementById(`${rank}-spell-${i}-name`);
-        const costInput = document.getElementById(`${rank}-spell-${i}-cost`);
-        const memCheck = document.getElementById(`${rank}-spell-${i}-mem`);
+        const nameInput = document.getElementById(`${rank}-${i}-name`);
+        const costInput = document.getElementById(`${rank}-${i}-cost`);
+        const memCheck = document.getElementById(`${rank}-${i}-mem`);
         if (nameInput) {
           this.character.magic.spells[rank].spells.push({
             name: nameInput?.value || '',
@@ -2342,6 +2344,9 @@ const App = {
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
     }
+    
+    // Update spell memorization limits (depends on INT)
+    this.updateSpellMemorization();
   },
 
   /**
@@ -2743,6 +2748,58 @@ const App = {
         document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
         document.getElementById('page-main')?.classList.add('active');
         document.querySelector('.tab-btn[data-page="main"]')?.classList.add('active');
+      }
+    }
+  },
+  
+  /**
+   * Update spell memorization limits based on class, rank, and INT
+   */
+  updateSpellMemorization() {
+    if (!window.ClassRankData) return;
+    
+    // Get INT value
+    const intInput = document.getElementById('int-value');
+    const intValue = parseInt(intInput?.value, 10) || 0;
+    
+    // Get all classes and ranks
+    const classes = [
+      {
+        className: document.getElementById('class-primary')?.value?.trim() || '',
+        classRank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0
+      },
+      {
+        className: document.getElementById('class-secondary')?.value?.trim() || '',
+        classRank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0
+      },
+      {
+        className: document.getElementById('class-tertiary')?.value?.trim() || '',
+        classRank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
+      }
+    ].filter(c => c.className);
+    
+    // Get combined spell memorization
+    const spellLimits = window.ClassRankData.getCombinedSpellMemorization(classes, intValue);
+    
+    // Update the "May Memorize X Spells" inputs
+    const spellRankMapping = {
+      'cantrips': 'cantrips-max',
+      'rank1': 'rank1-max',
+      'rank2': 'rank2-max',
+      'rank3': 'rank3-max',
+      'rank4': 'rank4-max',
+      'rank5': 'rank5-max'
+    };
+    
+    for (const [spellRank, inputId] of Object.entries(spellRankMapping)) {
+      const input = document.getElementById(inputId);
+      if (input) {
+        const limit = spellLimits[spellRank];
+        if (limit !== undefined) {
+          input.value = limit;
+        } else {
+          input.value = 0;
+        }
       }
     }
   },

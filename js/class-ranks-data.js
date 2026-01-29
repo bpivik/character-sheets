@@ -348,6 +348,168 @@ function getPrereqKeysForSkill(skillName, primaryClass, secondaryClass, tertiary
   };
 }
 
+/**
+ * Spell memorization data by class
+ * Structure: { divisor: INT/X, ranks: { classRank: { spellRank: bonus } } }
+ * Empty object for ranks means cannot cast at that class rank
+ */
+const SPELL_MEMORIZATION = {
+  'bard': {
+    divisor: 6,
+    ranks: {
+      0: { cantrips: 0 },
+      1: { cantrips: 1, rank1: 0 },
+      2: { cantrips: 2, rank1: 1 },
+      3: { cantrips: 3, rank1: 2, rank2: 0 },
+      4: { cantrips: 4, rank1: 3, rank2: 1 },
+      5: { cantrips: 5, rank1: 4, rank2: 2, rank3: 0 }
+    }
+  },
+  'cleric': {
+    divisor: 4,
+    ranks: {
+      0: { cantrips: 0 },
+      1: { cantrips: 2, rank1: 0 },
+      2: { cantrips: 4, rank1: 2, rank2: 0 },
+      3: { cantrips: 6, rank1: 4, rank2: 2, rank3: 0 },
+      4: { cantrips: 8, rank1: 6, rank2: 4, rank3: 2, rank4: 0 },
+      5: { cantrips: 10, rank1: 8, rank2: 6, rank3: 4, rank4: 2, rank5: 0 }
+    }
+  },
+  'druid': {
+    divisor: 4,
+    ranks: {
+      0: { cantrips: 0 },
+      1: { cantrips: 2, rank1: 0 },
+      2: { cantrips: 4, rank1: 2, rank2: 0 },
+      3: { cantrips: 6, rank1: 4, rank2: 2, rank3: 0 },
+      4: { cantrips: 8, rank1: 6, rank2: 4, rank3: 2, rank4: 0 },
+      5: { cantrips: 10, rank1: 8, rank2: 6, rank3: 4, rank4: 2, rank5: 0 }
+    }
+  },
+  'mage': {
+    divisor: 4,
+    ranks: {
+      0: { cantrips: 0 },
+      1: { cantrips: 1, rank1: 0 },
+      2: { cantrips: 2, rank1: 2, rank2: 0 },
+      3: { cantrips: 3, rank1: 4, rank2: 2, rank3: 0 },
+      4: { cantrips: 4, rank1: 6, rank2: 4, rank3: 2, rank4: 0 },
+      5: { cantrips: 5, rank1: 8, rank2: 6, rank3: 4, rank4: 2, rank5: 0 }
+    }
+  },
+  'paladin': {
+    divisor: 6,
+    ranks: {
+      0: {},  // Cannot cast
+      1: {},  // Cannot cast
+      2: { cantrips: 0 },
+      3: { cantrips: 1, rank1: 0 },
+      4: { cantrips: 2, rank1: 1, rank2: 0 },
+      5: { cantrips: 3, rank1: 2, rank2: 1, rank3: 0 }
+    }
+  },
+  'anti-paladin': {
+    divisor: 6,
+    ranks: {
+      0: {},  // Cannot cast
+      1: {},  // Cannot cast
+      2: { cantrips: 0 },
+      3: { cantrips: 1, rank1: 0 },
+      4: { cantrips: 2, rank1: 1, rank2: 0 },
+      5: { cantrips: 3, rank1: 2, rank2: 1, rank3: 0 }
+    }
+  },
+  'ranger': {
+    divisor: 6,
+    ranks: {
+      0: {},  // Cannot cast
+      1: {},  // Cannot cast
+      2: { cantrips: 0 },
+      3: { cantrips: 1, rank1: 0 },
+      4: { cantrips: 2, rank1: 1, rank2: 0 },
+      5: { cantrips: 3, rank1: 2, rank2: 1, rank3: 0 }
+    }
+  },
+  'sorcerer': {
+    divisor: 3,
+    ranks: {
+      0: { cantrips: 0 },
+      1: { cantrips: 1, rank1: 0 },
+      2: { cantrips: 2, rank1: 1, rank2: 0 },
+      3: { cantrips: 3, rank1: 2, rank2: 1, rank3: 0 },
+      4: { cantrips: 4, rank1: 3, rank2: 2, rank3: 1, rank4: 0 },
+      5: { cantrips: 5, rank1: 4, rank2: 3, rank3: 2, rank4: 1, rank5: 0 }
+    }
+  }
+};
+
+// Classes that have no magic
+const NO_MAGIC_CLASSES = ['berserker', 'cavalier', 'fighter', 'monk', 'rogue', 'thief', 'warlord'];
+
+/**
+ * Calculate spells that can be memorized for a given class at a given rank
+ * @param {string} className - The class name
+ * @param {number} classRank - The class rank (0-5)
+ * @param {number} intValue - The character's INT value
+ * @returns {object} { cantrips: N, rank1: N, rank2: N, ... } or empty object if no magic
+ */
+function getSpellMemorization(className, classRank, intValue) {
+  const normalized = normalizeClassName(className);
+  
+  // No magic classes
+  if (NO_MAGIC_CLASSES.includes(normalized)) {
+    return {};
+  }
+  
+  const classData = SPELL_MEMORIZATION[normalized];
+  if (!classData) {
+    return {};
+  }
+  
+  const rankData = classData.ranks[classRank] || {};
+  const divisor = classData.divisor;
+  const baseValue = Math.floor(intValue / divisor);
+  
+  const result = {};
+  const spellRanks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+  
+  spellRanks.forEach(spellRank => {
+    if (rankData[spellRank] !== undefined) {
+      result[spellRank] = baseValue + rankData[spellRank];
+    }
+  });
+  
+  return result;
+}
+
+/**
+ * Calculate combined spell memorization for all classes (takes best from each)
+ * @param {Array} classes - Array of { className, classRank } objects
+ * @param {number} intValue - The character's INT value
+ * @returns {object} { cantrips: N, rank1: N, ... } with best values from all classes
+ */
+function getCombinedSpellMemorization(classes, intValue) {
+  const combined = {};
+  const spellRanks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+  
+  classes.forEach(({ className, classRank }) => {
+    if (!className) return;
+    
+    const classSpells = getSpellMemorization(className, classRank, intValue);
+    
+    spellRanks.forEach(spellRank => {
+      if (classSpells[spellRank] !== undefined) {
+        if (combined[spellRank] === undefined || classSpells[spellRank] > combined[spellRank]) {
+          combined[spellRank] = classSpells[spellRank];
+        }
+      }
+    });
+  });
+  
+  return combined;
+}
+
 // Export for use in app.js
 window.ClassRankData = {
   CLASS_RANK_TITLES,
@@ -357,6 +519,8 @@ window.ClassRankData = {
   CLASS_PREREQ_SKILLS,
   RANK_REQUIREMENTS,
   CLASS_SLOT_MODIFIERS,
+  SPELL_MEMORIZATION,
+  NO_MAGIC_CLASSES,
   normalizeClassName,
   normalizeSkillName,
   getComboKey,
@@ -368,5 +532,7 @@ window.ClassRankData = {
   validateMulticlass,
   isPrereqForClass,
   getPrereqKeysForSkill,
-  getNextRankRequirement
+  getNextRankRequirement,
+  getSpellMemorization,
+  getCombinedSpellMemorization
 };

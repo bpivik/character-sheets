@@ -2189,6 +2189,12 @@ select:focus {
   background: var(--input-bg);
 }
 
+.memorize-input[readonly] {
+  background: var(--row-alt);
+  cursor: default;
+  font-weight: 600;
+}
+
 .memorize-input:focus {
   outline: none;
   border-color: var(--input-focus);
