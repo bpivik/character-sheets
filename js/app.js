@@ -1623,13 +1623,48 @@ const App = {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="checkbox" id="${rank}-${i}-mem" class="spell-memorized"></td>
-          <td><input type="text" id="${rank}-${i}-name" class="spell-name" placeholder=""></td>
+          <td class="spell-name-cell">
+            <input type="text" id="${rank}-${i}-name" class="spell-name" placeholder="" list="${rank}-${i}-datalist" autocomplete="off">
+            <datalist id="${rank}-${i}-datalist"></datalist>
+          </td>
           <td><input type="text" id="${rank}-${i}-cost" class="spell-cost" placeholder=""></td>
         `;
         tbody.appendChild(tr);
         
+        const nameInput = tr.querySelector(`#${rank}-${i}-name`);
+        const costInput = tr.querySelector(`#${rank}-${i}-cost`);
+        const datalist = tr.querySelector(`#${rank}-${i}-datalist`);
+        
+        // Populate datalist with spell options for this rank
+        if (window.SpellData && datalist) {
+          const spells = window.SpellData.SPELLS_BY_RANK[rank] || [];
+          spells.forEach(spell => {
+            const option = document.createElement('option');
+            option.value = spell.name;
+            datalist.appendChild(option);
+          });
+        }
+        
+        // Auto-fill cost when spell name is selected/entered
+        if (nameInput && costInput) {
+          nameInput.addEventListener('change', () => {
+            const spellName = nameInput.value.trim();
+            if (spellName && window.SpellData) {
+              const cost = window.SpellData.getSpellCost(spellName, rank);
+              if (cost) {
+                costInput.value = cost;
+              }
+            }
+            this.scheduleAutoSave();
+          });
+          
+          nameInput.addEventListener('input', () => this.scheduleAutoSave());
+        }
+        
         tr.querySelectorAll('input').forEach(input => {
-          input.addEventListener('input', () => this.scheduleAutoSave());
+          if (input !== nameInput) {
+            input.addEventListener('input', () => this.scheduleAutoSave());
+          }
           input.addEventListener('change', () => this.scheduleAutoSave());
         });
       }
