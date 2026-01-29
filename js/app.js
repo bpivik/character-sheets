@@ -318,7 +318,12 @@ const App = {
             this.updatePrereqKeys();
             this.updateMagicVisibility();
             this.updateSpellMemorization();
-            this.updateClassSpells(previousClasses);
+            
+            // Update class spells after a brief delay to ensure rank is set
+            setTimeout(() => {
+              this.updateClassSpells(previousClasses);
+            }, 50);
+            
             this.scheduleAutoSave();
           });
         }
@@ -1666,8 +1671,7 @@ const App = {
         tr.innerHTML = `
           <td><input type="checkbox" id="${rank}-${i}-mem" class="spell-memorized"></td>
           <td class="spell-name-cell">
-            <input type="text" id="${rank}-${i}-name" class="spell-name" placeholder="" list="${rank}-${i}-datalist" autocomplete="off">
-            <datalist id="${rank}-${i}-datalist"></datalist>
+            <input type="text" id="${rank}-${i}-name" class="spell-name" placeholder="" autocomplete="off">
           </td>
           <td><input type="text" id="${rank}-${i}-cost" class="spell-cost" placeholder=""></td>
         `;
@@ -1675,20 +1679,6 @@ const App = {
         
         const nameInput = tr.querySelector(`#${rank}-${i}-name`);
         const costInput = tr.querySelector(`#${rank}-${i}-cost`);
-        const datalist = tr.querySelector(`#${rank}-${i}-datalist`);
-        
-        // Populate datalist with spell options for this rank (if spell data available)
-        if (window.SpellData && datalist) {
-          const rankKey = rank;
-          const spellList = window.SpellData[rankKey];
-          if (spellList) {
-            Object.keys(spellList).forEach(spellName => {
-              const option = document.createElement('option');
-              option.value = spellName;
-              datalist.appendChild(option);
-            });
-          }
-        }
         
         // Auto-fill cost when spell name is selected/entered
         if (nameInput && costInput) {
@@ -1712,6 +1702,8 @@ const App = {
               // Spell name was cleared - also clear the cost and tooltip
               costInput.value = '';
               nameInput.title = '';
+              // Also clear classSpell marker if present
+              delete nameInput.dataset.classSpell;
             }
             this.scheduleAutoSave();
           });
@@ -2454,6 +2446,10 @@ const App = {
     
     // Update spell memorization limits (depends on INT)
     this.updateSpellMemorization();
+    
+    // Populate class spells (for spell-granting classes like Cleric)
+    // Don't remove any spells on init - just add missing ones
+    this.updateClassSpells(null);
   },
 
   /**
@@ -3104,7 +3100,10 @@ const App = {
     if (!window.ClassSpellLists || !window.SpellData) return;
     
     const classSpells = window.ClassSpellLists.getSpellsForClassAndRank(className, maxRank);
-    if (!classSpells) return;
+    if (!classSpells) {
+      console.log('No class spells found for', className, 'maxRank', maxRank);
+      return;
+    }
     
     const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
     
@@ -3115,7 +3114,7 @@ const App = {
       // Get current spells in this rank (to avoid duplicates)
       const existingSpells = this.getExistingSpellsInRank(rankKey);
       
-      // Find available slots and add spells
+      // Find available slots and add spells - reset slot index for each rank
       let slotIndex = 0;
       spellsForRank.forEach(spellName => {
         // Skip if spell already exists in this rank
@@ -3124,7 +3123,7 @@ const App = {
         }
         
         // Find next empty slot
-        while (slotIndex < 60) {
+        while (slotIndex < SPELL_SLOTS_PER_RANK) {
           const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
           if (nameInput && !nameInput.value.trim()) {
             // Found empty slot - add the spell
