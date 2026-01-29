@@ -56,6 +56,7 @@ const App = {
     this.updateWeaponsKnown();
     this.updateRankName();
     this.updatePrereqKeys();
+    this.updateMagicVisibility();
     
     // Update container button visibility
     this.updateContainerButtons();
@@ -223,6 +224,7 @@ const App = {
             this.updateWeaponsKnown(true);
             this.updateRankName();
             this.updatePrereqKeys();
+            this.updateMagicVisibility();
             this.scheduleAutoSave();
           });
         }
@@ -2602,6 +2604,62 @@ const App = {
       
       container.innerHTML = html;
     });
+  },
+  
+  /**
+   * Update magic page and row visibility based on selected classes
+   */
+  updateMagicVisibility() {
+    // Define which classes use which magic types
+    const DIVINE_CLASSES = ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid'];
+    const MAGE_CLASSES = ['mage'];
+    const SORCERER_CLASSES = ['sorcerer'];
+    const BARD_CLASSES = ['bard'];
+    
+    // Get all selected classes (normalized to lowercase)
+    const classes = [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c);
+    
+    // Check which magic types are needed
+    const needsDivine = classes.some(c => DIVINE_CLASSES.includes(c));
+    const needsMage = classes.some(c => MAGE_CLASSES.includes(c));
+    const needsSorcerer = classes.some(c => SORCERER_CLASSES.includes(c));
+    const needsBard = classes.some(c => BARD_CLASSES.includes(c));
+    
+    // Check if any magic is needed
+    const needsAnyMagic = needsDivine || needsMage || needsSorcerer || needsBard;
+    
+    // Show/hide magic skill rows
+    const divineRows = document.querySelectorAll('.magic-class-divine');
+    const mageRows = document.querySelectorAll('.magic-class-mage');
+    const sorcererRows = document.querySelectorAll('.magic-class-sorcerer');
+    const bardRows = document.querySelectorAll('.magic-class-bard');
+    
+    divineRows.forEach(row => row.style.display = needsDivine ? '' : 'none');
+    mageRows.forEach(row => row.style.display = needsMage ? '' : 'none');
+    sorcererRows.forEach(row => row.style.display = needsSorcerer ? '' : 'none');
+    bardRows.forEach(row => row.style.display = needsBard ? '' : 'none');
+    
+    // Show/hide magic page tabs
+    const magicTabs = document.querySelectorAll('.tab-btn[data-page="magic1"], .tab-btn[data-page="magic2"]');
+    magicTabs.forEach(tab => {
+      tab.parentElement.style.display = needsAnyMagic ? '' : 'none';
+    });
+    
+    // If currently on a magic page and no magic is needed, switch to main page
+    if (!needsAnyMagic) {
+      const activePage = document.querySelector('.sheet-page.active');
+      if (activePage && (activePage.id === 'page-magic1' || activePage.id === 'page-magic2')) {
+        // Switch to main page
+        document.querySelectorAll('.sheet-page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-main')?.classList.add('active');
+        document.querySelector('.tab-btn[data-page="main"]')?.classList.add('active');
+      }
+    }
   },
   
   /**
