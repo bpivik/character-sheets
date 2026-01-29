@@ -543,7 +543,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 560px 1fr 420px;
+  grid-template-columns: 506px 1fr 420px;
   gap: 1.5rem;
   align-items: start;
 }
