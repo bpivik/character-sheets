@@ -79,7 +79,7 @@ const Calculator = {
    */
   calculateInitiative(INT, DEX) {
     const sum = (parseInt(INT) || 0) + (parseInt(DEX) || 0);
-    return Math.round(sum / 2);
+    return Math.ceil(sum / 2);
   },
 
   /**
@@ -87,7 +87,7 @@ const Calculator = {
    */
   calculateLuckPoints(POW) {
     const pow = parseInt(POW) || 0;
-    return Math.round(pow / 6);
+    return Math.ceil(pow / 6);
   },
 
   /**

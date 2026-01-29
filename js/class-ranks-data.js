@@ -469,7 +469,7 @@ function getSpellMemorization(className, classRank, intValue) {
   
   const rankData = classData.ranks[classRank] || {};
   const divisor = classData.divisor;
-  const baseValue = Math.floor(intValue / divisor);
+  const baseValue = Math.ceil(intValue / divisor);
   
   const result = {};
   const spellRanks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
