@@ -1635,8 +1635,8 @@ const App = {
         const costInput = tr.querySelector(`#${rank}-${i}-cost`);
         const datalist = tr.querySelector(`#${rank}-${i}-datalist`);
         
-        // Populate datalist with spell options for this rank
-        if (window.SpellData && datalist) {
+        // Populate datalist with spell options for this rank (if spell data available)
+        if (window.SpellData && window.SpellData.SPELLS_BY_RANK && datalist) {
           const spells = window.SpellData.SPELLS_BY_RANK[rank] || [];
           spells.forEach(spell => {
             const option = document.createElement('option');
