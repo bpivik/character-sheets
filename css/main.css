@@ -475,19 +475,20 @@ select:focus {
 .prereq-skills {
   margin-top: 0.5rem;
   font-size: 0.75rem;
+  max-width: 160px;
 }
 
 .prereq-row {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.2rem;
 }
 
 .prereq-key {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .prereq-label {
