@@ -48,6 +48,9 @@ const App = {
     // Populate form with loaded data
     this.populateForm();
     
+    // Validate multiclass restrictions (without showing warnings on load)
+    this.updateMulticlassFieldStates();
+    
     // Update combat skill name and weapons from classes (if not already set)
     this.updateCombatSkillName();
     this.updateWeaponsKnown();
@@ -210,12 +213,14 @@ const App = {
           this.scheduleAutoSave();
         });
         
-        // Add blur listener for class fields to update combat skill name and weapons known
+        // Add blur listener for class fields to validate and update
         if (classFields.includes(fieldId)) {
           field.addEventListener('blur', () => {
-            this.updateCombatSkillName(true); // Force update when classes change
-            this.updateWeaponsKnown(true); // Force update when classes change
-            this.updateRankName(); // Update rank name when classes change
+            // Validate multiclass restrictions
+            this.validateAndUpdateClasses(fieldId);
+            this.updateCombatSkillName(true);
+            this.updateWeaponsKnown(true);
+            this.updateRankName();
             this.scheduleAutoSave();
           });
         }
@@ -2382,6 +2387,208 @@ const App = {
   },
 
   /**
+   * Validate multiclass restrictions and update field states
+   * @param {string} changedFieldId - The field that was just changed
+   */
+  validateAndUpdateClasses(changedFieldId) {
+    if (!window.ClassRankData) return;
+    
+    const primaryField = document.getElementById('class-primary');
+    const secondaryField = document.getElementById('class-secondary');
+    const tertiaryField = document.getElementById('class-tertiary');
+    const rankSecondaryField = document.getElementById('rank-secondary');
+    const rankTertiaryField = document.getElementById('rank-tertiary');
+    
+    const primary = primaryField?.value?.trim() || '';
+    const secondary = secondaryField?.value?.trim() || '';
+    const tertiary = tertiaryField?.value?.trim() || '';
+    
+    // Check if primary class can multiclass
+    if (primary) {
+      const canMulti = window.ClassRankData.canClassMulticlass(primary);
+      
+      if (!canMulti) {
+        // Disable secondary and tertiary fields
+        this.setMulticlassFieldsEnabled(false);
+        
+        // Clear any existing secondary/tertiary values with warning
+        if (secondary || tertiary) {
+          this.showMulticlassWarning(`${primary} cannot multiclass.`);
+          if (secondaryField) {
+            secondaryField.value = '';
+            this.character.info.classSecondary = '';
+          }
+          if (tertiaryField) {
+            tertiaryField.value = '';
+            this.character.info.classTertiary = '';
+          }
+          if (rankSecondaryField) {
+            rankSecondaryField.value = '';
+            this.character.info.rankSecondary = '';
+          }
+          if (rankTertiaryField) {
+            rankTertiaryField.value = '';
+            this.character.info.rankTertiary = '';
+          }
+        }
+        return;
+      } else {
+        // Enable secondary and tertiary fields
+        this.setMulticlassFieldsEnabled(true);
+      }
+    } else {
+      // No primary class - enable fields but they're essentially useless
+      this.setMulticlassFieldsEnabled(true);
+    }
+    
+    // Validate specific combinations
+    if (changedFieldId === 'class-secondary' && secondary) {
+      const check = window.ClassRankData.canCombineClasses(primary, secondary);
+      if (!check.allowed) {
+        this.showMulticlassWarning(check.reason);
+        secondaryField.value = '';
+        this.character.info.classSecondary = '';
+        if (rankSecondaryField) {
+          rankSecondaryField.value = '';
+          this.character.info.rankSecondary = '';
+        }
+        return;
+      }
+    }
+    
+    if (changedFieldId === 'class-tertiary' && tertiary) {
+      // Check tertiary against primary
+      const check1 = window.ClassRankData.canCombineClasses(primary, tertiary);
+      if (!check1.allowed) {
+        this.showMulticlassWarning(check1.reason);
+        tertiaryField.value = '';
+        this.character.info.classTertiary = '';
+        if (rankTertiaryField) {
+          rankTertiaryField.value = '';
+          this.character.info.rankTertiary = '';
+        }
+        return;
+      }
+      
+      // Check tertiary against secondary
+      if (secondary) {
+        const check2 = window.ClassRankData.canCombineClasses(secondary, tertiary);
+        if (!check2.allowed) {
+          this.showMulticlassWarning(check2.reason);
+          tertiaryField.value = '';
+          this.character.info.classTertiary = '';
+          if (rankTertiaryField) {
+            rankTertiaryField.value = '';
+            this.character.info.rankTertiary = '';
+          }
+          return;
+        }
+      }
+    }
+    
+    // If primary changed, re-validate existing secondary/tertiary
+    if (changedFieldId === 'class-primary' && primary) {
+      if (secondary) {
+        const check = window.ClassRankData.canCombineClasses(primary, secondary);
+        if (!check.allowed) {
+          this.showMulticlassWarning(check.reason);
+          secondaryField.value = '';
+          this.character.info.classSecondary = '';
+          if (rankSecondaryField) {
+            rankSecondaryField.value = '';
+            this.character.info.rankSecondary = '';
+          }
+        }
+      }
+      if (tertiary) {
+        const check = window.ClassRankData.canCombineClasses(primary, tertiary);
+        if (!check.allowed) {
+          this.showMulticlassWarning(check.reason);
+          tertiaryField.value = '';
+          this.character.info.classTertiary = '';
+          if (rankTertiaryField) {
+            rankTertiaryField.value = '';
+            this.character.info.rankTertiary = '';
+          }
+        }
+      }
+    }
+  },
+  
+  /**
+   * Enable or disable secondary/tertiary class and rank fields
+   */
+  setMulticlassFieldsEnabled(enabled) {
+    const fields = [
+      'class-secondary', 'class-tertiary',
+      'rank-secondary', 'rank-tertiary'
+    ];
+    
+    fields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.disabled = !enabled;
+        if (enabled) {
+          field.classList.remove('field-disabled');
+        } else {
+          field.classList.add('field-disabled');
+        }
+      }
+    });
+  },
+  
+  /**
+   * Update multiclass field states on load (without showing warnings)
+   */
+  updateMulticlassFieldStates() {
+    if (!window.ClassRankData) return;
+    
+    const primary = document.getElementById('class-primary')?.value?.trim() || '';
+    
+    if (primary) {
+      const canMulti = window.ClassRankData.canClassMulticlass(primary);
+      this.setMulticlassFieldsEnabled(canMulti);
+    } else {
+      this.setMulticlassFieldsEnabled(true);
+    }
+  },
+  
+  /**
+   * Show a warning popup for multiclass restriction violations
+   */
+  showMulticlassWarning(message) {
+    // Remove any existing warning
+    const existingWarning = document.getElementById('multiclass-warning');
+    if (existingWarning) existingWarning.remove();
+    
+    // Create warning popup
+    const warning = document.createElement('div');
+    warning.id = 'multiclass-warning';
+    warning.className = 'multiclass-warning';
+    warning.innerHTML = `
+      <div class="multiclass-warning-icon">⚠️</div>
+      <div class="multiclass-warning-title">Illegal Multiclass</div>
+      <div class="multiclass-warning-message">${message}</div>
+      <button class="multiclass-warning-close">OK</button>
+    `;
+    
+    document.body.appendChild(warning);
+    
+    // Close handler
+    const closeBtn = warning.querySelector('.multiclass-warning-close');
+    closeBtn.addEventListener('click', () => {
+      warning.remove();
+    });
+    
+    // Auto-close after 5 seconds
+    setTimeout(() => {
+      if (warning.parentNode) {
+        warning.remove();
+      }
+    }, 5000);
+  },
+
+  /**
    * Update rank name based on class and rank
    * For single class: uses standard rank titles
    * For multiclass: offers evocative name choices
@@ -2395,6 +2602,16 @@ const App = {
     const rankNameField = document.getElementById('rank-name');
     
     if (!rankNameField) return;
+    
+    // If no classes, clear rank name (if it's a standard title or evocative name)
+    if (!primaryClass) {
+      const currentValue = rankNameField.value.trim();
+      if (this.isStandardRankTitle(currentValue) || this.isEvocativeName(currentValue)) {
+        rankNameField.value = '';
+        this.character.info.rankName = '';
+      }
+      return;
+    }
     
     // Check if we have a multiclass combo with evocative names
     if (primaryClass && secondaryClass) {
@@ -2434,6 +2651,18 @@ const App = {
     
     for (const titles of Object.values(window.ClassRankData.CLASS_RANK_TITLES)) {
       if (titles.includes(value)) return true;
+    }
+    return false;
+  },
+  
+  /**
+   * Check if a value is an evocative name from multiclass combos
+   */
+  isEvocativeName(value) {
+    if (!value || !window.ClassRankData) return false;
+    
+    for (const names of Object.values(window.ClassRankData.EVOCATIVE_NAMES)) {
+      if (names.includes(value)) return true;
     }
     return false;
   },

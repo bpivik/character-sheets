@@ -45,12 +45,33 @@ const EVOCATIVE_NAMES = {
   "bard|rogue":      ["Songthief", "Veil Singer", "Songblade", "Grove Sneak", "Thornsinger", "Sylvan Shadow"],
   "bard|ranger":     ["Wayfarer", "Wildsong Ranger", "Arcane Rover", "Trail Skald", "Forest Singer", "Wildsong"],
 
-  "fighter|sorcerer":["Hexblade", "Eldritch Blade", "Blood Warrior"],
-  "rogue|sorcerer":  ["Spellthief", "Bloodshadow", "Veilblade"],
-  "ranger|sorcerer": ["Wildblood Stalker", "Runepath Ranger", "Hexhunter"],
+  "druid|ranger":    ["Grove Warden", "Wildland Scout", "Nature's Guardian"],
+  "druid|rogue":     ["Shadow Druid", "Thorn Shadow", "Wild Stalker"],
+  
   "cleric|sorcerer": ["Spiritbound", "Hexpriest", "Blood Theurge"],
   "druid|sorcerer":  ["Wild Shaman", "Spellroot", "Thorn Witch"],
-  "bard|sorcerer":   ["Wildsinger", "Thorn Cantor", "Hexchanter"]
+  "fighter|sorcerer":["Hexblade", "Eldritch Blade", "Blood Warrior"],
+  "ranger|sorcerer": ["Wildblood Stalker", "Runepath Ranger", "Hexhunter"],
+  "rogue|sorcerer":  ["Spellthief", "Bloodshadow", "Veilblade"]
+};
+
+// ============================================
+// MULTICLASS RESTRICTIONS
+// ============================================
+
+// Classes that cannot multiclass at all
+const NO_MULTICLASS = ["anti-paladin", "berserker", "cavalier", "monk", "paladin"];
+
+// Forbidden class combinations (bidirectional - if A can't combine with B, B can't combine with A)
+// Format: normalized class name -> array of classes it cannot combine with
+const FORBIDDEN_COMBINATIONS = {
+  "cleric": ["druid"],
+  "druid": ["cleric"],
+  "ranger": ["fighter"],
+  "fighter": ["ranger"],
+  "sorcerer": ["bard", "mage"],
+  "bard": ["sorcerer"],
+  "mage": ["sorcerer"]
 };
 
 /**
@@ -107,13 +128,111 @@ function hasEvocativeNames(primaryClass, secondaryClass) {
   return comboKey && EVOCATIVE_NAMES.hasOwnProperty(comboKey);
 }
 
+/**
+ * Check if a class can multiclass at all
+ * @returns {boolean} true if the class can multiclass
+ */
+function canClassMulticlass(className) {
+  const normalized = normalizeClassName(className);
+  return !NO_MULTICLASS.includes(normalized);
+}
+
+/**
+ * Check if two classes can be combined
+ * @returns {object} { allowed: boolean, reason?: string }
+ */
+function canCombineClasses(classA, classB) {
+  const normA = normalizeClassName(classA);
+  const normB = normalizeClassName(classB);
+  
+  if (!normA || !normB) {
+    return { allowed: true };
+  }
+  
+  // Check if either class cannot multiclass at all
+  if (NO_MULTICLASS.includes(normA)) {
+    return { 
+      allowed: false, 
+      reason: `${classA} cannot multiclass.`
+    };
+  }
+  if (NO_MULTICLASS.includes(normB)) {
+    return { 
+      allowed: false, 
+      reason: `${classB} cannot multiclass.`
+    };
+  }
+  
+  // Check forbidden combinations
+  if (FORBIDDEN_COMBINATIONS[normA] && FORBIDDEN_COMBINATIONS[normA].includes(normB)) {
+    return { 
+      allowed: false, 
+      reason: `${classA} cannot multiclass with ${classB}.`
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Validate a full multiclass setup (primary, secondary, tertiary)
+ * @returns {object} { valid: boolean, errors: string[] }
+ */
+function validateMulticlass(primary, secondary, tertiary) {
+  const errors = [];
+  
+  const normPrimary = normalizeClassName(primary);
+  
+  // If primary can't multiclass, secondary and tertiary must be empty
+  if (normPrimary && !canClassMulticlass(normPrimary)) {
+    if (secondary) {
+      errors.push(`${primary} cannot multiclass.`);
+    }
+    if (tertiary) {
+      errors.push(`${primary} cannot multiclass.`);
+    }
+    return { valid: errors.length === 0, errors };
+  }
+  
+  // Check primary + secondary
+  if (secondary) {
+    const check1 = canCombineClasses(primary, secondary);
+    if (!check1.allowed) {
+      errors.push(check1.reason);
+    }
+  }
+  
+  // Check primary + tertiary
+  if (tertiary) {
+    const check2 = canCombineClasses(primary, tertiary);
+    if (!check2.allowed) {
+      errors.push(check2.reason);
+    }
+  }
+  
+  // Check secondary + tertiary
+  if (secondary && tertiary) {
+    const check3 = canCombineClasses(secondary, tertiary);
+    if (!check3.allowed) {
+      errors.push(check3.reason);
+    }
+  }
+  
+  return { valid: errors.length === 0, errors };
+}
+
 // Export for use in app.js
 window.ClassRankData = {
   CLASS_RANK_TITLES,
   EVOCATIVE_NAMES,
+  NO_MULTICLASS,
+  FORBIDDEN_COMBINATIONS,
   normalizeClassName,
   getComboKey,
   getRankTitle,
   getEvocativeNames,
-  hasEvocativeNames
+  hasEvocativeNames,
+  canClassMulticlass,
+  canCombineClasses,
+  validateMulticlass
 };
