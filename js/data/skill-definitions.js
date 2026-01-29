@@ -161,11 +161,11 @@ const HEALING_RATE_TABLE = [
 
 // Encumbrance thresholds
 const ENC_STATUS = [
-  { name: 'Unburdened', threshold: 2 },
-  { name: 'Burdened', threshold: 3 },
-  { name: 'Heavily Burdened', threshold: 4 },
-  { name: 'Overloaded', threshold: 5 },
-  { name: 'Immobilized', threshold: Infinity }
+  { name: 'Unburdened', threshold: 2, penalty: null, penaltyText: '' },
+  { name: 'Burdened', threshold: 3, penalty: 'Hard', penaltyText: 'Hard (-20%)' },
+  { name: 'Heavily Burdened', threshold: 4, penalty: 'Formidable', penaltyText: 'Formidable (-40%)' },
+  { name: 'Overloaded', threshold: 5, penalty: 'Herculean', penaltyText: 'Herculean (-80%)' },
+  { name: 'Immobilized', threshold: Infinity, penalty: 'Hopeless', penaltyText: 'Immobilized' }
 ];
 
 // Fatigue states reference

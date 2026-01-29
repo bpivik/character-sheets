@@ -83,6 +83,11 @@ const App = {
             page.classList.add('active');
           }
         });
+        
+        // Update weapon damages when switching to Combat page
+        if (targetPage === 'combat' && window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+          window.WeaponData.updateAllWeaponDamage();
+        }
       });
     });
   },
@@ -532,6 +537,7 @@ const App = {
         <input type="text" class="prof-skill-base" id="prof-skill-${i}-base" placeholder="">
         <span class="prof-skill-base-val" id="prof-skill-${i}-base-val"></span>
         <input type="number" class="prof-skill-current" id="prof-skill-${i}-current" placeholder="">
+        <span class="enc-indicator prof-enc-indicator" id="prof-skill-${i}-enc" style="display: none;" title="Affected by ENC"></span>
       `;
       container.appendChild(row);
       
@@ -544,6 +550,7 @@ const App = {
       nameInput.addEventListener('input', (e) => {
         this.autoFillProfessionalSkillFormula(e.target, baseInput);
         this.updateProfessionalSkillData(i);
+        this.updateProfSkillEncIndicator(i);
         this.scheduleAutoSave();
       });
       
@@ -551,6 +558,7 @@ const App = {
       baseInput.addEventListener('input', () => {
         this.calculateProfessionalSkillBase(i);
         this.updateProfessionalSkillData(i);
+        this.updateProfSkillEncIndicator(i);
         this.scheduleAutoSave();
       });
       
@@ -559,6 +567,21 @@ const App = {
         this.scheduleAutoSave();
       });
     }
+  },
+  
+  /**
+   * Check if a formula contains STR or DEX and show/hide ENC indicator
+   */
+  updateProfSkillEncIndicator(index) {
+    const baseInput = document.getElementById(`prof-skill-${index}-base`);
+    const encIndicator = document.getElementById(`prof-skill-${index}-enc`);
+    
+    if (!baseInput || !encIndicator) return;
+    
+    const formula = baseInput.value.toUpperCase();
+    const hasStrOrDex = formula.includes('STR') || formula.includes('DEX');
+    
+    encIndicator.style.display = hasStrOrDex ? 'inline-block' : 'none';
   },
 
   /**
@@ -1598,6 +1621,8 @@ const App = {
         if (nameInput && skill.name) nameInput.value = skill.name;
         if (baseInput && skill.base) baseInput.value = skill.base;
         if (currentInput && skill.current) currentInput.value = skill.current;
+        // Update ENC indicator visibility
+        this.updateProfSkillEncIndicator(i);
       });
       // Recalculate base values after loading
       this.recalculateProfessionalSkillBases();
@@ -1775,6 +1800,11 @@ const App = {
           }
         }
       });
+    }
+    
+    // Update weapon damages with current damage modifier after all data is loaded
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
     }
   },
 
@@ -2029,7 +2059,7 @@ const App = {
     const results = Calculator.recalculateAll(attrs, this.sheetType);
     
     // Only update original values if NOT locked
-    if (!this.character.derivedLocked) {
+    if (!this.character.originalsLocked) {
       const apOrig = document.getElementById('action-points-original');
       if (apOrig) {
         apOrig.value = results.derived.actionPoints;
@@ -2063,6 +2093,11 @@ const App = {
       const magicOrig = document.getElementById('magic-points-original');
       if (magicOrig) {
         magicOrig.value = results.derived.magicPoints;
+      }
+      
+      // Update weapon damage displays when damage modifier changes
+      if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+        window.WeaponData.updateAllWeaponDamage();
       }
     }
     
@@ -2301,8 +2336,52 @@ const App = {
     
     const statusDisplay = document.getElementById('enc-status');
     if (statusDisplay) {
-      statusDisplay.textContent = status;
+      statusDisplay.textContent = status.name;
+      
+      // Add visual styling based on burden level
+      statusDisplay.classList.remove('enc-burdened', 'enc-heavily-burdened', 'enc-overloaded', 'enc-immobilized');
+      if (status.name === 'Burdened') {
+        statusDisplay.classList.add('enc-burdened');
+      } else if (status.name === 'Heavily Burdened') {
+        statusDisplay.classList.add('enc-heavily-burdened');
+      } else if (status.name === 'Overloaded') {
+        statusDisplay.classList.add('enc-overloaded');
+      } else if (status.name === 'Immobilized') {
+        statusDisplay.classList.add('enc-immobilized');
+      }
     }
+    
+    // Update ENC penalty display
+    this.updateEncPenaltyDisplay(status);
+  },
+  
+  /**
+   * Update ENC penalty display and affected skills visual feedback
+   */
+  updateEncPenaltyDisplay(status) {
+    // Update the ENC penalty note text
+    const penaltyNote = document.querySelector('.enc-penalty-note span:last-child');
+    if (penaltyNote) {
+      if (status.penalty) {
+        penaltyNote.textContent = `= ENC Penalty: ${status.penaltyText}`;
+        penaltyNote.classList.add('enc-penalty-active');
+      } else {
+        penaltyNote.textContent = '= ENC Penalty';
+        penaltyNote.classList.remove('enc-penalty-active');
+      }
+    }
+    
+    // Update tooltip on all enc-indicators
+    const indicators = document.querySelectorAll('.enc-indicator');
+    indicators.forEach(indicator => {
+      if (status.penalty) {
+        indicator.title = `Affected by ENC: ${status.penaltyText}`;
+        indicator.classList.add('enc-penalty-active');
+      } else {
+        indicator.title = 'Affected by ENC';
+        indicator.classList.remove('enc-penalty-active');
+      }
+    });
   },
 
   /**

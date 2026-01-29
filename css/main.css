@@ -878,6 +878,37 @@ select:focus {
   border-bottom: 10px solid #333;
   vertical-align: middle;
   margin-left: 2px;
+  transition: border-color 0.3s;
+}
+
+.enc-indicator.enc-penalty-active {
+  border-bottom-color: #c41e3a;
+}
+
+/* ENC Status styling */
+.enc-burdened {
+  color: #b8860b !important;
+  font-weight: 700;
+}
+
+.enc-heavily-burdened {
+  color: #ff8c00 !important;
+  font-weight: 700;
+}
+
+.enc-overloaded {
+  color: #c41e3a !important;
+  font-weight: 700;
+}
+
+.enc-immobilized {
+  color: #8b0000 !important;
+  font-weight: 700;
+}
+
+.enc-penalty-active {
+  color: #c41e3a;
+  font-weight: 600;
 }
 
 /* Belief Rows (Alignment, Passion, Oath) */
@@ -1025,12 +1056,16 @@ select:focus {
 /* Professional Skills */
 .professional-skill-row {
   display: grid;
-  grid-template-columns: 1fr 80px 55px 60px;
+  grid-template-columns: 1fr 80px 55px 60px 20px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
   font-size: 1.1rem;
   border-bottom: 1px solid var(--border-light);
+}
+
+.prof-enc-indicator {
+  justify-self: center;
 }
 
 .prof-skill-name {

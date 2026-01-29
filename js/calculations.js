@@ -135,17 +135,18 @@ const Calculator = {
 
   /**
    * Get Encumbrance status based on total ENC and STR
+   * Returns the full status object with penalty info
    */
   getEncStatus(totalEnc, STR) {
     const threshold = this.calculateEncThreshold(STR);
-    const ratio = totalEnc / threshold;
+    const ratio = threshold > 0 ? totalEnc / threshold : 0;
     
     for (const status of ENC_STATUS) {
       if (ratio <= status.threshold) {
-        return status.name;
+        return status;
       }
     }
-    return 'Immobilized';
+    return ENC_STATUS[ENC_STATUS.length - 1]; // Immobilized
   },
 
   /**
