@@ -2019,6 +2019,46 @@ select:focus {
   grid-column: 1 / -1;
 }
 
+/* Combat page with abilities sidebar layout */
+.combat-with-abilities-layout {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 0.75rem;
+}
+
+.combat-main-content {
+  min-width: 0;
+}
+
+.abilities-sidebar {
+  background: rgba(255,255,255,0.3);
+  border: 1px solid var(--border-light);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 150px);
+}
+
+.abilities-sidebar .section-header {
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+  text-align: center;
+}
+
+.abilities-single-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow-y: auto;
+  flex: 1;
+  margin-bottom: 0.3rem;
+}
+
+.abilities-sidebar .btn-small {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+
 .abilities-columns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
