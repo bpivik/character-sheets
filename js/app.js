@@ -5186,10 +5186,27 @@ const App = {
       render: () => {
         const totalEnc = document.getElementById('total-enc')?.textContent || '0';
         const maxEnc = document.getElementById('max-enc')?.textContent || '-';
+        const statusEl = document.getElementById('enc-status');
+        const statusText = statusEl?.textContent || 'Unknown';
+        
+        // Determine status class for coloring
+        let statusClass = '';
+        let statusColor = '';
+        if (statusText === 'Extremely Unburdened' || statusText === 'Unburdened') {
+          statusClass = 'enc-status-good';
+          statusColor = '#228b22';
+        } else if (statusText === 'Burdened') {
+          statusClass = 'enc-status-burdened';
+          statusColor = '#1e90ff';
+        } else if (statusText === 'Overburdened') {
+          statusClass = 'enc-status-overburdened';
+          statusColor = '#c41e3a';
+        }
+        
         return `
           <h4>Encumbrance</h4>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${totalEnc}</span></div>
-          <div class="stat-row"><span class="stat-label">Maximum:</span><span class="stat-value">${maxEnc}</span></div>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${totalEnc} / ${maxEnc}</span></div>
+          <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value ${statusClass}" style="color: ${statusColor}; font-weight: 700;">${statusText}</span></div>
         `;
       }
     },
@@ -5233,12 +5250,19 @@ const App = {
         return `
           <h4>D100 Dice Roller</h4>
           <div class="dice-roller-container">
-            <div class="dice-display">
-              <div class="die die-tens" id="die-tens">0</div>
-              <div class="die die-ones" id="die-ones">0</div>
+            <div class="dice-track" id="dice-track">
+              <div class="rolling-die die-tens" id="rolling-die-tens">
+                <div class="die-face">0</div>
+              </div>
+              <div class="rolling-die die-ones" id="rolling-die-ones">
+                <div class="die-face">0</div>
+              </div>
             </div>
-            <div class="dice-result" id="dice-result">--</div>
-            <button class="dice-roll-btn" id="btn-roll-dice">Roll D100</button>
+            <div class="dice-result-display">
+              <span class="result-label">Result:</span>
+              <span class="dice-result" id="dice-result">--</span>
+            </div>
+            <button class="dice-roll-btn" id="btn-roll-dice">🎲 Roll D100</button>
           </div>
         `;
       }
@@ -5460,54 +5484,74 @@ const App = {
    */
   setupDiceRoller(widgetElement) {
     const rollBtn = widgetElement.querySelector('#btn-roll-dice');
-    const dieTens = widgetElement.querySelector('#die-tens');
-    const dieOnes = widgetElement.querySelector('#die-ones');
+    const dieTens = widgetElement.querySelector('#rolling-die-tens');
+    const dieOnes = widgetElement.querySelector('#rolling-die-ones');
+    const dieTensFace = dieTens?.querySelector('.die-face');
+    const dieOnesFace = dieOnes?.querySelector('.die-face');
     const result = widgetElement.querySelector('#dice-result');
+    const track = widgetElement.querySelector('#dice-track');
     
-    if (!rollBtn || !dieTens || !dieOnes || !result) return;
+    if (!rollBtn || !dieTens || !dieOnes || !result || !track) return;
     
     rollBtn.addEventListener('click', () => {
       // Disable button during animation
       rollBtn.disabled = true;
+      result.textContent = '--';
+      result.classList.remove('flash');
       
-      // Add rolling class for animation
-      dieTens.classList.add('rolling');
-      dieOnes.classList.add('rolling');
+      // Reset dice position
+      dieTens.style.transition = 'none';
+      dieOnes.style.transition = 'none';
+      dieTens.style.transform = 'translateX(-100px) rotate(0deg)';
+      dieOnes.style.transform = 'translateX(-100px) rotate(0deg)';
       
-      // Animate through random numbers
-      let rollCount = 0;
-      const maxRolls = 15;
-      const rollInterval = setInterval(() => {
-        dieTens.textContent = Math.floor(Math.random() * 10);
-        dieOnes.textContent = Math.floor(Math.random() * 10);
-        rollCount++;
-        
-        if (rollCount >= maxRolls) {
-          clearInterval(rollInterval);
-          
-          // Final result
-          const tens = Math.floor(Math.random() * 10);
-          const ones = Math.floor(Math.random() * 10);
-          
-          dieTens.textContent = tens;
-          dieOnes.textContent = ones;
-          
-          // Calculate d100 result (00 + 0 = 100, otherwise tens*10 + ones)
-          const d100 = (tens === 0 && ones === 0) ? 100 : tens * 10 + ones;
-          result.textContent = d100;
-          
-          // Remove rolling class
-          dieTens.classList.remove('rolling');
-          dieOnes.classList.remove('rolling');
-          
-          // Add result flash
-          result.classList.add('flash');
-          setTimeout(() => result.classList.remove('flash'), 300);
-          
-          // Re-enable button
-          rollBtn.disabled = false;
+      // Force reflow
+      void dieTens.offsetWidth;
+      
+      // Generate final values
+      const finalTens = Math.floor(Math.random() * 10);
+      const finalOnes = Math.floor(Math.random() * 10);
+      
+      // Calculate roll distance (width of track)
+      const trackWidth = track.offsetWidth;
+      const rollDistance = trackWidth - 60; // Account for die size
+      
+      // Random spin amounts (multiple full rotations)
+      const spinTens = 360 * (3 + Math.random() * 3); // 3-6 rotations
+      const spinOnes = 360 * (3 + Math.random() * 3);
+      
+      // Animate numbers changing during roll
+      let frame = 0;
+      const numFrames = 30;
+      const numberInterval = setInterval(() => {
+        dieTensFace.textContent = Math.floor(Math.random() * 10);
+        dieOnesFace.textContent = Math.floor(Math.random() * 10);
+        frame++;
+        if (frame >= numFrames) {
+          clearInterval(numberInterval);
+          dieTensFace.textContent = finalTens;
+          dieOnesFace.textContent = finalOnes;
         }
-      }, 80);
+      }, 50);
+      
+      // Start rolling animation
+      setTimeout(() => {
+        dieTens.style.transition = 'transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        dieOnes.style.transition = 'transform 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        
+        dieTens.style.transform = `translateX(${rollDistance * 0.4}px) rotate(${spinTens}deg)`;
+        dieOnes.style.transform = `translateX(${rollDistance * 0.7}px) rotate(${spinOnes}deg)`;
+      }, 50);
+      
+      // Show result after animation
+      setTimeout(() => {
+        const d100 = (finalTens === 0 && finalOnes === 0) ? 100 : finalTens * 10 + finalOnes;
+        result.textContent = d100;
+        result.classList.add('flash');
+        
+        // Re-enable button
+        rollBtn.disabled = false;
+      }, 2000);
     });
   },
   
