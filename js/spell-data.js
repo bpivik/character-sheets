@@ -176,6 +176,7 @@ const SpellData = {
     "call lightning": "If weather permits, summon bolts of lightning from storm clouds to strike foes.",
     "chant": "Strengthen allies (+5% skills, +1 damage/Intensity) and weaken foes while maintained.",
     "charm being or mammal": "Enchant a sapient creature or mammal so it regards you as a trusted friend.",
+    "charm mammal": "Enchant a mammal so it regards you as a trusted friend.",
     "clairaudience": "Magically listen to sounds from a distant location within a 60' radius.",
     "clairvoyance": "Magically see a distant location within a 60' radius as if present there.",
     "clairaudience/clairvoyance": "Perceive a distant location within 60' through magical hearing or sight.",
@@ -681,6 +682,7 @@ const SpellData = {
     'Call Lightning': '3, +1/add\'l. Intensity',
     'Chant': '3, +1/add\'l. Intensity',
     'Charm Being or Mammal': '3/Intensity',
+    'Charm Mammal': '3/Intensity',
     'Clairaudience': 'See description',
     'Clairvoyance': 'See description',
     'Clairaudience/Clairvoyance': 'See description',
@@ -700,6 +702,7 @@ const SpellData = {
     'Cause Serious Wounds': '3',
     'Darkness': '1/Intensity',
     'Darkvision': '1/Intensity',
+    'Detect Charm (Mammals only)': '1/Intensity',
     'Detect Invisibility': '1/Intensity',
     'Dispel Magic': '1/Intensity',
     'Enfeeblement': '3, +1/add\'l. Intensity',
@@ -1027,29 +1030,12 @@ const SpellData = {
     
     const normalizedName = spellName.trim();
     
-    // If rank specified, search only that rank
-    if (rank !== null) {
-      const rankKey = rank === 0 ? 'cantrips' : `rank${rank}`;
-      const rankData = this[rankKey];
-      if (rankData) {
-        // Try exact match first
-        if (rankData[normalizedName]) {
-          return rankData[normalizedName];
-        }
-        // Try case-insensitive match
-        for (const [name, cost] of Object.entries(rankData)) {
-          if (name.toLowerCase() === normalizedName.toLowerCase()) {
-            return cost;
-          }
-        }
-      }
-      return null;
-    }
-    
-    // Search all ranks
+    // Always search all ranks to find the cost
     const allRanks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
     for (const rankKey of allRanks) {
       const rankData = this[rankKey];
+      if (!rankData) continue;
+      
       // Try exact match first
       if (rankData[normalizedName]) {
         return rankData[normalizedName];

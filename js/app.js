@@ -3569,15 +3569,14 @@ const App = {
         while (slotIndex < SPELL_SLOTS_PER_RANK) {
           const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
           if (nameInput && !nameInput.value.trim()) {
-            // Found empty slot - add the spell
-            nameInput.value = spellName;
+            // Found empty slot - add the spell with proper title case
+            nameInput.value = this.toTitleCase(spellName);
             
             // Mark as class spell for later removal
             nameInput.dataset.classSpell = className;
             
             // Auto-fill cost
-            const rankNum = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10);
-            const cost = window.SpellData.getSpellCost(spellName, rankNum);
+            const cost = window.SpellData.getSpellCost(spellName);
             const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
             if (costInput && cost) {
               costInput.value = cost;
@@ -3937,13 +3936,17 @@ const App = {
     for (let i = 0; i < 60; i++) {
       const nameInput = document.getElementById(`${rankKey}-${i}-name`);
       if (nameInput && !nameInput.value.trim()) {
-        nameInput.value = spellName;
+        nameInput.value = this.toTitleCase(spellName);
         nameInput.dataset.classSpell = 'sorcerer';
         
-        // Set tooltip
-        if (window.SpellData && window.SpellData.descriptions) {
-          const desc = window.SpellData.descriptions[normalizedSpell];
+        // Set tooltip and cost
+        if (window.SpellData) {
+          const desc = window.SpellData.getSpellDescription(spellName);
           if (desc) nameInput.title = desc;
+          
+          const cost = window.SpellData.getSpellCost(spellName);
+          const costInput = document.getElementById(`${rankKey}-${i}-cost`);
+          if (costInput && cost) costInput.value = cost;
         }
         
         return;
@@ -4101,7 +4104,7 @@ const App = {
       for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`ability-${col}-${i}`);
         if (input && !input.value.trim()) {
-          input.value = abilityName;
+          input.value = this.toTitleCase(abilityName);
           if (sourceClass) {
             input.dataset.classAbility = sourceClass.toLowerCase();
           }
@@ -4789,6 +4792,52 @@ const App = {
    */
   kebabCase(str) {
     return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  },
+  
+  /**
+   * Utility: Convert string to Title Case
+   * Preserves parenthetical parts and handles special cases like Roman numerals
+   */
+  toTitleCase(str) {
+    if (!str) return '';
+    
+    // Words that should stay lowercase (unless first word)
+    const lowercaseWords = ['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'of', 'in', 'with', 'vs'];
+    
+    // Words that should stay uppercase (Roman numerals, abbreviations)
+    const uppercaseWords = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii'];
+    
+    return str.split(' ').map((word, index) => {
+      // Handle parenthetical parts
+      if (word.startsWith('(')) {
+        const inner = word.slice(1);
+        return '(' + this.toTitleCase(inner);
+      }
+      if (word.endsWith(')')) {
+        const inner = word.slice(0, -1);
+        return this.toTitleCase(inner) + ')';
+      }
+      
+      const lowerWord = word.toLowerCase();
+      
+      // Check for Roman numerals
+      if (uppercaseWords.includes(lowerWord)) {
+        return word.toUpperCase();
+      }
+      
+      // First word is always capitalized
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }
+      
+      // Lowercase words stay lowercase (unless first)
+      if (lowercaseWords.includes(lowerWord)) {
+        return lowerWord;
+      }
+      
+      // Normal capitalization
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(' ');
   }
 };
 
