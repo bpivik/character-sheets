@@ -2868,6 +2868,67 @@ select:focus {
   padding: 0.3rem;
 }
 
+/* Prereq skill coloring */
+.skill-checkbox-row.prereq-class-1 {
+  background: rgba(201, 162, 39, 0.2);
+  border-left: 3px solid #c9a227;
+}
+
+.skill-checkbox-row.prereq-class-2 {
+  background: rgba(128, 128, 128, 0.2);
+  border-left: 3px solid #808080;
+}
+
+.skill-checkbox-row.prereq-class-3 {
+  background: rgba(74, 144, 226, 0.2);
+  border-left: 3px solid #4a90e2;
+}
+
+/* Prereq legend */
+.skills-prereq-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.legend-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.legend-color.prereq-class-1 {
+  background: rgba(201, 162, 39, 0.4);
+  border: 2px solid #c9a227;
+}
+
+.legend-color.prereq-class-2 {
+  background: rgba(128, 128, 128, 0.4);
+  border: 2px solid #808080;
+}
+
+.legend-color.prereq-class-3 {
+  background: rgba(74, 144, 226, 0.4);
+  border: 2px solid #4a90e2;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

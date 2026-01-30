@@ -6325,6 +6325,32 @@ const App = {
     combatContainer.innerHTML = '';
     magicalContainer.innerHTML = '';
     
+    // Get class names for prereq checking
+    const primaryClass = document.getElementById('class-primary')?.value || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value || '';
+    const tertiaryClass = document.getElementById('class-tertiary')?.value || '';
+    
+    // Helper to get prereq class level (1=primary, 2=secondary, 3=tertiary, 0=none)
+    const getPrereqLevel = (skillName) => {
+      if (primaryClass && window.ClassRanksData?.isPrereqForClass(skillName, primaryClass)) return 1;
+      if (secondaryClass && window.ClassRanksData?.isPrereqForClass(skillName, secondaryClass)) return 2;
+      if (tertiaryClass && window.ClassRanksData?.isPrereqForClass(skillName, tertiaryClass)) return 3;
+      return 0;
+    };
+    
+    // Helper to create skill row HTML with prereq coloring
+    const createSkillRow = (value, skillName, current, displayName) => {
+      const prereqLevel = getPrereqLevel(skillName);
+      const prereqClass = prereqLevel > 0 ? `prereq-class-${prereqLevel}` : '';
+      return `
+        <label class="skill-checkbox-row ${prereqClass}">
+          <input type="checkbox" name="improve-skill" value="${value}" data-skill-value="${current}">
+          <span class="skill-name">${displayName || skillName}</span>
+          <span class="skill-value">${current}%</span>
+        </label>
+      `;
+    };
+    
     // Standard Skills (removed home-parallel)
     const standardSkills = [
       'athletics', 'boating', 'brawn', 'conceal', 'customs', 'dance', 'deceit',
@@ -6348,13 +6374,7 @@ const App = {
       const current = currentEl?.value || currentEl?.textContent || '0';
       const skillName = standardLabels[skillId] || skillId;
       
-      standardContainer.innerHTML += `
-        <label class="skill-checkbox-row">
-          <input type="checkbox" name="improve-skill" value="standard:${skillId}" data-skill-value="${current}">
-          <span class="skill-name">${skillName}</span>
-          <span class="skill-value">${current}%</span>
-        </label>
-      `;
+      standardContainer.innerHTML += createSkillRow(`standard:${skillId}`, skillName, current, skillName);
     });
     
     // Professional Skills (from the character sheet) - collect and sort alphabetically
@@ -6376,25 +6396,13 @@ const App = {
     profSkills.sort((a, b) => a.name.localeCompare(b.name));
     
     profSkills.forEach(skill => {
-      professionalContainer.innerHTML += `
-        <label class="skill-checkbox-row">
-          <input type="checkbox" name="improve-skill" value="prof:${skill.index}" data-skill-value="${skill.current}">
-          <span class="skill-name">${skill.name}</span>
-          <span class="skill-value">${skill.current}%</span>
-        </label>
-      `;
+      professionalContainer.innerHTML += createSkillRow(`prof:${skill.index}`, skill.name, skill.current, skill.name);
     });
     
     // Combat Skill
     const combatSkillName = document.getElementById('combat-skill-name')?.value || 'Combat Skill';
     const combatSkillCurrent = document.getElementById('combat-skill-current')?.value || '0';
-    combatContainer.innerHTML += `
-      <label class="skill-checkbox-row">
-        <input type="checkbox" name="improve-skill" value="combat" data-skill-value="${combatSkillCurrent}">
-        <span class="skill-name">${combatSkillName}</span>
-        <span class="skill-value">${combatSkillCurrent}%</span>
-      </label>
-    `;
+    combatContainer.innerHTML += createSkillRow('combat', combatSkillName, combatSkillCurrent, combatSkillName);
     
     // Magical Skills - from the spell pages
     const magicalSkillDefs = [
@@ -6412,13 +6420,7 @@ const App = {
       const el = document.getElementById(skill.id);
       if (el && el.value) {
         const current = el.value || '0';
-        magicalContainer.innerHTML += `
-          <label class="skill-checkbox-row">
-            <input type="checkbox" name="improve-skill" value="magic:${skill.id}" data-skill-value="${current}">
-            <span class="skill-name">${skill.name}</span>
-            <span class="skill-value">${current}%</span>
-          </label>
-        `;
+        magicalContainer.innerHTML += createSkillRow(`magic:${skill.id}`, skill.name, current, skill.name);
       }
     });
     
@@ -6427,11 +6429,52 @@ const App = {
       magicalContainer.innerHTML = '<p class="no-skills-message">No magical skills</p>';
     }
     
+    // Add legend if any classes are set
+    this.updateSkillsLegend(primaryClass, secondaryClass, tertiaryClass);
+    
     // Add change listeners to enable/disable Continue button
     this.updateContinueButton();
     document.querySelectorAll('#improve-skills-modal input[name="improve-skill"]').forEach(cb => {
       cb.addEventListener('change', () => this.updateContinueButton());
     });
+  },
+
+  /**
+   * Update the prereq skills legend
+   */
+  updateSkillsLegend(primaryClass, secondaryClass, tertiaryClass) {
+    let legendContainer = document.getElementById('skills-prereq-legend');
+    if (!legendContainer) {
+      // Create legend container after skills-columns
+      const skillsColumns = document.querySelector('.skills-columns');
+      if (skillsColumns) {
+        legendContainer = document.createElement('div');
+        legendContainer.id = 'skills-prereq-legend';
+        legendContainer.className = 'skills-prereq-legend';
+        skillsColumns.parentNode.insertBefore(legendContainer, skillsColumns.nextSibling);
+      }
+    }
+    
+    if (!legendContainer) return;
+    
+    // Build legend HTML
+    let legendItems = [];
+    if (primaryClass) {
+      legendItems.push(`<span class="legend-item"><span class="legend-color prereq-class-1"></span> ${primaryClass} (Primary)</span>`);
+    }
+    if (secondaryClass) {
+      legendItems.push(`<span class="legend-item"><span class="legend-color prereq-class-2"></span> ${secondaryClass} (Secondary)</span>`);
+    }
+    if (tertiaryClass) {
+      legendItems.push(`<span class="legend-item"><span class="legend-color prereq-class-3"></span> ${tertiaryClass} (Tertiary)</span>`);
+    }
+    
+    if (legendItems.length > 0) {
+      legendContainer.innerHTML = `<span class="legend-label">Prerequisite Skills:</span> ${legendItems.join('')}`;
+      legendContainer.style.display = 'flex';
+    } else {
+      legendContainer.style.display = 'none';
+    }
   },
 
   /**

@@ -524,6 +524,23 @@
   background: #4a4a4a;
 }
 
+/* Prereq skill coloring dark mode */
+[data-theme="dark"] .skill-checkbox-row.prereq-class-1 {
+  background: rgba(201, 162, 39, 0.25);
+}
+
+[data-theme="dark"] .skill-checkbox-row.prereq-class-2 {
+  background: rgba(160, 160, 160, 0.25);
+}
+
+[data-theme="dark"] .skill-checkbox-row.prereq-class-3 {
+  background: rgba(74, 144, 226, 0.25);
+}
+
+[data-theme="dark"] .skills-prereq-legend {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 /* Rank prompt */
 [data-theme="dark"] .rank-prompt-overlay .rank-prompt-content {
   background: var(--bg-parchment);
