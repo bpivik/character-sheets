@@ -6403,13 +6403,12 @@ const App = {
     });
     
     // Combat Skills - Combat Skill and Unarmed
-    const combatSkillName = document.getElementById('combat-skill-name')?.value || 'Combat Skill';
-    const combatSkillCurrent = document.getElementById('combat-skill-current')?.value || '0';
+    const combatSkillName = document.getElementById('combat-skill-1-name')?.value || 'Combat Skill';
+    const combatSkillCurrent = document.getElementById('combat-skill-1-percent')?.value || '0';
     combatContainer.innerHTML += createSkillRow('combat', combatSkillName, combatSkillCurrent, combatSkillName);
     
     // Unarmed
-    const unarmedEl = document.getElementById('unarmed-current');
-    const unarmedCurrent = unarmedEl?.value || unarmedEl?.textContent || '0';
+    const unarmedCurrent = document.getElementById('unarmed-percent')?.value || '0';
     combatContainer.innerHTML += createSkillRow('standard:unarmed', 'Unarmed', unarmedCurrent, 'Unarmed');
     
     // Magical Skills - from the spell pages
