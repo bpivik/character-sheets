@@ -1144,7 +1144,15 @@ const App = {
         
         // Convert to title case
         if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
+          let itemName = this.toTitleCase(nameInput.value.trim());
+          
+          // Check if this is a container - add "(see below)" if so
+          const containerId = this.getContainerType(itemName);
+          if (containerId && !itemName.toLowerCase().includes('see below')) {
+            itemName = itemName + ' (see below)';
+          }
+          
+          nameInput.value = itemName;
         }
         
         // Normal autofill and update logic
@@ -1551,7 +1559,44 @@ const App = {
       
       encInput.addEventListener('input', () => {
         this.updateContainerCapacity();
+        this.checkContainerCapacity();
       });
+    }
+  },
+  
+  /**
+   * Check container capacity and show warning if over limit
+   */
+  checkContainerCapacity() {
+    if (!this.activeContainer) return;
+    
+    const config = CONTAINER_CONFIGS[this.activeContainer];
+    const container = document.getElementById('container-items');
+    if (!container) return;
+    
+    let totalEnc = 0;
+    container.querySelectorAll('.equipment-enc').forEach(input => {
+      totalEnc += parseFloat(input.value) || 0;
+    });
+    
+    // Remove existing warning
+    const existingWarning = document.getElementById('container-warning');
+    if (existingWarning) existingWarning.remove();
+    
+    // Show warning if over capacity
+    if (totalEnc > config.maxEnc) {
+      const warningDiv = document.createElement('div');
+      warningDiv.id = 'container-warning';
+      warningDiv.className = 'container-warning';
+      warningDiv.innerHTML = `
+        <span class="warning-icon">⚠️</span>
+        <span>Container is full! Max capacity is ${config.maxEnc} ENC. You have ${totalEnc.toFixed(1)} ENC.</span>
+      `;
+      
+      const capacityDisplay = document.querySelector('.container-capacity');
+      if (capacityDisplay) {
+        capacityDisplay.parentNode.insertBefore(warningDiv, capacityDisplay.nextSibling);
+      }
     }
   },
 
@@ -5335,7 +5380,6 @@ const App = {
       name: 'Movement',
       icon: '🏃',
       render: () => {
-        const base = document.getElementById('movement-current')?.value || '-';
         const walk = document.getElementById('walk-speed')?.textContent || '-';
         const run = document.getElementById('run-speed')?.textContent || '-';
         const sprint = document.getElementById('sprint-speed')?.textContent || '-';
@@ -5347,12 +5391,12 @@ const App = {
         
         let html = `
           <h4>Movement</h4>
-          <div class="stat-row"><span class="stat-label">Base:</span><span class="stat-value">${base}'</span></div>
           <div class="stat-row"><span class="stat-label">Walk:</span><span class="stat-value">${walk}</span></div>
           <div class="stat-row"><span class="stat-label">Run:</span><span class="stat-value">${run}</span></div>
           <div class="stat-row"><span class="stat-label">Sprint:</span><span class="stat-value">${sprint}</span></div>
           <div class="stat-row"><span class="stat-label">Swim:</span><span class="stat-value">${swim}</span></div>
           <div class="stat-row"><span class="stat-label">Climb:</span><span class="stat-value">${climb}</span></div>
+          <hr class="widget-divider">
           <div class="stat-row"><span class="stat-label">Vertical Jump:</span><span class="stat-value">${jumpV}</span></div>
           <div class="stat-row"><span class="stat-label">Horizontal Jump:</span><span class="stat-value">${jumpH}</span></div>
         `;
@@ -5368,9 +5412,29 @@ const App = {
       name: 'Encumbrance',
       icon: '🎒',
       render: () => {
-        const totalEnc = document.getElementById('total-enc')?.textContent || '0';
-        const statusEl = document.getElementById('enc-status');
-        const statusText = statusEl?.textContent || 'Unknown';
+        // Calculate total ENC directly from character data
+        let totalEnc = 0;
+        
+        // From equipment array
+        if (MythrasApp.character.equipment) {
+          MythrasApp.character.equipment.forEach(item => {
+            if (item.enc) totalEnc += parseFloat(item.enc) || 0;
+          });
+        }
+        
+        // From money (every 100 coins = 1 Thing)
+        if (MythrasApp.character.money) {
+          let totalCoins = 0;
+          ['copper', 'silver', 'gold', 'platinum', 'electrum'].forEach(type => {
+            totalCoins += parseInt(MythrasApp.character.money[type]) || 0;
+          });
+          totalEnc += Math.floor(totalCoins / 100);
+        }
+        
+        // Calculate status based on STR
+        const STR = parseInt(MythrasApp.character.attributes?.STR) || 10;
+        const status = window.Calculator?.getEncStatus(totalEnc, STR) || { name: 'Unknown' };
+        const statusText = status.name || 'Unknown';
         
         // Determine status color
         let statusColor = '#228b22'; // Green for Unburdened
@@ -5382,7 +5446,7 @@ const App = {
         
         return `
           <h4>Encumbrance</h4>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value-bold">${totalEnc}</span></div>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value-bold">${totalEnc.toFixed(1)}</span></div>
           <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value-bold" style="color: ${statusColor};">${statusText}</span></div>
         `;
       }
