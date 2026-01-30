@@ -6332,9 +6332,12 @@ const App = {
     
     // Helper to get prereq class level (1=primary, 2=secondary, 3=tertiary, 0=none)
     const getPrereqLevel = (skillName) => {
-      if (primaryClass && window.ClassRanksData?.isPrereqForClass(skillName, primaryClass)) return 1;
-      if (secondaryClass && window.ClassRanksData?.isPrereqForClass(skillName, secondaryClass)) return 2;
-      if (tertiaryClass && window.ClassRanksData?.isPrereqForClass(skillName, tertiaryClass)) return 3;
+      // Use the global isPrereqForClass function from class-ranks-data.js
+      if (typeof isPrereqForClass === 'function') {
+        if (primaryClass && isPrereqForClass(skillName, primaryClass)) return 1;
+        if (secondaryClass && isPrereqForClass(skillName, secondaryClass)) return 2;
+        if (tertiaryClass && isPrereqForClass(skillName, tertiaryClass)) return 3;
+      }
       return 0;
     };
     
@@ -6351,12 +6354,12 @@ const App = {
       `;
     };
     
-    // Standard Skills (removed home-parallel)
+    // Standard Skills (removed home-parallel and unarmed - unarmed goes to Combat)
     const standardSkills = [
       'athletics', 'boating', 'brawn', 'conceal', 'customs', 'dance', 'deceit',
       'drive', 'endurance', 'evade', 'first-aid', 'influence',
       'insight', 'locale', 'perception', 'ride', 'sing', 'stealth', 'swim',
-      'unarmed', 'willpower'
+      'willpower'
     ];
     
     const standardLabels = {
@@ -6366,7 +6369,7 @@ const App = {
       'evade': 'Evade', 'first-aid': 'First Aid',
       'influence': 'Influence', 'insight': 'Insight', 'locale': 'Locale',
       'perception': 'Perception', 'ride': 'Ride', 'sing': 'Sing',
-      'stealth': 'Stealth', 'swim': 'Swim', 'unarmed': 'Unarmed', 'willpower': 'Willpower'
+      'stealth': 'Stealth', 'swim': 'Swim', 'willpower': 'Willpower'
     };
     
     standardSkills.forEach(skillId => {
@@ -6399,10 +6402,15 @@ const App = {
       professionalContainer.innerHTML += createSkillRow(`prof:${skill.index}`, skill.name, skill.current, skill.name);
     });
     
-    // Combat Skill
+    // Combat Skills - Combat Skill and Unarmed
     const combatSkillName = document.getElementById('combat-skill-name')?.value || 'Combat Skill';
     const combatSkillCurrent = document.getElementById('combat-skill-current')?.value || '0';
     combatContainer.innerHTML += createSkillRow('combat', combatSkillName, combatSkillCurrent, combatSkillName);
+    
+    // Unarmed
+    const unarmedEl = document.getElementById('unarmed-current');
+    const unarmedCurrent = unarmedEl?.value || unarmedEl?.textContent || '0';
+    combatContainer.innerHTML += createSkillRow('standard:unarmed', 'Unarmed', unarmedCurrent, 'Unarmed');
     
     // Magical Skills - from the spell pages
     const magicalSkillDefs = [
