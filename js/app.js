@@ -6108,19 +6108,115 @@ const App = {
   },
 
   /**
-   * Open the EXP spending modal
+   * Open the main EXP spending modal
    */
   openExpModal() {
     const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
     
-    if (expRolls <= 0) {
-      alert('You have no EXP Rolls to spend.');
-      return;
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('exp-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'exp-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content exp-modal-content">
+          <div class="modal-header">
+            <h3>Spend EXP Rolls</h3>
+            <button class="modal-close" id="exp-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="exp-rolls-display">
+              <span class="exp-rolls-label">Available EXP Rolls:</span>
+              <span class="exp-rolls-value" id="exp-modal-rolls">0</span>
+            </div>
+            <div class="exp-options">
+              <button type="button" class="btn exp-option-btn" id="exp-btn-improve-skills">
+                <span class="exp-option-icon">📈</span>
+                <span class="exp-option-text">Improve Existing Skills</span>
+              </button>
+              <button type="button" class="btn exp-option-btn" id="exp-btn-unlock-abilities">
+                <span class="exp-option-icon">⭐</span>
+                <span class="exp-option-text">Unlock Class Abilities</span>
+              </button>
+              <button type="button" class="btn exp-option-btn" id="exp-btn-learn-skills">
+                <span class="exp-option-icon">📚</span>
+                <span class="exp-option-text">Learn New Skills</span>
+              </button>
+              <button type="button" class="btn exp-option-btn" id="exp-btn-passions">
+                <span class="exp-option-icon">❤️</span>
+                <span class="exp-option-text">Strengthen Passions</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close button
+      document.getElementById('exp-modal-close').addEventListener('click', () => {
+        this.closeExpModal();
+      });
+      
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeExpModal();
+        }
+      });
+      
+      // Escape to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          this.closeExpModal();
+        }
+      });
+      
+      // Option buttons
+      document.getElementById('exp-btn-improve-skills').addEventListener('click', () => {
+        this.openImproveSkillsModal();
+      });
+      
+      document.getElementById('exp-btn-unlock-abilities').addEventListener('click', () => {
+        // TODO: Implement
+        alert('Unlock Class Abilities - Coming soon!');
+      });
+      
+      document.getElementById('exp-btn-learn-skills').addEventListener('click', () => {
+        // TODO: Implement
+        alert('Learn New Skills - Coming soon!');
+      });
+      
+      document.getElementById('exp-btn-passions').addEventListener('click', () => {
+        // TODO: Implement
+        alert('Strengthen Passions - Coming soon!');
+      });
     }
     
-    // TODO: Build and show the EXP spending modal
-    console.log('Opening EXP modal with', expRolls, 'rolls available');
-    alert(`EXP Modal coming soon!\n\nYou have ${expRolls} EXP Roll(s) to spend.`);
+    // Update EXP rolls display
+    document.getElementById('exp-modal-rolls').textContent = expRolls;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+
+  /**
+   * Close the main EXP modal
+   */
+  closeExpModal() {
+    const modal = document.getElementById('exp-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Open the Improve Existing Skills modal
+   */
+  openImproveSkillsModal() {
+    // TODO: Build this modal
+    console.log('Opening Improve Existing Skills modal');
+    alert('Improve Existing Skills modal - Coming soon!');
   }
 };
 

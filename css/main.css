@@ -2717,6 +2717,71 @@ select:focus {
   color: #bbb !important;
 }
 
+/* ============================================
+   EXP Spending Modal
+   ============================================ */
+.exp-modal-content {
+  max-width: 400px;
+  width: 90%;
+}
+
+.exp-rolls-display {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(139, 115, 85, 0.1);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.exp-rolls-label {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+}
+
+.exp-rolls-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+.exp-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.exp-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-parchment);
+  border: 2px solid var(--border-gold);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.exp-option-btn:hover {
+  background: rgba(139, 115, 85, 0.15);
+  border-color: var(--accent-color);
+  transform: translateX(4px);
+}
+
+.exp-option-icon {
+  font-size: 1.5rem;
+  width: 2rem;
+  text-align: center;
+}
+
+.exp-option-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 /* Prerequisite Status Modal */
 .prereq-modal-overlay {
   position: fixed;

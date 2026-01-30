@@ -478,6 +478,29 @@
   color: #fca5a5;
 }
 
+/* EXP Modal dark mode */
+[data-theme="dark"] .exp-modal-content {
+  background: var(--bg-parchment);
+}
+
+[data-theme="dark"] .exp-rolls-display {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .exp-option-btn {
+  background: var(--bg-parchment);
+  border-color: var(--border-dark);
+}
+
+[data-theme="dark"] .exp-option-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+}
+
+[data-theme="dark"] .exp-option-text {
+  color: var(--text-primary);
+}
+
 /* Rank prompt */
 [data-theme="dark"] .rank-prompt-overlay .rank-prompt-content {
   background: var(--bg-parchment);
