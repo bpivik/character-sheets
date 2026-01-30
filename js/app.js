@@ -73,6 +73,9 @@ const App = {
     // Setup prereq label click handlers
     this.setupPrereqLabelClicks();
     
+    // Setup summary page
+    this.setupSummaryPage();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -112,6 +115,11 @@ const App = {
         // Update weapon damages when switching to Combat page
         if (targetPage === 'combat' && window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
+        }
+        
+        // Refresh summary widgets when switching to Summary page
+        if (targetPage === 'summary') {
+          this.refreshSummaryWidgets();
         }
       });
     });
@@ -4955,6 +4963,488 @@ const App = {
       // Normal capitalization
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     }).join(' ');
+  },
+  
+  // ==================== SUMMARY PAGE ====================
+  
+  /**
+   * Available widget definitions
+   */
+  summaryWidgets: {
+    'character-info': {
+      name: 'Character Info',
+      icon: '👤',
+      render: () => {
+        const name = document.getElementById('character-name')?.value || 'Unnamed';
+        const species = document.getElementById('species')?.value || '-';
+        const culture = document.getElementById('culture')?.value || '-';
+        const primaryClass = document.getElementById('class-primary')?.value || '-';
+        const rank = document.getElementById('rank-primary')?.value || '0';
+        return `
+          <h4>Character Info</h4>
+          <div class="stat-row"><span class="stat-label">Name:</span><span class="stat-value">${name}</span></div>
+          <div class="stat-row"><span class="stat-label">Species:</span><span class="stat-value">${species}</span></div>
+          <div class="stat-row"><span class="stat-label">Culture:</span><span class="stat-value">${culture}</span></div>
+          <div class="stat-row"><span class="stat-label">Class:</span><span class="stat-value">${primaryClass} (Rank ${rank})</span></div>
+        `;
+      }
+    },
+    'attributes': {
+      name: 'Attributes',
+      icon: '💪',
+      render: () => {
+        const attrs = ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA'];
+        let boxes = '';
+        attrs.forEach(attr => {
+          const val = document.getElementById(attr)?.value || '-';
+          boxes += `<div class="stat-box"><div class="label">${attr}</div><div class="value">${val}</div></div>`;
+        });
+        return `<h4>Attributes</h4><div class="stat-grid">${boxes}</div>`;
+      }
+    },
+    'derived-stats': {
+      name: 'Derived Stats',
+      icon: '📊',
+      render: () => {
+        const ap = document.getElementById('action-points-current')?.value || '-';
+        const dmg = document.getElementById('damage-mod-current')?.value || '-';
+        const init = document.getElementById('initiative-current')?.value || '-';
+        const heal = document.getElementById('healing-rate-current')?.value || '-';
+        const luck = document.getElementById('luck-current')?.value || '-';
+        const mp = document.getElementById('magic-points-current')?.value || '-';
+        return `
+          <h4>Derived Stats</h4>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="label">AP</div><div class="value">${ap}</div></div>
+            <div class="stat-box"><div class="label">Init</div><div class="value">${init}</div></div>
+            <div class="stat-box"><div class="label">DMG</div><div class="value">${dmg}</div></div>
+            <div class="stat-box"><div class="label">Heal</div><div class="value">${heal}</div></div>
+            <div class="stat-box"><div class="label">Luck</div><div class="value">${luck}</div></div>
+            <div class="stat-box"><div class="label">MP</div><div class="value">${mp}</div></div>
+          </div>
+        `;
+      }
+    },
+    'hp-overview': {
+      name: 'Hit Points',
+      icon: '❤️',
+      render: () => {
+        let html = '<h4>Hit Points</h4><div class="hp-overview">';
+        for (let i = 0; i < 7; i++) {
+          const hp = document.getElementById(`loc-${i}-hp`)?.value || '-';
+          const current = document.getElementById(`loc-${i}-current`)?.value || hp;
+          const locNames = ['R.Leg', 'L.Leg', 'Abdom', 'Chest', 'R.Arm', 'L.Arm', 'Head'];
+          const damaged = current !== hp && current !== '' && hp !== '';
+          html += `<div class="hp-location${damaged ? ' damaged' : ''}">
+            <div class="loc-name">${locNames[i] || 'Loc'}</div>
+            <div class="loc-hp">${current}/${hp}</div>
+          </div>`;
+        }
+        html += '</div>';
+        return html;
+      }
+    },
+    'combat-skills': {
+      name: 'Combat Skills',
+      icon: '⚔️',
+      render: () => {
+        const combatName = document.getElementById('combat-skill-1-name')?.value || 'Combat Style';
+        const combatPct = document.getElementById('combat-skill-1-percent')?.value || '-';
+        const unarmedPct = document.getElementById('unarmed-percent')?.value || '-';
+        return `
+          <h4>Combat Skills</h4>
+          <div class="skill-list">
+            <div class="skill-item"><span>${combatName}</span><span>${combatPct}%</span></div>
+            <div class="skill-item"><span>Unarmed</span><span>${unarmedPct}%</span></div>
+          </div>
+        `;
+      }
+    },
+    'key-skills': {
+      name: 'Key Skills',
+      icon: '🎯',
+      render: () => {
+        // Show skills above 50%
+        const skills = [];
+        const standardSkills = [
+          ['athletics', 'Athletics'], ['brawn', 'Brawn'], ['endurance', 'Endurance'],
+          ['evade', 'Evade'], ['perception', 'Perception'], ['stealth', 'Stealth'],
+          ['willpower', 'Willpower'], ['influence', 'Influence'], ['insight', 'Insight'],
+          ['first-aid', 'First Aid']
+        ];
+        standardSkills.forEach(([id, name]) => {
+          const val = parseInt(document.getElementById(`${id}-current`)?.value, 10) || 0;
+          if (val >= 50) skills.push({ name, val });
+        });
+        // Check professional skills
+        for (let i = 0; i < 15; i++) {
+          const name = document.getElementById(`prof-skill-${i}-name`)?.value;
+          const val = parseInt(document.getElementById(`prof-skill-${i}-current`)?.value, 10) || 0;
+          if (name && val >= 50) skills.push({ name, val });
+        }
+        skills.sort((a, b) => b.val - a.val);
+        const top8 = skills.slice(0, 8);
+        let html = '<h4>Key Skills (50%+)</h4><div class="skill-list">';
+        if (top8.length === 0) {
+          html += '<div class="skill-item"><span>No skills at 50%+</span></div>';
+        } else {
+          top8.forEach(s => {
+            html += `<div class="skill-item"><span>${s.name}</span><span>${s.val}%</span></div>`;
+          });
+        }
+        html += '</div>';
+        return html;
+      }
+    },
+    'magic-skills': {
+      name: 'Magic Skills',
+      icon: '✨',
+      render: () => {
+        const channel = document.getElementById('channel-percent')?.value || '-';
+        const piety = document.getElementById('piety-percent')?.value || '-';
+        const arcCast = document.getElementById('arcane-casting-percent')?.value || '-';
+        const arcKnow = document.getElementById('arcane-knowledge-percent')?.value || '-';
+        return `
+          <h4>Magic Skills</h4>
+          <div class="skill-list">
+            <div class="skill-item"><span>Channel</span><span>${channel}%</span></div>
+            <div class="skill-item"><span>Piety</span><span>${piety}%</span></div>
+            <div class="skill-item"><span>Arcane Casting</span><span>${arcCast}%</span></div>
+            <div class="skill-item"><span>Arcane Knowledge</span><span>${arcKnow}%</span></div>
+          </div>
+        `;
+      }
+    },
+    'movement': {
+      name: 'Movement',
+      icon: '🏃',
+      render: () => {
+        const base = document.getElementById('movement-base')?.value || '-';
+        const current = document.getElementById('movement-current')?.value || base;
+        const jumpH = document.getElementById('jump-horizontal')?.value || '-';
+        const jumpV = document.getElementById('jump-vertical')?.value || '-';
+        return `
+          <h4>Movement</h4>
+          <div class="stat-row"><span class="stat-label">Base:</span><span class="stat-value">${base} ft</span></div>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} ft</span></div>
+          <div class="stat-row"><span class="stat-label">Jump (H):</span><span class="stat-value">${jumpH} ft</span></div>
+          <div class="stat-row"><span class="stat-label">Jump (V):</span><span class="stat-value">${jumpV} ft</span></div>
+        `;
+      }
+    },
+    'encumbrance': {
+      name: 'Encumbrance',
+      icon: '🎒',
+      render: () => {
+        const totalEnc = document.getElementById('total-enc')?.textContent || '0';
+        const maxEnc = document.getElementById('max-enc')?.textContent || '-';
+        return `
+          <h4>Encumbrance</h4>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${totalEnc}</span></div>
+          <div class="stat-row"><span class="stat-label">Maximum:</span><span class="stat-value">${maxEnc}</span></div>
+        `;
+      }
+    },
+    'money': {
+      name: 'Money',
+      icon: '💰',
+      render: () => {
+        const pp = document.getElementById('money-pp')?.value || '0';
+        const gp = document.getElementById('money-gp')?.value || '0';
+        const sp = document.getElementById('money-sp')?.value || '0';
+        const cp = document.getElementById('money-cp')?.value || '0';
+        return `
+          <h4>Money</h4>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="label">PP</div><div class="value">${pp}</div></div>
+            <div class="stat-box"><div class="label">GP</div><div class="value">${gp}</div></div>
+            <div class="stat-box"><div class="label">SP</div><div class="value">${sp}</div></div>
+            <div class="stat-box"><div class="label">CP</div><div class="value">${cp}</div></div>
+          </div>
+        `;
+      }
+    },
+    'tenacity': {
+      name: 'Tenacity',
+      icon: '🔥',
+      render: () => {
+        const current = document.getElementById('tenacity-current')?.value || '-';
+        const max = document.getElementById('tenacity-max')?.value || '-';
+        return `
+          <h4>Tenacity</h4>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} / ${max}</span></div>
+        `;
+      }
+    },
+    'weapons': {
+      name: 'Weapons',
+      icon: '🗡️',
+      render: () => {
+        let html = '<h4>Weapons</h4><div class="skill-list">';
+        let found = false;
+        // Check melee weapons
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`melee-${i}-name`)?.value;
+          const dmg = document.getElementById(`melee-${i}-damage`)?.value;
+          if (name) {
+            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
+            found = true;
+          }
+        }
+        // Check ranged weapons
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`ranged-${i}-name`)?.value;
+          const dmg = document.getElementById(`ranged-${i}-damage`)?.value;
+          if (name) {
+            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) {
+          html += '<div class="skill-item"><span>No weapons</span></div>';
+        }
+        html += '</div>';
+        return html;
+      }
+    }
+  },
+  
+  /**
+   * Set up the summary page with drag-and-drop
+   */
+  setupSummaryPage() {
+    const palette = document.getElementById('palette-widgets');
+    const canvas = document.getElementById('summary-canvas');
+    const resetBtn = document.getElementById('btn-reset-summary');
+    
+    if (!palette || !canvas) return;
+    
+    // Load saved layout
+    const savedLayout = this.loadSummaryLayout();
+    
+    // Populate palette with widgets not in the saved layout
+    this.populatePalette(savedLayout);
+    
+    // Populate canvas with saved widgets
+    this.populateCanvas(savedLayout);
+    
+    // Set up canvas drag-over events
+    canvas.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      canvas.classList.add('drag-over');
+    });
+    
+    canvas.addEventListener('dragleave', () => {
+      canvas.classList.remove('drag-over');
+    });
+    
+    canvas.addEventListener('drop', (e) => {
+      e.preventDefault();
+      canvas.classList.remove('drag-over');
+      
+      const widgetId = e.dataTransfer.getData('text/plain');
+      if (widgetId && this.summaryWidgets[widgetId]) {
+        this.addWidgetToCanvas(widgetId);
+        this.removeWidgetFromPalette(widgetId);
+        this.saveSummaryLayout();
+      }
+    });
+    
+    // Reset button
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm('Reset summary layout to default?')) {
+          this.resetSummaryLayout();
+        }
+      });
+    }
+  },
+  
+  /**
+   * Populate the palette with available widgets
+   */
+  populatePalette(excludeIds = []) {
+    const palette = document.getElementById('palette-widgets');
+    if (!palette) return;
+    
+    palette.innerHTML = '';
+    
+    Object.entries(this.summaryWidgets).forEach(([id, widget]) => {
+      if (excludeIds.includes(id)) return;
+      
+      const item = document.createElement('div');
+      item.className = 'widget-item';
+      item.draggable = true;
+      item.dataset.widgetId = id;
+      item.innerHTML = `<span class="widget-icon">${widget.icon}</span><span>${widget.name}</span>`;
+      
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', id);
+        item.classList.add('dragging');
+      });
+      
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+      });
+      
+      palette.appendChild(item);
+    });
+  },
+  
+  /**
+   * Populate the canvas with saved widgets
+   */
+  populateCanvas(widgetIds = []) {
+    const canvas = document.getElementById('summary-canvas');
+    if (!canvas) return;
+    
+    canvas.innerHTML = '';
+    
+    widgetIds.forEach(id => {
+      if (this.summaryWidgets[id]) {
+        this.addWidgetToCanvas(id, false);
+      }
+    });
+  },
+  
+  /**
+   * Add a widget to the canvas
+   */
+  addWidgetToCanvas(widgetId, save = true) {
+    const canvas = document.getElementById('summary-canvas');
+    const widget = this.summaryWidgets[widgetId];
+    if (!canvas || !widget) return;
+    
+    const item = document.createElement('div');
+    item.className = 'widget-item';
+    item.dataset.widgetId = widgetId;
+    
+    const content = document.createElement('div');
+    content.className = 'widget-content';
+    content.innerHTML = widget.render();
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'widget-remove';
+    removeBtn.innerHTML = '×';
+    removeBtn.title = 'Remove widget';
+    removeBtn.addEventListener('click', () => {
+      item.remove();
+      this.addWidgetToPalette(widgetId);
+      this.saveSummaryLayout();
+    });
+    
+    item.appendChild(content);
+    item.appendChild(removeBtn);
+    canvas.appendChild(item);
+    
+    if (save) {
+      this.saveSummaryLayout();
+    }
+  },
+  
+  /**
+   * Remove a widget from the palette
+   */
+  removeWidgetFromPalette(widgetId) {
+    const palette = document.getElementById('palette-widgets');
+    if (!palette) return;
+    
+    const item = palette.querySelector(`[data-widget-id="${widgetId}"]`);
+    if (item) item.remove();
+  },
+  
+  /**
+   * Add a widget back to the palette
+   */
+  addWidgetToPalette(widgetId) {
+    const palette = document.getElementById('palette-widgets');
+    const widget = this.summaryWidgets[widgetId];
+    if (!palette || !widget) return;
+    
+    const item = document.createElement('div');
+    item.className = 'widget-item';
+    item.draggable = true;
+    item.dataset.widgetId = widgetId;
+    item.innerHTML = `<span class="widget-icon">${widget.icon}</span><span>${widget.name}</span>`;
+    
+    item.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', widgetId);
+      item.classList.add('dragging');
+    });
+    
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+    });
+    
+    palette.appendChild(item);
+  },
+  
+  /**
+   * Save current summary layout to localStorage
+   */
+  saveSummaryLayout() {
+    const canvas = document.getElementById('summary-canvas');
+    if (!canvas) return;
+    
+    const widgetIds = Array.from(canvas.querySelectorAll('.widget-item'))
+      .map(item => item.dataset.widgetId)
+      .filter(id => id);
+    
+    try {
+      localStorage.setItem('mythras-summary-layout', JSON.stringify(widgetIds));
+    } catch (e) {
+      console.warn('Could not save summary layout');
+    }
+  },
+  
+  /**
+   * Load summary layout from localStorage
+   */
+  loadSummaryLayout() {
+    try {
+      const saved = localStorage.getItem('mythras-summary-layout');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      // Ignore
+    }
+    // Default layout
+    return ['character-info', 'attributes', 'derived-stats', 'hp-overview'];
+  },
+  
+  /**
+   * Reset summary layout to default
+   */
+  resetSummaryLayout() {
+    try {
+      localStorage.removeItem('mythras-summary-layout');
+    } catch (e) {
+      // Ignore
+    }
+    
+    const defaultLayout = ['character-info', 'attributes', 'derived-stats', 'hp-overview'];
+    this.populatePalette(defaultLayout);
+    this.populateCanvas(defaultLayout);
+  },
+  
+  /**
+   * Refresh all widgets on the summary canvas
+   */
+  refreshSummaryWidgets() {
+    const canvas = document.getElementById('summary-canvas');
+    if (!canvas) return;
+    
+    canvas.querySelectorAll('.widget-item').forEach(item => {
+      const widgetId = item.dataset.widgetId;
+      const widget = this.summaryWidgets[widgetId];
+      if (widget) {
+        const content = item.querySelector('.widget-content');
+        if (content) {
+          content.innerHTML = widget.render();
+        }
+      }
+    });
   }
 };
 

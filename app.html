@@ -44,6 +44,7 @@
         <li><button class="tab-btn" data-page="combat">Combat / Abilities</button></li>
         <li><button class="tab-btn" data-page="magic1">Cantrips-Rank 2 Spells</button></li>
         <li><button class="tab-btn" data-page="magic2">Ranks 3-5 Spells</button></li>
+        <li><button class="tab-btn" data-page="summary">Summary</button></li>
         <li><button class="tab-btn" data-page="notes">Notes</button></li>
       </ul>
       <div class="sheet-controls">
@@ -1321,7 +1322,33 @@
       </div>
     </section>
 
-    <!-- ==================== PAGE 6: NOTES ==================== -->
+    <!-- ==================== PAGE 6: SUMMARY ==================== -->
+    <section id="page-summary" class="sheet-page page-summary">
+      <div class="page-content ornate-border">
+        <h2 class="page-title">Character Summary</h2>
+        <p class="summary-instructions">Drag widgets from the palette to customize your quick-reference panel. Your layout is saved automatically.</p>
+        
+        <div class="summary-container">
+          <!-- Widget Palette -->
+          <div class="widget-palette">
+            <h3>Available Widgets</h3>
+            <div class="palette-widgets" id="palette-widgets">
+              <!-- Widgets will be populated by JS -->
+            </div>
+          </div>
+          
+          <!-- Summary Canvas -->
+          <div class="summary-canvas">
+            <div class="canvas-grid" id="summary-canvas">
+              <!-- Dropped widgets appear here -->
+            </div>
+            <button class="btn btn-secondary" id="btn-reset-summary">Reset Layout</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 7: NOTES ==================== -->
     <section id="page-notes" class="sheet-page page-notes">
       <div class="page-content ornate-border">
         <h2 class="page-title">Notes</h2>
