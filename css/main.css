@@ -2782,6 +2782,128 @@ select:focus {
   color: var(--text-primary);
 }
 
+/* Improve Existing Skills Modal */
+.improve-skills-modal-content {
+  max-width: 900px;
+  width: 95%;
+  max-height: 85vh;
+}
+
+.improve-skills-instructions {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.skills-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.skill-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-column h4 {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-header);
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-gold);
+}
+
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skill-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.skill-checkbox-row:hover {
+  background: rgba(139, 115, 85, 0.1);
+}
+
+.skill-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.skill-checkbox-row .skill-name {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.skill-checkbox-row .skill-value {
+  font-weight: 600;
+  color: var(--text-header);
+  font-size: 0.9rem;
+}
+
+.no-skills-message {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-gold);
+  background: linear-gradient(to top, rgba(139,115,85,0.1), transparent);
+}
+
+.modal-footer .btn {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-footer .btn-secondary {
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  color: var(--text-primary);
+}
+
+.modal-footer .btn-secondary:hover {
+  background: #e8e8e8;
+}
+
+.modal-footer .btn-primary {
+  background: var(--accent-color, #8B4513);
+  border: 1px solid var(--accent-color, #8B4513);
+  color: white;
+}
+
+.modal-footer .btn-primary:hover:not(:disabled) {
+  background: #a0522d;
+}
+
+.modal-footer .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Prerequisite Status Modal */
 .prereq-modal-overlay {
   position: fixed;

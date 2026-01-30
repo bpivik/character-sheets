@@ -6214,9 +6214,237 @@ const App = {
    * Open the Improve Existing Skills modal
    */
   openImproveSkillsModal() {
-    // TODO: Build this modal
-    console.log('Opening Improve Existing Skills modal');
-    alert('Improve Existing Skills modal - Coming soon!');
+    // Close the main EXP modal
+    this.closeExpModal();
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('improve-skills-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'improve-skills-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content improve-skills-modal-content">
+          <div class="modal-header">
+            <h3>Improve Existing Skills</h3>
+            <button class="modal-close" id="improve-skills-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="exp-rolls-display">
+              <span class="exp-rolls-label">Available EXP Rolls:</span>
+              <span class="exp-rolls-value" id="improve-skills-exp-rolls">0</span>
+            </div>
+            <p class="improve-skills-instructions">Select skills to attempt improvement (1 EXP Roll each):</p>
+            <div class="skills-columns">
+              <div class="skill-column">
+                <h4>Standard Skills</h4>
+                <div class="skill-list" id="improve-standard-skills"></div>
+              </div>
+              <div class="skill-column">
+                <h4>Professional Skills</h4>
+                <div class="skill-list" id="improve-professional-skills"></div>
+              </div>
+              <div class="skill-column">
+                <h4>Magical Skills</h4>
+                <div class="skill-list" id="improve-magical-skills"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="improve-skills-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="improve-skills-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="improve-skills-continue" disabled>Continue</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close button
+      document.getElementById('improve-skills-modal-close').addEventListener('click', () => {
+        this.closeImproveSkillsModal();
+      });
+      
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeImproveSkillsModal();
+        }
+      });
+      
+      // Escape to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          this.closeImproveSkillsModal();
+        }
+      });
+      
+      // Back button
+      document.getElementById('improve-skills-back').addEventListener('click', () => {
+        this.closeImproveSkillsModal();
+        this.openExpModal();
+      });
+      
+      // Cancel button
+      document.getElementById('improve-skills-cancel').addEventListener('click', () => {
+        this.closeImproveSkillsModal();
+      });
+      
+      // Continue button
+      document.getElementById('improve-skills-continue').addEventListener('click', () => {
+        this.processSkillImprovement();
+      });
+    }
+    
+    // Populate skill lists
+    this.populateImprovementSkills();
+    
+    // Update EXP rolls display
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    document.getElementById('improve-skills-exp-rolls').textContent = expRolls;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+
+  /**
+   * Populate the skill lists for improvement
+   */
+  populateImprovementSkills() {
+    const standardContainer = document.getElementById('improve-standard-skills');
+    const professionalContainer = document.getElementById('improve-professional-skills');
+    const magicalContainer = document.getElementById('improve-magical-skills');
+    
+    // Clear existing
+    standardContainer.innerHTML = '';
+    professionalContainer.innerHTML = '';
+    magicalContainer.innerHTML = '';
+    
+    // Standard Skills
+    const standardSkills = [
+      'athletics', 'boating', 'brawn', 'conceal', 'customs', 'dance', 'deceit',
+      'drive', 'endurance', 'evade', 'first-aid', 'home-parallel', 'influence',
+      'insight', 'locale', 'perception', 'ride', 'sing', 'stealth', 'swim',
+      'unarmed', 'willpower'
+    ];
+    
+    const standardLabels = {
+      'athletics': 'Athletics', 'boating': 'Boating', 'brawn': 'Brawn', 
+      'conceal': 'Conceal', 'customs': 'Customs', 'dance': 'Dance',
+      'deceit': 'Deceit', 'drive': 'Drive', 'endurance': 'Endurance',
+      'evade': 'Evade', 'first-aid': 'First Aid', 'home-parallel': 'Home Parallel',
+      'influence': 'Influence', 'insight': 'Insight', 'locale': 'Locale',
+      'perception': 'Perception', 'ride': 'Ride', 'sing': 'Sing',
+      'stealth': 'Stealth', 'swim': 'Swim', 'unarmed': 'Unarmed', 'willpower': 'Willpower'
+    };
+    
+    standardSkills.forEach(skillId => {
+      const currentEl = document.getElementById(`${skillId}-current`);
+      const current = currentEl?.value || currentEl?.textContent || '0';
+      const skillName = standardLabels[skillId] || skillId;
+      
+      standardContainer.innerHTML += `
+        <label class="skill-checkbox-row">
+          <input type="checkbox" name="improve-skill" value="standard:${skillId}" data-skill-value="${current}">
+          <span class="skill-name">${skillName}</span>
+          <span class="skill-value">${current}%</span>
+        </label>
+      `;
+    });
+    
+    // Professional Skills (from the character sheet)
+    for (let i = 0; i < 20; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      
+      if (nameInput && nameInput.value.trim()) {
+        const skillName = nameInput.value.trim();
+        const current = currentInput?.value || '0';
+        
+        // Check if this is a magical skill
+        const magicalSkills = ['channel', 'piety', 'devotion', 'folk magic', 'invocation', 'shaping'];
+        const isMagical = magicalSkills.some(ms => skillName.toLowerCase().includes(ms));
+        
+        const container = isMagical ? magicalContainer : professionalContainer;
+        container.innerHTML += `
+          <label class="skill-checkbox-row">
+            <input type="checkbox" name="improve-skill" value="prof:${i}" data-skill-value="${current}">
+            <span class="skill-name">${skillName}</span>
+            <span class="skill-value">${current}%</span>
+          </label>
+        `;
+      }
+    }
+    
+    // Combat Skill
+    const combatSkillName = document.getElementById('combat-skill-name')?.value || 'Combat Skill';
+    const combatSkillCurrent = document.getElementById('combat-skill-current')?.value || '0';
+    professionalContainer.innerHTML += `
+      <label class="skill-checkbox-row">
+        <input type="checkbox" name="improve-skill" value="combat" data-skill-value="${combatSkillCurrent}">
+        <span class="skill-name">${combatSkillName}</span>
+        <span class="skill-value">${combatSkillCurrent}%</span>
+      </label>
+    `;
+    
+    // If no magical skills, show message
+    if (magicalContainer.innerHTML === '') {
+      magicalContainer.innerHTML = '<p class="no-skills-message">No magical skills</p>';
+    }
+    
+    // Add change listeners to enable/disable Continue button
+    this.updateContinueButton();
+    document.querySelectorAll('#improve-skills-modal input[name="improve-skill"]').forEach(cb => {
+      cb.addEventListener('change', () => this.updateContinueButton());
+    });
+  },
+
+  /**
+   * Update the Continue button state based on selections
+   */
+  updateContinueButton() {
+    const checked = document.querySelectorAll('#improve-skills-modal input[name="improve-skill"]:checked');
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    const continueBtn = document.getElementById('improve-skills-continue');
+    
+    if (continueBtn) {
+      // Enable if at least one skill selected and have enough EXP rolls
+      continueBtn.disabled = checked.length === 0 || checked.length > expRolls;
+      
+      // Update button text to show count
+      if (checked.length > 0) {
+        continueBtn.textContent = `Continue (${checked.length} skill${checked.length > 1 ? 's' : ''})`;
+      } else {
+        continueBtn.textContent = 'Continue';
+      }
+    }
+  },
+
+  /**
+   * Close the Improve Skills modal
+   */
+  closeImproveSkillsModal() {
+    const modal = document.getElementById('improve-skills-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Process the skill improvement rolls
+   */
+  processSkillImprovement() {
+    const checked = document.querySelectorAll('#improve-skills-modal input[name="improve-skill"]:checked');
+    
+    if (checked.length === 0) return;
+    
+    // TODO: Implement the actual rolling and improvement logic
+    const skillsToImprove = Array.from(checked).map(cb => ({
+      id: cb.value,
+      currentValue: parseInt(cb.dataset.skillValue, 10) || 0
+    }));
+    
+    console.log('Skills to improve:', skillsToImprove);
+    alert(`Rolling to improve ${skillsToImprove.length} skill(s)...\n\nNext step: Roll results modal!`);
   }
 };
 

@@ -501,6 +501,29 @@
   color: var(--text-primary);
 }
 
+/* Improve Skills Modal dark mode */
+[data-theme="dark"] .improve-skills-modal-content {
+  background: var(--bg-parchment);
+}
+
+[data-theme="dark"] .skill-checkbox-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .modal-footer {
+  border-top-color: var(--border-dark);
+}
+
+[data-theme="dark"] .modal-footer .btn-secondary {
+  background: #3a3a3a;
+  border-color: #555;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-footer .btn-secondary:hover {
+  background: #4a4a4a;
+}
+
 /* Rank prompt */
 [data-theme="dark"] .rank-prompt-overlay .rank-prompt-content {
   background: var(--bg-parchment);
