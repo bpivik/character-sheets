@@ -3441,7 +3441,7 @@ const App = {
       
       // 4. Check professional skills for exact match
       if (!found) {
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
@@ -3462,7 +3462,7 @@ const App = {
       // Skills that can have specializations in parentheses
       const partialMatchSkills = ['lore', 'art', 'craft', 'musicianship'];
       if (!found && partialMatchSkills.includes(normalizedSkill)) {
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
@@ -5334,7 +5334,6 @@ const App = {
       name: 'Movement',
       icon: '🏃',
       render: () => {
-        const base = document.getElementById('movement-current')?.value || '-';
         const walk = document.getElementById('walk-speed')?.textContent || '-';
         const run = document.getElementById('run-speed')?.textContent || '-';
         const sprint = document.getElementById('sprint-speed')?.textContent || '-';
@@ -5346,12 +5345,12 @@ const App = {
         
         let html = `
           <h4>Movement</h4>
-          <div class="stat-row"><span class="stat-label">Base:</span><span class="stat-value">${base}'</span></div>
           <div class="stat-row"><span class="stat-label">Walk:</span><span class="stat-value">${walk}</span></div>
           <div class="stat-row"><span class="stat-label">Run:</span><span class="stat-value">${run}</span></div>
           <div class="stat-row"><span class="stat-label">Sprint:</span><span class="stat-value">${sprint}</span></div>
           <div class="stat-row"><span class="stat-label">Swim:</span><span class="stat-value">${swim}</span></div>
           <div class="stat-row"><span class="stat-label">Climb:</span><span class="stat-value">${climb}</span></div>
+          <hr style="border:none;border-top:1px solid #ccc;margin:6px 0;">
           <div class="stat-row"><span class="stat-label">Vertical Jump:</span><span class="stat-value">${jumpV}</span></div>
           <div class="stat-row"><span class="stat-label">Horizontal Jump:</span><span class="stat-value">${jumpH}</span></div>
         `;
