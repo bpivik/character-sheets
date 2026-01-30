@@ -79,6 +79,9 @@ const App = {
     // Setup floating dice roller
     this.setupFloatingDiceRoller();
     
+    // Setup EXP spending modal
+    this.setupExpModal();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -6090,6 +6093,34 @@ const App = {
         }
       }
     });
+  },
+
+  /**
+   * Setup EXP spending modal
+   */
+  setupExpModal() {
+    const btn = document.getElementById('btn-spend-exp');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        this.openExpModal();
+      });
+    }
+  },
+
+  /**
+   * Open the EXP spending modal
+   */
+  openExpModal() {
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    
+    if (expRolls <= 0) {
+      alert('You have no EXP Rolls to spend.');
+      return;
+    }
+    
+    // TODO: Build and show the EXP spending modal
+    console.log('Opening EXP modal with', expRolls, 'rolls available');
+    alert(`EXP Modal coming soon!\n\nYou have ${expRolls} EXP Roll(s) to spend.`);
   }
 };
 

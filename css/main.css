@@ -519,6 +519,7 @@ select:focus {
   background: rgba(255,255,255,0.3);
   border-radius: 4px;
   margin-bottom: 0.5rem;
+  width: fit-content;
 }
 
 .rank-section .section-header {
@@ -551,8 +552,28 @@ select:focus {
 .exp-rolls-section {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
   margin-top: 0.25rem;
+}
+
+.btn-spend-exp {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--button-bg, #5a4a3a);
+  color: var(--button-text, #fff);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-spend-exp:hover {
+  background: var(--button-hover, #6b5a4a);
+  transform: translateY(-1px);
+}
+
+.btn-spend-exp:active {
+  transform: translateY(0);
 }
 
 /* ============================================
