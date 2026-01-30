@@ -6516,21 +6516,417 @@ const App = {
   },
 
   /**
-   * Process the skill improvement rolls
+   * Process the skill improvement rolls - show the roll method selection modal
    */
   processSkillImprovement() {
     const checked = document.querySelectorAll('#improve-skills-modal input[name="improve-skill"]:checked');
     
     if (checked.length === 0) return;
     
-    // TODO: Implement the actual rolling and improvement logic
-    const skillsToImprove = Array.from(checked).map(cb => ({
-      id: cb.value,
-      currentValue: parseInt(cb.dataset.skillValue, 10) || 0
-    }));
+    // Gather selected skills with their display names
+    this.skillsToImprove = Array.from(checked).map(cb => {
+      const row = cb.closest('.skill-checkbox-row');
+      const nameSpan = row.querySelector('.skill-name');
+      return {
+        id: cb.value,
+        name: nameSpan?.textContent || cb.value,
+        currentValue: parseInt(cb.dataset.skillValue, 10) || 0
+      };
+    });
     
-    console.log('Skills to improve:', skillsToImprove);
-    alert(`Rolling to improve ${skillsToImprove.length} skill(s)...\n\nNext step: Roll results modal!`);
+    // Close the selection modal and open the roll method modal
+    this.closeImproveSkillsModal();
+    this.openRollMethodModal();
+  },
+
+  /**
+   * Open the roll method selection modal
+   */
+  openRollMethodModal() {
+    let modal = document.getElementById('roll-method-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'roll-method-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content roll-method-modal-content">
+          <div class="modal-header">
+            <h3>Skill Improvement</h3>
+            <button class="modal-close" id="roll-method-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <h4>Selected Skills to Improve:</h4>
+            <div class="selected-skills-list" id="selected-skills-list"></div>
+            <div class="roll-method-choice">
+              <p>How would you like to roll?</p>
+              <div class="roll-method-buttons">
+                <button type="button" class="btn btn-primary" id="btn-roll-here">Roll Here</button>
+                <button type="button" class="btn btn-secondary" id="btn-roll-myself">I'll Roll Myself</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="roll-method-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="roll-method-cancel">Cancel</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close handlers
+      document.getElementById('roll-method-modal-close').addEventListener('click', () => this.closeRollMethodModal());
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeRollMethodModal(); });
+      
+      // Back button
+      document.getElementById('roll-method-back').addEventListener('click', () => {
+        this.closeRollMethodModal();
+        this.openImproveSkillsModal();
+      });
+      
+      // Cancel button
+      document.getElementById('roll-method-cancel').addEventListener('click', () => this.closeRollMethodModal());
+      
+      // Roll here button
+      document.getElementById('btn-roll-here').addEventListener('click', () => {
+        this.closeRollMethodModal();
+        this.openDiceTypeModal();
+      });
+      
+      // Roll myself button
+      document.getElementById('btn-roll-myself').addEventListener('click', () => {
+        this.closeRollMethodModal();
+        this.openManualEntryModal();
+      });
+    }
+    
+    // Populate selected skills list
+    const listContainer = document.getElementById('selected-skills-list');
+    listContainer.innerHTML = this.skillsToImprove.map(skill => 
+      `<div class="selected-skill-item"><span class="skill-name">${skill.name}</span><span class="skill-value">${skill.currentValue}%</span></div>`
+    ).join('');
+    
+    modal.classList.remove('hidden');
+  },
+
+  closeRollMethodModal() {
+    const modal = document.getElementById('roll-method-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  /**
+   * Open the dice type selection modal (1d4+1 vs 1d6+1)
+   */
+  openDiceTypeModal() {
+    let modal = document.getElementById('dice-type-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'dice-type-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content dice-type-modal-content">
+          <div class="modal-header">
+            <h3>Improvement Dice</h3>
+            <button class="modal-close" id="dice-type-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>Which improvement dice are you using?</p>
+            <div class="dice-type-buttons">
+              <button type="button" class="btn exp-option-btn" id="btn-dice-1d4">
+                <span class="dice-type-label">Standard</span>
+                <span class="dice-type-value">1d4+1</span>
+              </button>
+              <button type="button" class="btn exp-option-btn" id="btn-dice-1d6">
+                <span class="dice-type-label">Faster Ranking</span>
+                <span class="dice-type-value">1d6+1</span>
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="dice-type-back">Back</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      document.getElementById('dice-type-modal-close').addEventListener('click', () => this.closeDiceTypeModal());
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeDiceTypeModal(); });
+      
+      document.getElementById('dice-type-back').addEventListener('click', () => {
+        this.closeDiceTypeModal();
+        this.openRollMethodModal();
+      });
+      
+      document.getElementById('btn-dice-1d4').addEventListener('click', () => {
+        this.improvementDice = '1d4+1';
+        this.closeDiceTypeModal();
+        this.startAutomaticRolling();
+      });
+      
+      document.getElementById('btn-dice-1d6').addEventListener('click', () => {
+        this.improvementDice = '1d6+1';
+        this.closeDiceTypeModal();
+        this.startAutomaticRolling();
+      });
+    }
+    
+    modal.classList.remove('hidden');
+  },
+
+  closeDiceTypeModal() {
+    const modal = document.getElementById('dice-type-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  /**
+   * Start the automatic rolling process
+   */
+  startAutomaticRolling() {
+    const INT = parseInt(document.getElementById('int-value')?.value, 10) || 0;
+    this.rollResults = [];
+    this.currentRollIndex = 0;
+    
+    // Process all skills
+    this.skillsToImprove.forEach(skill => {
+      // Roll 1d100
+      const d100Roll = Math.floor(Math.random() * 100) + 1;
+      const totalCheck = d100Roll + INT;
+      const success = totalCheck > skill.currentValue;
+      
+      let improvement = 0;
+      let improvementRoll = null;
+      if (success) {
+        // Roll improvement dice
+        if (this.improvementDice === '1d4+1') {
+          improvementRoll = Math.floor(Math.random() * 4) + 1;
+        } else {
+          improvementRoll = Math.floor(Math.random() * 6) + 1;
+        }
+        improvement = improvementRoll + 1;
+      }
+      
+      this.rollResults.push({
+        ...skill,
+        d100Roll,
+        INT,
+        totalCheck,
+        success,
+        improvementRoll,
+        improvement,
+        newValue: skill.currentValue + improvement
+      });
+    });
+    
+    // Show results
+    this.openRollResultsModal();
+  },
+
+  /**
+   * Open the roll results modal
+   */
+  openRollResultsModal() {
+    let modal = document.getElementById('roll-results-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'roll-results-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content roll-results-modal-content">
+          <div class="modal-header">
+            <h3>Improvement Results</h3>
+            <button class="modal-close" id="roll-results-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="roll-results-list" id="roll-results-list"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="roll-results-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="roll-results-apply">Apply Changes</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      document.getElementById('roll-results-modal-close').addEventListener('click', () => this.closeRollResultsModal());
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeRollResultsModal(); });
+      
+      document.getElementById('roll-results-cancel').addEventListener('click', () => this.closeRollResultsModal());
+      
+      document.getElementById('roll-results-apply').addEventListener('click', () => {
+        this.applySkillImprovements();
+        this.closeRollResultsModal();
+      });
+    }
+    
+    // Build results HTML
+    const resultsContainer = document.getElementById('roll-results-list');
+    resultsContainer.innerHTML = this.rollResults.map(result => {
+      const successClass = result.success ? 'success' : 'failure';
+      const successText = result.success ? '✓ Success!' : '✗ Failed';
+      const improvementText = result.success 
+        ? `+${result.improvement} (${this.improvementDice} = ${result.improvementRoll}+1)`
+        : 'No improvement';
+      
+      return `
+        <div class="roll-result-item ${successClass}">
+          <div class="roll-result-header">
+            <span class="skill-name">${result.name}</span>
+            <span class="roll-outcome ${successClass}">${successText}</span>
+          </div>
+          <div class="roll-result-details">
+            <span>Roll: ${result.d100Roll} + ${result.INT} INT = ${result.totalCheck}</span>
+            <span>vs ${result.currentValue}%</span>
+          </div>
+          <div class="roll-result-improvement">
+            <span>${improvementText}</span>
+            ${result.success ? `<span class="new-value">${result.currentValue}% → ${result.newValue}%</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    modal.classList.remove('hidden');
+  },
+
+  closeRollResultsModal() {
+    const modal = document.getElementById('roll-results-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  /**
+   * Open the manual entry modal
+   */
+  openManualEntryModal() {
+    let modal = document.getElementById('manual-entry-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'manual-entry-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content manual-entry-modal-content">
+          <div class="modal-header">
+            <h3>Manual Skill Improvement</h3>
+            <button class="modal-close" id="manual-entry-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="manual-entry-instructions">Enter the amount to add to each skill:</p>
+            <div class="manual-entry-list" id="manual-entry-list"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="manual-entry-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="manual-entry-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="manual-entry-apply">Apply Changes</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      document.getElementById('manual-entry-modal-close').addEventListener('click', () => this.closeManualEntryModal());
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeManualEntryModal(); });
+      
+      document.getElementById('manual-entry-back').addEventListener('click', () => {
+        this.closeManualEntryModal();
+        this.openRollMethodModal();
+      });
+      
+      document.getElementById('manual-entry-cancel').addEventListener('click', () => this.closeManualEntryModal());
+      
+      document.getElementById('manual-entry-apply').addEventListener('click', () => {
+        this.applyManualImprovements();
+        this.closeManualEntryModal();
+      });
+    }
+    
+    // Build entry list
+    const listContainer = document.getElementById('manual-entry-list');
+    listContainer.innerHTML = this.skillsToImprove.map((skill, index) => `
+      <div class="manual-entry-row">
+        <span class="skill-name">${skill.name}</span>
+        <span class="skill-current">${skill.currentValue}%</span>
+        <span class="entry-plus">+</span>
+        <input type="number" class="manual-entry-input" id="manual-entry-${index}" min="0" max="99" value="0" data-skill-id="${skill.id}">
+      </div>
+    `).join('');
+    
+    modal.classList.remove('hidden');
+  },
+
+  closeManualEntryModal() {
+    const modal = document.getElementById('manual-entry-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  /**
+   * Apply skill improvements from automatic rolling
+   */
+  applySkillImprovements() {
+    this.rollResults.forEach(result => {
+      if (result.success && result.improvement > 0) {
+        this.updateSkillValue(result.id, result.newValue);
+      }
+    });
+    
+    // Deduct EXP rolls
+    const expRollsInput = document.getElementById('exp-rolls');
+    if (expRollsInput) {
+      const current = parseInt(expRollsInput.value, 10) || 0;
+      expRollsInput.value = Math.max(0, current - this.skillsToImprove.length);
+    }
+    
+    this.scheduleAutoSave();
+    alert('Skill improvements applied!');
+  },
+
+  /**
+   * Apply manual skill improvements
+   */
+  applyManualImprovements() {
+    this.skillsToImprove.forEach((skill, index) => {
+      const input = document.getElementById(`manual-entry-${index}`);
+      const improvement = parseInt(input?.value, 10) || 0;
+      if (improvement > 0) {
+        const newValue = skill.currentValue + improvement;
+        this.updateSkillValue(skill.id, newValue);
+      }
+    });
+    
+    // Deduct EXP rolls
+    const expRollsInput = document.getElementById('exp-rolls');
+    if (expRollsInput) {
+      const current = parseInt(expRollsInput.value, 10) || 0;
+      expRollsInput.value = Math.max(0, current - this.skillsToImprove.length);
+    }
+    
+    this.scheduleAutoSave();
+    alert('Skill improvements applied!');
+  },
+
+  /**
+   * Update a skill value on the character sheet
+   */
+  updateSkillValue(skillId, newValue) {
+    // Parse skill ID format: "standard:skillname", "prof:index", "combat", "magic:id"
+    const [type, id] = skillId.split(':');
+    
+    if (type === 'standard') {
+      // Standard skills use {id}-current
+      const el = document.getElementById(`${id}-current`);
+      if (el) el.value = newValue;
+    } else if (type === 'prof') {
+      // Professional skills use prof-skill-{index}-current
+      const el = document.getElementById(`prof-skill-${id}-current`);
+      if (el) el.value = newValue;
+    } else if (skillId === 'combat') {
+      // Combat skill
+      const el = document.getElementById('combat-skill-1-percent');
+      if (el) el.value = newValue;
+    } else if (type === 'magic') {
+      // Magical skills
+      const el = document.getElementById(id);
+      if (el) el.value = newValue;
+    }
+    
+    // Trigger recalculation
+    this.recalculateAll();
   }
 };
 

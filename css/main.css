@@ -2929,6 +2929,203 @@ select:focus {
   border: 2px solid #4a90e2;
 }
 
+/* Roll Method Modal */
+.roll-method-modal-content,
+.dice-type-modal-content,
+.manual-entry-modal-content {
+  max-width: 500px;
+  width: 90%;
+}
+
+.roll-results-modal-content {
+  max-width: 600px;
+  width: 95%;
+  max-height: 80vh;
+}
+
+.selected-skills-list {
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.selected-skill-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.selected-skill-item:last-child {
+  border-bottom: none;
+}
+
+.roll-method-choice {
+  text-align: center;
+}
+
+.roll-method-choice p {
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.roll-method-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.roll-method-buttons .btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Dice Type Modal */
+.dice-type-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.dice-type-buttons .exp-option-btn {
+  flex-direction: column;
+  padding: 1.5rem 2rem;
+  min-width: 140px;
+}
+
+.dice-type-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.dice-type-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+/* Roll Results Modal */
+.roll-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.roll-result-item {
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #ccc;
+}
+
+.roll-result-item.success {
+  border-left-color: #27ae60;
+  background: rgba(39, 174, 96, 0.08);
+}
+
+.roll-result-item.failure {
+  border-left-color: #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+}
+
+.roll-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.roll-result-header .skill-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.roll-outcome {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.roll-outcome.success {
+  color: #27ae60;
+}
+
+.roll-outcome.failure {
+  color: #c0392b;
+}
+
+.roll-result-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.roll-result-improvement {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.roll-result-improvement .new-value {
+  font-weight: 600;
+  color: #27ae60;
+}
+
+/* Manual Entry Modal */
+.manual-entry-instructions {
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.manual-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.manual-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
+}
+
+.manual-entry-row .skill-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.manual-entry-row .skill-current {
+  color: var(--text-secondary);
+  min-width: 50px;
+  text-align: right;
+}
+
+.manual-entry-row .entry-plus {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.manual-entry-input {
+  width: 60px;
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 1rem;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

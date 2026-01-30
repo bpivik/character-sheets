@@ -541,6 +541,27 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Roll modals dark mode */
+[data-theme="dark"] .selected-skills-list,
+[data-theme="dark"] .roll-result-item,
+[data-theme="dark"] .manual-entry-row {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .roll-result-item.success {
+  background: rgba(39, 174, 96, 0.15);
+}
+
+[data-theme="dark"] .roll-result-item.failure {
+  background: rgba(192, 57, 43, 0.15);
+}
+
+[data-theme="dark"] .manual-entry-input {
+  background: #2a2a2a;
+  border-color: #555;
+  color: var(--text-primary);
+}
+
 /* Rank prompt */
 [data-theme="dark"] .rank-prompt-overlay .rank-prompt-content {
   background: var(--bg-parchment);
