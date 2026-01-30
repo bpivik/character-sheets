@@ -3192,7 +3192,7 @@ const App = {
       'drive': 'drive',
       'endurance': 'endurance',
       'evade': 'evade',
-      'first aid': 'firstaid',
+      'first aid': 'first-aid',
       'influence': 'influence',
       'insight': 'insight',
       'locale': 'locale',
@@ -3203,18 +3203,6 @@ const App = {
       'swim': 'swim',
       'unarmed': 'unarmed',
       'willpower': 'willpower'
-    };
-    
-    // Define magic skills
-    const magicSkillMap = {
-      'channel': 'channel',
-      'piety': 'piety',
-      'arcane casting': 'arcane-casting',
-      'arcane knowledge': 'arcane-knowledge',
-      'arcane sorcery': 'arcane-sorcery',
-      'sorcerous wisdom': 'sorcerous-wisdom',
-      'musicianship': 'musicianship',
-      'lyrical magic': 'lyrical-magic'
     };
     
     prereqSkills.forEach(skillName => {
@@ -3233,11 +3221,21 @@ const App = {
       
       // 2. Check if it's a known magic skill
       if (!found) {
-        const magicSkillId = magicSkillMap[normalizedSkill];
-        if (magicSkillId) {
-          // The -current input contains the TOTAL skill value
-          const currentInput = document.getElementById(`${magicSkillId}-current`);
-          skillValue = parseInt(currentInput?.value, 10) || 0;
+        const magicSkillMap = {
+          'channel': 'channel-percent',
+          'piety': 'piety-percent',
+          'arcane casting': 'arcane-casting-percent',
+          'arcane knowledge': 'arcane-knowledge-percent',
+          'arcane sorcery': 'arcane-sorcery-percent',
+          'sorcerous wisdom': 'sorcerous-wisdom-percent',
+          'musicianship': 'musicianship-percent',
+          'lyrical magic': 'lyrical-magic-percent'
+        };
+        
+        const inputId = magicSkillMap[normalizedSkill];
+        if (inputId) {
+          const input = document.getElementById(inputId);
+          skillValue = parseInt(input?.value, 10) || 0;
           found = true;
         }
       }
