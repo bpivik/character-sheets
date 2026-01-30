@@ -5367,31 +5367,9 @@ const App = {
       name: 'Encumbrance',
       icon: '🎒',
       render: () => {
-        // Calculate total ENC directly from character data (not DOM)
-        let totalEnc = 0;
-        
-        // Equipment ENC
-        if (MythrasApp.character.equipment) {
-          MythrasApp.character.equipment.forEach(item => {
-            if (item && item.enc) {
-              totalEnc += parseFloat(item.enc) || 0;
-            }
-          });
-        }
-        
-        // Money ENC (every 100 coins = 1 Thing)
-        if (MythrasApp.character.money) {
-          let totalCoins = 0;
-          ['copper', 'silver', 'gold', 'platinum', 'electrum'].forEach(type => {
-            totalCoins += parseInt(MythrasApp.character.money[type]) || 0;
-          });
-          totalEnc += Math.floor(totalCoins / 100);
-        }
-        
-        // Calculate status from STR
-        const STR = parseInt(MythrasApp.character.attributes?.STR) || 10;
-        const status = window.Calculator ? window.Calculator.getEncStatus(totalEnc, STR) : { name: 'Unknown' };
-        const statusText = status.name || 'Unknown';
+        const totalEnc = document.getElementById('total-enc')?.textContent || '0';
+        const statusEl = document.getElementById('enc-status');
+        const statusText = statusEl?.textContent || 'Unknown';
         
         // Determine status color
         let statusColor = '#228b22'; // Green for Unburdened
@@ -5403,7 +5381,7 @@ const App = {
         
         return `
           <h4>Encumbrance</h4>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value-bold">${totalEnc.toFixed(1)}</span></div>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value-bold">${totalEnc}</span></div>
           <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value-bold" style="color: ${statusColor};">${statusText}</span></div>
         `;
       }
