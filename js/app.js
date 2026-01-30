@@ -3459,19 +3459,18 @@ const App = {
       }
       
       // 5. Check professional skills for partial match (e.g., "Lore" matching "Lore (History)")
-      if (!found) {
+      // Skills that can have specializations in parentheses
+      const partialMatchSkills = ['lore', 'art', 'craft', 'musicianship'];
+      if (!found && partialMatchSkills.includes(normalizedSkill)) {
         for (let i = 0; i < 15; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
           if (nameInput) {
             const name = nameInput.value?.trim().toLowerCase() || '';
-            // Check if skill name starts with our search term (for "Lore" -> "Lore (History)")
-            // Or if the base name (before parenthesis) matches
+            // Check if the base name (before parenthesis) matches
             const baseName = name.split('(')[0].trim();
-            if (name.startsWith(normalizedSkill + ' ') || 
-                name.startsWith(normalizedSkill + '(') || 
-                baseName === normalizedSkill) {
+            if (baseName === normalizedSkill) {
               const total = parseInt(currentInput?.value, 10) || 0;
               // Take the highest value if multiple matches
               if (total > skillValue) {
