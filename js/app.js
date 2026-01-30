@@ -910,6 +910,16 @@ const App = {
       const currentInput = row.querySelector('.prof-skill-current');
       const prereqKeys = row.querySelector('.prereq-keys');
       
+      // Convert to title case on blur
+      nameInput.addEventListener('blur', () => {
+        if (nameInput.value.trim()) {
+          nameInput.value = this.toTitleCase(nameInput.value.trim());
+          prereqKeys.dataset.skillName = nameInput.value;
+          this.updatePrereqKeys();
+          this.scheduleAutoSave();
+        }
+      });
+      
       // Auto-fill formula when skill name is entered
       nameInput.addEventListener('input', (e) => {
         this.autoFillProfessionalSkillFormula(e.target, baseInput);
@@ -1128,6 +1138,11 @@ const App = {
         
         // Update previous value
         nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+        
+        // Convert to title case
+        if (nameInput.value.trim()) {
+          nameInput.value = this.toTitleCase(nameInput.value.trim());
+        }
         
         // Normal autofill and update logic
         if (window.EncumbranceData) {
@@ -1516,6 +1531,10 @@ const App = {
       
       // Autofill ENC on blur
       nameInput.addEventListener('blur', () => {
+        // Convert to title case
+        if (nameInput.value.trim()) {
+          nameInput.value = this.toTitleCase(nameInput.value.trim());
+        }
         if (window.EncumbranceData) {
           const itemName = nameInput.value;
           if (itemName.trim() === '') {
@@ -1744,6 +1763,10 @@ const App = {
         const rowIndex = i;
         if (nameInput) {
           nameInput.addEventListener('blur', () => {
+            // Convert to title case
+            if (nameInput.value.trim()) {
+              nameInput.value = this.toTitleCase(nameInput.value.trim());
+            }
             if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
               window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
               this.scheduleAutoSave();
@@ -1782,6 +1805,10 @@ const App = {
         const rowIndex = i;
         if (nameInput) {
           nameInput.addEventListener('blur', () => {
+            // Convert to title case
+            if (nameInput.value.trim()) {
+              nameInput.value = this.toTitleCase(nameInput.value.trim());
+            }
             if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
               window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.scheduleAutoSave();
@@ -1840,6 +1867,9 @@ const App = {
       input.classList.remove('duplicate-warning');
       return;
     }
+    
+    // Convert to title case
+    input.value = this.toTitleCase(value);
     
     // Check for duplicates
     const isDuplicate = this.checkAbilityDuplicate(input);
@@ -1995,6 +2025,9 @@ const App = {
           nameInput.addEventListener('change', () => {
             const spellName = nameInput.value.trim();
             if (spellName && window.SpellData) {
+              // Convert to title case
+              nameInput.value = this.toTitleCase(spellName);
+              
               // Convert rank key to number for getSpellCost
               const rankNum = rank === 'cantrips' ? 0 : parseInt(rank.replace('rank', ''), 10);
               const cost = window.SpellData.getSpellCost(spellName, rankNum);
