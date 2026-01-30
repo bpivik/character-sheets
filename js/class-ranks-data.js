@@ -317,6 +317,11 @@ function normalizeSkillName(name) {
 }
 
 /**
+ * Skills that can have specializations in parentheses
+ */
+const PARTIAL_MATCH_SKILLS = ['lore', 'art', 'craft', 'musicianship'];
+
+/**
  * Check if a skill is a prerequisite for a given class
  * @param {string} skillName - The skill name to check
  * @param {string} className - The class name to check against
@@ -329,7 +334,18 @@ function isPrereqForClass(skillName, className) {
   const prereqs = CLASS_PREREQ_SKILLS[normClass];
   if (!prereqs) return false;
   
-  return prereqs.some(p => normalizeSkillName(p) === normSkill);
+  // Check for exact match first
+  if (prereqs.some(p => normalizeSkillName(p) === normSkill)) {
+    return true;
+  }
+  
+  // Check for partial match (e.g., "Lore (History)" matches prereq "Lore")
+  const baseSkillName = normSkill.split('(')[0].trim();
+  if (PARTIAL_MATCH_SKILLS.includes(baseSkillName)) {
+    return prereqs.some(p => normalizeSkillName(p) === baseSkillName);
+  }
+  
+  return false;
 }
 
 /**
