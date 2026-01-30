@@ -2980,6 +2980,19 @@ select:focus {
   border-bottom: none;
 }
 
+/* Bold styles for skill names and values */
+.widget-content .skill-name-bold {
+  font-weight: 700;
+}
+
+.widget-content .skill-value-bold {
+  font-weight: 700;
+}
+
+.widget-content .stat-value-bold {
+  font-weight: 700;
+}
+
 .widget-content .hp-overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));

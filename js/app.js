@@ -5053,11 +5053,11 @@ const App = {
         const mp = document.getElementById('magic-points-current')?.value || '-';
         return `
           <h4>Attributes</h4>
-          <div class="stat-row"><span class="stat-label">Action Points:</span><span class="stat-value">${ap}</span></div>
-          <div class="stat-row"><span class="stat-label">Damage Modifier:</span><span class="stat-value">${dmg}</span></div>
-          <div class="stat-row"><span class="stat-label">Initiative:</span><span class="stat-value">${init}</span></div>
-          <div class="stat-row"><span class="stat-label">Luck Points:</span><span class="stat-value">${luck}</span></div>
-          <div class="stat-row"><span class="stat-label">Magic Points:</span><span class="stat-value">${mp}</span></div>
+          <div class="stat-row"><span class="stat-label">Action Points:</span><span class="stat-value-bold">${ap}</span></div>
+          <div class="stat-row"><span class="stat-label">Damage Modifier:</span><span class="stat-value-bold">${dmg}</span></div>
+          <div class="stat-row"><span class="stat-label">Initiative:</span><span class="stat-value-bold">${init}</span></div>
+          <div class="stat-row"><span class="stat-label">Luck Points:</span><span class="stat-value-bold">${luck}</span></div>
+          <div class="stat-row"><span class="stat-label">Magic Points:</span><span class="stat-value-bold">${mp}</span></div>
         `;
       }
     },
@@ -5139,7 +5139,7 @@ const App = {
         const skills = [];
         const addedSkills = new Set();
         
-        // Add the always-show skills first
+        // Add the always-show skills
         alwaysShow.forEach(id => {
           const val = parseInt(document.getElementById(`${id}-current`)?.value, 10) || 0;
           skills.push({ name: alwaysShowNames[id], val, required: true });
@@ -5163,15 +5163,13 @@ const App = {
           }
         });
         
-        // Sort: required skills first (in original order), then others by value descending
-        const requiredSkills = skills.filter(s => s.required);
-        const otherSkills = skills.filter(s => !s.required).sort((a, b) => b.val - a.val);
-        const sortedSkills = [...requiredSkills, ...otherSkills];
+        // Sort alphabetically by name
+        skills.sort((a, b) => a.name.localeCompare(b.name));
         
         let html = '<h4>Key Standard Skills</h4><div class="skill-list">';
-        sortedSkills.forEach(s => {
+        skills.forEach(s => {
           const dimmed = s.val < 50 ? ' color:#999;' : '';
-          html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span style="font-weight:600;${dimmed}">${s.val}%</span></div>`;
+          html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-value-bold" style="${dimmed}">${s.val}%</span></div>`;
         });
         html += '</div>';
         return html;
@@ -5192,15 +5190,15 @@ const App = {
           }
         }
         
-        // Sort by value descending
-        skills.sort((a, b) => b.val - a.val);
+        // Sort alphabetically by name
+        skills.sort((a, b) => a.name.localeCompare(b.name));
         
         let html = '<h4>Professional Skills</h4><div class="skill-list">';
         if (skills.length === 0) {
           html += '<div class="skill-item"><span style="color:#999;">No professional skills</span></div>';
         } else {
           skills.forEach(s => {
-            html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span style="font-weight:600;">${s.val}%</span></div>`;
+            html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-value-bold">${s.val}%</span></div>`;
           });
         }
         html += '</div>';
@@ -5264,28 +5262,9 @@ const App = {
       icon: '🎒',
       render: () => {
         const totalEnc = document.getElementById('total-enc')?.textContent || '0';
-        const maxEnc = document.getElementById('max-enc')?.textContent || '-';
-        const statusEl = document.getElementById('enc-status');
-        const statusText = statusEl?.textContent || 'Unknown';
-        
-        // Determine status class for coloring
-        let statusClass = '';
-        let statusColor = '';
-        if (statusText === 'Extremely Unburdened' || statusText === 'Unburdened') {
-          statusClass = 'enc-status-good';
-          statusColor = '#228b22';
-        } else if (statusText === 'Burdened') {
-          statusClass = 'enc-status-burdened';
-          statusColor = '#1e90ff';
-        } else if (statusText === 'Overburdened') {
-          statusClass = 'enc-status-overburdened';
-          statusColor = '#c41e3a';
-        }
-        
         return `
           <h4>Encumbrance</h4>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${totalEnc} / ${maxEnc}</span></div>
-          <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value ${statusClass}" style="color: ${statusColor}; font-weight: 700;">${statusText}</span></div>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${totalEnc}</span></div>
         `;
       }
     },

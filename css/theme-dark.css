@@ -504,3 +504,16 @@
 [data-theme="dark"] datalist {
   background: var(--bg-parchment);
 }
+
+/* Alphabetize Spells Button */
+[data-theme="dark"] .btn-alphabetize {
+  background: #3a3a3a;
+  border-color: #555555;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .btn-alphabetize:hover {
+  background: #c9a227;
+  border-color: #c9a227;
+  color: #1a1a1a;
+}
