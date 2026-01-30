@@ -5118,7 +5118,7 @@ const App = {
       }
     },
     'key-skills': {
-      name: 'Key Skills',
+      name: 'Key Standard Skills',
       icon: '🎯',
       render: () => {
         // Always include these skills
@@ -5156,25 +5156,46 @@ const App = {
           }
         });
         
-        // Check professional skills above 50%
-        for (let i = 0; i < 15; i++) {
-          const name = document.getElementById(`prof-skill-${i}-name`)?.value;
-          const val = parseInt(document.getElementById(`prof-skill-${i}-current`)?.value, 10) || 0;
-          if (name && val >= 50) {
-            skills.push({ name, val, required: false });
-          }
-        }
-        
         // Sort: required skills first (in original order), then others by value descending
         const requiredSkills = skills.filter(s => s.required);
         const otherSkills = skills.filter(s => !s.required).sort((a, b) => b.val - a.val);
         const sortedSkills = [...requiredSkills, ...otherSkills];
         
-        let html = '<h4>Key Skills</h4><div class="skill-list">';
+        let html = '<h4>Key Standard Skills</h4><div class="skill-list">';
         sortedSkills.forEach(s => {
           const dimmed = s.val < 50 ? ' color:#999;' : '';
           html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span style="font-weight:600;${dimmed}">${s.val}%</span></div>`;
         });
+        html += '</div>';
+        return html;
+      }
+    },
+    'professional-skills': {
+      name: 'Professional Skills',
+      icon: '📚',
+      render: () => {
+        const skills = [];
+        
+        // Check all professional skill slots
+        for (let i = 0; i < 15; i++) {
+          const name = document.getElementById(`prof-skill-${i}-name`)?.value;
+          const val = parseInt(document.getElementById(`prof-skill-${i}-current`)?.value, 10) || 0;
+          if (name && name.trim()) {
+            skills.push({ name: name.trim(), val });
+          }
+        }
+        
+        // Sort by value descending
+        skills.sort((a, b) => b.val - a.val);
+        
+        let html = '<h4>Professional Skills</h4><div class="skill-list">';
+        if (skills.length === 0) {
+          html += '<div class="skill-item"><span style="color:#999;">No professional skills</span></div>';
+        } else {
+          skills.forEach(s => {
+            html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span style="font-weight:600;">${s.val}%</span></div>`;
+          });
+        }
         html += '</div>';
         return html;
       }
@@ -5282,20 +5303,38 @@ const App = {
       render: () => {
         return `
           <h4>D100 Dice Roller</h4>
-          <div class="dice-roller-container">
-            <div class="dice-track" id="dice-track">
-              <div class="rolling-die die-tens" id="rolling-die-tens">
-                <div class="die-face">0</div>
+          <div class="dice-roller-3d">
+            <div class="dice-viewport" id="dice-viewport">
+              <div class="dice-floor"></div>
+              <div class="d10 d10-tens" id="d10-tens">
+                <div class="d10-face d10-face-0">0</div>
+                <div class="d10-face d10-face-1">1</div>
+                <div class="d10-face d10-face-2">2</div>
+                <div class="d10-face d10-face-3">3</div>
+                <div class="d10-face d10-face-4">4</div>
+                <div class="d10-face d10-face-5">5</div>
+                <div class="d10-face d10-face-6">6</div>
+                <div class="d10-face d10-face-7">7</div>
+                <div class="d10-face d10-face-8">8</div>
+                <div class="d10-face d10-face-9">9</div>
               </div>
-              <div class="rolling-die die-ones" id="rolling-die-ones">
-                <div class="die-face">0</div>
+              <div class="d10 d10-ones" id="d10-ones">
+                <div class="d10-face d10-face-0">0</div>
+                <div class="d10-face d10-face-1">1</div>
+                <div class="d10-face d10-face-2">2</div>
+                <div class="d10-face d10-face-3">3</div>
+                <div class="d10-face d10-face-4">4</div>
+                <div class="d10-face d10-face-5">5</div>
+                <div class="d10-face d10-face-6">6</div>
+                <div class="d10-face d10-face-7">7</div>
+                <div class="d10-face d10-face-8">8</div>
+                <div class="d10-face d10-face-9">9</div>
               </div>
             </div>
-            <div class="dice-result-display">
-              <span class="result-label">Result:</span>
-              <span class="dice-result" id="dice-result">--</span>
+            <div class="dice-result-area">
+              <span class="dice-result-number" id="dice-result-3d">--</span>
             </div>
-            <button class="dice-roll-btn" id="btn-roll-dice">🎲 Roll D100</button>
+            <button class="dice-roll-btn-3d" id="btn-roll-3d">🎲 Roll D100</button>
           </div>
         `;
       }
@@ -5516,75 +5555,81 @@ const App = {
    * Set up the dice roller widget functionality
    */
   setupDiceRoller(widgetElement) {
-    const rollBtn = widgetElement.querySelector('#btn-roll-dice');
-    const dieTens = widgetElement.querySelector('#rolling-die-tens');
-    const dieOnes = widgetElement.querySelector('#rolling-die-ones');
-    const dieTensFace = dieTens?.querySelector('.die-face');
-    const dieOnesFace = dieOnes?.querySelector('.die-face');
-    const result = widgetElement.querySelector('#dice-result');
-    const track = widgetElement.querySelector('#dice-track');
+    const rollBtn = widgetElement.querySelector('#btn-roll-3d');
+    const d10Tens = widgetElement.querySelector('#d10-tens');
+    const d10Ones = widgetElement.querySelector('#d10-ones');
+    const result = widgetElement.querySelector('#dice-result-3d');
+    const viewport = widgetElement.querySelector('#dice-viewport');
     
-    if (!rollBtn || !dieTens || !dieOnes || !result || !track) return;
+    if (!rollBtn || !d10Tens || !d10Ones || !result || !viewport) return;
     
     rollBtn.addEventListener('click', () => {
       // Disable button during animation
       rollBtn.disabled = true;
       result.textContent = '--';
-      result.classList.remove('flash');
-      
-      // Reset dice position
-      dieTens.style.transition = 'none';
-      dieOnes.style.transition = 'none';
-      dieTens.style.transform = 'translateX(-100px) rotate(0deg)';
-      dieOnes.style.transform = 'translateX(-100px) rotate(0deg)';
-      
-      // Force reflow
-      void dieTens.offsetWidth;
+      result.classList.remove('result-show');
       
       // Generate final values
       const finalTens = Math.floor(Math.random() * 10);
       const finalOnes = Math.floor(Math.random() * 10);
       
-      // Calculate roll distance (width of track)
-      const trackWidth = track.offsetWidth;
-      const rollDistance = trackWidth - 60; // Account for die size
+      // Random rotation amounts
+      const rotationsX1 = 720 + Math.random() * 720;
+      const rotationsY1 = 360 + Math.random() * 720;
+      const rotationsZ1 = Math.random() * 360;
       
-      // Random spin amounts (multiple full rotations)
-      const spinTens = 360 * (3 + Math.random() * 3); // 3-6 rotations
-      const spinOnes = 360 * (3 + Math.random() * 3);
+      const rotationsX2 = 720 + Math.random() * 720;
+      const rotationsY2 = 360 + Math.random() * 720;
+      const rotationsZ2 = Math.random() * 360;
       
-      // Animate numbers changing during roll
-      let frame = 0;
-      const numFrames = 30;
-      const numberInterval = setInterval(() => {
-        dieTensFace.textContent = Math.floor(Math.random() * 10);
-        dieOnesFace.textContent = Math.floor(Math.random() * 10);
-        frame++;
-        if (frame >= numFrames) {
-          clearInterval(numberInterval);
-          dieTensFace.textContent = finalTens;
-          dieOnesFace.textContent = finalOnes;
-        }
-      }, 50);
+      // Start positions (off to the left)
+      const startX1 = -80;
+      const startX2 = -120;
       
-      // Start rolling animation
+      // End positions
+      const endX1 = 60 + Math.random() * 30;
+      const endX2 = 160 + Math.random() * 30;
+      
+      // Calculate final rotation to show correct number
+      // Each face is 36 degrees apart (360/10)
+      const faceAngle = 36;
+      const finalRotX1 = finalTens * faceAngle;
+      const finalRotX2 = finalOnes * faceAngle;
+      
+      // Set up animation
+      d10Tens.style.transition = 'none';
+      d10Ones.style.transition = 'none';
+      d10Tens.style.transform = `translateX(${startX1}px) translateZ(30px) rotateX(0deg) rotateY(0deg)`;
+      d10Ones.style.transform = `translateX(${startX2}px) translateZ(30px) rotateX(0deg) rotateY(0deg)`;
+      
+      // Force reflow
+      void d10Tens.offsetWidth;
+      
+      // Add rolling class
+      d10Tens.classList.add('rolling');
+      d10Ones.classList.add('rolling');
+      
+      // Start the roll animation
       setTimeout(() => {
-        dieTens.style.transition = 'transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        dieOnes.style.transition = 'transform 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        d10Tens.style.transition = 'transform 2s cubic-bezier(0.25, 0.1, 0.15, 1)';
+        d10Ones.style.transition = 'transform 2.3s cubic-bezier(0.25, 0.1, 0.15, 1)';
         
-        dieTens.style.transform = `translateX(${rollDistance * 0.4}px) rotate(${spinTens}deg)`;
-        dieOnes.style.transform = `translateX(${rollDistance * 0.7}px) rotate(${spinOnes}deg)`;
+        d10Tens.style.transform = `translateX(${endX1}px) translateZ(30px) rotateX(${rotationsX1 + finalRotX1}deg) rotateY(${rotationsY1}deg) rotateZ(${rotationsZ1}deg)`;
+        d10Ones.style.transform = `translateX(${endX2}px) translateZ(30px) rotateX(${rotationsX2 + finalRotX2}deg) rotateY(${rotationsY2}deg) rotateZ(${rotationsZ2}deg)`;
       }, 50);
       
       // Show result after animation
       setTimeout(() => {
+        d10Tens.classList.remove('rolling');
+        d10Ones.classList.remove('rolling');
+        
         const d100 = (finalTens === 0 && finalOnes === 0) ? 100 : finalTens * 10 + finalOnes;
         result.textContent = d100;
-        result.classList.add('flash');
+        result.classList.add('result-show');
         
         // Re-enable button
         rollBtn.disabled = false;
-      }, 2000);
+      }, 2500);
     });
   },
   
