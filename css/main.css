@@ -1193,6 +1193,23 @@ select:focus {
   text-align: right;
 }
 
+.belief-formula-input {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-align: center;
+  background: rgba(139, 115, 85, 0.1);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.2rem;
+  width: 100%;
+}
+
+.belief-formula-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  background: var(--input-bg);
+}
+
 .belief-base {
   text-align: center;
   font-weight: 600;

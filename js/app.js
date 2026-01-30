@@ -88,6 +88,9 @@ const App = {
     // Setup add row buttons
     this.setupAddRowButtons();
     
+    // Setup passion formula listeners
+    this.setupPassionFormulaListeners();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -1069,7 +1072,7 @@ const App = {
   },
 
   /**
-   * Calculate a formula like "STR+DEX" or "INT x2" using current attribute values
+   * Calculate a formula like "STR+DEX", "INT x2", "POW+INT+50" using current attribute values
    */
   calculateFormulaValue(formula) {
     const attrs = {
@@ -1082,31 +1085,46 @@ const App = {
       CHA: parseInt(document.getElementById('cha-value')?.value) || 0
     };
     
-    // Handle "X x2" format (e.g., "INT x2", "DEX x2")
-    const multiplierMatch = formula.match(/^([A-Z]{3})\s*[xX×]\s*2$/);
+    // Normalize formula: uppercase, remove extra spaces
+    const normalized = formula.toUpperCase().replace(/\s+/g, '').trim();
+    
+    // Handle "Xx2" format (e.g., "INTx2", "INTX2", "DEXx2") - multiplier pattern
+    const multiplierMatch = normalized.match(/^([A-Z]{3})[xX×]2$/);
     if (multiplierMatch) {
       const attr = multiplierMatch[1];
-      return attrs[attr] ? attrs[attr] * 2 : null;
-    }
-    
-    // Handle "X+Y" format (e.g., "STR+DEX", "INT+POW")
-    const additionMatch = formula.match(/^([A-Z]{3})\s*\+\s*([A-Z]{3})$/);
-    if (additionMatch) {
-      const attr1 = additionMatch[1];
-      const attr2 = additionMatch[2];
-      if (attrs[attr1] !== undefined && attrs[attr2] !== undefined) {
-        return attrs[attr1] + attrs[attr2];
+      if (attrs[attr] !== undefined) {
+        return attrs[attr] * 2;
       }
     }
     
-    // Handle "X+Y+N" format (e.g., "INT+CHA+40")
-    const additionBonusMatch = formula.match(/^([A-Z]{3})\s*\+\s*([A-Z]{3})\s*\+\s*(\d+)$/);
+    // Handle "X+Y+N" format (e.g., "INT+CHA+40", "POW+INT+50")
+    const additionBonusMatch = normalized.match(/^([A-Z]{3})\+([A-Z]{3})\+(\d+)$/);
     if (additionBonusMatch) {
       const attr1 = additionBonusMatch[1];
       const attr2 = additionBonusMatch[2];
       const bonus = parseInt(additionBonusMatch[3]);
       if (attrs[attr1] !== undefined && attrs[attr2] !== undefined) {
         return attrs[attr1] + attrs[attr2] + bonus;
+      }
+    }
+    
+    // Handle "Xx2+N" format (e.g., "INTx2+40", "POWx2+30") - multiplier with bonus
+    const multiplierBonusMatch = normalized.match(/^([A-Z]{3})[xX×]2\+(\d+)$/);
+    if (multiplierBonusMatch) {
+      const attr = multiplierBonusMatch[1];
+      const bonus = parseInt(multiplierBonusMatch[2]);
+      if (attrs[attr] !== undefined) {
+        return attrs[attr] * 2 + bonus;
+      }
+    }
+    
+    // Handle "X+Y" format (e.g., "STR+DEX", "INT+POW")
+    const additionMatch = normalized.match(/^([A-Z]{3})\+([A-Z]{3})$/);
+    if (additionMatch) {
+      const attr1 = additionMatch[1];
+      const attr2 = additionMatch[2];
+      if (attrs[attr1] !== undefined && attrs[attr2] !== undefined) {
+        return attrs[attr1] + attrs[attr2];
       }
     }
     
@@ -2335,8 +2353,10 @@ const App = {
     if (this.character.passions) {
       this.character.passions.forEach((item, i) => {
         const nameInput = document.getElementById(`passion-${i+1}-name`);
+        const formulaInput = document.getElementById(`passion-${i+1}-formula`);
         const currentInput = document.getElementById(`passion-${i+1}-current`);
         if (nameInput && item.name) nameInput.value = item.name;
+        if (formulaInput && item.formula) formulaInput.value = item.formula;
         if (currentInput && item.current) currentInput.value = item.current;
       });
     }
@@ -2561,28 +2581,36 @@ const App = {
       }
     }
     
-    // Passions
-    for (let i = 1; i <= 4; i++) {
-      const nameInput = document.getElementById(`passion-${i}-name`);
-      const currentInput = document.getElementById(`passion-${i}-current`);
-      if (nameInput && currentInput) {
-        this.character.passions[i-1] = {
-          name: nameInput.value,
-          current: currentInput.value
-        };
-      }
+    // Passions (dynamic rows with custom formulas)
+    this.character.passions = [];
+    const passionsContainer = document.getElementById('passions-container');
+    if (passionsContainer) {
+      const passionRows = passionsContainer.querySelectorAll('.belief-row');
+      passionRows.forEach((row, i) => {
+        const nameInput = row.querySelector('.belief-name');
+        const formulaInput = row.querySelector('.belief-formula-input');
+        const currentInput = row.querySelector('.belief-input');
+        this.character.passions.push({
+          name: nameInput?.value || '',
+          formula: formulaInput?.value || 'POW+INT+50',
+          current: currentInput?.value || ''
+        });
+      });
     }
     
-    // Oaths
-    for (let i = 1; i <= 4; i++) {
-      const nameInput = document.getElementById(`oath-${i}-name`);
-      const currentInput = document.getElementById(`oath-${i}-current`);
-      if (nameInput && currentInput) {
-        this.character.oaths[i-1] = {
-          name: nameInput.value,
-          current: currentInput.value
-        };
-      }
+    // Oaths (dynamic rows)
+    this.character.oaths = [];
+    const oathsContainer = document.getElementById('oaths-container');
+    if (oathsContainer) {
+      const oathRows = oathsContainer.querySelectorAll('.belief-row');
+      oathRows.forEach((row, i) => {
+        const nameInput = row.querySelector('.belief-name');
+        const currentInput = row.querySelector('.belief-input');
+        this.character.oaths.push({
+          name: nameInput?.value || '',
+          current: currentInput?.value || ''
+        });
+      });
     }
     
     // Languages
@@ -2828,13 +2856,22 @@ const App = {
       if (baseSpan) baseSpan.textContent = results.beliefs.alignment;
     }
     
-    // Update all passion bases (dynamic count)
+    // Update all passion bases (dynamic count) - each passion can have a custom formula
     const passionsContainer = document.getElementById('passions-container');
     if (passionsContainer) {
       const passionRows = passionsContainer.querySelectorAll('.belief-row');
       passionRows.forEach(row => {
+        const formulaInput = row.querySelector('.belief-formula-input');
         const passionBase = row.querySelector('.belief-base');
-        if (passionBase) passionBase.textContent = results.beliefs.passion;
+        if (formulaInput && passionBase) {
+          const formula = formulaInput.value.trim();
+          if (formula) {
+            const result = this.calculateFormulaValue(formula.toUpperCase());
+            passionBase.textContent = result !== null ? result : '0';
+          } else {
+            passionBase.textContent = '0';
+          }
+        }
       });
     }
     
@@ -6479,6 +6516,21 @@ const App = {
   },
 
   /**
+   * Setup event listeners for passion formula inputs
+   */
+  setupPassionFormulaListeners() {
+    const container = document.getElementById('passions-container');
+    if (!container) return;
+    
+    container.querySelectorAll('.belief-formula-input').forEach(input => {
+      input.addEventListener('input', () => {
+        this.recalculateAll();
+        this.scheduleAutoSave();
+      });
+    });
+  },
+
+  /**
    * Alphabetize beliefs (passions or oaths)
    */
   alphabetizeBeliefs(type) {
@@ -6683,11 +6735,20 @@ const App = {
     row.dataset.index = newIndex;
     row.innerHTML = `
       <input type="text" class="belief-name" id="passion-${newIndex}-name" placeholder="">
-      <span class="belief-formula">POW+INT+50</span>
+      <input type="text" class="belief-formula-input" id="passion-${newIndex}-formula" value="POW+INT+50" placeholder="e.g. POW+INT+50">
       <span class="belief-base" id="passion-${newIndex}-base">0</span>
       <input type="number" class="belief-input" id="passion-${newIndex}-current" placeholder="">
     `;
     container.appendChild(row);
+    
+    // Add formula input listener
+    const formulaInput = row.querySelector('.belief-formula-input');
+    if (formulaInput) {
+      formulaInput.addEventListener('input', () => {
+        this.recalculateAll();
+        this.scheduleAutoSave();
+      });
+    }
     
     this.recalculateAll();
     row.querySelector('.belief-name').focus();
