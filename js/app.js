@@ -5688,14 +5688,14 @@ const App = {
       }
     });
     
-    // Reset button
-    if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
+    // Reset button - use event delegation to ensure it works
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'btn-reset-summary') {
         if (confirm('Reset summary layout to default?')) {
           this.resetSummaryLayout();
         }
-      });
-    }
+      }
+    });
   },
   
   /**
@@ -6063,6 +6063,18 @@ const App = {
       localStorage.removeItem('mythras-summary-layout');
     } catch (e) {
       // Ignore
+    }
+    
+    // Clear canvas
+    const canvas = document.getElementById('summary-canvas');
+    if (canvas) {
+      canvas.innerHTML = '';
+    }
+    
+    // Clear palette
+    const palette = document.getElementById('palette-widgets');
+    if (palette) {
+      palette.innerHTML = '';
     }
     
     const defaultLayout = ['character-info', 'characteristics', 'attributes', 'hp-overview'];
