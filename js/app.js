@@ -3064,7 +3064,7 @@ const App = {
     const currentRank = parseInt(rankInput?.value, 10) || 0;
     
     if (!className) {
-      alert('No class selected for this slot.');
+      this.showPrereqModal('No Class Selected', '<p>No class selected for this slot.</p>');
       return;
     }
     
@@ -3072,7 +3072,7 @@ const App = {
     const req = window.ClassRankData.getNextRankRequirement(currentRank, classSlot);
     
     if (!req) {
-      alert(`${className} is at maximum rank (Rank 5).`);
+      this.showPrereqModal(`${className} - Max Rank`, `<p>${className} is at maximum rank (Rank 5).</p>`);
       return;
     }
     
@@ -3080,52 +3080,98 @@ const App = {
     const prereqSkills = window.ClassRankData.getPrereqSkillsForClass(className);
     
     if (!prereqSkills || prereqSkills.length === 0) {
-      alert(`No prerequisite skills defined for ${className}.`);
+      this.showPrereqModal(`${className}`, `<p>No prerequisite skills defined for ${className}.</p>`);
       return;
     }
     
     // Collect current skill values from the character sheet
     const skillStatus = this.getPrereqSkillStatus(prereqSkills, req.percentRequired);
     
-    // Build message
+    // Build HTML content
     const slotName = classSlot === 'primary' ? 'Class' : 
                      classSlot === 'secondary' ? 'Subclass 1' : 'Subclass 2';
     
-    let message = `${className} (${slotName})\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `Current Rank: ${currentRank}\n`;
-    message += `Next Rank: ${req.nextRank}\n`;
-    message += `Requires: ${req.skillsNeeded} skills at ${req.percentRequired}%\n\n`;
-    
     const metCount = skillStatus.filter(s => s.met).length;
-    message += `Progress: ${metCount}/${req.skillsNeeded} skills met\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    
-    // Skills that meet the requirement
     const metSkills = skillStatus.filter(s => s.met);
     const unmetSkills = skillStatus.filter(s => !s.met);
     
+    let html = `
+      <div class="prereq-info">
+        <p><strong>Current Rank:</strong> ${currentRank}</p>
+        <p><strong>Next Rank:</strong> ${req.nextRank}</p>
+        <p><strong>Requires:</strong> ${req.skillsNeeded} skills at ${req.percentRequired}%</p>
+      </div>
+      <div class="prereq-progress ${metCount >= req.skillsNeeded ? 'ready' : ''}">
+        Progress: ${metCount}/${req.skillsNeeded} skills met
+        ${metCount >= req.skillsNeeded ? ' ★ READY TO ADVANCE! ★' : ''}
+      </div>
+    `;
+    
     if (metSkills.length > 0) {
-      message += `✓ SKILLS AT ${req.percentRequired}%+:\n`;
+      html += `<div class="prereq-section met">
+        <h4>✓ Skills at ${req.percentRequired}%+</h4>
+        <ul>`;
       metSkills.forEach(s => {
-        message += `   ${s.name}: ${s.value}%\n`;
+        html += `<li><span class="skill-name">${s.name}</span><span class="skill-value">${s.value}%</span></li>`;
       });
-      message += '\n';
+      html += `</ul></div>`;
     }
     
     if (unmetSkills.length > 0) {
-      message += `✗ SKILLS BELOW ${req.percentRequired}%:\n`;
+      html += `<div class="prereq-section unmet">
+        <h4>✗ Skills below ${req.percentRequired}%</h4>
+        <ul>`;
       unmetSkills.forEach(s => {
         const needed = req.percentRequired - s.value;
-        message += `   ${s.name}: ${s.value}% (need +${needed}%)\n`;
+        html += `<li><span class="skill-name">${s.name}</span><span class="skill-value">${s.value}% <span class="needed">(need +${needed}%)</span></span></li>`;
       });
+      html += `</ul></div>`;
     }
     
-    if (metCount >= req.skillsNeeded) {
-      message += `\n★ READY TO ADVANCE TO RANK ${req.nextRank}! ★`;
-    }
+    this.showPrereqModal(`${className} (${slotName})`, html);
+  },
+  
+  /**
+   * Show a modal dialog for prerequisite skill status
+   */
+  showPrereqModal(title, content) {
+    // Remove existing modal if present
+    const existing = document.getElementById('prereq-modal');
+    if (existing) existing.remove();
     
-    alert(message);
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'prereq-modal';
+    modal.className = 'prereq-modal-overlay';
+    modal.innerHTML = `
+      <div class="prereq-modal">
+        <div class="prereq-modal-header">
+          <h3>${title}</h3>
+          <button class="prereq-modal-close">&times;</button>
+        </div>
+        <div class="prereq-modal-content">
+          ${content}
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close handlers
+    const closeBtn = modal.querySelector('.prereq-modal-close');
+    closeBtn.addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+    
+    // Close on Escape
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        modal.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   },
   
   /**
@@ -3137,77 +3183,116 @@ const App = {
     prereqSkills.forEach(skillName => {
       const normalizedSkill = skillName.toLowerCase().trim();
       let skillValue = 0;
+      let found = false;
       
-      // Check professional skills
+      // Check professional skills first
       for (let i = 0; i < 15; i++) {
         const nameInput = document.getElementById(`prof-skill-${i}-name`);
-        const totalInput = document.getElementById(`prof-skill-${i}-total`);
+        const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
+        const currentInput = document.getElementById(`prof-skill-${i}-current`);
         
-        if (nameInput && totalInput) {
+        if (nameInput) {
           const name = nameInput.value?.trim().toLowerCase() || '';
-          if (name === normalizedSkill) {
-            skillValue = parseInt(totalInput.value, 10) || 0;
+          if (name === normalizedSkill || name.startsWith(normalizedSkill)) {
+            const base = parseInt(baseVal?.textContent, 10) || 0;
+            const current = parseInt(currentInput?.value, 10) || 0;
+            skillValue = base + current;
+            found = true;
             break;
           }
         }
       }
       
-      // Check standard skills if not found in professional
-      if (skillValue === 0) {
+      // Check standard skills if not found
+      if (!found) {
         const standardSkillMap = {
-          'athletics': 'athletics-total',
-          'boating': 'boating-total',
-          'brawn': 'brawn-total',
-          'conceal': 'conceal-total',
-          'customs': 'customs-total',
-          'dance': 'dance-total',
-          'deceit': 'deceit-total',
-          'drive': 'drive-total',
-          'endurance': 'endurance-total',
-          'evade': 'evade-total',
-          'first aid': 'firstaid-total',
-          'influence': 'influence-total',
-          'insight': 'insight-total',
-          'locale': 'locale-total',
-          'perception': 'perception-total',
-          'ride': 'ride-total',
-          'sing': 'sing-total',
-          'stealth': 'stealth-total',
-          'swim': 'swim-total',
-          'unarmed': 'unarmed-total',
-          'willpower': 'willpower-total'
+          'athletics': 'athletics',
+          'boating': 'boating',
+          'brawn': 'brawn',
+          'conceal': 'conceal',
+          'customs': 'customs',
+          'dance': 'dance',
+          'deceit': 'deceit',
+          'drive': 'drive',
+          'endurance': 'endurance',
+          'evade': 'evade',
+          'first aid': 'firstaid',
+          'influence': 'influence',
+          'insight': 'insight',
+          'locale': 'locale',
+          'perception': 'perception',
+          'ride': 'ride',
+          'sing': 'sing',
+          'stealth': 'stealth',
+          'swim': 'swim',
+          'unarmed': 'unarmed',
+          'willpower': 'willpower'
         };
         
-        const inputId = standardSkillMap[normalizedSkill];
-        if (inputId) {
-          const input = document.getElementById(inputId);
-          skillValue = parseInt(input?.value, 10) || 0;
+        const skillId = standardSkillMap[normalizedSkill];
+        if (skillId) {
+          const baseSpan = document.getElementById(`${skillId}-base`);
+          const currentInput = document.getElementById(`${skillId}-current`);
+          const base = parseInt(baseSpan?.textContent, 10) || 0;
+          const current = parseInt(currentInput?.value, 10) || 0;
+          skillValue = base + current;
+          found = true;
         }
       }
       
       // Check combat skill
-      if (skillValue === 0 && normalizedSkill === 'combat skill') {
-        const combatTotal = document.getElementById('combat-skill-total');
-        skillValue = parseInt(combatTotal?.value, 10) || 0;
+      if (!found && normalizedSkill === 'combat skill') {
+        // Combat skill is special - check combat-skill-1-percent (the first combat style)
+        const combatPercent = document.getElementById('combat-skill-1-percent');
+        skillValue = parseInt(combatPercent?.value, 10) || 0;
+        found = true;
       }
       
       // Check magic skills
-      if (skillValue === 0) {
+      if (!found) {
         const magicSkillMap = {
-          'channel': 'channel-total',
-          'piety': 'piety-total',
-          'arcane casting': 'arcane-casting-total',
-          'arcane knowledge': 'arcane-knowledge-total',
-          'arcane sorcery': 'arcane-sorcery-total',
-          'sorcerous wisdom': 'sorcerous-wisdom-total',
-          'musicianship': 'musicianship-total',
-          'lyrical magic': 'lyrical-magic-total'
+          'channel': 'channel',
+          'piety': 'piety',
+          'arcane casting': 'arcane-casting',
+          'arcane knowledge': 'arcane-knowledge',
+          'arcane sorcery': 'arcane-sorcery',
+          'sorcerous wisdom': 'sorcerous-wisdom',
+          'musicianship': 'musicianship',
+          'lyrical magic': 'lyrical-magic'
         };
         
-        const inputId = magicSkillMap[normalizedSkill];
-        if (inputId) {
-          const input = document.getElementById(inputId);
-          skillValue = parseInt(input?.value, 10) || 0;
+        const skillId = magicSkillMap[normalizedSkill];
+        if (skillId) {
+          const baseSpan = document.getElementById(`${skillId}-base`);
+          const currentInput = document.getElementById(`${skillId}-current`);
+          const base = parseInt(baseSpan?.textContent, 10) || 0;
+          const current = parseInt(currentInput?.value, 10) || 0;
+          skillValue = base + current;
+          found = true;
+        }
+      }
+      
+      // Check for partial matches in professional skills (e.g., "Lore" matching "Lore (History)")
+      if (!found) {
+        for (let i = 0; i < 15; i++) {
+          const nameInput = document.getElementById(`prof-skill-${i}-name`);
+          const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
+          const currentInput = document.getElementById(`prof-skill-${i}-current`);
+          
+          if (nameInput) {
+            const name = nameInput.value?.trim().toLowerCase() || '';
+            // Check if the skill name contains our search term (for things like "Lore")
+            if (name.includes(normalizedSkill) || normalizedSkill.includes(name.split('(')[0].trim())) {
+              const base = parseInt(baseVal?.textContent, 10) || 0;
+              const current = parseInt(currentInput?.value, 10) || 0;
+              const total = base + current;
+              // Take the highest value if multiple matches
+              if (total > skillValue) {
+                skillValue = total;
+                found = true;
+              }
+            }
+          }
         }
       }
       
