@@ -3441,7 +3441,7 @@ const App = {
       
       // 4. Check professional skills for exact match
       if (!found) {
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
@@ -3462,7 +3462,7 @@ const App = {
       // Skills that can have specializations in parentheses
       const partialMatchSkills = ['lore', 'art', 'craft', 'musicianship'];
       if (!found && partialMatchSkills.includes(normalizedSkill)) {
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
@@ -5288,7 +5288,7 @@ const App = {
         const skills = [];
         
         // Check all professional skill slots
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
           const name = document.getElementById(`prof-skill-${i}-name`)?.value;
           const val = parseInt(document.getElementById(`prof-skill-${i}-current`)?.value, 10) || 0;
           if (name && name.trim()) {
