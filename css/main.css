@@ -2794,9 +2794,9 @@ select:focus {
   background: white;
   border: 1px solid #ccc;
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 14px 16px;
   cursor: grab;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -2835,8 +2835,8 @@ select:focus {
   padding: 16px;
   min-height: 400px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
   align-content: start;
 }
 
@@ -2920,18 +2920,18 @@ select:focus {
 }
 
 .widget-content h4 {
-  margin: 0 0 8px 0;
-  font-size: 0.9rem;
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
   color: var(--accent-color, #8B4513);
-  border-bottom: 1px solid #eee;
-  padding-bottom: 4px;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 6px;
 }
 
 .widget-content .stat-row {
   display: flex;
   justify-content: space-between;
-  padding: 2px 0;
-  font-size: 0.85rem;
+  padding: 4px 0;
+  font-size: 1rem;
 }
 
 .widget-content .stat-row .stat-label {
@@ -2945,34 +2945,34 @@ select:focus {
 .widget-content .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 6px;
   text-align: center;
 }
 
 .widget-content .stat-grid .stat-box {
   background: #f0f0f0;
-  padding: 4px;
+  padding: 6px;
   border-radius: 4px;
 }
 
 .widget-content .stat-grid .stat-box .label {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: #666;
 }
 
 .widget-content .stat-grid .stat-box .value {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
 .widget-content .skill-list {
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .widget-content .skill-list .skill-item {
   display: flex;
   justify-content: space-between;
-  padding: 2px 0;
+  padding: 4px 0;
   border-bottom: 1px dotted #eee;
 }
 
@@ -2983,24 +2983,25 @@ select:focus {
 .widget-content .hp-overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 4px;
-  font-size: 0.75rem;
+  gap: 6px;
+  font-size: 0.9rem;
 }
 
 .widget-content .hp-location {
   background: #f0f0f0;
-  padding: 4px;
+  padding: 6px;
   border-radius: 4px;
   text-align: center;
 }
 
 .widget-content .hp-location .loc-name {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: #666;
 }
 
 .widget-content .hp-location .loc-hp {
   font-weight: 600;
+  font-size: 1rem;
 }
 
 .widget-content .hp-location.damaged {
