@@ -76,6 +76,9 @@ const App = {
     // Setup summary page
     this.setupSummaryPage();
     
+    // Setup floating dice roller
+    this.setupFloatingDiceRoller();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -5296,48 +5299,6 @@ const App = {
           <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} / ${max}</span></div>
         `;
       }
-    },
-    'dice-roller': {
-      name: 'Dice Roller',
-      icon: '🎲',
-      render: () => {
-        return `
-          <h4>D100 Dice Roller</h4>
-          <div class="dice-roller-3d">
-            <div class="dice-viewport" id="dice-viewport">
-              <div class="dice-floor"></div>
-              <div class="d10 d10-tens" id="d10-tens">
-                <div class="d10-face d10-face-0">0</div>
-                <div class="d10-face d10-face-1">1</div>
-                <div class="d10-face d10-face-2">2</div>
-                <div class="d10-face d10-face-3">3</div>
-                <div class="d10-face d10-face-4">4</div>
-                <div class="d10-face d10-face-5">5</div>
-                <div class="d10-face d10-face-6">6</div>
-                <div class="d10-face d10-face-7">7</div>
-                <div class="d10-face d10-face-8">8</div>
-                <div class="d10-face d10-face-9">9</div>
-              </div>
-              <div class="d10 d10-ones" id="d10-ones">
-                <div class="d10-face d10-face-0">0</div>
-                <div class="d10-face d10-face-1">1</div>
-                <div class="d10-face d10-face-2">2</div>
-                <div class="d10-face d10-face-3">3</div>
-                <div class="d10-face d10-face-4">4</div>
-                <div class="d10-face d10-face-5">5</div>
-                <div class="d10-face d10-face-6">6</div>
-                <div class="d10-face d10-face-7">7</div>
-                <div class="d10-face d10-face-8">8</div>
-                <div class="d10-face d10-face-9">9</div>
-              </div>
-            </div>
-            <div class="dice-result-area">
-              <span class="dice-result-number" id="dice-result-3d">--</span>
-            </div>
-            <button class="dice-roll-btn-3d" id="btn-roll-3d">🎲 Roll D100</button>
-          </div>
-        `;
-      }
     }
   },
   
@@ -5541,95 +5502,140 @@ const App = {
     item.appendChild(removeBtn);
     canvas.appendChild(item);
     
-    // Set up dice roller if this is the dice widget
-    if (widgetId === 'dice-roller') {
-      this.setupDiceRoller(item);
-    }
-    
     if (save) {
       this.saveSummaryLayout();
     }
   },
   
   /**
-   * Set up the dice roller widget functionality
+   * Set up the floating dice roller
    */
-  setupDiceRoller(widgetElement) {
-    const rollBtn = widgetElement.querySelector('#btn-roll-3d');
-    const d10Tens = widgetElement.querySelector('#d10-tens');
-    const d10Ones = widgetElement.querySelector('#d10-ones');
-    const result = widgetElement.querySelector('#dice-result-3d');
-    const viewport = widgetElement.querySelector('#dice-viewport');
+  setupFloatingDiceRoller() {
+    const fab = document.getElementById('dice-fab');
+    const overlay = document.getElementById('dice-overlay');
+    const dieTens = document.getElementById('flying-die-tens');
+    const dieOnes = document.getElementById('flying-die-ones');
+    const resultDisplay = document.getElementById('dice-result-overlay');
     
-    if (!rollBtn || !d10Tens || !d10Ones || !result || !viewport) return;
+    if (!fab || !overlay || !dieTens || !dieOnes || !resultDisplay) return;
     
-    rollBtn.addEventListener('click', () => {
-      // Disable button during animation
-      rollBtn.disabled = true;
-      result.textContent = '--';
-      result.classList.remove('result-show');
+    let isRolling = false;
+    
+    fab.addEventListener('click', () => {
+      if (isRolling) return;
+      isRolling = true;
+      
+      // Show overlay
+      overlay.classList.add('active');
+      resultDisplay.textContent = '';
+      resultDisplay.className = 'dice-result-overlay';
       
       // Generate final values
       const finalTens = Math.floor(Math.random() * 10);
       const finalOnes = Math.floor(Math.random() * 10);
       
-      // Random rotation amounts
-      const rotationsX1 = 720 + Math.random() * 720;
-      const rotationsY1 = 360 + Math.random() * 720;
-      const rotationsZ1 = Math.random() * 360;
+      // Update die faces with random numbers
+      this.updateDieFaces(dieTens, finalTens);
+      this.updateDieFaces(dieOnes, finalOnes);
       
-      const rotationsX2 = 720 + Math.random() * 720;
-      const rotationsY2 = 360 + Math.random() * 720;
-      const rotationsZ2 = Math.random() * 360;
+      // Get viewport dimensions
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
       
-      // Start positions (off to the left)
-      const startX1 = -80;
-      const startX2 = -120;
+      // Random start positions (off screen left)
+      const startY1 = vh * 0.3 + Math.random() * vh * 0.4;
+      const startY2 = vh * 0.3 + Math.random() * vh * 0.4;
       
-      // End positions
-      const endX1 = 60 + Math.random() * 30;
-      const endX2 = 160 + Math.random() * 30;
+      // End positions (toward center-right)
+      const endX1 = vw * 0.3 + Math.random() * vw * 0.2;
+      const endX2 = vw * 0.5 + Math.random() * vw * 0.2;
+      const endY1 = vh * 0.4 + Math.random() * vh * 0.2;
+      const endY2 = vh * 0.4 + Math.random() * vh * 0.2;
       
-      // Calculate final rotation to show correct number
-      // Each face is 36 degrees apart (360/10)
-      const faceAngle = 36;
-      const finalRotX1 = finalTens * faceAngle;
-      const finalRotX2 = finalOnes * faceAngle;
+      // Random rotations
+      const rotX1 = 720 + Math.random() * 1080;
+      const rotY1 = 720 + Math.random() * 1080;
+      const rotZ1 = 360 + Math.random() * 720;
+      const rotX2 = 720 + Math.random() * 1080;
+      const rotY2 = 720 + Math.random() * 1080;
+      const rotZ2 = 360 + Math.random() * 720;
       
-      // Set up animation
-      d10Tens.style.transition = 'none';
-      d10Ones.style.transition = 'none';
-      d10Tens.style.transform = `translateX(${startX1}px) translateZ(30px) rotateX(0deg) rotateY(0deg)`;
-      d10Ones.style.transform = `translateX(${startX2}px) translateZ(30px) rotateX(0deg) rotateY(0deg)`;
+      // Set initial positions
+      dieTens.style.transition = 'none';
+      dieOnes.style.transition = 'none';
+      dieTens.style.left = '-100px';
+      dieTens.style.top = startY1 + 'px';
+      dieOnes.style.left = '-100px';
+      dieOnes.style.top = startY2 + 'px';
+      dieTens.querySelector('.die-cube').style.transform = 'rotateX(0) rotateY(0) rotateZ(0)';
+      dieOnes.querySelector('.die-cube').style.transform = 'rotateX(0) rotateY(0) rotateZ(0)';
       
       // Force reflow
-      void d10Tens.offsetWidth;
+      void dieTens.offsetWidth;
       
-      // Add rolling class
-      d10Tens.classList.add('rolling');
-      d10Ones.classList.add('rolling');
+      // Start animation
+      dieTens.classList.add('rolling');
+      dieOnes.classList.add('rolling');
       
-      // Start the roll animation
       setTimeout(() => {
-        d10Tens.style.transition = 'transform 2s cubic-bezier(0.25, 0.1, 0.15, 1)';
-        d10Ones.style.transition = 'transform 2.3s cubic-bezier(0.25, 0.1, 0.15, 1)';
+        dieTens.style.transition = 'left 2s cubic-bezier(0.25, 0.1, 0.25, 1), top 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        dieOnes.style.transition = 'left 2.3s cubic-bezier(0.25, 0.1, 0.25, 1), top 2.3s cubic-bezier(0.25, 0.1, 0.25, 1)';
         
-        d10Tens.style.transform = `translateX(${endX1}px) translateZ(30px) rotateX(${rotationsX1 + finalRotX1}deg) rotateY(${rotationsY1}deg) rotateZ(${rotationsZ1}deg)`;
-        d10Ones.style.transform = `translateX(${endX2}px) translateZ(30px) rotateX(${rotationsX2 + finalRotX2}deg) rotateY(${rotationsY2}deg) rotateZ(${rotationsZ2}deg)`;
+        dieTens.querySelector('.die-cube').style.transition = 'transform 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        dieOnes.querySelector('.die-cube').style.transition = 'transform 2.3s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        
+        dieTens.style.left = endX1 + 'px';
+        dieTens.style.top = endY1 + 'px';
+        dieOnes.style.left = endX2 + 'px';
+        dieOnes.style.top = endY2 + 'px';
+        
+        dieTens.querySelector('.die-cube').style.transform = `rotateX(${rotX1}deg) rotateY(${rotY1}deg) rotateZ(${rotZ1}deg)`;
+        dieOnes.querySelector('.die-cube').style.transform = `rotateX(${rotX2}deg) rotateY(${rotY2}deg) rotateZ(${rotZ2}deg)`;
       }, 50);
       
-      // Show result after animation
+      // Show result
       setTimeout(() => {
-        d10Tens.classList.remove('rolling');
-        d10Ones.classList.remove('rolling');
+        dieTens.classList.remove('rolling');
+        dieOnes.classList.remove('rolling');
         
         const d100 = (finalTens === 0 && finalOnes === 0) ? 100 : finalTens * 10 + finalOnes;
-        result.textContent = d100;
-        result.classList.add('result-show');
+        resultDisplay.textContent = d100;
+        resultDisplay.classList.add('show');
         
-        // Re-enable button
-        rollBtn.disabled = false;
+        // Add critical styling
+        if (d100 <= 5) {
+          resultDisplay.classList.add('critical-success');
+        } else if (d100 >= 96) {
+          resultDisplay.classList.add('critical-fail');
+        }
+        
+        // Auto-close after showing result
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          dieTens.classList.remove('rolling');
+          dieOnes.classList.remove('rolling');
+          resultDisplay.classList.remove('show', 'critical-success', 'critical-fail');
+          isRolling = false;
+        }, 2000);
       }, 2500);
+    });
+    
+    // Click overlay to close (if not rolling)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay && !isRolling) {
+        overlay.classList.remove('active');
+      }
+    });
+  },
+  
+  /**
+   * Update die faces with numbers centered around the final value
+   */
+  updateDieFaces(die, finalValue) {
+    const faces = die.querySelectorAll('.die-face');
+    const numbers = [finalValue, (finalValue + 5) % 10, (finalValue + 1) % 10, (finalValue + 6) % 10, (finalValue + 2) % 10, (finalValue + 7) % 10];
+    faces.forEach((face, i) => {
+      face.textContent = numbers[i];
     });
   },
   
