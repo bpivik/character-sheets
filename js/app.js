@@ -6399,7 +6399,13 @@ const App = {
     // Magical Skills - from the spell pages
     const magicalSkillDefs = [
       { id: 'channel-percent', name: 'Channel' },
-      { id: 'piety-percent', name: 'Piety' }
+      { id: 'piety-percent', name: 'Piety' },
+      { id: 'arcane-casting-percent', name: 'Arcane Casting' },
+      { id: 'arcane-knowledge-percent', name: 'Arcane Knowledge' },
+      { id: 'arcane-sorcery-percent', name: 'Arcane Sorcery' },
+      { id: 'sorcerous-wisdom-percent', name: 'Sorcerous Wisdom' },
+      { id: 'musicianship-percent', name: 'Musicianship' },
+      { id: 'lyrical-magic-percent', name: 'Lyrical Magic' }
     ];
     
     magicalSkillDefs.forEach(skill => {
