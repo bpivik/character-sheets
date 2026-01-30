@@ -1329,6 +1329,12 @@ select:focus {
   text-align: center;
   border-radius: 4px;
   width: 100%;
+  cursor: default;
+}
+
+.prof-skill-base[readonly] {
+  background: rgba(139, 115, 85, 0.1);
+  border-color: transparent;
 }
 
 .prof-skill-base-val {

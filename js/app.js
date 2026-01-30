@@ -909,7 +909,7 @@ const App = {
       row.innerHTML = `
         <span class="prereq-keys" id="prof-skill-${i}-prereq" data-skill-name=""></span>
         <input type="text" class="prof-skill-name" id="prof-skill-${i}-name" placeholder="">
-        <input type="text" class="prof-skill-base" id="prof-skill-${i}-base" placeholder="">
+        <input type="text" class="prof-skill-base" id="prof-skill-${i}-base" placeholder="" readonly>
         <span class="prof-skill-base-val" id="prof-skill-${i}-base-val"></span>
         <input type="number" class="prof-skill-current" id="prof-skill-${i}-current" placeholder="">
         <span class="enc-indicator prof-enc-indicator" id="prof-skill-${i}-enc" style="display: none;" title="Affected by ENC"></span>
@@ -6475,7 +6475,7 @@ const App = {
     row.innerHTML = `
       <span class="prereq-keys" id="prof-skill-${newIndex}-prereq" data-skill-name=""></span>
       <input type="text" class="prof-skill-name" id="prof-skill-${newIndex}-name" placeholder="">
-      <input type="text" class="prof-skill-base" id="prof-skill-${newIndex}-base" placeholder="">
+      <input type="text" class="prof-skill-base" id="prof-skill-${newIndex}-base" placeholder="" readonly>
       <span class="prof-skill-base-val" id="prof-skill-${newIndex}-base-val"></span>
       <input type="number" class="prof-skill-current" id="prof-skill-${newIndex}-current" placeholder="">
       <span class="enc-indicator prof-enc-indicator" id="prof-skill-${newIndex}-enc" style="display: none;" title="Affected by ENC"></span>
@@ -7911,30 +7911,86 @@ const App = {
    * Add a new professional skill to the character sheet
    */
   addNewProfessionalSkill(skill) {
-    // Find first empty slot
-    for (let i = 0; i < 20; i++) {
+    const container = document.getElementById('professional-skills-container');
+    if (!container) {
+      alert('Professional skills container not found!');
+      return;
+    }
+    
+    // Find first empty slot by checking all rows
+    const rows = container.querySelectorAll('.professional-skill-row');
+    for (let i = 0; i < rows.length; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       if (nameInput && !nameInput.value.trim()) {
+        const baseInput = document.getElementById(`prof-skill-${i}-base`);
+        const baseValSpan = document.getElementById(`prof-skill-${i}-base-val`);
+        const currentInput = document.getElementById(`prof-skill-${i}-current`);
+        
         // Set the skill name
         nameInput.value = skill.fullName || skill.name;
         
-        // Trigger blur to calculate base value
+        // Set the formula from skill data
+        if (baseInput && skill.formula) {
+          baseInput.value = skill.formula;
+        }
+        
+        // Trigger input event to auto-fill formula if not already set
+        nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Trigger blur to finalize
         nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
         
-        // Set current to base value
+        // Calculate base and set current to base value
         setTimeout(() => {
-          const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
-          const currentInput = document.getElementById(`prof-skill-${i}-current`);
-          if (baseVal && currentInput) {
-            currentInput.value = baseVal.textContent || '';
-          }
-        }, 100);
+          // Trigger base calculation
+          this.calculateProfessionalSkillBase(i);
+          
+          // Get the calculated base value and set as current
+          setTimeout(() => {
+            const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
+            const currInput = document.getElementById(`prof-skill-${i}-current`);
+            if (baseVal && currInput) {
+              const calculatedBase = baseVal.textContent || '';
+              if (calculatedBase) {
+                currInput.value = calculatedBase;
+              }
+            }
+          }, 50);
+        }, 50);
         
         return;
       }
     }
     
-    alert('No empty professional skill slots available!');
+    // No empty slot found - add a new row
+    this.addProfessionalSkillRow();
+    setTimeout(() => {
+      // Try again with the new row
+      const newRows = container.querySelectorAll('.professional-skill-row');
+      const lastIndex = newRows.length - 1;
+      const nameInput = document.getElementById(`prof-skill-${lastIndex}-name`);
+      const baseInput = document.getElementById(`prof-skill-${lastIndex}-base`);
+      
+      if (nameInput) {
+        nameInput.value = skill.fullName || skill.name;
+        if (baseInput && skill.formula) {
+          baseInput.value = skill.formula;
+        }
+        nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+        nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        
+        setTimeout(() => {
+          this.calculateProfessionalSkillBase(lastIndex);
+          setTimeout(() => {
+            const baseVal = document.getElementById(`prof-skill-${lastIndex}-base-val`);
+            const currInput = document.getElementById(`prof-skill-${lastIndex}-current`);
+            if (baseVal && currInput && baseVal.textContent) {
+              currInput.value = baseVal.textContent;
+            }
+          }, 50);
+        }, 50);
+      }
+    }, 100);
   },
 
   /**
