@@ -85,6 +85,9 @@ const App = {
     // Setup alphabetize button
     this.setupAlphabetizeButton();
     
+    // Setup add row buttons
+    this.setupAddRowButtons();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -2779,21 +2782,34 @@ const App = {
       if (baseSpan) baseSpan.textContent = results.beliefs.alignment;
     }
     
+    // Update passion bases (static 4 rows for now)
     for (let i = 1; i <= 4; i++) {
       const passionBase = document.getElementById(`passion-${i}-base`);
       if (passionBase) passionBase.textContent = results.beliefs.passion;
-      
-      const oathBase = document.getElementById(`oath-${i}-base`);
-      if (oathBase) oathBase.textContent = results.beliefs.oath;
+    }
+    
+    // Update all oath bases (dynamic count)
+    const oathsContainer = document.getElementById('oaths-container');
+    if (oathsContainer) {
+      const oathRows = oathsContainer.querySelectorAll('.belief-row');
+      oathRows.forEach(row => {
+        const oathBase = row.querySelector('.belief-base');
+        if (oathBase) oathBase.textContent = results.beliefs.oath;
+      });
     }
     
     // Update language bases
     const nativeBase = document.getElementById('native-tongue-base');
     if (nativeBase) nativeBase.textContent = results.languages.native;
     
-    for (let i = 2; i <= 5; i++) {
-      const langBase = document.getElementById(`language-${i}-base`);
-      if (langBase) langBase.textContent = results.languages.additional;
+    // Update all additional language bases (dynamic count)
+    const langContainer = document.getElementById('language-container');
+    if (langContainer) {
+      const langRows = langContainer.querySelectorAll('.language-row:not(.native)');
+      langRows.forEach((row, idx) => {
+        const langBase = row.querySelector('.language-base');
+        if (langBase) langBase.textContent = results.languages.additional;
+      });
     }
     
     // Update professional skill base values
@@ -6111,6 +6127,146 @@ const App = {
   },
 
   /**
+   * Setup add row buttons
+   */
+  setupAddRowButtons() {
+    // Add Professional Skill
+    const addProfBtn = document.getElementById('btn-add-prof-skill');
+    if (addProfBtn) {
+      addProfBtn.addEventListener('click', () => this.addProfessionalSkillRow());
+    }
+    
+    // Add Language
+    const addLangBtn = document.getElementById('btn-add-language');
+    if (addLangBtn) {
+      addLangBtn.addEventListener('click', () => this.addLanguageRow());
+    }
+    
+    // Add Oath
+    const addOathBtn = document.getElementById('btn-add-oath');
+    if (addOathBtn) {
+      addOathBtn.addEventListener('click', () => this.addOathRow());
+    }
+  },
+
+  /**
+   * Add a new professional skill row
+   */
+  addProfessionalSkillRow() {
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    
+    // Find current highest index
+    const rows = container.querySelectorAll('.professional-skill-row');
+    const newIndex = rows.length;
+    
+    const row = document.createElement('div');
+    row.className = 'professional-skill-row';
+    row.innerHTML = `
+      <span class="prereq-keys" id="prof-skill-${newIndex}-prereq" data-skill-name=""></span>
+      <input type="text" class="prof-skill-name" id="prof-skill-${newIndex}-name" placeholder="">
+      <input type="text" class="prof-skill-base" id="prof-skill-${newIndex}-base" placeholder="">
+      <span class="prof-skill-base-val" id="prof-skill-${newIndex}-base-val"></span>
+      <input type="number" class="prof-skill-current" id="prof-skill-${newIndex}-current" placeholder="">
+      <span class="enc-indicator prof-enc-indicator" id="prof-skill-${newIndex}-enc" style="display: none;" title="Affected by ENC"></span>
+    `;
+    container.appendChild(row);
+    
+    // Add event listeners (same as generateProfessionalSkills)
+    const nameInput = row.querySelector('.prof-skill-name');
+    const baseInput = row.querySelector('.prof-skill-base');
+    const currentInput = row.querySelector('.prof-skill-current');
+    const prereqKeys = row.querySelector('.prereq-keys');
+    
+    nameInput.addEventListener('blur', () => {
+      if (nameInput.value.trim()) {
+        nameInput.value = this.toTitleCase(nameInput.value.trim());
+        prereqKeys.dataset.skillName = nameInput.value;
+        this.updatePrereqKeys();
+        this.scheduleAutoSave();
+      }
+    });
+    
+    nameInput.addEventListener('input', () => {
+      this.autoFillProfessionalSkillBase(newIndex);
+    });
+    
+    baseInput.addEventListener('blur', () => {
+      this.calculateProfessionalSkillBase(newIndex);
+    });
+    
+    currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    
+    // Scroll to show new row
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    nameInput.focus();
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Add a new language row
+   */
+  addLanguageRow() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    // Find current highest index
+    const rows = container.querySelectorAll('.language-row:not(.native)');
+    const newIndex = rows.length + 2; // +2 because native is 1, first additional is 2
+    
+    const row = document.createElement('div');
+    row.className = 'language-row';
+    row.innerHTML = `
+      <input type="text" class="language-name" id="language-${newIndex}-name" placeholder="">
+      <span class="language-formula">INT+CHA</span>
+      <span class="language-base" id="language-${newIndex}-base">0</span>
+      <input type="number" class="language-input" id="language-${newIndex}-current" placeholder="">
+    `;
+    container.appendChild(row);
+    
+    // Calculate base value
+    this.recalculateAll();
+    
+    // Scroll to show new row and focus
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    row.querySelector('.language-name').focus();
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Add a new oath row
+   */
+  addOathRow() {
+    const container = document.getElementById('oaths-container');
+    if (!container) return;
+    
+    // Find current highest index
+    const rows = container.querySelectorAll('.belief-row');
+    const newIndex = rows.length + 1;
+    
+    const row = document.createElement('div');
+    row.className = 'belief-row';
+    row.dataset.index = newIndex;
+    row.innerHTML = `
+      <input type="text" class="belief-name" id="oath-${newIndex}-name" placeholder="">
+      <span class="belief-formula">POW+CHA+50</span>
+      <span class="belief-base" id="oath-${newIndex}-base">0</span>
+      <input type="number" class="belief-input" id="oath-${newIndex}-current" placeholder="">
+    `;
+    container.appendChild(row);
+    
+    // Calculate base value
+    this.recalculateAll();
+    
+    // Focus the new row
+    row.querySelector('.belief-name').focus();
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
    * Alphabetize professional skills
    */
   alphabetizeProfessionalSkills() {
@@ -7384,17 +7540,24 @@ const App = {
    * Add a new language to the character sheet
    */
   addNewLanguage(skill) {
-    // Find first empty language slot (slots 2-5)
-    for (let i = 2; i <= 5; i++) {
-      const nameInput = document.getElementById(`language-${i}-name`);
+    const container = document.getElementById('language-container');
+    if (!container) {
+      alert('Language container not found!');
+      return;
+    }
+    
+    // Find first empty language slot (skip native tongue)
+    const langRows = container.querySelectorAll('.language-row:not(.native)');
+    for (const row of langRows) {
+      const nameInput = row.querySelector('.language-name');
       if (nameInput && !nameInput.value.trim()) {
         // Set the language name
         nameInput.value = skill.specialty || skill.fullName || 'New Language';
         
         // Set current to base value
         setTimeout(() => {
-          const baseEl = document.getElementById(`language-${i}-base`);
-          const currentInput = document.getElementById(`language-${i}-current`);
+          const baseEl = row.querySelector('.language-base');
+          const currentInput = row.querySelector('.language-input');
           if (baseEl && currentInput) {
             currentInput.value = baseEl.textContent || '';
           }
@@ -7404,7 +7567,25 @@ const App = {
       }
     }
     
-    alert('No empty language slots available!');
+    // No empty slots - add a new row
+    this.addLanguageRow();
+    setTimeout(() => {
+      const newRows = container.querySelectorAll('.language-row:not(.native)');
+      const lastRow = newRows[newRows.length - 1];
+      if (lastRow) {
+        const nameInput = lastRow.querySelector('.language-name');
+        if (nameInput) {
+          nameInput.value = skill.specialty || skill.fullName || 'New Language';
+        }
+        setTimeout(() => {
+          const baseEl = lastRow.querySelector('.language-base');
+          const currentInput = lastRow.querySelector('.language-input');
+          if (baseEl && currentInput) {
+            currentInput.value = baseEl.textContent || '';
+          }
+        }, 100);
+      }
+    }, 100);
   }
 };
 

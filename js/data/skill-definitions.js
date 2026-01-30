@@ -202,7 +202,7 @@ const EQUIPMENT_SLOTS = 30;
 const BACKPACK_SLOTS = 12;
 
 // Number of professional skill slots
-const PROFESSIONAL_SKILL_SLOTS = 15;
+const PROFESSIONAL_SKILL_SLOTS = 22;
 
 // Number of special ability slots per column
 const ABILITY_SLOTS_PER_COLUMN = 25;

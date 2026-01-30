@@ -865,13 +865,19 @@ select:focus {
   margin-bottom: 0;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
 .btn-small {
   padding: 0.2rem 0.5rem;
   font-size: 0.75rem;
   border-radius: 4px;
 }
 
-.btn-alphabetize {
+.btn-alphabetize,
+.btn-add-row {
   background: var(--button-bg, #5a4a3a);
   color: var(--text-light);
   border: 1px solid var(--border-gold);
@@ -879,8 +885,15 @@ select:focus {
   transition: background 0.15s;
 }
 
-.btn-alphabetize:hover {
+.btn-alphabetize:hover,
+.btn-add-row:hover {
   background: #6b5a4a;
+}
+
+.btn-add-row {
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.15rem 0.5rem;
 }
 
 /* Scrollable containers */
@@ -888,6 +901,12 @@ select:focus {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+.resizable-container {
+  resize: vertical;
+  min-height: 200px;
+  max-height: 600px;
 }
 
 .scrollable-language-container {
