@@ -1625,6 +1625,43 @@ const App = {
       tr.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', () => this.scheduleAutoSave());
       });
+      
+      // Add armor AP auto-fill on blur (only for armor inputs)
+      const armorInput = tr.querySelector('.armor-input');
+      const apInput = tr.querySelector('.ap-input');
+      if (armorInput && apInput) {
+        // Store the previous armor value to detect changes
+        armorInput.dataset.previousArmor = '';
+        
+        armorInput.addEventListener('blur', () => {
+          const currentArmor = armorInput.value.trim();
+          const previousArmor = armorInput.dataset.previousArmor || '';
+          
+          // Only auto-fill if armor name changed and AP hasn't been manually set
+          // or if AP is empty/zero
+          if (currentArmor !== previousArmor && window.ArmorData) {
+            const ap = window.ArmorData.getAP(currentArmor);
+            if (ap !== null) {
+              // Only set if AP is empty or was auto-filled (not manually changed)
+              const currentAP = apInput.value.trim();
+              const wasAutoFilled = apInput.dataset.autoFilled === 'true';
+              
+              if (!currentAP || currentAP === '0' || wasAutoFilled) {
+                apInput.value = ap;
+                apInput.dataset.autoFilled = 'true';
+                this.scheduleAutoSave();
+              }
+            }
+          }
+          
+          armorInput.dataset.previousArmor = currentArmor;
+        });
+        
+        // Track when user manually edits AP
+        apInput.addEventListener('input', () => {
+          apInput.dataset.autoFilled = 'false';
+        });
+      }
     });
   },
 
