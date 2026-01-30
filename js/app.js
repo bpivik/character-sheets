@@ -1144,7 +1144,15 @@ const App = {
         
         // Convert to title case
         if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
+          let itemName = this.toTitleCase(nameInput.value.trim());
+          
+          // Add "(see below)" for container items if not already present
+          const containerId = this.getContainerIdFromItemName(itemName);
+          if (containerId && !itemName.toLowerCase().includes('see below')) {
+            itemName = itemName + ' (see below)';
+          }
+          
+          nameInput.value = itemName;
         }
         
         // Normal autofill and update logic
@@ -1578,8 +1586,26 @@ const App = {
     }
     
     // Add over-capacity class if exceeded
+    const isOverCapacity = totalEnc > config.maxEnc;
     if (capacityBar) {
-      capacityBar.classList.toggle('over-capacity', totalEnc > config.maxEnc);
+      capacityBar.classList.toggle('over-capacity', isOverCapacity);
+    }
+    
+    // Show/hide warning message
+    let warningEl = document.getElementById('container-capacity-warning');
+    if (isOverCapacity) {
+      if (!warningEl) {
+        warningEl = document.createElement('div');
+        warningEl.id = 'container-capacity-warning';
+        warningEl.className = 'container-capacity-warning';
+        const modalBody = document.querySelector('#container-modal .modal-body');
+        if (modalBody) {
+          modalBody.insertBefore(warningEl, modalBody.firstChild);
+        }
+      }
+      warningEl.innerHTML = `⚠️ Container is over capacity! Max: ${config.maxEnc} ENC, Current: ${totalEnc.toFixed(1)} ENC`;
+    } else if (warningEl) {
+      warningEl.remove();
     }
   },
 

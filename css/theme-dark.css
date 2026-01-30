@@ -472,6 +472,12 @@
   border-bottom-color: var(--border-dark);
 }
 
+[data-theme="dark"] .container-capacity-warning {
+  background: #450a0a;
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
 /* Rank prompt */
 [data-theme="dark"] .rank-prompt-overlay .rank-prompt-content {
   background: var(--bg-parchment);
