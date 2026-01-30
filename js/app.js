@@ -6145,7 +6145,7 @@ const App = {
               </button>
               <button type="button" class="btn exp-option-btn" id="exp-btn-passions">
                 <span class="exp-option-icon">❤️</span>
-                <span class="exp-option-text">Strengthen Passions</span>
+                <span class="exp-option-text">Strengthen Passions, Alignment, or Oaths</span>
               </button>
             </div>
           </div>
@@ -6189,7 +6189,7 @@ const App = {
       
       document.getElementById('exp-btn-passions').addEventListener('click', () => {
         // TODO: Implement
-        alert('Strengthen Passions - Coming soon!');
+        alert('Strengthen Passions, Alignment, or Oaths - Coming soon!');
       });
     }
     
@@ -6694,14 +6694,18 @@ const App = {
       
       let improvement = 0;
       let improvementRoll = null;
+      
       if (success) {
-        // Roll improvement dice
+        // Roll improvement dice on success
         if (this.improvementDice === '1d4+1') {
           improvementRoll = Math.floor(Math.random() * 4) + 1;
         } else {
           improvementRoll = Math.floor(Math.random() * 6) + 1;
         }
         improvement = improvementRoll + 1;
+      } else {
+        // Still get +1 on failure
+        improvement = 1;
       }
       
       this.rollResults.push({
@@ -6761,10 +6765,10 @@ const App = {
     const resultsContainer = document.getElementById('roll-results-list');
     resultsContainer.innerHTML = this.rollResults.map(result => {
       const successClass = result.success ? 'success' : 'failure';
-      const successText = result.success ? '✓ Success!' : '✗ Failed';
+      const successText = result.success ? '✓ Success!' : '✗ Failed (but +1)';
       const improvementText = result.success 
         ? `+${result.improvement} (${this.improvementDice} = ${result.improvementRoll}+1)`
-        : 'No improvement';
+        : '+1 (consolation)';
       
       return `
         <div class="roll-result-item ${successClass}">
@@ -6778,7 +6782,7 @@ const App = {
           </div>
           <div class="roll-result-improvement">
             <span>${improvementText}</span>
-            ${result.success ? `<span class="new-value">${result.currentValue}% → ${result.newValue}%</span>` : ''}
+            <span class="new-value">${result.currentValue}% → ${result.newValue}%</span>
           </div>
         </div>
       `;
@@ -6859,8 +6863,11 @@ const App = {
    * Apply skill improvements from automatic rolling
    */
   applySkillImprovements() {
+    console.log('Applying skill improvements:', this.rollResults);
     this.rollResults.forEach(result => {
-      if (result.success && result.improvement > 0) {
+      // Always apply - everyone gets at least +1
+      console.log(`Applying to ${result.id}: improvement=${result.improvement}, newValue=${result.newValue}`);
+      if (result.improvement > 0) {
         this.updateSkillValue(result.id, result.newValue);
       }
     });
@@ -6906,23 +6913,34 @@ const App = {
   updateSkillValue(skillId, newValue) {
     // Parse skill ID format: "standard:skillname", "prof:index", "combat", "magic:id"
     const [type, id] = skillId.split(':');
+    let el = null;
     
     if (type === 'standard') {
-      // Standard skills use {id}-current
-      const el = document.getElementById(`${id}-current`);
-      if (el) el.value = newValue;
+      // Standard skills use {id}-current, except unarmed which uses unarmed-percent
+      if (id === 'unarmed') {
+        el = document.getElementById('unarmed-percent');
+      } else {
+        el = document.getElementById(`${id}-current`);
+      }
     } else if (type === 'prof') {
       // Professional skills use prof-skill-{index}-current
-      const el = document.getElementById(`prof-skill-${id}-current`);
-      if (el) el.value = newValue;
+      el = document.getElementById(`prof-skill-${id}-current`);
     } else if (skillId === 'combat') {
       // Combat skill
-      const el = document.getElementById('combat-skill-1-percent');
-      if (el) el.value = newValue;
+      el = document.getElementById('combat-skill-1-percent');
     } else if (type === 'magic') {
       // Magical skills
-      const el = document.getElementById(id);
-      if (el) el.value = newValue;
+      el = document.getElementById(id);
+    }
+    
+    if (el) {
+      el.value = newValue;
+      // Dispatch input event to trigger any listeners
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      console.log(`Updated ${skillId} to ${newValue}`);
+    } else {
+      console.warn(`Could not find element for skill: ${skillId}`);
     }
     
     // Trigger recalculation
