@@ -4989,39 +4989,35 @@ const App = {
         `;
       }
     },
-    'attributes': {
-      name: 'Attributes',
+    'characteristics': {
+      name: 'Characteristics',
       icon: '💪',
       render: () => {
-        const attrs = ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA'];
+        const chars = ['STR', 'CON', 'SIZ', 'DEX', 'INT', 'POW', 'CHA'];
         let boxes = '';
-        attrs.forEach(attr => {
-          const val = document.getElementById(attr)?.value || '-';
-          boxes += `<div class="stat-box"><div class="label">${attr}</div><div class="value">${val}</div></div>`;
+        chars.forEach(c => {
+          const val = document.getElementById(`${c.toLowerCase()}-value`)?.value || '-';
+          boxes += `<div class="stat-box"><div class="label">${c}</div><div class="value">${val}</div></div>`;
         });
-        return `<h4>Attributes</h4><div class="stat-grid">${boxes}</div>`;
+        return `<h4>Characteristics</h4><div class="stat-grid">${boxes}</div>`;
       }
     },
-    'derived-stats': {
-      name: 'Derived Stats',
+    'attributes': {
+      name: 'Attributes',
       icon: '📊',
       render: () => {
         const ap = document.getElementById('action-points-current')?.value || '-';
         const dmg = document.getElementById('damage-mod-current')?.value || '-';
         const init = document.getElementById('initiative-current')?.value || '-';
-        const heal = document.getElementById('healing-rate-current')?.value || '-';
         const luck = document.getElementById('luck-current')?.value || '-';
         const mp = document.getElementById('magic-points-current')?.value || '-';
         return `
-          <h4>Derived Stats</h4>
-          <div class="stat-grid">
-            <div class="stat-box"><div class="label">AP</div><div class="value">${ap}</div></div>
-            <div class="stat-box"><div class="label">Init</div><div class="value">${init}</div></div>
-            <div class="stat-box"><div class="label">DMG</div><div class="value">${dmg}</div></div>
-            <div class="stat-box"><div class="label">Heal</div><div class="value">${heal}</div></div>
-            <div class="stat-box"><div class="label">Luck</div><div class="value">${luck}</div></div>
-            <div class="stat-box"><div class="label">MP</div><div class="value">${mp}</div></div>
-          </div>
+          <h4>Attributes</h4>
+          <div class="stat-row"><span class="stat-label">Action Points:</span><span class="stat-value">${ap}</span></div>
+          <div class="stat-row"><span class="stat-label">Damage Modifier:</span><span class="stat-value">${dmg}</span></div>
+          <div class="stat-row"><span class="stat-label">Initiative:</span><span class="stat-value">${init}</span></div>
+          <div class="stat-row"><span class="stat-label">Luck Points:</span><span class="stat-value">${luck}</span></div>
+          <div class="stat-row"><span class="stat-label">Magic Points:</span><span class="stat-value">${mp}</span></div>
         `;
       }
     },
@@ -5044,54 +5040,108 @@ const App = {
         return html;
       }
     },
-    'combat-skills': {
-      name: 'Combat Skills',
+    'combat': {
+      name: 'Combat',
       icon: '⚔️',
       render: () => {
         const combatName = document.getElementById('combat-skill-1-name')?.value || 'Combat Style';
         const combatPct = document.getElementById('combat-skill-1-percent')?.value || '-';
         const unarmedPct = document.getElementById('unarmed-percent')?.value || '-';
-        return `
-          <h4>Combat Skills</h4>
+        
+        let html = `
+          <h4>Combat</h4>
           <div class="skill-list">
             <div class="skill-item"><span>${combatName}</span><span>${combatPct}%</span></div>
             <div class="skill-item"><span>Unarmed</span><span>${unarmedPct}%</span></div>
           </div>
+          <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;">
+          <div class="skill-list">
         `;
+        
+        let found = false;
+        // Check melee weapons
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`melee-${i}-name`)?.value;
+          const dmg = document.getElementById(`melee-${i}-damage`)?.value;
+          if (name) {
+            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
+            found = true;
+          }
+        }
+        // Check ranged weapons
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`ranged-${i}-name`)?.value;
+          const dmg = document.getElementById(`ranged-${i}-damage`)?.value;
+          if (name) {
+            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) {
+          html += '<div class="skill-item"><span style="color:#999;">No weapons</span></div>';
+        }
+        html += '</div></div>';
+        return html;
       }
     },
     'key-skills': {
       name: 'Key Skills',
       icon: '🎯',
       render: () => {
-        // Show skills above 50%
+        // Always include these skills
+        const alwaysShow = ['athletics', 'brawn', 'endurance', 'evade', 'insight', 'perception', 'stealth', 'willpower'];
+        const alwaysShowNames = {
+          'athletics': 'Athletics', 'brawn': 'Brawn', 'endurance': 'Endurance', 
+          'evade': 'Evade', 'insight': 'Insight', 'perception': 'Perception', 
+          'stealth': 'Stealth', 'willpower': 'Willpower'
+        };
+        
         const skills = [];
-        const standardSkills = [
-          ['athletics', 'Athletics'], ['brawn', 'Brawn'], ['endurance', 'Endurance'],
-          ['evade', 'Evade'], ['perception', 'Perception'], ['stealth', 'Stealth'],
-          ['willpower', 'Willpower'], ['influence', 'Influence'], ['insight', 'Insight'],
-          ['first-aid', 'First Aid']
-        ];
-        standardSkills.forEach(([id, name]) => {
+        const addedSkills = new Set();
+        
+        // Add the always-show skills first
+        alwaysShow.forEach(id => {
           const val = parseInt(document.getElementById(`${id}-current`)?.value, 10) || 0;
-          if (val >= 50) skills.push({ name, val });
+          skills.push({ name: alwaysShowNames[id], val, required: true });
+          addedSkills.add(id);
         });
-        // Check professional skills
+        
+        // Add other standard skills above 50%
+        const otherStandard = [
+          ['boating', 'Boating'], ['conceal', 'Conceal'], ['customs', 'Customs'],
+          ['dance', 'Dance'], ['deceit', 'Deceit'], ['drive', 'Drive'],
+          ['first-aid', 'First Aid'], ['influence', 'Influence'], ['locale', 'Locale'],
+          ['ride', 'Ride'], ['sing', 'Sing'], ['swim', 'Swim']
+        ];
+        otherStandard.forEach(([id, name]) => {
+          if (!addedSkills.has(id)) {
+            const val = parseInt(document.getElementById(`${id}-current`)?.value, 10) || 0;
+            if (val >= 50) {
+              skills.push({ name, val, required: false });
+              addedSkills.add(id);
+            }
+          }
+        });
+        
+        // Check professional skills above 50%
         for (let i = 0; i < 15; i++) {
           const name = document.getElementById(`prof-skill-${i}-name`)?.value;
           const val = parseInt(document.getElementById(`prof-skill-${i}-current`)?.value, 10) || 0;
-          if (name && val >= 50) skills.push({ name, val });
+          if (name && val >= 50) {
+            skills.push({ name, val, required: false });
+          }
         }
-        skills.sort((a, b) => b.val - a.val);
-        const top8 = skills.slice(0, 8);
-        let html = '<h4>Key Skills (50%+)</h4><div class="skill-list">';
-        if (top8.length === 0) {
-          html += '<div class="skill-item"><span>No skills at 50%+</span></div>';
-        } else {
-          top8.forEach(s => {
-            html += `<div class="skill-item"><span>${s.name}</span><span>${s.val}%</span></div>`;
-          });
-        }
+        
+        // Sort: required skills first (in original order), then others by value descending
+        const requiredSkills = skills.filter(s => s.required);
+        const otherSkills = skills.filter(s => !s.required).sort((a, b) => b.val - a.val);
+        const sortedSkills = [...requiredSkills, ...otherSkills];
+        
+        let html = '<h4>Key Skills</h4><div class="skill-list">';
+        sortedSkills.forEach(s => {
+          const highlight = s.val >= 50 ? '' : ' style="color:#999;"';
+          html += `<div class="skill-item"${highlight}><span>${s.name}</span><span>${s.val}%</span></div>`;
+        });
         html += '</div>';
         return html;
       }
@@ -5119,16 +5169,14 @@ const App = {
       name: 'Movement',
       icon: '🏃',
       render: () => {
-        const base = document.getElementById('movement-base')?.value || '-';
-        const current = document.getElementById('movement-current')?.value || base;
-        const jumpH = document.getElementById('jump-horizontal')?.value || '-';
-        const jumpV = document.getElementById('jump-vertical')?.value || '-';
+        const current = document.getElementById('movement-current')?.value || '-';
+        const jumpV = document.getElementById('vertical-jump')?.textContent || '-';
+        const jumpH = document.getElementById('horizontal-jump')?.textContent || '-';
         return `
           <h4>Movement</h4>
-          <div class="stat-row"><span class="stat-label">Base:</span><span class="stat-value">${base} ft</span></div>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} ft</span></div>
-          <div class="stat-row"><span class="stat-label">Jump (H):</span><span class="stat-value">${jumpH} ft</span></div>
-          <div class="stat-row"><span class="stat-label">Jump (V):</span><span class="stat-value">${jumpV} ft</span></div>
+          <div class="stat-row"><span class="stat-label">Movement Rate:</span><span class="stat-value">${current} ft</span></div>
+          <div class="stat-row"><span class="stat-label">Vertical Jump:</span><span class="stat-value">${jumpV}</span></div>
+          <div class="stat-row"><span class="stat-label">Horizontal Jump:</span><span class="stat-value">${jumpH}</span></div>
         `;
       }
     },
@@ -5149,15 +5197,17 @@ const App = {
       name: 'Money',
       icon: '💰',
       render: () => {
-        const pp = document.getElementById('money-pp')?.value || '0';
-        const gp = document.getElementById('money-gp')?.value || '0';
-        const sp = document.getElementById('money-sp')?.value || '0';
-        const cp = document.getElementById('money-cp')?.value || '0';
+        const pp = document.getElementById('money-platinum')?.value || '0';
+        const gp = document.getElementById('money-gold')?.value || '0';
+        const sp = document.getElementById('money-silver')?.value || '0';
+        const cp = document.getElementById('money-copper')?.value || '0';
+        const ep = document.getElementById('money-electrum')?.value || '0';
         return `
           <h4>Money</h4>
           <div class="stat-grid">
             <div class="stat-box"><div class="label">PP</div><div class="value">${pp}</div></div>
             <div class="stat-box"><div class="label">GP</div><div class="value">${gp}</div></div>
+            <div class="stat-box"><div class="label">EP</div><div class="value">${ep}</div></div>
             <div class="stat-box"><div class="label">SP</div><div class="value">${sp}</div></div>
             <div class="stat-box"><div class="label">CP</div><div class="value">${cp}</div></div>
           </div>
@@ -5174,37 +5224,6 @@ const App = {
           <h4>Tenacity</h4>
           <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} / ${max}</span></div>
         `;
-      }
-    },
-    'weapons': {
-      name: 'Weapons',
-      icon: '🗡️',
-      render: () => {
-        let html = '<h4>Weapons</h4><div class="skill-list">';
-        let found = false;
-        // Check melee weapons
-        for (let i = 0; i < 4; i++) {
-          const name = document.getElementById(`melee-${i}-name`)?.value;
-          const dmg = document.getElementById(`melee-${i}-damage`)?.value;
-          if (name) {
-            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
-            found = true;
-          }
-        }
-        // Check ranged weapons
-        for (let i = 0; i < 4; i++) {
-          const name = document.getElementById(`ranged-${i}-name`)?.value;
-          const dmg = document.getElementById(`ranged-${i}-damage`)?.value;
-          if (name) {
-            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
-            found = true;
-          }
-        }
-        if (!found) {
-          html += '<div class="skill-item"><span>No weapons</span></div>';
-        }
-        html += '</div>';
-        return html;
       }
     }
   },
@@ -5410,7 +5429,7 @@ const App = {
       // Ignore
     }
     // Default layout
-    return ['character-info', 'attributes', 'derived-stats', 'hp-overview'];
+    return ['character-info', 'characteristics', 'attributes', 'hp-overview'];
   },
   
   /**
@@ -5423,7 +5442,7 @@ const App = {
       // Ignore
     }
     
-    const defaultLayout = ['character-info', 'attributes', 'derived-stats', 'hp-overview'];
+    const defaultLayout = ['character-info', 'characteristics', 'attributes', 'hp-overview'];
     this.populatePalette(defaultLayout);
     this.populateCanvas(defaultLayout);
   },
