@@ -3120,6 +3120,113 @@ const App = {
       
       container.innerHTML = html;
     });
+    
+    // Set up click handlers for all prereq keys
+    this.setupPrereqKeyClicks();
+  },
+  
+  /**
+   * Set up click handlers for prerequisite key icons
+   */
+  setupPrereqKeyClicks() {
+    document.querySelectorAll('.prereq-key[data-key-info]').forEach(key => {
+      // Remove existing listener to avoid duplicates
+      key.removeEventListener('click', key._clickHandler);
+      
+      key._clickHandler = (e) => {
+        e.stopPropagation();
+        const info = key.dataset.keyInfo;
+        const color = key.dataset.keyColor;
+        
+        if (info) {
+          this.showKeyPopup(info, color, e);
+        }
+      };
+      
+      key.addEventListener('click', key._clickHandler);
+    });
+  },
+  
+  /**
+   * Show a small popup for prerequisite key info
+   */
+  showKeyPopup(info, color, event) {
+    // Remove existing popup
+    const existing = document.getElementById('key-popup');
+    if (existing) existing.remove();
+    
+    // Parse the info string: "ClassName: Rank X requires Y skills at Z%"
+    const parts = info.split(':');
+    const className = parts[0].trim();
+    const details = parts[1]?.trim() || '';
+    
+    // Determine header color based on key color
+    const headerColors = {
+      'gold': '#c9a227',
+      'silver': '#808080',
+      'blue': '#4a90e2'
+    };
+    const headerColor = headerColors[color] || headerColors.gold;
+    
+    // Create popup
+    const popup = document.createElement('div');
+    popup.id = 'key-popup';
+    popup.className = 'key-popup';
+    popup.innerHTML = `
+      <div class="key-popup-header" style="background: ${headerColor};">
+        <span>${className} (Class)</span>
+        <button class="key-popup-close">&times;</button>
+      </div>
+      <div class="key-popup-content">
+        <p class="key-popup-label">Prerequisite Skill</p>
+        <p class="key-popup-details">${details}</p>
+      </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Position near the clicked key
+    const rect = event.target.closest('.prereq-key').getBoundingClientRect();
+    const popupRect = popup.getBoundingClientRect();
+    
+    let left = rect.left + rect.width / 2 - popupRect.width / 2;
+    let top = rect.bottom + 8;
+    
+    // Keep within viewport
+    if (left < 10) left = 10;
+    if (left + popupRect.width > window.innerWidth - 10) {
+      left = window.innerWidth - popupRect.width - 10;
+    }
+    if (top + popupRect.height > window.innerHeight - 10) {
+      top = rect.top - popupRect.height - 8;
+    }
+    
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    
+    // Close handlers
+    const closeBtn = popup.querySelector('.key-popup-close');
+    closeBtn.addEventListener('click', () => popup.remove());
+    
+    // Close when clicking outside
+    setTimeout(() => {
+      const outsideClickHandler = (e) => {
+        if (!popup.contains(e.target) && !e.target.closest('.prereq-key')) {
+          popup.remove();
+          document.removeEventListener('click', outsideClickHandler);
+        }
+      };
+      document.addEventListener('click', outsideClickHandler);
+    }, 10);
+    
+    // Close on Escape
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        popup.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   },
   
   /**
@@ -4339,10 +4446,10 @@ const App = {
     
     const c = colors[color] || colors.gold;
     const uniqueId = `key-${color}-${Math.random().toString(36).substr(2, 9)}`;
-    const titleEl = tooltip ? `<title>${tooltip}</title>` : '';
+    // Store tooltip data in data attributes for click popup instead of hover
+    const dataAttrs = tooltip ? `data-key-info="${tooltip.replace(/"/g, '&quot;')}" data-key-color="${color}"` : '';
     
-    return `<svg class="prereq-key" viewBox="0 0 32 32">
-      ${titleEl}
+    return `<svg class="prereq-key" viewBox="0 0 32 32" ${dataAttrs}>
       <defs>
         <linearGradient id="${uniqueId}" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" style="stop-color:${c.gradient[0]}"/>

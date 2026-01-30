@@ -487,9 +487,15 @@ select:focus {
 }
 
 .prereq-key {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.prereq-key:hover {
+  transform: scale(1.2);
 }
 
 .prereq-label {
@@ -854,9 +860,71 @@ select:focus {
 }
 
 .prereq-keys .prereq-key {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Key Popup */
+.key-popup {
+  position: fixed;
+  z-index: 10000;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  min-width: 220px;
+  max-width: 300px;
+  animation: keyPopupFadeIn 0.15s ease;
+}
+
+@keyframes keyPopupFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.key-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.key-popup-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.8;
+}
+
+.key-popup-close:hover {
+  opacity: 1;
+}
+
+.key-popup-content {
+  padding: 14px;
+}
+
+.key-popup-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 6px 0;
+  font-weight: 500;
+}
+
+.key-popup-details {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .skill-name {

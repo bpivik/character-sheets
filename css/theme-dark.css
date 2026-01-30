@@ -527,3 +527,17 @@
 [data-theme="dark"] .widget-content .spell-hover:hover {
   background: rgba(201, 162, 39, 0.15);
 }
+
+/* Key Popup in dark mode */
+[data-theme="dark"] .key-popup {
+  background: #2a2a2a;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] .key-popup-label {
+  color: #999;
+}
+
+[data-theme="dark"] .key-popup-details {
+  color: #e0e0e0;
+}
