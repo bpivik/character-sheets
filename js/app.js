@@ -3180,59 +3180,65 @@ const App = {
   getPrereqSkillStatus(prereqSkills, requiredPercent) {
     const status = [];
     
+    // Define which skills are standard skills (not professional)
+    const standardSkillMap = {
+      'athletics': 'athletics',
+      'boating': 'boating',
+      'brawn': 'brawn',
+      'conceal': 'conceal',
+      'customs': 'customs',
+      'dance': 'dance',
+      'deceit': 'deceit',
+      'drive': 'drive',
+      'endurance': 'endurance',
+      'evade': 'evade',
+      'first aid': 'firstaid',
+      'influence': 'influence',
+      'insight': 'insight',
+      'locale': 'locale',
+      'perception': 'perception',
+      'ride': 'ride',
+      'sing': 'sing',
+      'stealth': 'stealth',
+      'swim': 'swim',
+      'unarmed': 'unarmed',
+      'willpower': 'willpower'
+    };
+    
+    // Define magic skills
+    const magicSkillMap = {
+      'channel': 'channel',
+      'piety': 'piety',
+      'arcane casting': 'arcane-casting',
+      'arcane knowledge': 'arcane-knowledge',
+      'arcane sorcery': 'arcane-sorcery',
+      'sorcerous wisdom': 'sorcerous-wisdom',
+      'musicianship': 'musicianship',
+      'lyrical magic': 'lyrical-magic'
+    };
+    
     prereqSkills.forEach(skillName => {
       const normalizedSkill = skillName.toLowerCase().trim();
       let skillValue = 0;
       let found = false;
       
-      // Check professional skills first
-      for (let i = 0; i < 15; i++) {
-        const nameInput = document.getElementById(`prof-skill-${i}-name`);
-        const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
-        const currentInput = document.getElementById(`prof-skill-${i}-current`);
-        
-        if (nameInput) {
-          const name = nameInput.value?.trim().toLowerCase() || '';
-          if (name === normalizedSkill || name.startsWith(normalizedSkill)) {
-            const base = parseInt(baseVal?.textContent, 10) || 0;
-            const current = parseInt(currentInput?.value, 10) || 0;
-            skillValue = base + current;
-            found = true;
-            break;
-          }
-        }
+      // 1. Check if it's a known standard skill FIRST
+      const standardSkillId = standardSkillMap[normalizedSkill];
+      if (standardSkillId) {
+        const baseSpan = document.getElementById(`${standardSkillId}-base`);
+        const currentInput = document.getElementById(`${standardSkillId}-current`);
+        const base = parseInt(baseSpan?.textContent, 10) || 0;
+        const current = parseInt(currentInput?.value, 10) || 0;
+        skillValue = base + current;
+        found = true;
       }
       
-      // Check standard skills if not found
+      // 2. Check if it's a known magic skill
       if (!found) {
-        const standardSkillMap = {
-          'athletics': 'athletics',
-          'boating': 'boating',
-          'brawn': 'brawn',
-          'conceal': 'conceal',
-          'customs': 'customs',
-          'dance': 'dance',
-          'deceit': 'deceit',
-          'drive': 'drive',
-          'endurance': 'endurance',
-          'evade': 'evade',
-          'first aid': 'firstaid',
-          'influence': 'influence',
-          'insight': 'insight',
-          'locale': 'locale',
-          'perception': 'perception',
-          'ride': 'ride',
-          'sing': 'sing',
-          'stealth': 'stealth',
-          'swim': 'swim',
-          'unarmed': 'unarmed',
-          'willpower': 'willpower'
-        };
-        
-        const skillId = standardSkillMap[normalizedSkill];
-        if (skillId) {
-          const baseSpan = document.getElementById(`${skillId}-base`);
-          const currentInput = document.getElementById(`${skillId}-current`);
+        const magicSkillId = magicSkillMap[normalizedSkill];
+        if (magicSkillId) {
+          const baseSpan = document.getElementById(`${magicSkillId}-base`);
+          const currentInput = document.getElementById(`${magicSkillId}-current`);
           const base = parseInt(baseSpan?.textContent, 10) || 0;
           const current = parseInt(currentInput?.value, 10) || 0;
           skillValue = base + current;
@@ -3240,39 +3246,14 @@ const App = {
         }
       }
       
-      // Check combat skill
+      // 3. Check combat skill
       if (!found && normalizedSkill === 'combat skill') {
-        // Combat skill is special - check combat-skill-1-percent (the first combat style)
         const combatPercent = document.getElementById('combat-skill-1-percent');
         skillValue = parseInt(combatPercent?.value, 10) || 0;
         found = true;
       }
       
-      // Check magic skills
-      if (!found) {
-        const magicSkillMap = {
-          'channel': 'channel',
-          'piety': 'piety',
-          'arcane casting': 'arcane-casting',
-          'arcane knowledge': 'arcane-knowledge',
-          'arcane sorcery': 'arcane-sorcery',
-          'sorcerous wisdom': 'sorcerous-wisdom',
-          'musicianship': 'musicianship',
-          'lyrical magic': 'lyrical-magic'
-        };
-        
-        const skillId = magicSkillMap[normalizedSkill];
-        if (skillId) {
-          const baseSpan = document.getElementById(`${skillId}-base`);
-          const currentInput = document.getElementById(`${skillId}-current`);
-          const base = parseInt(baseSpan?.textContent, 10) || 0;
-          const current = parseInt(currentInput?.value, 10) || 0;
-          skillValue = base + current;
-          found = true;
-        }
-      }
-      
-      // Check for partial matches in professional skills (e.g., "Lore" matching "Lore (History)")
+      // 4. Check professional skills for exact match
       if (!found) {
         for (let i = 0; i < 15; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
@@ -3281,8 +3262,33 @@ const App = {
           
           if (nameInput) {
             const name = nameInput.value?.trim().toLowerCase() || '';
-            // Check if the skill name contains our search term (for things like "Lore")
-            if (name.includes(normalizedSkill) || normalizedSkill.includes(name.split('(')[0].trim())) {
+            // Exact match only for professional skills
+            if (name === normalizedSkill) {
+              const base = parseInt(baseVal?.textContent, 10) || 0;
+              const current = parseInt(currentInput?.value, 10) || 0;
+              skillValue = base + current;
+              found = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      // 5. Check professional skills for partial match (e.g., "Lore" matching "Lore (History)")
+      if (!found) {
+        for (let i = 0; i < 15; i++) {
+          const nameInput = document.getElementById(`prof-skill-${i}-name`);
+          const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
+          const currentInput = document.getElementById(`prof-skill-${i}-current`);
+          
+          if (nameInput) {
+            const name = nameInput.value?.trim().toLowerCase() || '';
+            // Check if skill name starts with our search term (for "Lore" -> "Lore (History)")
+            // Or if the base name (before parenthesis) matches
+            const baseName = name.split('(')[0].trim();
+            if (name.startsWith(normalizedSkill + ' ') || 
+                name.startsWith(normalizedSkill + '(') || 
+                baseName === normalizedSkill) {
               const base = parseInt(baseVal?.textContent, 10) || 0;
               const current = parseInt(currentInput?.value, 10) || 0;
               const total = base + current;
