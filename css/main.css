@@ -853,6 +853,71 @@ select:focus {
   grid-template-columns: 42px 1fr 80px 55px 60px;
 }
 
+/* Section header with button */
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.section-header-row .section-header {
+  margin-bottom: 0;
+}
+
+.btn-small {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.btn-alphabetize {
+  background: var(--button-bg, #5a4a3a);
+  color: var(--text-light);
+  border: 1px solid var(--border-gold);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-alphabetize:hover {
+  background: #6b5a4a;
+}
+
+/* Scrollable containers */
+.scrollable-skills-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.scrollable-language-container {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.scrollable-skills-container::-webkit-scrollbar,
+.scrollable-language-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-skills-container::-webkit-scrollbar-track,
+.scrollable-language-container::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.05);
+  border-radius: 3px;
+}
+
+.scrollable-skills-container::-webkit-scrollbar-thumb,
+.scrollable-language-container::-webkit-scrollbar-thumb {
+  background: rgba(139, 115, 85, 0.4);
+  border-radius: 3px;
+}
+
+.scrollable-skills-container::-webkit-scrollbar-thumb:hover,
+.scrollable-language-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 115, 85, 0.6);
+}
+
 .header-base,
 .header-current {
   text-align: center;
@@ -3123,6 +3188,110 @@ select:focus {
   border: 1px solid #ccc;
   border-radius: 4px;
   text-align: center;
+  font-size: 1rem;
+}
+
+/* Learn New Skills Modal */
+.learn-skills-modal-content {
+  max-width: 550px;
+  width: 95%;
+  max-height: 80vh;
+}
+
+.learn-skills-instructions {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.learn-skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 45vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.learn-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.learn-skill-row:hover {
+  background: rgba(139, 115, 85, 0.1);
+}
+
+.learn-skill-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.learn-skill-row .skill-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.learn-skill-row .skill-formula {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.learn-skills-cost-note {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(201, 162, 39, 0.15);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Specialty Input Modal */
+.specialty-input-modal-content {
+  max-width: 450px;
+  width: 90%;
+}
+
+.specialty-input-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.specialty-input-row {
+  background: rgba(0,0,0,0.03);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.specialty-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-header);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.specialty-prompt {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+.specialty-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   font-size: 1rem;
 }
 

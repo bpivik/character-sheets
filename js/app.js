@@ -82,6 +82,9 @@ const App = {
     // Setup EXP spending modal
     this.setupExpModal();
     
+    // Setup alphabetize button
+    this.setupAlphabetizeButton();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -6096,6 +6099,64 @@ const App = {
   },
 
   /**
+   * Setup alphabetize button for Professional Skills
+   */
+  setupAlphabetizeButton() {
+    const btn = document.getElementById('btn-alphabetize-prof');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        this.alphabetizeProfessionalSkills();
+      });
+    }
+  },
+
+  /**
+   * Alphabetize professional skills
+   */
+  alphabetizeProfessionalSkills() {
+    // Gather all professional skills with their data
+    const skills = [];
+    for (let i = 0; i < 20; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const baseInput = document.getElementById(`prof-skill-${i}-base`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      
+      if (nameInput && nameInput.value.trim()) {
+        skills.push({
+          name: nameInput.value.trim(),
+          base: baseInput?.value || '',
+          current: currentInput?.value || ''
+        });
+      }
+    }
+    
+    // Sort alphabetically
+    skills.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Clear all rows and re-populate
+    for (let i = 0; i < 20; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const baseInput = document.getElementById(`prof-skill-${i}-base`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      
+      if (i < skills.length) {
+        nameInput.value = skills[i].name;
+        baseInput.value = skills[i].base;
+        currentInput.value = skills[i].current;
+      } else {
+        nameInput.value = '';
+        baseInput.value = '';
+        currentInput.value = '';
+      }
+      
+      // Trigger base value calculation
+      nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
+    }
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
    * Setup EXP spending modal
    */
   setupExpModal() {
@@ -6183,8 +6244,8 @@ const App = {
       });
       
       document.getElementById('exp-btn-learn-skills').addEventListener('click', () => {
-        // TODO: Implement
-        alert('Learn New Skills - Coming soon!');
+        this.closeExpModal();
+        this.openLearnNewSkillsModal();
       });
       
       document.getElementById('exp-btn-passions').addEventListener('click', () => {
@@ -6945,6 +7006,405 @@ const App = {
     
     // Trigger recalculation
     this.recalculateAll();
+  },
+
+  /**
+   * Open the Learn New Skills modal
+   */
+  openLearnNewSkillsModal() {
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    
+    // Skills that cannot be learned this way
+    const excludedSkills = [
+      'arcane casting', 'arcane sorcery', 'channel', 'lyrical magic', 
+      'mysticism', 'psychic manipulation', 'sorcerous wisdom', 'arcane knowledge'
+    ];
+    
+    // Skills that need specialties
+    const specialtySkills = ['art', 'craft', 'lore'];
+    
+    // Get currently known professional skills
+    const knownSkills = new Set();
+    for (let i = 0; i < 20; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      if (nameInput && nameInput.value.trim()) {
+        // Get base skill name (before parentheses)
+        const baseName = nameInput.value.trim().toLowerCase().split('(')[0].trim();
+        knownSkills.add(baseName);
+      }
+    }
+    
+    // Get known languages
+    const knownLanguages = new Set();
+    const nativeTongue = document.getElementById('native-tongue-name')?.value?.trim();
+    if (nativeTongue) knownLanguages.add(nativeTongue.toLowerCase());
+    for (let i = 2; i <= 5; i++) {
+      const langName = document.getElementById(`language-${i}-name`)?.value?.trim();
+      if (langName) knownLanguages.add(langName.toLowerCase());
+    }
+    
+    // Build list of available professional skills
+    const availableSkills = [];
+    if (typeof SKILL_DEFINITIONS !== 'undefined' && SKILL_DEFINITIONS.professional) {
+      for (const [skillKey, skillData] of Object.entries(SKILL_DEFINITIONS.professional)) {
+        // Skip excluded skills
+        if (excludedSkills.includes(skillKey)) continue;
+        
+        // Skip language (handled separately)
+        if (skillKey === 'language') continue;
+        
+        // For specialty skills, always show them
+        if (specialtySkills.includes(skillKey)) {
+          availableSkills.push({
+            key: skillKey,
+            name: this.toTitleCase(skillKey),
+            formula: skillData.formula,
+            needsSpecialty: true
+          });
+        } else if (!knownSkills.has(skillKey)) {
+          // For non-specialty skills, only show if not known
+          availableSkills.push({
+            key: skillKey,
+            name: this.toTitleCase(skillKey),
+            formula: skillData.formula,
+            needsSpecialty: false
+          });
+        }
+      }
+    }
+    
+    // Always add Language option and Piety if they need specialty input
+    availableSkills.push({
+      key: 'language',
+      name: 'Language',
+      formula: 'INT+CHA',
+      needsSpecialty: true,
+      isLanguage: true
+    });
+    
+    // Add Piety with deity prompt if not excluded
+    if (!knownSkills.has('piety')) {
+      // Remove the plain piety that was added above, we'll add special version
+      const pietyIdx = availableSkills.findIndex(s => s.key === 'piety' && !s.needsSpecialty);
+      if (pietyIdx > -1) availableSkills.splice(pietyIdx, 1);
+      
+      availableSkills.push({
+        key: 'piety',
+        name: 'Piety',
+        formula: 'CHA+POW',
+        needsSpecialty: true,
+        isPiety: true
+      });
+    }
+    
+    // Sort alphabetically
+    availableSkills.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Store for later
+    this.availableNewSkills = availableSkills;
+    
+    // Create modal
+    let modal = document.getElementById('learn-skills-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'learn-skills-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content learn-skills-modal-content">
+          <div class="modal-header">
+            <h3>Learn New Skills</h3>
+            <button class="modal-close" id="learn-skills-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="exp-rolls-display">
+              <span class="exp-rolls-label">Available EXP Rolls:</span>
+              <span class="exp-rolls-value" id="learn-skills-exp-rolls">0</span>
+            </div>
+            <p class="learn-skills-instructions">Select new skills to learn:</p>
+            <div class="learn-skills-list" id="learn-skills-list"></div>
+            <p class="learn-skills-cost-note">⚠️ New skills cost <strong>3 Experience Rolls</strong> each.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="learn-skills-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="learn-skills-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="learn-skills-continue" disabled>Continue</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      document.getElementById('learn-skills-modal-close').addEventListener('click', () => this.closeLearnSkillsModal());
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeLearnSkillsModal(); });
+      
+      document.getElementById('learn-skills-back').addEventListener('click', () => {
+        this.closeLearnSkillsModal();
+        this.openExpModal();
+      });
+      
+      document.getElementById('learn-skills-cancel').addEventListener('click', () => this.closeLearnSkillsModal());
+      
+      document.getElementById('learn-skills-continue').addEventListener('click', () => {
+        this.processLearnNewSkills();
+      });
+    }
+    
+    // Populate skill list
+    const listContainer = document.getElementById('learn-skills-list');
+    listContainer.innerHTML = availableSkills.map((skill, index) => `
+      <label class="learn-skill-row">
+        <input type="checkbox" name="learn-skill" value="${index}" data-skill-key="${skill.key}">
+        <span class="skill-name">${skill.name}</span>
+        <span class="skill-formula">(${skill.formula})</span>
+      </label>
+    `).join('');
+    
+    // Update EXP display
+    document.getElementById('learn-skills-exp-rolls').textContent = expRolls;
+    
+    // Add checkbox listeners
+    document.querySelectorAll('#learn-skills-modal input[name="learn-skill"]').forEach(cb => {
+      cb.addEventListener('change', () => this.updateLearnSkillsContinueButton());
+    });
+    
+    modal.classList.remove('hidden');
+  },
+
+  closeLearnSkillsModal() {
+    const modal = document.getElementById('learn-skills-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  updateLearnSkillsContinueButton() {
+    const checked = document.querySelectorAll('#learn-skills-modal input[name="learn-skill"]:checked');
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    const continueBtn = document.getElementById('learn-skills-continue');
+    const cost = checked.length * 3;
+    
+    if (continueBtn) {
+      const canAfford = cost <= expRolls && checked.length > 0;
+      continueBtn.disabled = !canAfford;
+      continueBtn.textContent = checked.length > 0 
+        ? `Continue (${checked.length} skill${checked.length > 1 ? 's' : ''}, ${cost} EXP)`
+        : 'Continue';
+    }
+  },
+
+  /**
+   * Process learning new skills - prompt for specialties if needed
+   */
+  processLearnNewSkills() {
+    const checked = document.querySelectorAll('#learn-skills-modal input[name="learn-skill"]:checked');
+    if (checked.length === 0) return;
+    
+    // Gather selected skills
+    this.skillsToLearn = Array.from(checked).map(cb => {
+      const index = parseInt(cb.value, 10);
+      return { ...this.availableNewSkills[index] };
+    });
+    
+    // Check if any need specialty input
+    const needsInput = this.skillsToLearn.filter(s => s.needsSpecialty);
+    
+    if (needsInput.length > 0) {
+      this.closeLearnSkillsModal();
+      this.openSpecialtyInputModal();
+    } else {
+      this.closeLearnSkillsModal();
+      this.finalizeLearnNewSkills();
+    }
+  },
+
+  /**
+   * Open specialty input modal for skills that need it
+   */
+  openSpecialtyInputModal() {
+    let modal = document.getElementById('specialty-input-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'specialty-input-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content specialty-input-modal-content">
+          <div class="modal-header">
+            <h3>Specify Details</h3>
+            <button class="modal-close" id="specialty-input-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="specialty-input-list" id="specialty-input-list"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="specialty-input-back">Back</button>
+            <button type="button" class="btn btn-primary" id="specialty-input-confirm">Confirm</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      document.getElementById('specialty-input-modal-close').addEventListener('click', () => this.closeSpecialtyInputModal());
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeSpecialtyInputModal(); });
+      
+      document.getElementById('specialty-input-back').addEventListener('click', () => {
+        this.closeSpecialtyInputModal();
+        this.openLearnNewSkillsModal();
+      });
+      
+      document.getElementById('specialty-input-confirm').addEventListener('click', () => {
+        this.collectSpecialtiesAndFinalize();
+      });
+    }
+    
+    // Build input fields
+    const listContainer = document.getElementById('specialty-input-list');
+    listContainer.innerHTML = this.skillsToLearn
+      .filter(s => s.needsSpecialty)
+      .map((skill, index) => {
+        let prompt = 'What specialty?';
+        let placeholder = 'e.g., Painting, Sculpting';
+        
+        if (skill.isLanguage) {
+          prompt = 'What language do you wish to learn?';
+          placeholder = 'e.g., Goblin, Infernal, Elvish';
+        } else if (skill.isPiety) {
+          prompt = 'What deity? The Ten Thousand are the most common.';
+          placeholder = 'e.g., Vitus, Mycr';
+        } else if (skill.key === 'lore') {
+          placeholder = 'e.g., History, Arcana, Religion';
+        } else if (skill.key === 'craft') {
+          placeholder = 'e.g., Blacksmithing, Carpentry';
+        } else if (skill.key === 'art') {
+          placeholder = 'e.g., Painting, Sculpture, Music';
+        }
+        
+        return `
+          <div class="specialty-input-row">
+            <label class="specialty-label">${skill.name}</label>
+            <p class="specialty-prompt">${prompt}</p>
+            <input type="text" class="specialty-input" id="specialty-input-${index}" 
+                   data-skill-key="${skill.key}" placeholder="${placeholder}">
+          </div>
+        `;
+      }).join('');
+    
+    modal.classList.remove('hidden');
+  },
+
+  closeSpecialtyInputModal() {
+    const modal = document.getElementById('specialty-input-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  collectSpecialtiesAndFinalize() {
+    // Collect specialty inputs
+    let inputIndex = 0;
+    this.skillsToLearn.forEach(skill => {
+      if (skill.needsSpecialty) {
+        const input = document.getElementById(`specialty-input-${inputIndex}`);
+        const specialty = input?.value?.trim() || '';
+        if (specialty) {
+          skill.specialty = this.toTitleCase(specialty);
+          skill.fullName = skill.isLanguage ? specialty : `${skill.name} (${skill.specialty})`;
+        } else {
+          skill.fullName = skill.name;
+        }
+        inputIndex++;
+      } else {
+        skill.fullName = skill.name;
+      }
+    });
+    
+    this.closeSpecialtyInputModal();
+    this.finalizeLearnNewSkills();
+  },
+
+  /**
+   * Finalize learning new skills - add to character sheet
+   */
+  finalizeLearnNewSkills() {
+    const expCost = this.skillsToLearn.length * 3;
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    
+    if (expCost > expRolls) {
+      alert('Not enough EXP rolls!');
+      return;
+    }
+    
+    // Add each skill
+    this.skillsToLearn.forEach(skill => {
+      if (skill.isLanguage) {
+        this.addNewLanguage(skill);
+      } else {
+        this.addNewProfessionalSkill(skill);
+      }
+    });
+    
+    // Deduct EXP
+    const expRollsInput = document.getElementById('exp-rolls');
+    if (expRollsInput) {
+      expRollsInput.value = Math.max(0, expRolls - expCost);
+    }
+    
+    this.recalculateAll();
+    this.scheduleAutoSave();
+    
+    const skillNames = this.skillsToLearn.map(s => s.fullName || s.name).join(', ');
+    alert(`Added new skill${this.skillsToLearn.length > 1 ? 's' : ''}: ${skillNames}`);
+  },
+
+  /**
+   * Add a new professional skill to the character sheet
+   */
+  addNewProfessionalSkill(skill) {
+    // Find first empty slot
+    for (let i = 0; i < 20; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      if (nameInput && !nameInput.value.trim()) {
+        // Set the skill name
+        nameInput.value = skill.fullName || skill.name;
+        
+        // Trigger blur to calculate base value
+        nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        
+        // Set current to base value
+        setTimeout(() => {
+          const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
+          const currentInput = document.getElementById(`prof-skill-${i}-current`);
+          if (baseVal && currentInput) {
+            currentInput.value = baseVal.textContent || '';
+          }
+        }, 100);
+        
+        return;
+      }
+    }
+    
+    alert('No empty professional skill slots available!');
+  },
+
+  /**
+   * Add a new language to the character sheet
+   */
+  addNewLanguage(skill) {
+    // Find first empty language slot (slots 2-5)
+    for (let i = 2; i <= 5; i++) {
+      const nameInput = document.getElementById(`language-${i}-name`);
+      if (nameInput && !nameInput.value.trim()) {
+        // Set the language name
+        nameInput.value = skill.specialty || skill.fullName || 'New Language';
+        
+        // Set current to base value
+        setTimeout(() => {
+          const baseEl = document.getElementById(`language-${i}-base`);
+          const currentInput = document.getElementById(`language-${i}-current`);
+          if (baseEl && currentInput) {
+            currentInput.value = baseEl.textContent || '';
+          }
+        }, 100);
+        
+        return;
+      }
+    }
+    
+    alert('No empty language slots available!');
   }
 };
 

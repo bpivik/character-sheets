@@ -628,14 +628,17 @@
 
             <!-- Professional Skills Section -->
             <section class="skills-section professional-skills">
-              <h3 class="section-header">Professional Skills</h3>
+              <div class="section-header-row">
+                <h3 class="section-header">Professional Skills</h3>
+                <button type="button" class="btn btn-small btn-alphabetize" id="btn-alphabetize-prof" title="Sort alphabetically">A→Z</button>
+              </div>
               <div class="skills-header prof-header">
                 <span></span>
                 <span></span>
                 <span class="header-base">Base %</span>
                 <span class="header-current">%</span>
               </div>
-              <div id="professional-skills-container">
+              <div id="professional-skills-container" class="scrollable-skills-container">
                 <!-- Professional skills are dynamically generated -->
               </div>
             </section>
@@ -649,6 +652,7 @@
                 <span class="header-base">Base %</span>
                 <span class="header-current">%</span>
               </div>
+              <div class="scrollable-language-container">
               <div class="language-row native">
                 <label class="language-label">Native Tongue:</label>
                 <input type="text" class="language-name" id="native-tongue-name" placeholder="">
@@ -679,6 +683,7 @@
                 <span class="language-formula">INT+CHA</span>
                 <span class="language-base" id="language-5-base">0</span>
                 <input type="number" class="language-input" id="language-5-current" placeholder="">
+              </div>
               </div>
             </section>
           </div>
