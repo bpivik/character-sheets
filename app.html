@@ -28,6 +28,7 @@
   </script>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/theme-dark.css">
   <link rel="stylesheet" href="css/print.css" media="print">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,6 +49,7 @@
         <li><button class="tab-btn" data-page="notes">Notes</button></li>
       </ul>
       <div class="sheet-controls">
+        <button id="btn-theme" class="btn btn-secondary" title="Toggle Dark Mode">🌙</button>
         <select id="sheet-type-select" class="sheet-type-selector">
           <option value="human">Human / Demihuman</option>
           <option value="syrin">Syrin</option>
@@ -1380,6 +1382,35 @@
         window.location.href = 'index.html';
       }
     });
+    
+    // Theme toggle handler
+    (function() {
+      const themeBtn = document.getElementById('btn-theme');
+      const app = document.getElementById('app');
+      
+      // Load saved theme
+      const savedTheme = localStorage.getItem('mythras-theme') || 'light';
+      if (savedTheme === 'dark') {
+        app.dataset.theme = 'dark';
+        themeBtn.textContent = '☀️';
+        themeBtn.title = 'Switch to Light Mode';
+      }
+      
+      themeBtn.addEventListener('click', function() {
+        const isDark = app.dataset.theme === 'dark';
+        if (isDark) {
+          app.dataset.theme = '';
+          themeBtn.textContent = '🌙';
+          themeBtn.title = 'Switch to Dark Mode';
+          localStorage.setItem('mythras-theme', 'light');
+        } else {
+          app.dataset.theme = 'dark';
+          themeBtn.textContent = '☀️';
+          themeBtn.title = 'Switch to Light Mode';
+          localStorage.setItem('mythras-theme', 'dark');
+        }
+      });
+    })();
   </script>
 </body>
 </html>

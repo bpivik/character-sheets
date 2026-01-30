@@ -3010,3 +3010,10 @@ select:focus {
 #btn-reset-summary {
   align-self: flex-start;
 }
+
+/* Theme toggle button */
+#btn-theme {
+  font-size: 1.1rem;
+  padding: 4px 10px;
+  min-width: auto;
+}

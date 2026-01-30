@@ -5139,8 +5139,8 @@ const App = {
         
         let html = '<h4>Key Skills</h4><div class="skill-list">';
         sortedSkills.forEach(s => {
-          const highlight = s.val >= 50 ? '' : ' style="color:#999;"';
-          html += `<div class="skill-item"${highlight}><span>${s.name}</span><span>${s.val}%</span></div>`;
+          const dimmed = s.val < 50 ? ' style="color:#999;"' : '';
+          html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span${dimmed}>${s.val}%</span></div>`;
         });
         html += '</div>';
         return html;
