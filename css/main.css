@@ -2848,6 +2848,43 @@ select:focus {
 .canvas-grid .widget-item {
   cursor: default;
   position: relative;
+  transition: transform 0.15s ease;
+}
+
+.canvas-grid .widget-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.canvas-grid .widget-item.drop-before {
+  box-shadow: 0 -3px 0 0 var(--accent-color, #8B4513);
+}
+
+.canvas-grid .widget-item.drop-after {
+  box-shadow: 0 3px 0 0 var(--accent-color, #8B4513);
+}
+
+.widget-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: #aaa;
+  cursor: grab;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.widget-drag-handle:hover {
+  color: var(--accent-color, #8B4513);
+}
+
+.widget-drag-handle:active {
+  cursor: grabbing;
+}
+
+.canvas-grid .widget-item .widget-content {
+  padding-left: 20px;
 }
 
 .canvas-grid .widget-item .widget-remove {

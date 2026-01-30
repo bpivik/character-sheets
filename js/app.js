@@ -5337,6 +5337,7 @@ const App = {
     const item = document.createElement('div');
     item.className = 'widget-item';
     item.dataset.widgetId = widgetId;
+    item.draggable = true;
     
     const content = document.createElement('div');
     content.className = 'widget-content';
@@ -5352,6 +5353,77 @@ const App = {
       this.saveSummaryLayout();
     });
     
+    // Drag handle for reordering
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'widget-drag-handle';
+    dragHandle.innerHTML = '⋮⋮';
+    dragHandle.title = 'Drag to reorder';
+    
+    // Drag events for reordering within canvas
+    item.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', widgetId);
+      e.dataTransfer.setData('source', 'canvas');
+      item.classList.add('dragging');
+      // Store reference for reordering
+      this.draggedWidget = item;
+    });
+    
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      this.draggedWidget = null;
+      // Remove all drop indicators
+      canvas.querySelectorAll('.widget-item').forEach(w => {
+        w.classList.remove('drop-before', 'drop-after');
+      });
+    });
+    
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!this.draggedWidget || this.draggedWidget === item) return;
+      
+      const rect = item.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      
+      // Remove previous indicators
+      canvas.querySelectorAll('.widget-item').forEach(w => {
+        w.classList.remove('drop-before', 'drop-after');
+      });
+      
+      // Show indicator
+      if (e.clientY < midY) {
+        item.classList.add('drop-before');
+      } else {
+        item.classList.add('drop-after');
+      }
+    });
+    
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const source = e.dataTransfer.getData('source');
+      
+      if (source === 'canvas' && this.draggedWidget && this.draggedWidget !== item) {
+        // Reordering within canvas
+        const rect = item.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        
+        if (e.clientY < midY) {
+          canvas.insertBefore(this.draggedWidget, item);
+        } else {
+          canvas.insertBefore(this.draggedWidget, item.nextSibling);
+        }
+        
+        this.saveSummaryLayout();
+      }
+      
+      // Clean up indicators
+      canvas.querySelectorAll('.widget-item').forEach(w => {
+        w.classList.remove('drop-before', 'drop-after');
+      });
+    });
+    
+    item.appendChild(dragHandle);
     item.appendChild(content);
     item.appendChild(removeBtn);
     canvas.appendChild(item);
