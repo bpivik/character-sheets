@@ -1270,6 +1270,8 @@ select:focus {
 .grade-table {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, auto);
+  grid-auto-flow: column;
   gap: 0.2rem 1rem;
 }
 
@@ -1536,28 +1538,9 @@ select:focus {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   max-width: 500px;
   width: 90%;
-  max-height: 85vh;
-  min-height: 60vh;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-}
-
-/* Container warning */
-.container-warning {
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  padding: 10px 14px;
-  margin: 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #b91c1c;
-  font-weight: 500;
-}
-
-.container-warning .warning-icon {
-  font-size: 1.2rem;
 }
 
 .modal-header {
@@ -3069,23 +3052,16 @@ select:focus {
 
 /* Bold styles for skill names and values */
 .widget-content .skill-name-bold {
-  font-weight: 700 !important;
+  font-weight: 700;
 }
 
 .widget-content .skill-value-bold {
-  font-weight: 700 !important;
+  font-weight: 700;
 }
 
 .widget-content .stat-value-bold,
 .widget-content .stat-row .stat-value-bold {
   font-weight: 700 !important;
-}
-
-/* Widget divider line */
-.widget-content .widget-divider {
-  border: none;
-  border-top: 1px solid #ccc;
-  margin: 8px 0;
 }
 
 /* Spell widget header */

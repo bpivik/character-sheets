@@ -542,14 +542,8 @@
   color: #e0e0e0;
 }
 
-/* Container warning in dark mode */
-[data-theme="dark"] .container-warning {
-  background: #4a1c1c;
-  border-color: #991b1b;
-  color: #fca5a5;
-}
-
-/* Widget divider in dark mode */
-[data-theme="dark"] .widget-content .widget-divider {
-  border-top-color: #444;
+/* Field labels in dark mode */
+[data-theme="dark"] .field-label,
+[data-theme="dark"] .field-label-large {
+  color: #e0e0e0;
 }
