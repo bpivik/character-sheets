@@ -3803,6 +3803,169 @@ select:focus {
   background: #ffe0e0;
 }
 
+/* Combat Stats Grid in Widget */
+.combat-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.combat-stat {
+  text-align: center;
+  padding: 4px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 4px;
+}
+
+.combat-stat .stat-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.combat-stat .stat-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.stat-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.spin-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border-gold);
+  background: var(--button-bg, #5a4a3a);
+  color: var(--text-light);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.spin-btn:hover {
+  background: #6b5a4a;
+}
+
+.spin-btn:active {
+  transform: scale(0.95);
+}
+
+/* Dice button for weapon damage */
+.dice-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.dice-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.damage-roll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Damage Result Overlay */
+.damage-result-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.damage-result-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.damage-result-content {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 2px solid var(--border-gold);
+  border-radius: 16px;
+  padding: 24px 40px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: damagePopIn 0.3s ease-out;
+}
+
+@keyframes damagePopIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.damage-formula {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+.damage-breakdown {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.damage-total {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  margin-bottom: 16px;
+}
+
+.damage-total.damage-high {
+  color: #e94560;
+  text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+}
+
+.damage-total.damage-low {
+  color: #666;
+}
+
+.damage-close {
+  background: var(--border-gold);
+  color: #1a1a1a;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.damage-close:hover {
+  background: #d4b44a;
+}
+
 #btn-reset-summary {
   align-self: flex-start;
 }

@@ -1117,9 +1117,13 @@ const App = {
    * Recalculate all professional skill base values
    */
   recalculateProfessionalSkillBases() {
-    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.professional-skill-row');
+    rows.forEach((row, i) => {
       this.calculateProfessionalSkillBase(i);
-    }
+    });
   },
 
   /**
@@ -2291,7 +2295,18 @@ const App = {
         const currentInput = document.getElementById(`prof-skill-${i}-current`);
         const prereqKeys = document.getElementById(`prof-skill-${i}-prereq`);
         if (nameInput && skill.name) nameInput.value = this.toTitleCase(skill.name);
-        if (baseInput && skill.base) baseInput.value = skill.base;
+        if (baseInput) {
+          // If base formula was saved, use it; otherwise try to auto-fill from skill name
+          if (skill.base) {
+            baseInput.value = skill.base;
+          } else if (skill.name) {
+            // Try to auto-fill the formula from skill definitions
+            const skillNameLower = skill.name.replace(/\s*\(.*?\)/g, '').trim().toLowerCase();
+            if (SKILL_DEFINITIONS.professional && SKILL_DEFINITIONS.professional[skillNameLower]) {
+              baseInput.value = SKILL_DEFINITIONS.professional[skillNameLower].formula;
+            }
+          }
+        }
         if (currentInput && skill.current) {
           currentInput.value = skill.current;
           // Store as original value for ENC penalty system
@@ -5313,18 +5328,58 @@ const App = {
       name: 'Combat',
       icon: '⚔️',
       render: () => {
+        // Get combat stats
+        const initiative = document.getElementById('initiative-current')?.value || '-';
+        const actionPointsMax = document.getElementById('action-points-original')?.value || '2';
+        const actionPointsCurrent = document.getElementById('action-points-current')?.value || actionPointsMax;
+        const luckPointsMax = document.getElementById('luck-original')?.value || '2';
+        const luckPointsCurrent = document.getElementById('luck-current')?.value || luckPointsMax;
+        const magicPointsMax = document.getElementById('magic-points-original')?.value || '0';
+        const magicPointsCurrent = document.getElementById('magic-points-current')?.value || magicPointsMax;
+        
         const combatName = document.getElementById('combat-skill-1-name')?.value || 'Combat Style';
         const combatPct = document.getElementById('combat-skill-1-percent')?.value || '-';
         const unarmedPct = document.getElementById('unarmed-percent')?.value || '-';
         
         let html = `
           <h4>Combat</h4>
+          <div class="combat-stats-grid">
+            <div class="combat-stat">
+              <span class="stat-label">Initiative</span>
+              <span class="stat-value">${initiative}</span>
+            </div>
+            <div class="combat-stat editable">
+              <span class="stat-label">Action Pts</span>
+              <div class="stat-spinner">
+                <button class="spin-btn spin-down" data-target="action-points-current" data-max="${actionPointsMax}">−</button>
+                <span class="stat-value" id="summary-ap">${actionPointsCurrent}</span>
+                <button class="spin-btn spin-up" data-target="action-points-current" data-max="${actionPointsMax}">+</button>
+              </div>
+            </div>
+            <div class="combat-stat editable">
+              <span class="stat-label">Luck Pts</span>
+              <div class="stat-spinner">
+                <button class="spin-btn spin-down" data-target="luck-current" data-max="${luckPointsMax}">−</button>
+                <span class="stat-value" id="summary-luck">${luckPointsCurrent}</span>
+                <button class="spin-btn spin-up" data-target="luck-current" data-max="${luckPointsMax}">+</button>
+              </div>
+            </div>
+            <div class="combat-stat editable">
+              <span class="stat-label">Magic Pts</span>
+              <div class="stat-spinner">
+                <button class="spin-btn spin-down" data-target="magic-points-current" data-max="${magicPointsMax}">−</button>
+                <span class="stat-value" id="summary-mp">${magicPointsCurrent}</span>
+                <button class="spin-btn spin-up" data-target="magic-points-current" data-max="${magicPointsMax}">+</button>
+              </div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
           <div class="skill-list">
             <div class="skill-item"><span>${combatName}</span><span>${combatPct}%</span></div>
             <div class="skill-item"><span>Unarmed</span><span>${unarmedPct}%</span></div>
           </div>
-          <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px;">
-          <div class="skill-list">
+          <div style="margin-top:8px; border-top:1px solid var(--border-light); padding-top:8px;">
+          <div class="skill-list weapons-list">
         `;
         
         let found = false;
@@ -5332,8 +5387,11 @@ const App = {
         for (let i = 0; i < 4; i++) {
           const name = document.getElementById(`melee-${i}-name`)?.value;
           const dmg = document.getElementById(`melee-${i}-damage`)?.value;
-          if (name) {
-            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
+          if (name && dmg) {
+            html += `<div class="skill-item weapon-row"><span>${name}</span><span class="damage-roll">${dmg} <button class="dice-btn" data-damage="${dmg}" title="Roll damage">🎲</button></span></div>`;
+            found = true;
+          } else if (name) {
+            html += `<div class="skill-item"><span>${name}</span><span>-</span></div>`;
             found = true;
           }
         }
@@ -5341,10 +5399,18 @@ const App = {
         for (let i = 0; i < 4; i++) {
           const name = document.getElementById(`ranged-${i}-name`)?.value;
           const dmg = document.getElementById(`ranged-${i}-damage`)?.value;
-          if (name) {
-            html += `<div class="skill-item"><span>${name}</span><span>${dmg || '-'}</span></div>`;
+          if (name && dmg) {
+            html += `<div class="skill-item weapon-row"><span>${name}</span><span class="damage-roll">${dmg} <button class="dice-btn" data-damage="${dmg}" title="Roll damage">🎲</button></span></div>`;
+            found = true;
+          } else if (name) {
+            html += `<div class="skill-item"><span>${name}</span><span>-</span></div>`;
             found = true;
           }
+        }
+        // Unarmed damage
+        const unarmedDmg = document.getElementById('unarmed-damage')?.value;
+        if (unarmedDmg) {
+          html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage">🎲</button></span></div>`;
         }
         if (!found) {
           html += '<div class="skill-item"><span style="color:#999;">No weapons</span></div>';
@@ -5950,9 +6016,178 @@ const App = {
     item.appendChild(removeBtn);
     canvas.appendChild(item);
     
+    // Setup event listeners for interactive widgets (combat stats, dice rolls)
+    this.setupWidgetEventListeners(content);
+    
     if (save) {
       this.saveSummaryLayout();
     }
+  },
+
+  /**
+   * Setup event listeners for interactive widget elements
+   */
+  setupWidgetEventListeners(container) {
+    // Spinner buttons for combat stats
+    container.querySelectorAll('.spin-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetId = btn.dataset.target;
+        const max = parseInt(btn.dataset.max, 10) || 99;
+        const isUp = btn.classList.contains('spin-up');
+        
+        // Find the value span (sibling)
+        const spinner = btn.closest('.stat-spinner');
+        const valueSpan = spinner?.querySelector('.stat-value');
+        
+        if (!valueSpan) return;
+        
+        let current = parseInt(valueSpan.textContent, 10) || 0;
+        
+        if (isUp && current < max) {
+          current++;
+        } else if (!isUp && current > 0) {
+          current--;
+        }
+        
+        valueSpan.textContent = current;
+        
+        // Sync to character page
+        const targetInput = document.getElementById(targetId);
+        if (targetInput) {
+          targetInput.value = current;
+          targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        
+        this.scheduleAutoSave();
+      });
+    });
+    
+    // Dice roll buttons for weapons
+    container.querySelectorAll('.dice-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const damage = btn.dataset.damage;
+        if (damage) {
+          this.rollDamage(damage);
+        }
+      });
+    });
+  },
+
+  /**
+   * Roll damage dice and show result
+   */
+  rollDamage(damageString) {
+    // Parse damage string like "1d8+1+1d6" or "1d6+1d4"
+    const result = this.parseDamageRoll(damageString);
+    
+    // Show result in an overlay
+    this.showDamageResult(damageString, result);
+  },
+
+  /**
+   * Parse and roll a damage string
+   */
+  parseDamageRoll(damageString) {
+    // Normalize the string
+    const normalized = damageString.toLowerCase().replace(/\s/g, '');
+    
+    // Split by + and - while keeping the operators
+    const parts = normalized.split(/(?=[+-])/);
+    
+    let total = 0;
+    const rolls = [];
+    
+    parts.forEach(part => {
+      // Check if it's a dice roll (e.g., 1d8, 2d6)
+      const diceMatch = part.match(/([+-]?)(\d*)d(\d+)/);
+      if (diceMatch) {
+        const sign = diceMatch[1] === '-' ? -1 : 1;
+        const count = parseInt(diceMatch[2], 10) || 1;
+        const sides = parseInt(diceMatch[3], 10);
+        
+        let diceTotal = 0;
+        const individualRolls = [];
+        for (let i = 0; i < count; i++) {
+          const roll = Math.floor(Math.random() * sides) + 1;
+          individualRolls.push(roll);
+          diceTotal += roll;
+        }
+        
+        rolls.push({ dice: `${count}d${sides}`, rolls: individualRolls, total: diceTotal * sign });
+        total += diceTotal * sign;
+      } else {
+        // It's a modifier
+        const numMatch = part.match(/([+-]?\d+)/);
+        if (numMatch) {
+          const mod = parseInt(numMatch[1], 10);
+          rolls.push({ modifier: mod });
+          total += mod;
+        }
+      }
+    });
+    
+    return { total, rolls };
+  },
+
+  /**
+   * Show damage roll result overlay
+   */
+  showDamageResult(damageString, result) {
+    // Create or get overlay
+    let overlay = document.getElementById('damage-result-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'damage-result-overlay';
+      overlay.className = 'damage-result-overlay';
+      overlay.innerHTML = `
+        <div class="damage-result-content">
+          <div class="damage-formula"></div>
+          <div class="damage-breakdown"></div>
+          <div class="damage-total"></div>
+          <button class="damage-close">OK</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      
+      overlay.querySelector('.damage-close').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+      
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('visible');
+        }
+      });
+    }
+    
+    // Build breakdown string
+    let breakdown = '';
+    result.rolls.forEach((r, i) => {
+      if (i > 0 && !breakdown.endsWith(' ')) breakdown += ' ';
+      if (r.dice) {
+        const rollsStr = r.rolls.join('+');
+        breakdown += `${r.dice} (${rollsStr}=${r.total > 0 ? r.total : r.total})`;
+      } else if (r.modifier !== undefined) {
+        breakdown += (r.modifier >= 0 ? '+' : '') + r.modifier;
+      }
+    });
+    
+    overlay.querySelector('.damage-formula').textContent = `Damage: ${damageString}`;
+    overlay.querySelector('.damage-breakdown').textContent = breakdown;
+    overlay.querySelector('.damage-total').textContent = result.total;
+    
+    // Add color based on roll
+    const totalEl = overlay.querySelector('.damage-total');
+    totalEl.className = 'damage-total';
+    if (result.total >= 10) {
+      totalEl.classList.add('damage-high');
+    } else if (result.total <= 2) {
+      totalEl.classList.add('damage-low');
+    }
+    
+    overlay.classList.add('visible');
   },
   
   /**
