@@ -1323,7 +1323,7 @@ const App = {
       const encInput = document.getElementById(`equip-${slotIndex}-enc`);
       
       if (nameInput) {
-        nameInput.value = item.name;
+        nameInput.value = this.toTitleCase(item.name);
         nameInput.dataset.previousValue = item.name.toLowerCase();
       }
       if (encInput && item.enc) {
@@ -1620,7 +1620,7 @@ const App = {
     items.forEach((item, i) => {
       const nameInput = document.getElementById(`container-${i}-name`);
       const encInput = document.getElementById(`container-${i}-enc`);
-      if (nameInput && item.name) nameInput.value = item.name;
+      if (nameInput && item.name) nameInput.value = this.toTitleCase(item.name);
       if (encInput && item.enc) encInput.value = item.enc;
     });
   },
@@ -2200,7 +2200,7 @@ const App = {
       this.character.equipment.forEach((item, i) => {
         const nameInput = document.getElementById(`equip-${i}-name`);
         const encInput = document.getElementById(`equip-${i}-enc`);
-        if (nameInput && item.name) nameInput.value = item.name;
+        if (nameInput && item.name) nameInput.value = this.toTitleCase(item.name);
         if (encInput && item.enc) encInput.value = item.enc;
       });
     }
@@ -2224,7 +2224,7 @@ const App = {
         const baseInput = document.getElementById(`prof-skill-${i}-base`);
         const currentInput = document.getElementById(`prof-skill-${i}-current`);
         const prereqKeys = document.getElementById(`prof-skill-${i}-prereq`);
-        if (nameInput && skill.name) nameInput.value = skill.name;
+        if (nameInput && skill.name) nameInput.value = this.toTitleCase(skill.name);
         if (baseInput && skill.base) baseInput.value = skill.base;
         if (currentInput && skill.current) {
           currentInput.value = skill.current;
@@ -2232,7 +2232,7 @@ const App = {
           currentInput.dataset.originalValue = skill.current;
         }
         // Update prereq-keys data attribute
-        if (prereqKeys && skill.name) prereqKeys.dataset.skillName = skill.name;
+        if (prereqKeys && skill.name) prereqKeys.dataset.skillName = this.toTitleCase(skill.name);
         // Update ENC indicator visibility
         this.updateProfSkillEncIndicator(i);
       });
@@ -2328,7 +2328,9 @@ const App = {
         const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
         fields.forEach(field => {
           const input = document.getElementById(`melee-${i}-${field}`);
-          if (input && weapon[field]) input.value = weapon[field];
+          if (input && weapon[field]) {
+            input.value = field === 'name' ? this.toTitleCase(weapon[field]) : weapon[field];
+          }
           // Restore baseDamage data attribute for damage field
           if (field === 'damage' && input && weapon.baseDamage) {
             input.dataset.baseDamage = weapon.baseDamage;
@@ -2343,7 +2345,9 @@ const App = {
         const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
         fields.forEach(field => {
           const input = document.getElementById(`ranged-${i}-${field}`);
-          if (input && weapon[field]) input.value = weapon[field];
+          if (input && weapon[field]) {
+            input.value = field === 'name' ? this.toTitleCase(weapon[field]) : weapon[field];
+          }
           // Restore baseDamage data attribute for damage field
           if (field === 'damage' && input && weapon.baseDamage) {
             input.dataset.baseDamage = weapon.baseDamage;
@@ -2358,7 +2362,7 @@ const App = {
         const col = Math.floor(i / 20) + 1;
         const row = i % 20;
         const input = document.getElementById(`ability-${col}-${row}`);
-        if (input && ability) input.value = ability;
+        if (input && ability) input.value = this.toTitleCase(ability);
       });
       // Update tooltips after loading abilities
       this.updateAllAbilityTooltips();
@@ -2408,7 +2412,7 @@ const App = {
               const costInput = document.getElementById(`${rank}-${i}-cost`);
               const memCheck = document.getElementById(`${rank}-${i}-mem`);
               if (nameInput && spell.name) {
-                nameInput.value = spell.name;
+                nameInput.value = this.toTitleCase(spell.name);
                 // Restore classSpell marker if present
                 if (spell.classSpell) {
                   nameInput.dataset.classSpell = spell.classSpell;
@@ -5226,15 +5230,33 @@ const App = {
       name: 'Movement',
       icon: '🏃',
       render: () => {
-        const current = document.getElementById('movement-current')?.value || '-';
+        const base = document.getElementById('movement-current')?.value || '-';
+        const walk = document.getElementById('walk-speed')?.textContent || '-';
+        const run = document.getElementById('run-speed')?.textContent || '-';
+        const sprint = document.getElementById('sprint-speed')?.textContent || '-';
+        const swim = document.getElementById('swim-speed')?.textContent || '-';
+        const climb = document.getElementById('climb-speed')?.textContent || '-';
         const jumpV = document.getElementById('vertical-jump')?.textContent || '-';
         const jumpH = document.getElementById('horizontal-jump')?.textContent || '-';
-        return `
+        const fly = document.getElementById('flying-speed')?.value || '';
+        
+        let html = `
           <h4>Movement</h4>
-          <div class="stat-row"><span class="stat-label">Movement Rate:</span><span class="stat-value">${current} ft</span></div>
+          <div class="stat-row"><span class="stat-label">Base:</span><span class="stat-value">${base}'</span></div>
+          <div class="stat-row"><span class="stat-label">Walk:</span><span class="stat-value">${walk}</span></div>
+          <div class="stat-row"><span class="stat-label">Run:</span><span class="stat-value">${run}</span></div>
+          <div class="stat-row"><span class="stat-label">Sprint:</span><span class="stat-value">${sprint}</span></div>
+          <div class="stat-row"><span class="stat-label">Swim:</span><span class="stat-value">${swim}</span></div>
+          <div class="stat-row"><span class="stat-label">Climb:</span><span class="stat-value">${climb}</span></div>
           <div class="stat-row"><span class="stat-label">Vertical Jump:</span><span class="stat-value">${jumpV}</span></div>
           <div class="stat-row"><span class="stat-label">Horizontal Jump:</span><span class="stat-value">${jumpH}</span></div>
         `;
+        
+        if (fly && fly.trim()) {
+          html += `<div class="stat-row"><span class="stat-label">Fly:</span><span class="stat-value">${fly}</span></div>`;
+        }
+        
+        return html;
       }
     },
     'encumbrance': {
@@ -5298,6 +5320,181 @@ const App = {
           <h4>Tenacity</h4>
           <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} / ${max}</span></div>
         `;
+      }
+    },
+    'spells-cantrips': {
+      name: 'Cantrips',
+      icon: '✨',
+      dynamic: true,
+      isAvailable: () => {
+        // Check if any cantrips are memorized
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`cantrips-${i}-mem`);
+          const name = document.getElementById(`cantrips-${i}-name`);
+          if (mem?.checked && name?.value?.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Cantrips (Memorized)</h4><div class="skill-list">';
+        let found = false;
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`cantrips-${i}-mem`);
+          const name = document.getElementById(`cantrips-${i}-name`);
+          const cost = document.getElementById(`cantrips-${i}-cost`);
+          if (mem?.checked && name?.value?.trim()) {
+            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) html += '<div class="skill-item"><span style="color:#999;">None memorized</span></div>';
+        html += '</div>';
+        return html;
+      }
+    },
+    'spells-rank1': {
+      name: 'Rank 1 Spells',
+      icon: '🔮',
+      dynamic: true,
+      isAvailable: () => {
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank1-${i}-mem`);
+          const name = document.getElementById(`rank1-${i}-name`);
+          if (mem?.checked && name?.value?.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Rank 1 Spells (Memorized)</h4><div class="skill-list">';
+        let found = false;
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank1-${i}-mem`);
+          const name = document.getElementById(`rank1-${i}-name`);
+          const cost = document.getElementById(`rank1-${i}-cost`);
+          if (mem?.checked && name?.value?.trim()) {
+            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) html += '<div class="skill-item"><span style="color:#999;">None memorized</span></div>';
+        html += '</div>';
+        return html;
+      }
+    },
+    'spells-rank2': {
+      name: 'Rank 2 Spells',
+      icon: '🔮',
+      dynamic: true,
+      isAvailable: () => {
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank2-${i}-mem`);
+          const name = document.getElementById(`rank2-${i}-name`);
+          if (mem?.checked && name?.value?.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Rank 2 Spells (Memorized)</h4><div class="skill-list">';
+        let found = false;
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank2-${i}-mem`);
+          const name = document.getElementById(`rank2-${i}-name`);
+          const cost = document.getElementById(`rank2-${i}-cost`);
+          if (mem?.checked && name?.value?.trim()) {
+            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) html += '<div class="skill-item"><span style="color:#999;">None memorized</span></div>';
+        html += '</div>';
+        return html;
+      }
+    },
+    'spells-rank3': {
+      name: 'Rank 3 Spells',
+      icon: '🔮',
+      dynamic: true,
+      isAvailable: () => {
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank3-${i}-mem`);
+          const name = document.getElementById(`rank3-${i}-name`);
+          if (mem?.checked && name?.value?.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Rank 3 Spells (Memorized)</h4><div class="skill-list">';
+        let found = false;
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank3-${i}-mem`);
+          const name = document.getElementById(`rank3-${i}-name`);
+          const cost = document.getElementById(`rank3-${i}-cost`);
+          if (mem?.checked && name?.value?.trim()) {
+            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) html += '<div class="skill-item"><span style="color:#999;">None memorized</span></div>';
+        html += '</div>';
+        return html;
+      }
+    },
+    'spells-rank4': {
+      name: 'Rank 4 Spells',
+      icon: '🔮',
+      dynamic: true,
+      isAvailable: () => {
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank4-${i}-mem`);
+          const name = document.getElementById(`rank4-${i}-name`);
+          if (mem?.checked && name?.value?.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Rank 4 Spells (Memorized)</h4><div class="skill-list">';
+        let found = false;
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank4-${i}-mem`);
+          const name = document.getElementById(`rank4-${i}-name`);
+          const cost = document.getElementById(`rank4-${i}-cost`);
+          if (mem?.checked && name?.value?.trim()) {
+            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) html += '<div class="skill-item"><span style="color:#999;">None memorized</span></div>';
+        html += '</div>';
+        return html;
+      }
+    },
+    'spells-rank5': {
+      name: 'Rank 5 Spells',
+      icon: '🔮',
+      dynamic: true,
+      isAvailable: () => {
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank5-${i}-mem`);
+          const name = document.getElementById(`rank5-${i}-name`);
+          if (mem?.checked && name?.value?.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Rank 5 Spells (Memorized)</h4><div class="skill-list">';
+        let found = false;
+        for (let i = 0; i < 12; i++) {
+          const mem = document.getElementById(`rank5-${i}-mem`);
+          const name = document.getElementById(`rank5-${i}-name`);
+          const cost = document.getElementById(`rank5-${i}-cost`);
+          if (mem?.checked && name?.value?.trim()) {
+            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+            found = true;
+          }
+        }
+        if (!found) html += '<div class="skill-item"><span style="color:#999;">None memorized</span></div>';
+        html += '</div>';
+        return html;
       }
     }
   },
@@ -5364,6 +5561,9 @@ const App = {
     
     Object.entries(this.summaryWidgets).forEach(([id, widget]) => {
       if (excludeIds.includes(id)) return;
+      
+      // Skip dynamic widgets that aren't available
+      if (widget.dynamic && widget.isAvailable && !widget.isAvailable()) return;
       
       const item = document.createElement('div');
       item.className = 'widget-item';
@@ -5534,41 +5734,35 @@ const App = {
       const finalTens = Math.floor(Math.random() * 10);
       const finalOnes = Math.floor(Math.random() * 10);
       
-      // Update die faces with random numbers
-      this.updateDieFaces(dieTens, finalTens);
-      this.updateDieFaces(dieOnes, finalOnes);
-      
       // Get viewport dimensions
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       
       // Random start positions (off screen left)
-      const startY1 = vh * 0.3 + Math.random() * vh * 0.4;
-      const startY2 = vh * 0.3 + Math.random() * vh * 0.4;
+      const startY1 = vh * 0.3 + Math.random() * vh * 0.3;
+      const startY2 = vh * 0.3 + Math.random() * vh * 0.3;
       
-      // End positions (toward center-right)
-      const endX1 = vw * 0.3 + Math.random() * vw * 0.2;
-      const endX2 = vw * 0.5 + Math.random() * vw * 0.2;
-      const endY1 = vh * 0.4 + Math.random() * vh * 0.2;
-      const endY2 = vh * 0.4 + Math.random() * vh * 0.2;
-      
-      // Random rotations
-      const rotX1 = 720 + Math.random() * 1080;
-      const rotY1 = 720 + Math.random() * 1080;
-      const rotZ1 = 360 + Math.random() * 720;
-      const rotX2 = 720 + Math.random() * 1080;
-      const rotY2 = 720 + Math.random() * 1080;
-      const rotZ2 = 360 + Math.random() * 720;
+      // End positions (toward center)
+      const endX1 = vw * 0.25 + Math.random() * vw * 0.15;
+      const endX2 = vw * 0.55 + Math.random() * vw * 0.15;
+      const endY1 = vh * 0.35 + Math.random() * vh * 0.15;
+      const endY2 = vh * 0.35 + Math.random() * vh * 0.15;
       
       // Set initial positions
       dieTens.style.transition = 'none';
       dieOnes.style.transition = 'none';
-      dieTens.style.left = '-100px';
+      dieTens.style.left = '-120px';
       dieTens.style.top = startY1 + 'px';
-      dieOnes.style.left = '-100px';
+      dieTens.style.transform = 'rotate(0deg) scale(1)';
+      dieOnes.style.left = '-120px';
       dieOnes.style.top = startY2 + 'px';
-      dieTens.querySelector('.die-cube').style.transform = 'rotateX(0) rotateY(0) rotateZ(0)';
-      dieOnes.querySelector('.die-cube').style.transform = 'rotateX(0) rotateY(0) rotateZ(0)';
+      dieOnes.style.transform = 'rotate(0deg) scale(1)';
+      
+      // Set initial values
+      const tensValue = dieTens.querySelector('.d10-value');
+      const onesValue = dieOnes.querySelector('.d10-value');
+      tensValue.textContent = Math.floor(Math.random() * 10);
+      onesValue.textContent = Math.floor(Math.random() * 10);
       
       // Force reflow
       void dieTens.offsetWidth;
@@ -5577,20 +5771,34 @@ const App = {
       dieTens.classList.add('rolling');
       dieOnes.classList.add('rolling');
       
+      // Animate numbers changing
+      let frame = 0;
+      const numberInterval = setInterval(() => {
+        tensValue.textContent = Math.floor(Math.random() * 10);
+        onesValue.textContent = Math.floor(Math.random() * 10);
+        frame++;
+        if (frame > 25) {
+          clearInterval(numberInterval);
+          tensValue.textContent = finalTens;
+          onesValue.textContent = finalOnes;
+        }
+      }, 60);
+      
+      // Random rotation amounts
+      const rot1 = 720 + Math.random() * 1080;
+      const rot2 = 720 + Math.random() * 1080;
+      
       setTimeout(() => {
-        dieTens.style.transition = 'left 2s cubic-bezier(0.25, 0.1, 0.25, 1), top 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        dieOnes.style.transition = 'left 2.3s cubic-bezier(0.25, 0.1, 0.25, 1), top 2.3s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        
-        dieTens.querySelector('.die-cube').style.transition = 'transform 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        dieOnes.querySelector('.die-cube').style.transition = 'transform 2.3s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        dieTens.style.transition = 'left 1.8s cubic-bezier(0.25, 0.1, 0.25, 1), top 1.8s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        dieOnes.style.transition = 'left 2.1s cubic-bezier(0.25, 0.1, 0.25, 1), top 2.1s cubic-bezier(0.25, 0.1, 0.25, 1), transform 2.1s cubic-bezier(0.25, 0.1, 0.25, 1)';
         
         dieTens.style.left = endX1 + 'px';
         dieTens.style.top = endY1 + 'px';
+        dieTens.style.transform = `rotate(${rot1}deg) scale(1.1)`;
+        
         dieOnes.style.left = endX2 + 'px';
         dieOnes.style.top = endY2 + 'px';
-        
-        dieTens.querySelector('.die-cube').style.transform = `rotateX(${rotX1}deg) rotateY(${rotY1}deg) rotateZ(${rotZ1}deg)`;
-        dieOnes.querySelector('.die-cube').style.transform = `rotateX(${rotX2}deg) rotateY(${rotY2}deg) rotateZ(${rotZ2}deg)`;
+        dieOnes.style.transform = `rotate(${rot2}deg) scale(1.1)`;
       }, 50);
       
       // Show result
@@ -5617,7 +5825,7 @@ const App = {
           resultDisplay.classList.remove('show', 'critical-success', 'critical-fail');
           isRolling = false;
         }, 2000);
-      }, 2500);
+      }, 2300);
     });
     
     // Click overlay to close (if not rolling)
@@ -5625,17 +5833,6 @@ const App = {
       if (e.target === overlay && !isRolling) {
         overlay.classList.remove('active');
       }
-    });
-  },
-  
-  /**
-   * Update die faces with numbers centered around the final value
-   */
-  updateDieFaces(die, finalValue) {
-    const faces = die.querySelectorAll('.die-face');
-    const numbers = [finalValue, (finalValue + 5) % 10, (finalValue + 1) % 10, (finalValue + 6) % 10, (finalValue + 2) % 10, (finalValue + 7) % 10];
-    faces.forEach((face, i) => {
-      face.textContent = numbers[i];
     });
   },
   

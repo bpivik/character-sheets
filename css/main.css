@@ -3074,11 +3074,11 @@ select:focus {
   height: 100%;
 }
 
-/* Flying 3D Dice */
+/* Flying 3D Dice - D10 Style */
 .flying-die {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   transform-style: preserve-3d;
   opacity: 0;
 }
@@ -3087,51 +3087,40 @@ select:focus {
   opacity: 1;
 }
 
-.die-cube {
+.d10-shape {
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.d10-inner {
   width: 100%;
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-}
-
-.die-face {
-  position: absolute;
-  width: 80px;
-  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
+}
+
+.d10-value {
+  font-size: 3rem;
   font-weight: 700;
-  border-radius: 12px;
-  backface-visibility: hidden;
-}
-
-/* Tens die - Red */
-#flying-die-tens .die-face {
-  background: linear-gradient(145deg, #e94560, #c73659);
-  border: 3px solid rgba(255,255,255,0.8);
   color: #fff;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  box-shadow: inset 0 2px 8px rgba(255,255,255,0.2), inset 0 -2px 8px rgba(0,0,0,0.2);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  z-index: 10;
 }
 
-/* Ones die - Blue */
-#flying-die-ones .die-face {
-  background: linear-gradient(145deg, #4a90e2, #357abd);
-  border: 3px solid rgba(255,255,255,0.8);
-  color: #fff;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  box-shadow: inset 0 2px 8px rgba(255,255,255,0.2), inset 0 -2px 8px rgba(0,0,0,0.2);
+/* D10 shape using clip-path for pentagonal look */
+#flying-die-tens .d10-inner {
+  background: linear-gradient(135deg, #e94560 0%, #c73659 50%, #a02040 100%);
+  clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+  border-radius: 4px;
 }
 
-/* Cube face positions */
-.die-face.front  { transform: rotateY(0deg) translateZ(40px); }
-.die-face.back   { transform: rotateY(180deg) translateZ(40px); }
-.die-face.right  { transform: rotateY(90deg) translateZ(40px); }
-.die-face.left   { transform: rotateY(-90deg) translateZ(40px); }
-.die-face.top    { transform: rotateX(90deg) translateZ(40px); }
-.die-face.bottom { transform: rotateX(-90deg) translateZ(40px); }
+#flying-die-ones .d10-inner {
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 50%, #2563a0 100%);
+  clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+  border-radius: 4px;
+}
 
 /* Result Display */
 .dice-result-overlay {
