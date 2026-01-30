@@ -5139,8 +5139,8 @@ const App = {
         
         let html = '<h4>Key Skills</h4><div class="skill-list">';
         sortedSkills.forEach(s => {
-          const dimmed = s.val < 50 ? ' style="color:#999;"' : '';
-          html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span${dimmed}>${s.val}%</span></div>`;
+          const dimmed = s.val < 50 ? ' color:#999;' : '';
+          html += `<div class="skill-item"><span style="font-weight:600;">${s.name}</span><span style="font-weight:600;${dimmed}">${s.val}%</span></div>`;
         });
         html += '</div>';
         return html;
@@ -5223,6 +5223,23 @@ const App = {
         return `
           <h4>Tenacity</h4>
           <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} / ${max}</span></div>
+        `;
+      }
+    },
+    'dice-roller': {
+      name: 'Dice Roller',
+      icon: '🎲',
+      render: () => {
+        return `
+          <h4>D100 Dice Roller</h4>
+          <div class="dice-roller-container">
+            <div class="dice-display">
+              <div class="die die-tens" id="die-tens">0</div>
+              <div class="die die-ones" id="die-ones">0</div>
+            </div>
+            <div class="dice-result" id="dice-result">--</div>
+            <button class="dice-roll-btn" id="btn-roll-dice">Roll D100</button>
+          </div>
         `;
       }
     }
@@ -5428,9 +5445,70 @@ const App = {
     item.appendChild(removeBtn);
     canvas.appendChild(item);
     
+    // Set up dice roller if this is the dice widget
+    if (widgetId === 'dice-roller') {
+      this.setupDiceRoller(item);
+    }
+    
     if (save) {
       this.saveSummaryLayout();
     }
+  },
+  
+  /**
+   * Set up the dice roller widget functionality
+   */
+  setupDiceRoller(widgetElement) {
+    const rollBtn = widgetElement.querySelector('#btn-roll-dice');
+    const dieTens = widgetElement.querySelector('#die-tens');
+    const dieOnes = widgetElement.querySelector('#die-ones');
+    const result = widgetElement.querySelector('#dice-result');
+    
+    if (!rollBtn || !dieTens || !dieOnes || !result) return;
+    
+    rollBtn.addEventListener('click', () => {
+      // Disable button during animation
+      rollBtn.disabled = true;
+      
+      // Add rolling class for animation
+      dieTens.classList.add('rolling');
+      dieOnes.classList.add('rolling');
+      
+      // Animate through random numbers
+      let rollCount = 0;
+      const maxRolls = 15;
+      const rollInterval = setInterval(() => {
+        dieTens.textContent = Math.floor(Math.random() * 10);
+        dieOnes.textContent = Math.floor(Math.random() * 10);
+        rollCount++;
+        
+        if (rollCount >= maxRolls) {
+          clearInterval(rollInterval);
+          
+          // Final result
+          const tens = Math.floor(Math.random() * 10);
+          const ones = Math.floor(Math.random() * 10);
+          
+          dieTens.textContent = tens;
+          dieOnes.textContent = ones;
+          
+          // Calculate d100 result (00 + 0 = 100, otherwise tens*10 + ones)
+          const d100 = (tens === 0 && ones === 0) ? 100 : tens * 10 + ones;
+          result.textContent = d100;
+          
+          // Remove rolling class
+          dieTens.classList.remove('rolling');
+          dieOnes.classList.remove('rolling');
+          
+          // Add result flash
+          result.classList.add('flash');
+          setTimeout(() => result.classList.remove('flash'), 300);
+          
+          // Re-enable button
+          rollBtn.disabled = false;
+        }
+      }, 80);
+    });
   },
   
   /**
