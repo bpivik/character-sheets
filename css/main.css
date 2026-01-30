@@ -877,7 +877,8 @@ select:focus {
 }
 
 .btn-alphabetize,
-.btn-add-row {
+.btn-add-row,
+.btn-remove-row {
   background: var(--button-bg, #5a4a3a);
   color: var(--text-light);
   border: 1px solid var(--border-gold);
@@ -890,7 +891,16 @@ select:focus {
   background: #6b5a4a;
 }
 
-.btn-add-row {
+.btn-remove-row {
+  background: #6b4a4a;
+}
+
+.btn-remove-row:hover {
+  background: #8b5a5a;
+}
+
+.btn-add-row,
+.btn-remove-row {
   font-weight: 700;
   font-size: 0.9rem;
   padding: 0.15rem 0.5rem;

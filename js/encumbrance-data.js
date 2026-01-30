@@ -501,11 +501,14 @@ function buildEncIndex() {
 
 /**
  * Normalize item name for lookup
- * Removes extra spaces, lowercases, trims
+ * Removes extra spaces, lowercases, trims, and removes "(see below)"
  */
 function normalizeItemName(name) {
   if (!name) return '';
-  return name.toLowerCase().trim().replace(/\s+/g, ' ');
+  let normalized = name.toLowerCase().trim();
+  // Remove "(see below)" suffix for matching
+  normalized = normalized.replace(/\s*\(see below\)\s*/gi, '');
+  return normalized.replace(/\s+/g, ' ').trim();
 }
 
 /**

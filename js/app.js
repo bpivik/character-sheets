@@ -962,8 +962,39 @@ const App = {
           e.target.dataset.originalValue = e.target.value;
         }
         this.updateProfessionalSkillData(i);
+        // Sync Musicianship if this is that skill and user is a Bard
+        this.syncMusicianshipIfBard(i);
         this.scheduleAutoSave();
       });
+    }
+  },
+
+  /**
+   * Sync Musicianship between Professional Skills and Magic page if user is a Bard
+   */
+  syncMusicianshipIfBard(profSkillIndex) {
+    const nameInput = document.getElementById(`prof-skill-${profSkillIndex}-name`);
+    const currentInput = document.getElementById(`prof-skill-${profSkillIndex}-current`);
+    
+    if (!nameInput || !currentInput) return;
+    
+    const skillName = nameInput.value.trim().toLowerCase();
+    if (!skillName.startsWith('musicianship')) return;
+    
+    // Check if user is a Bard
+    const classes = [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c);
+    
+    if (!classes.includes('bard')) return;
+    
+    // Sync to magic page
+    const magicMusicianship = document.getElementById('musicianship-percent');
+    if (magicMusicianship && magicMusicianship.value !== currentInput.value) {
+      magicMusicianship.value = currentInput.value;
+      magicMusicianship.dispatchEvent(new Event('input', { bubbles: true }));
     }
   },
   
@@ -2782,10 +2813,14 @@ const App = {
       if (baseSpan) baseSpan.textContent = results.beliefs.alignment;
     }
     
-    // Update passion bases (static 4 rows for now)
-    for (let i = 1; i <= 4; i++) {
-      const passionBase = document.getElementById(`passion-${i}-base`);
-      if (passionBase) passionBase.textContent = results.beliefs.passion;
+    // Update all passion bases (dynamic count)
+    const passionsContainer = document.getElementById('passions-container');
+    if (passionsContainer) {
+      const passionRows = passionsContainer.querySelectorAll('.belief-row');
+      passionRows.forEach(row => {
+        const passionBase = row.querySelector('.belief-base');
+        if (passionBase) passionBase.textContent = results.beliefs.passion;
+      });
     }
     
     // Update all oath bases (dynamic count)
@@ -4463,6 +4498,46 @@ const App = {
         });
       }
     });
+    
+    // Add special sync for Musicianship (magic page -> professional skills)
+    const musicianshipMagic = document.getElementById('musicianship-percent');
+    if (musicianshipMagic) {
+      musicianshipMagic.addEventListener('input', () => {
+        this.syncMusicianshipToProfSkills(musicianshipMagic.value);
+      });
+    }
+  },
+
+  /**
+   * Sync Musicianship from magic page to Professional Skills (if user is a Bard)
+   */
+  syncMusicianshipToProfSkills(value) {
+    // Check if user is a Bard
+    const classes = [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c);
+    
+    if (!classes.includes('bard')) return;
+    
+    // Find Musicianship in professional skills
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.professional-skill-row');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.prof-skill-name');
+      const currentInput = row.querySelector('.prof-skill-current');
+      if (nameInput && currentInput) {
+        const skillName = nameInput.value.trim().toLowerCase();
+        if (skillName.startsWith('musicianship')) {
+          if (currentInput.value !== value) {
+            currentInput.value = value;
+          }
+        }
+      }
+    });
   },
   
   /**
@@ -6115,38 +6190,273 @@ const App = {
   },
 
   /**
-   * Setup alphabetize button for Professional Skills
+   * Setup alphabetize buttons
    */
   setupAlphabetizeButton() {
-    const btn = document.getElementById('btn-alphabetize-prof');
-    if (btn) {
-      btn.addEventListener('click', () => {
-        this.alphabetizeProfessionalSkills();
-      });
+    // Professional Skills
+    const profBtn = document.getElementById('btn-alphabetize-prof');
+    if (profBtn) {
+      profBtn.addEventListener('click', () => this.alphabetizeProfessionalSkills());
+    }
+    
+    // Passions
+    const passionsBtn = document.getElementById('btn-alphabetize-passions');
+    if (passionsBtn) {
+      passionsBtn.addEventListener('click', () => this.alphabetizeBeliefs('passions'));
+    }
+    
+    // Oaths
+    const oathsBtn = document.getElementById('btn-alphabetize-oaths');
+    if (oathsBtn) {
+      oathsBtn.addEventListener('click', () => this.alphabetizeBeliefs('oaths'));
+    }
+    
+    // Languages
+    const langBtn = document.getElementById('btn-alphabetize-languages');
+    if (langBtn) {
+      langBtn.addEventListener('click', () => this.alphabetizeLanguages());
     }
   },
 
   /**
-   * Setup add row buttons
+   * Setup add/remove row buttons
    */
   setupAddRowButtons() {
-    // Add Professional Skill
-    const addProfBtn = document.getElementById('btn-add-prof-skill');
-    if (addProfBtn) {
-      addProfBtn.addEventListener('click', () => this.addProfessionalSkillRow());
+    // Professional Skills
+    document.getElementById('btn-add-prof-skill')?.addEventListener('click', () => this.addProfessionalSkillRow());
+    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeRow('professional-skills-container', 'professional-skill-row', 'Professional Skill'));
+    
+    // Languages
+    document.getElementById('btn-add-language')?.addEventListener('click', () => this.addLanguageRow());
+    document.getElementById('btn-remove-language')?.addEventListener('click', () => this.removeLanguageRow());
+    
+    // Oaths
+    document.getElementById('btn-add-oath')?.addEventListener('click', () => this.addOathRow());
+    document.getElementById('btn-remove-oath')?.addEventListener('click', () => this.removeBeliefRow('oaths-container', 'Oath'));
+    
+    // Passions
+    document.getElementById('btn-add-passion')?.addEventListener('click', () => this.addPassionRow());
+    document.getElementById('btn-remove-passion')?.addEventListener('click', () => this.removeBeliefRow('passions-container', 'Passion'));
+    
+    // Equipment
+    document.getElementById('btn-add-equipment')?.addEventListener('click', () => this.addEquipmentRow());
+    document.getElementById('btn-remove-equipment')?.addEventListener('click', () => this.removeEquipmentRow());
+  },
+
+  /**
+   * Alphabetize beliefs (passions or oaths)
+   */
+  alphabetizeBeliefs(type) {
+    const containerId = type === 'passions' ? 'passions-container' : 'oaths-container';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Gather all beliefs with their data
+    const beliefs = [];
+    const rows = container.querySelectorAll('.belief-row');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.belief-name');
+      const currentInput = row.querySelector('.belief-input');
+      if (nameInput && nameInput.value.trim()) {
+        beliefs.push({
+          name: nameInput.value.trim(),
+          current: currentInput?.value || ''
+        });
+      }
+    });
+    
+    // Sort alphabetically
+    beliefs.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Re-populate rows
+    rows.forEach((row, i) => {
+      const nameInput = row.querySelector('.belief-name');
+      const currentInput = row.querySelector('.belief-input');
+      if (i < beliefs.length) {
+        nameInput.value = beliefs[i].name;
+        currentInput.value = beliefs[i].current;
+      } else {
+        nameInput.value = '';
+        currentInput.value = '';
+      }
+    });
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Alphabetize languages (keeping Native Tongue at top)
+   */
+  alphabetizeLanguages() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    // Gather non-native languages
+    const languages = [];
+    const rows = container.querySelectorAll('.language-row:not(.native)');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.language-name');
+      const currentInput = row.querySelector('.language-input');
+      if (nameInput && nameInput.value.trim()) {
+        languages.push({
+          name: nameInput.value.trim(),
+          current: currentInput?.value || ''
+        });
+      }
+    });
+    
+    // Sort alphabetically
+    languages.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Re-populate non-native rows
+    rows.forEach((row, i) => {
+      const nameInput = row.querySelector('.language-name');
+      const currentInput = row.querySelector('.language-input');
+      if (i < languages.length) {
+        nameInput.value = languages[i].name;
+        currentInput.value = languages[i].current;
+      } else {
+        nameInput.value = '';
+        currentInput.value = '';
+      }
+    });
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Generic remove row with warning
+   */
+  removeRow(containerId, rowClass, typeName) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const rows = container.querySelectorAll(`.${rowClass}`);
+    if (rows.length <= 1) {
+      alert(`Cannot remove the last ${typeName} row.`);
+      return;
     }
     
-    // Add Language
-    const addLangBtn = document.getElementById('btn-add-language');
-    if (addLangBtn) {
-      addLangBtn.addEventListener('click', () => this.addLanguageRow());
+    const lastRow = rows[rows.length - 1];
+    const nameInput = lastRow.querySelector('input[type="text"]');
+    const hasContent = nameInput && nameInput.value.trim();
+    
+    if (hasContent) {
+      if (!confirm(`The last ${typeName} row contains "${nameInput.value}". Delete it permanently?`)) {
+        return;
+      }
     }
     
-    // Add Oath
-    const addOathBtn = document.getElementById('btn-add-oath');
-    if (addOathBtn) {
-      addOathBtn.addEventListener('click', () => this.addOathRow());
+    lastRow.remove();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Remove language row with warning
+   */
+  removeLanguageRow() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.language-row:not(.native)');
+    if (rows.length <= 1) {
+      alert('Cannot remove the last Language row.');
+      return;
     }
+    
+    const lastRow = rows[rows.length - 1];
+    const nameInput = lastRow.querySelector('.language-name');
+    const hasContent = nameInput && nameInput.value.trim();
+    
+    if (hasContent) {
+      if (!confirm(`The last Language row contains "${nameInput.value}". Delete it permanently?`)) {
+        return;
+      }
+    }
+    
+    lastRow.remove();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Remove belief row (passion/oath) with warning
+   */
+  removeBeliefRow(containerId, typeName) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.belief-row');
+    if (rows.length <= 1) {
+      alert(`Cannot remove the last ${typeName} row.`);
+      return;
+    }
+    
+    const lastRow = rows[rows.length - 1];
+    const nameInput = lastRow.querySelector('.belief-name');
+    const hasContent = nameInput && nameInput.value.trim();
+    
+    if (hasContent) {
+      if (!confirm(`The last ${typeName} row contains "${nameInput.value}". Delete it permanently?`)) {
+        return;
+      }
+    }
+    
+    lastRow.remove();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Remove equipment row with warning
+   */
+  removeEquipmentRow() {
+    const container = document.getElementById('equipment-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.equipment-row');
+    if (rows.length <= 1) {
+      alert('Cannot remove the last Equipment row.');
+      return;
+    }
+    
+    const lastRow = rows[rows.length - 1];
+    const nameInput = lastRow.querySelector('.equipment-name');
+    const hasContent = nameInput && nameInput.value.trim();
+    
+    if (hasContent) {
+      if (!confirm(`The last Equipment row contains "${nameInput.value}". Delete it permanently?`)) {
+        return;
+      }
+    }
+    
+    lastRow.remove();
+    this.recalculateEncumbrance();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Add a new passion row
+   */
+  addPassionRow() {
+    const container = document.getElementById('passions-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.belief-row');
+    const newIndex = rows.length + 1;
+    
+    const row = document.createElement('div');
+    row.className = 'belief-row';
+    row.dataset.index = newIndex;
+    row.innerHTML = `
+      <input type="text" class="belief-name" id="passion-${newIndex}-name" placeholder="">
+      <span class="belief-formula">POW+INT+50</span>
+      <span class="belief-base" id="passion-${newIndex}-base">0</span>
+      <input type="number" class="belief-input" id="passion-${newIndex}-current" placeholder="">
+    `;
+    container.appendChild(row);
+    
+    this.recalculateAll();
+    row.querySelector('.belief-name').focus();
+    this.scheduleAutoSave();
   },
 
   /**
@@ -6262,6 +6572,97 @@ const App = {
     
     // Focus the new row
     row.querySelector('.belief-name').focus();
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Add a new equipment row
+   */
+  addEquipmentRow() {
+    const container = document.getElementById('equipment-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.equipment-row');
+    const newIndex = rows.length;
+    
+    const row = document.createElement('div');
+    row.className = 'equipment-row';
+    row.innerHTML = `
+      <input type="text" class="equipment-name" id="equip-${newIndex}-name" placeholder="">
+      <input type="number" class="equipment-enc" id="equip-${newIndex}-enc" placeholder="" step="0.1">
+    `;
+    container.appendChild(row);
+    
+    // Add event listeners (same as generateEquipmentRows)
+    const nameInput = row.querySelector('.equipment-name');
+    const encInput = row.querySelector('.equipment-enc');
+    const rowIndex = newIndex;
+    
+    nameInput.dataset.previousValue = '';
+    
+    nameInput.addEventListener('focus', () => {
+      nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+    });
+    
+    nameInput.addEventListener('blur', async () => {
+      const currentValue = nameInput.value.trim().toLowerCase();
+      const previousValue = nameInput.dataset.previousValue || '';
+      
+      if (previousValue && (!currentValue || currentValue !== previousValue)) {
+        const removedContainer = this.getContainerIdFromItemName(previousValue);
+        if (removedContainer) {
+          const stillExists = this.containerStillExistsElsewhere(removedContainer, rowIndex);
+          if (!stillExists) {
+            const hasItems = this.containerHasItems(removedContainer);
+            if (hasItems) {
+              const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
+              if (!handled) {
+                nameInput.value = previousValue;
+                nameInput.dataset.previousValue = previousValue;
+                return;
+              }
+            }
+          }
+        }
+      }
+      
+      nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+      
+      if (nameInput.value.trim()) {
+        let itemName = this.toTitleCase(nameInput.value.trim());
+        const containerId = this.getContainerIdFromItemName(itemName);
+        if (containerId && !itemName.toLowerCase().includes('see below')) {
+          itemName = itemName + ' (see below)';
+        }
+        nameInput.value = itemName;
+      }
+      
+      if (window.EncumbranceData) {
+        const itemName = nameInput.value;
+        if (itemName.trim() === '') {
+          window.EncumbranceData.clearEquipmentEncIfEmpty('equip', rowIndex, itemName);
+        } else {
+          window.EncumbranceData.autofillEquipmentEnc('equip', rowIndex, itemName);
+        }
+        this.updateTotalEnc();
+        this.updateContainerButtons();
+        this.scheduleAutoSave();
+      }
+    });
+    
+    nameInput.addEventListener('input', () => {
+      this.updateContainerButtons();
+      this.scheduleAutoSave();
+    });
+    
+    encInput.addEventListener('input', () => {
+      this.updateTotalEnc();
+      this.scheduleAutoSave();
+    });
+    
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    nameInput.focus();
     
     this.scheduleAutoSave();
   },

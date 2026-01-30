@@ -558,13 +558,21 @@
 
             <!-- Passion Section -->
             <section class="passion-section">
-              <h3 class="section-header">Passions</h3>
+              <div class="section-header-row">
+                <h3 class="section-header">Passions</h3>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-alphabetize" id="btn-alphabetize-passions" title="Sort alphabetically">A→Z</button>
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-passion" title="Add passion row">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-passion" title="Remove last passion row">−</button>
+                </div>
+              </div>
               <div class="section-subheader">
                 <span></span>
                 <span></span>
                 <span class="header-base">Base %</span>
                 <span class="header-current">%</span>
               </div>
+              <div id="passions-container">
               <div class="belief-row" data-index="1">
                 <input type="text" class="belief-name" id="passion-1-name" placeholder="">
                 <span class="belief-formula">POW+INT+50</span>
@@ -589,13 +597,18 @@
                 <span class="belief-base" id="passion-4-base">0</span>
                 <input type="number" class="belief-input" id="passion-4-current" placeholder="">
               </div>
+              </div>
             </section>
 
             <!-- Oath Section -->
             <section class="oath-section">
               <div class="section-header-row">
                 <h3 class="section-header">Oaths</h3>
-                <button type="button" class="btn btn-small btn-add-row" id="btn-add-oath" title="Add oath row">+</button>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-alphabetize" id="btn-alphabetize-oaths" title="Sort alphabetically">A→Z</button>
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-oath" title="Add oath row">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-oath" title="Remove last oath row">−</button>
+                </div>
               </div>
               <div class="section-subheader">
                 <span></span>
@@ -638,6 +651,7 @@
                 <div class="header-buttons">
                   <button type="button" class="btn btn-small btn-alphabetize" id="btn-alphabetize-prof" title="Sort alphabetically">A→Z</button>
                   <button type="button" class="btn btn-small btn-add-row" id="btn-add-prof-skill" title="Add professional skill row">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-prof-skill" title="Remove last row">−</button>
                 </div>
               </div>
               <div class="skills-header prof-header">
@@ -655,7 +669,11 @@
             <section class="language-section">
               <div class="section-header-row">
                 <h3 class="section-header">Language</h3>
-                <button type="button" class="btn btn-small btn-add-row" id="btn-add-language" title="Add language row">+</button>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-alphabetize" id="btn-alphabetize-languages" title="Sort alphabetically">A→Z</button>
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-language" title="Add language row">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-language" title="Remove last row">−</button>
+                </div>
               </div>
               <div class="section-subheader">
                 <span></span>
@@ -714,7 +732,13 @@
           <!-- Right Column: Equipment -->
           <div class="column-right">
             <section class="equipment-section">
-              <h3 class="section-header">Equipment</h3>
+              <div class="section-header-row">
+                <h3 class="section-header">Equipment</h3>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-equipment" title="Add equipment row">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-equipment" title="Remove last row">−</button>
+                </div>
+              </div>
               <div class="equipment-header">
                 <span class="header-item">Item</span>
                 <span class="header-enc">ENC</span>
