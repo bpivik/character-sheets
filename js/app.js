@@ -6235,7 +6235,7 @@ const App = {
               <span class="exp-rolls-value" id="improve-skills-exp-rolls">0</span>
             </div>
             <p class="improve-skills-instructions">Select skills to attempt improvement (1 EXP Roll each):</p>
-            <div class="skills-columns">
+            <div class="skills-columns skills-columns-4">
               <div class="skill-column">
                 <h4>Standard Skills</h4>
                 <div class="skill-list" id="improve-standard-skills"></div>
@@ -6243,6 +6243,10 @@ const App = {
               <div class="skill-column">
                 <h4>Professional Skills</h4>
                 <div class="skill-list" id="improve-professional-skills"></div>
+              </div>
+              <div class="skill-column">
+                <h4>Combat</h4>
+                <div class="skill-list" id="improve-combat-skills"></div>
               </div>
               <div class="skill-column">
                 <h4>Magical Skills</h4>
@@ -6312,17 +6316,19 @@ const App = {
   populateImprovementSkills() {
     const standardContainer = document.getElementById('improve-standard-skills');
     const professionalContainer = document.getElementById('improve-professional-skills');
+    const combatContainer = document.getElementById('improve-combat-skills');
     const magicalContainer = document.getElementById('improve-magical-skills');
     
     // Clear existing
     standardContainer.innerHTML = '';
     professionalContainer.innerHTML = '';
+    combatContainer.innerHTML = '';
     magicalContainer.innerHTML = '';
     
-    // Standard Skills
+    // Standard Skills (removed home-parallel)
     const standardSkills = [
       'athletics', 'boating', 'brawn', 'conceal', 'customs', 'dance', 'deceit',
-      'drive', 'endurance', 'evade', 'first-aid', 'home-parallel', 'influence',
+      'drive', 'endurance', 'evade', 'first-aid', 'influence',
       'insight', 'locale', 'perception', 'ride', 'sing', 'stealth', 'swim',
       'unarmed', 'willpower'
     ];
@@ -6331,7 +6337,7 @@ const App = {
       'athletics': 'Athletics', 'boating': 'Boating', 'brawn': 'Brawn', 
       'conceal': 'Conceal', 'customs': 'Customs', 'dance': 'Dance',
       'deceit': 'Deceit', 'drive': 'Drive', 'endurance': 'Endurance',
-      'evade': 'Evade', 'first-aid': 'First Aid', 'home-parallel': 'Home Parallel',
+      'evade': 'Evade', 'first-aid': 'First Aid',
       'influence': 'Influence', 'insight': 'Insight', 'locale': 'Locale',
       'perception': 'Perception', 'ride': 'Ride', 'sing': 'Sing',
       'stealth': 'Stealth', 'swim': 'Swim', 'unarmed': 'Unarmed', 'willpower': 'Willpower'
@@ -6351,40 +6357,64 @@ const App = {
       `;
     });
     
-    // Professional Skills (from the character sheet)
+    // Professional Skills (from the character sheet) - collect and sort alphabetically
+    const profSkills = [];
     for (let i = 0; i < 20; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
       
       if (nameInput && nameInput.value.trim()) {
-        const skillName = nameInput.value.trim();
-        const current = currentInput?.value || '0';
-        
-        // Check if this is a magical skill
-        const magicalSkills = ['channel', 'piety', 'devotion', 'folk magic', 'invocation', 'shaping'];
-        const isMagical = magicalSkills.some(ms => skillName.toLowerCase().includes(ms));
-        
-        const container = isMagical ? magicalContainer : professionalContainer;
-        container.innerHTML += `
-          <label class="skill-checkbox-row">
-            <input type="checkbox" name="improve-skill" value="prof:${i}" data-skill-value="${current}">
-            <span class="skill-name">${skillName}</span>
-            <span class="skill-value">${current}%</span>
-          </label>
-        `;
+        profSkills.push({
+          index: i,
+          name: nameInput.value.trim(),
+          current: currentInput?.value || '0'
+        });
       }
     }
+    
+    // Sort alphabetically
+    profSkills.sort((a, b) => a.name.localeCompare(b.name));
+    
+    profSkills.forEach(skill => {
+      professionalContainer.innerHTML += `
+        <label class="skill-checkbox-row">
+          <input type="checkbox" name="improve-skill" value="prof:${skill.index}" data-skill-value="${skill.current}">
+          <span class="skill-name">${skill.name}</span>
+          <span class="skill-value">${skill.current}%</span>
+        </label>
+      `;
+    });
     
     // Combat Skill
     const combatSkillName = document.getElementById('combat-skill-name')?.value || 'Combat Skill';
     const combatSkillCurrent = document.getElementById('combat-skill-current')?.value || '0';
-    professionalContainer.innerHTML += `
+    combatContainer.innerHTML += `
       <label class="skill-checkbox-row">
         <input type="checkbox" name="improve-skill" value="combat" data-skill-value="${combatSkillCurrent}">
         <span class="skill-name">${combatSkillName}</span>
         <span class="skill-value">${combatSkillCurrent}%</span>
       </label>
     `;
+    
+    // Magical Skills - from the spell pages
+    const magicalSkillDefs = [
+      { id: 'channel-percent', name: 'Channel' },
+      { id: 'piety-percent', name: 'Piety' }
+    ];
+    
+    magicalSkillDefs.forEach(skill => {
+      const el = document.getElementById(skill.id);
+      if (el && el.value) {
+        const current = el.value || '0';
+        magicalContainer.innerHTML += `
+          <label class="skill-checkbox-row">
+            <input type="checkbox" name="improve-skill" value="magic:${skill.id}" data-skill-value="${current}">
+            <span class="skill-name">${skill.name}</span>
+            <span class="skill-value">${current}%</span>
+          </label>
+        `;
+      }
+    });
     
     // If no magical skills, show message
     if (magicalContainer.innerHTML === '') {
