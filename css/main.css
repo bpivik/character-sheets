@@ -2989,8 +2989,30 @@ select:focus {
   font-weight: 700;
 }
 
-.widget-content .stat-value-bold {
-  font-weight: 700;
+.widget-content .stat-value-bold,
+.widget-content .stat-row .stat-value-bold {
+  font-weight: 700 !important;
+}
+
+/* Spell widget header */
+.widget-content .spell-widget-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #888;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 4px;
+}
+
+/* Spell hover for tooltips */
+.widget-content .spell-hover {
+  cursor: help;
+}
+
+.widget-content .spell-hover:hover {
+  background: rgba(139, 69, 19, 0.1);
 }
 
 .widget-content .hp-overview {

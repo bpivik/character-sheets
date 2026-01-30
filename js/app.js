@@ -5262,9 +5262,21 @@ const App = {
       icon: '🎒',
       render: () => {
         const totalEnc = document.getElementById('total-enc')?.textContent || '0';
+        const statusEl = document.getElementById('enc-status');
+        const statusText = statusEl?.textContent || 'Unknown';
+        
+        // Determine status color
+        let statusColor = '#228b22'; // Green for Unburdened
+        if (statusText === 'Overburdened') {
+          statusColor = '#c41e3a'; // Red
+        } else if (statusText === 'Burdened') {
+          statusColor = '#1e90ff'; // Blue
+        }
+        
         return `
           <h4>Encumbrance</h4>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${totalEnc}</span></div>
+          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value-bold">${totalEnc}</span></div>
+          <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value-bold" style="color: ${statusColor};">${statusText}</span></div>
         `;
       }
     },
@@ -5306,7 +5318,6 @@ const App = {
       icon: '✨',
       dynamic: true,
       isAvailable: () => {
-        // Check if any cantrips are memorized
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`cantrips-${i}-mem`);
           const name = document.getElementById(`cantrips-${i}-name`);
@@ -5315,14 +5326,19 @@ const App = {
         return false;
       },
       render: () => {
-        let html = '<h4>Cantrips (Memorized)</h4><div class="skill-list">';
+        let html = '<h4>Cantrips (Memorized)</h4>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`cantrips-${i}-mem`);
-          const name = document.getElementById(`cantrips-${i}-name`);
+          const nameEl = document.getElementById(`cantrips-${i}-name`);
           const cost = document.getElementById(`cantrips-${i}-cost`);
-          if (mem?.checked && name?.value?.trim()) {
-            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+          if (mem?.checked && nameEl?.value?.trim()) {
+            const spellName = nameEl.value.trim();
+            const description = window.SpellData?.getSpellDescription(spellName) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
             found = true;
           }
         }
@@ -5344,14 +5360,19 @@ const App = {
         return false;
       },
       render: () => {
-        let html = '<h4>Rank 1 Spells (Memorized)</h4><div class="skill-list">';
+        let html = '<h4>Rank 1 Spells (Memorized)</h4>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`rank1-${i}-mem`);
-          const name = document.getElementById(`rank1-${i}-name`);
+          const nameEl = document.getElementById(`rank1-${i}-name`);
           const cost = document.getElementById(`rank1-${i}-cost`);
-          if (mem?.checked && name?.value?.trim()) {
-            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+          if (mem?.checked && nameEl?.value?.trim()) {
+            const spellName = nameEl.value.trim();
+            const description = window.SpellData?.getSpellDescription(spellName) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
             found = true;
           }
         }
@@ -5373,14 +5394,19 @@ const App = {
         return false;
       },
       render: () => {
-        let html = '<h4>Rank 2 Spells (Memorized)</h4><div class="skill-list">';
+        let html = '<h4>Rank 2 Spells (Memorized)</h4>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`rank2-${i}-mem`);
-          const name = document.getElementById(`rank2-${i}-name`);
+          const nameEl = document.getElementById(`rank2-${i}-name`);
           const cost = document.getElementById(`rank2-${i}-cost`);
-          if (mem?.checked && name?.value?.trim()) {
-            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+          if (mem?.checked && nameEl?.value?.trim()) {
+            const spellName = nameEl.value.trim();
+            const description = window.SpellData?.getSpellDescription(spellName) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
             found = true;
           }
         }
@@ -5402,14 +5428,19 @@ const App = {
         return false;
       },
       render: () => {
-        let html = '<h4>Rank 3 Spells (Memorized)</h4><div class="skill-list">';
+        let html = '<h4>Rank 3 Spells (Memorized)</h4>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`rank3-${i}-mem`);
-          const name = document.getElementById(`rank3-${i}-name`);
+          const nameEl = document.getElementById(`rank3-${i}-name`);
           const cost = document.getElementById(`rank3-${i}-cost`);
-          if (mem?.checked && name?.value?.trim()) {
-            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+          if (mem?.checked && nameEl?.value?.trim()) {
+            const spellName = nameEl.value.trim();
+            const description = window.SpellData?.getSpellDescription(spellName) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
             found = true;
           }
         }
@@ -5431,14 +5462,19 @@ const App = {
         return false;
       },
       render: () => {
-        let html = '<h4>Rank 4 Spells (Memorized)</h4><div class="skill-list">';
+        let html = '<h4>Rank 4 Spells (Memorized)</h4>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`rank4-${i}-mem`);
-          const name = document.getElementById(`rank4-${i}-name`);
+          const nameEl = document.getElementById(`rank4-${i}-name`);
           const cost = document.getElementById(`rank4-${i}-cost`);
-          if (mem?.checked && name?.value?.trim()) {
-            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+          if (mem?.checked && nameEl?.value?.trim()) {
+            const spellName = nameEl.value.trim();
+            const description = window.SpellData?.getSpellDescription(spellName) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
             found = true;
           }
         }
@@ -5460,14 +5496,19 @@ const App = {
         return false;
       },
       render: () => {
-        let html = '<h4>Rank 5 Spells (Memorized)</h4><div class="skill-list">';
+        let html = '<h4>Rank 5 Spells (Memorized)</h4>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
           const mem = document.getElementById(`rank5-${i}-mem`);
-          const name = document.getElementById(`rank5-${i}-name`);
+          const nameEl = document.getElementById(`rank5-${i}-name`);
           const cost = document.getElementById(`rank5-${i}-cost`);
-          if (mem?.checked && name?.value?.trim()) {
-            html += `<div class="skill-item"><span>${name.value}</span><span>${cost?.value || ''}</span></div>`;
+          if (mem?.checked && nameEl?.value?.trim()) {
+            const spellName = nameEl.value.trim();
+            const description = window.SpellData?.getSpellDescription(spellName) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
             found = true;
           }
         }

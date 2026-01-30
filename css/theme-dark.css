@@ -517,3 +517,13 @@
   border-color: #c9a227;
   color: #1a1a1a;
 }
+
+/* Spell widget in dark mode */
+[data-theme="dark"] .widget-content .spell-widget-header {
+  color: #888;
+  border-bottom-color: #444;
+}
+
+[data-theme="dark"] .widget-content .spell-hover:hover {
+  background: rgba(201, 162, 39, 0.15);
+}
