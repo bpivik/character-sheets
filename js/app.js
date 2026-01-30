@@ -3225,11 +3225,9 @@ const App = {
       // 1. Check if it's a known standard skill FIRST
       const standardSkillId = standardSkillMap[normalizedSkill];
       if (standardSkillId) {
-        const baseSpan = document.getElementById(`${standardSkillId}-base`);
+        // The -current input contains the TOTAL skill value, not points added
         const currentInput = document.getElementById(`${standardSkillId}-current`);
-        const base = parseInt(baseSpan?.textContent, 10) || 0;
-        const current = parseInt(currentInput?.value, 10) || 0;
-        skillValue = base + current;
+        skillValue = parseInt(currentInput?.value, 10) || 0;
         found = true;
       }
       
@@ -3237,11 +3235,9 @@ const App = {
       if (!found) {
         const magicSkillId = magicSkillMap[normalizedSkill];
         if (magicSkillId) {
-          const baseSpan = document.getElementById(`${magicSkillId}-base`);
+          // The -current input contains the TOTAL skill value
           const currentInput = document.getElementById(`${magicSkillId}-current`);
-          const base = parseInt(baseSpan?.textContent, 10) || 0;
-          const current = parseInt(currentInput?.value, 10) || 0;
-          skillValue = base + current;
+          skillValue = parseInt(currentInput?.value, 10) || 0;
           found = true;
         }
       }
@@ -3257,16 +3253,14 @@ const App = {
       if (!found) {
         for (let i = 0; i < 15; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
-          const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
           if (nameInput) {
             const name = nameInput.value?.trim().toLowerCase() || '';
             // Exact match only for professional skills
             if (name === normalizedSkill) {
-              const base = parseInt(baseVal?.textContent, 10) || 0;
-              const current = parseInt(currentInput?.value, 10) || 0;
-              skillValue = base + current;
+              // Professional skill -current is the TOTAL
+              skillValue = parseInt(currentInput?.value, 10) || 0;
               found = true;
               break;
             }
@@ -3278,7 +3272,6 @@ const App = {
       if (!found) {
         for (let i = 0; i < 15; i++) {
           const nameInput = document.getElementById(`prof-skill-${i}-name`);
-          const baseVal = document.getElementById(`prof-skill-${i}-base-val`);
           const currentInput = document.getElementById(`prof-skill-${i}-current`);
           
           if (nameInput) {
@@ -3289,9 +3282,7 @@ const App = {
             if (name.startsWith(normalizedSkill + ' ') || 
                 name.startsWith(normalizedSkill + '(') || 
                 baseName === normalizedSkill) {
-              const base = parseInt(baseVal?.textContent, 10) || 0;
-              const current = parseInt(currentInput?.value, 10) || 0;
-              const total = base + current;
+              const total = parseInt(currentInput?.value, 10) || 0;
               // Take the highest value if multiple matches
               if (total > skillValue) {
                 skillValue = total;
