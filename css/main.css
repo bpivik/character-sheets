@@ -2844,16 +2844,20 @@ select:focus {
 .summary-container {
   display: flex;
   gap: 20px;
-  min-height: 500px;
+  min-height: 600px;
 }
 
 .widget-palette {
-  width: 220px;
+  width: 180px;
   flex-shrink: 0;
   background: #f5f5f5;
   border-radius: 8px;
   padding: 12px;
   border: 1px solid #ddd;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
 }
 
 .widget-palette h3 {
@@ -2868,8 +2872,6 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 600px;
-  overflow-y: auto;
 }
 
 .widget-item {
@@ -2915,9 +2917,9 @@ select:focus {
   border: 2px dashed #ccc;
   border-radius: 8px;
   padding: 16px;
-  min-height: 400px;
+  min-height: 500px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   align-content: start;
 }
