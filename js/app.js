@@ -5497,13 +5497,16 @@ const App = {
     // Apply all penalties
     this.applyAllPenalties();
     
-    // Update summary page
+    // Update summary page - refresh all widgets that display penalized values
     this.updateCombatQuickRef();
     if (typeof this.refreshSummaryWidget === 'function') {
       this.refreshSummaryWidget('fatigue');
       this.refreshSummaryWidget('combat');
       this.refreshSummaryWidget('attributes');
       this.refreshSummaryWidget('movement');
+      this.refreshSummaryWidget('key-skills');
+      this.refreshSummaryWidget('professional-skills');
+      this.refreshSummaryWidget('magic-skills');
     }
     
     if (save) {
@@ -5926,6 +5929,20 @@ const App = {
       }
     });
     
+    // Magic skills
+    const magicSkillIds = [
+      'channel-percent', 'piety-percent', 
+      'arcane-casting-percent', 'arcane-knowledge-percent',
+      'arcane-sorcery-percent', 'sorcerous-wisdom-percent',
+      'musicianship-percent', 'lyrical-magic-percent'
+    ];
+    magicSkillIds.forEach(id => {
+      const input = document.getElementById(id);
+      if (input && input.value && input.dataset.originalValue === undefined) {
+        input.dataset.originalValue = input.value;
+      }
+    });
+    
     // Initiative
     const initCurrent = document.getElementById('initiative-current');
     if (initCurrent && initCurrent.value && initCurrent.dataset.originalValue === undefined) {
@@ -6120,6 +6137,48 @@ const App = {
           input.classList.add('enc-penalized-value');
           if (encIsBurdened) input.classList.add('enc-burdened-penalty');
         }
+        if (fatigueActive) {
+          input.classList.add('fatigue-penalized');
+          if (fatigueSevere) input.classList.add('fatigue-severe');
+        }
+        if (!fatigue.canAct) input.classList.add('fatigue-incapacitated');
+      } else if (input.dataset.originalValue !== undefined) {
+        input.value = input.dataset.originalValue;
+        input.title = '';
+      }
+    });
+    
+    // --- Magic Skills (no ENC penalty, only fatigue) ---
+    const magicSkillIds = [
+      'channel-percent', 'piety-percent', 
+      'arcane-casting-percent', 'arcane-knowledge-percent',
+      'arcane-sorcery-percent', 'sorcerous-wisdom-percent',
+      'musicianship-percent', 'lyrical-magic-percent'
+    ];
+    
+    magicSkillIds.forEach(id => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || 0;
+      const totalPenalty = fatigueSkillPenalty; // No ENC penalty for magic skills
+      const hasPenalty = totalPenalty > 0 && originalValue > 0;
+      
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+      
+      if (hasPenalty) {
+        const penalizedValue = Math.max(0, originalValue - totalPenalty);
+        input.value = penalizedValue;
+        
+        let tooltipParts = [`Original: ${originalValue}%`];
+        if (fatigueSkillPenalty > 0) tooltipParts.push(`Fatigue (${fatigue.skillGrade}): -${fatigueSkillPenalty}%`);
+        tooltipParts.push(`Effective: ${penalizedValue}%`);
+        input.title = tooltipParts.join(', ');
+        
         if (fatigueActive) {
           input.classList.add('fatigue-penalized');
           if (fatigueSevere) input.classList.add('fatigue-severe');
@@ -6652,7 +6711,7 @@ const App = {
         const skills = [];
         
         // Check all professional skill slots
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
           const name = document.getElementById(`prof-skill-${i}-name`)?.value;
           const val = parseInt(document.getElementById(`prof-skill-${i}-current`)?.value, 10) || 0;
           if (name && name.trim()) {
@@ -7349,8 +7408,6 @@ const App = {
         const newState = fatigueBtn.dataset.fatigueState;
         if (newState && FATIGUE_PENALTIES[newState]) {
           this.setFatigueState(newState, true);
-          // Re-render the fatigue widget
-          this.refreshSummaryWidget('fatigue');
         }
         return;
       }
