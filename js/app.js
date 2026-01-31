@@ -415,7 +415,7 @@ const App = {
           val = Math.max(0, Math.min(5, val));
           field.value = val;
           this.character.info[this.camelCase(fieldId)] = val;
-          this.recalculateAll();
+          this.recalculateAll(true); // Force update even if locked
           this.scheduleAutoSave();
         };
         field.addEventListener('input', handleRankChange);
@@ -427,7 +427,7 @@ const App = {
     const speciesField = document.getElementById('species');
     if (speciesField) {
       const handleSpeciesChange = () => {
-        this.recalculateAll();
+        this.recalculateAll(true); // Force update even if locked
       };
       speciesField.addEventListener('input', handleSpeciesChange);
       speciesField.addEventListener('change', handleSpeciesChange);
@@ -2931,8 +2931,9 @@ const App = {
 
   /**
    * Recalculate all derived values
+   * @param {boolean} forceUpdate - If true, bypasses originalsLocked check (used for rank/species changes)
    */
-  recalculateAll() {
+  recalculateAll(forceUpdate = false) {
     const attrs = this.character.attributes;
     
     // Calculate combined rank from all classes
@@ -2951,15 +2952,10 @@ const App = {
     const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
-    // Debug logging
-    console.log('recalculateAll called:', { combinedRank, species, isHuman, originalsLocked: this.character.originalsLocked });
-    
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
     
-    console.log('Calculator results:', results.derived);
-    
-    // Only update original values if NOT locked
-    if (!this.character.originalsLocked) {
+    // Update original values if NOT locked OR if forceUpdate is true (rank/species changes)
+    if (!this.character.originalsLocked || forceUpdate) {
       const apOrig = document.getElementById('action-points-original');
       if (apOrig) {
         apOrig.value = results.derived.actionPoints;
