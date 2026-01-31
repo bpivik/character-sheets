@@ -822,6 +822,42 @@ select:focus {
   border-radius: 8px;
 }
 
+/* Scrollable containers for dynamic rows */
+#passions-container {
+  max-height: calc(3 * 42px);  /* 3 rows */
+  overflow-y: auto;
+}
+
+#oaths-container {
+  max-height: calc(4 * 42px);  /* 4 rows */
+  overflow-y: auto;
+}
+
+#professional-skills-container {
+  max-height: calc(15 * 38px);  /* 15 rows */
+  overflow-y: auto;
+}
+
+#passions-container::-webkit-scrollbar,
+#oaths-container::-webkit-scrollbar,
+#professional-skills-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+#passions-container::-webkit-scrollbar-track,
+#oaths-container::-webkit-scrollbar-track,
+#professional-skills-container::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 3px;
+}
+
+#passions-container::-webkit-scrollbar-thumb,
+#oaths-container::-webkit-scrollbar-thumb,
+#professional-skills-container::-webkit-scrollbar-thumb {
+  background: var(--border-gold);
+  border-radius: 3px;
+}
+
 .section-header {
   font-family: var(--font-header);
   font-size: 1.2rem;
@@ -1162,7 +1198,7 @@ select:focus {
 
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr minmax(85px, auto) 45px 50px;
+  grid-template-columns: 1fr 105px 45px 50px;
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0;
@@ -1194,15 +1230,14 @@ select:focus {
 }
 
 .belief-formula-input {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-secondary);
   text-align: center;
   background: rgba(139, 115, 85, 0.1);
   border: 1px solid transparent;
   border-radius: 4px;
-  padding: 0.25rem 0.2rem;
+  padding: 0.25rem 0.1rem;
   width: 100%;
-  min-width: 85px;
 }
 
 .belief-formula-input:focus {
