@@ -4136,12 +4136,13 @@ select:focus {
 .d10-icon {
   width: 18px;
   height: 18px;
-  filter: brightness(0.7);
-  transition: filter 0.15s;
+  opacity: 0.6;
+  transition: opacity 0.15s, filter 0.15s;
 }
 
 .d100-btn:hover .d10-icon {
-  filter: brightness(1) drop-shadow(0 0 2px var(--border-gold));
+  opacity: 1;
+  filter: drop-shadow(0 0 3px var(--border-gold));
 }
 
 /* Damage dice button styling */
