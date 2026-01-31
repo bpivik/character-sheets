@@ -2266,12 +2266,12 @@ select:focus {
 .fatigue-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
 }
 
 .fatigue-table th,
 .fatigue-table td {
-  padding: 0.12rem 0.2rem;
+  padding: 0.3rem 0.4rem;
   border: 1px solid var(--border-light);
   text-align: center;
 }
@@ -2279,6 +2279,23 @@ select:focus {
 .fatigue-table th {
   background: rgba(0,0,0,0.08);
   font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* State column: bold, larger, left-aligned */
+.fatigue-col-state {
+  text-align: left;
+  width: 25%;
+}
+
+.fatigue-state-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-align: left;
+  font-family: var(--font-header);
+  color: var(--text-header);
 }
 
 .fatigue-table tbody tr:nth-child(even) {
