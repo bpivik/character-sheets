@@ -2473,9 +2473,9 @@ select:focus {
 
 .rest-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   align-items: center;
-  margin-left: 1rem;
+  margin-left: 2.5rem;
 }
 
 .rest-btn {
