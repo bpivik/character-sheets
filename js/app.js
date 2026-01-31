@@ -5449,8 +5449,8 @@ const App = {
           <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
           <div class="combat-skill-header"><span>Combat Skill</span><span>%</span></div>
           <div class="skill-list">
-            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll d100"><i class="fa-solid fa-dice-d10"></i></button></span></div>
-            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll d100"><i class="fa-solid fa-dice-d10"></i></button></span></div>
+            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll a d100!"><img src="https://game-icons.net/icons/ffffff/transparent/1x1/skoll/d10.svg" alt="d10" class="d10-icon"></button></span></div>
+            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll a d100!"><img src="https://game-icons.net/icons/ffffff/transparent/1x1/skoll/d10.svg" alt="d10" class="d10-icon"></button></span></div>
           </div>
         `;
         

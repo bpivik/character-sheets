@@ -4101,18 +4101,29 @@ select:focus {
   border: none;
   cursor: pointer;
   padding: 2px 4px;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
   opacity: 0.7;
-  transition: opacity 0.15s, transform 0.15s, color 0.15s;
+  transition: opacity 0.15s, transform 0.15s;
   z-index: 10;
   pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .d100-btn:hover {
   opacity: 1;
   transform: scale(1.2);
-  color: var(--border-gold);
+}
+
+.d10-icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0.7);
+  transition: filter 0.15s;
+}
+
+.d100-btn:hover .d10-icon {
+  filter: brightness(1) drop-shadow(0 0 2px var(--border-gold));
 }
 
 /* Damage dice button styling */
