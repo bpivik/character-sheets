@@ -9952,11 +9952,55 @@ const App = {
     // Build rank tabs (1 through current rank - Rank 0 has no abilities)
     this.buildRankTabs(classRank);
     
-    // Select highest rank by default (most likely what they want), minimum Rank 1
-    const selectedRank = Math.max(1, classRank);
+    // Find the lowest rank where the character hasn't taken all abilities
+    const selectedRank = this.findLowestIncompleteRank(className, classRank);
     if (classRank >= 1) {
       this.selectRankTab(selectedRank);
     }
+  },
+
+  /**
+   * Find the lowest rank where the character hasn't acquired all available abilities
+   */
+  findLowestIncompleteRank(className, maxRank) {
+    if (maxRank < 1) return 1;
+    
+    const acquiredAbilities = this.getAcquiredAbilities();
+    const charIncreases = this.character.characteristicIncreases || [];
+    const getSkillValue = (skillName) => this.getSkillValueByName(skillName);
+    
+    for (let rank = 1; rank <= maxRank; rank++) {
+      const abilities = getRankedAbilitiesForClass(className, rank);
+      
+      // Check if any abilities at this rank are still available (not acquired and prereqs met)
+      for (const ability of abilities) {
+        // Special handling for Characteristic Increase
+        if (ability.name === 'Characteristic Increase') {
+          const charIncreasesAtThisRank = charIncreases.filter(inc => inc.rank === rank);
+          if (charIncreasesAtThisRank.length === 0) {
+            // Haven't taken Characteristic Increase at this rank
+            return rank;
+          }
+          continue;
+        }
+        
+        // Check if already acquired
+        const alreadyHas = hasAbility(ability.name, acquiredAbilities);
+        const repeatable = isRepeatableAbility(ability.name);
+        
+        if (!alreadyHas || repeatable) {
+          // Check prerequisites
+          const prereqCheck = checkAbilityPrereqs(ability.prereqs, acquiredAbilities, getSkillValue);
+          if (prereqCheck.met) {
+            // Found an available ability at this rank
+            return rank;
+          }
+        }
+      }
+    }
+    
+    // All abilities acquired at all ranks, default to highest rank
+    return maxRank;
   },
 
   /**
@@ -9970,7 +10014,7 @@ const App = {
     for (let r = 1; r <= maxRank; r++) {
       const tab = document.createElement('button');
       tab.type = 'button';
-      tab.className = 'rank-tab' + (r === maxRank ? ' active' : '');
+      tab.className = 'rank-tab';
       tab.dataset.rank = r;
       tab.textContent = `Rank ${r}`;
       tab.addEventListener('click', () => {
