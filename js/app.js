@@ -8465,6 +8465,10 @@ const App = {
                 <span class="exp-option-icon">❤️</span>
                 <span class="exp-option-text">Strengthen Passions, Alignment, or Oaths</span>
               </button>
+              <button type="button" class="btn exp-option-btn" id="exp-btn-add-subclass">
+                <span class="exp-option-icon">🎭</span>
+                <span class="exp-option-text">Add New Sub-class</span>
+              </button>
             </div>
           </div>
         </div>
@@ -8496,7 +8500,7 @@ const App = {
       });
       
       document.getElementById('exp-btn-unlock-abilities').addEventListener('click', () => {
-        // TODO: Implement
+        // TODO: Implement class abilities
         alert('Unlock Class Abilities - Coming soon!');
       });
       
@@ -8507,6 +8511,10 @@ const App = {
       
       document.getElementById('exp-btn-passions').addEventListener('click', () => {
         this.openStrengthenPassionsModal();
+      });
+      
+      document.getElementById('exp-btn-add-subclass').addEventListener('click', () => {
+        this.openAddSubclassModal();
       });
     }
     
@@ -9067,6 +9075,337 @@ const App = {
     if (modal) {
       modal.classList.add('hidden');
     }
+  },
+
+  /**
+   * Open the Add New Sub-class modal
+   */
+  openAddSubclassModal() {
+    // Close the main EXP modal
+    this.closeExpModal();
+    
+    // Get current class info
+    const primaryClass = document.getElementById('class-primary')?.value?.trim() || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
+    const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim() || '';
+    const primaryRank = parseInt(document.getElementById('rank-primary')?.value, 10) || 0;
+    const species = document.getElementById('species')?.value?.trim().toLowerCase() || '';
+    const isSyrin = species === 'syrin';
+    
+    // Check if can add subclass
+    const cannotMulticlass = ['anti-paladin', 'berserker', 'cavalier', 'monk', 'paladin'];
+    const currentClasses = [primaryClass, secondaryClass, tertiaryClass].filter(c => c).map(c => c.toLowerCase());
+    
+    // Determine which slot we're filling
+    let targetSlot = '';
+    if (!secondaryClass) {
+      targetSlot = 'secondary';
+    } else if (!tertiaryClass) {
+      targetSlot = 'tertiary';
+    }
+    
+    // Check restrictions
+    let errorMessage = '';
+    if (!primaryClass) {
+      errorMessage = 'You must have a primary class before adding a sub-class.';
+    } else if (currentClasses.length >= 3) {
+      errorMessage = 'You already have the maximum of 3 classes.';
+    } else if (cannotMulticlass.includes(primaryClass.toLowerCase())) {
+      errorMessage = `${primaryClass} cannot multi-class.`;
+    } else if (primaryRank < 1) {
+      errorMessage = 'You must be at least Rank 1 in your primary class to add a sub-class.';
+    }
+    
+    // Calculate cost
+    const expCost = primaryRank;
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('add-subclass-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'add-subclass-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content add-subclass-modal-content">
+          <div class="modal-header">
+            <h3>Add New Sub-class</h3>
+            <button class="modal-close" id="add-subclass-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="exp-rolls-display">
+              <span class="exp-rolls-label">Available EXP Rolls:</span>
+              <span class="exp-rolls-value" id="add-subclass-exp-rolls">0</span>
+            </div>
+            <div class="subclass-cost-display" id="subclass-cost-display">
+              <span class="subclass-cost-label">Cost:</span>
+              <span class="subclass-cost-value" id="subclass-cost-value">0</span>
+              <span class="subclass-cost-note" id="subclass-cost-note"></span>
+            </div>
+            <div class="subclass-error" id="subclass-error"></div>
+            <div class="subclass-selection" id="subclass-selection">
+              <label for="subclass-select">Choose a class:</label>
+              <select id="subclass-select" class="subclass-select">
+                <option value="">-- Select a Class --</option>
+              </select>
+              <div class="subclass-restriction-note" id="subclass-restriction-note"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="add-subclass-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="add-subclass-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="add-subclass-confirm" disabled>Add Sub-class</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close button
+      document.getElementById('add-subclass-modal-close').addEventListener('click', () => {
+        this.closeAddSubclassModal();
+      });
+      
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeAddSubclassModal();
+        }
+      });
+      
+      // Escape to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          this.closeAddSubclassModal();
+        }
+      });
+      
+      // Back button
+      document.getElementById('add-subclass-back').addEventListener('click', () => {
+        this.closeAddSubclassModal();
+        this.openExpModal();
+      });
+      
+      // Cancel button
+      document.getElementById('add-subclass-cancel').addEventListener('click', () => {
+        this.closeAddSubclassModal();
+      });
+      
+      // Select change
+      document.getElementById('subclass-select').addEventListener('change', () => {
+        this.updateSubclassConfirmButton();
+      });
+      
+      // Confirm button
+      document.getElementById('add-subclass-confirm').addEventListener('click', () => {
+        this.confirmAddSubclass();
+      });
+    }
+    
+    // Update display
+    document.getElementById('add-subclass-exp-rolls').textContent = expRolls;
+    document.getElementById('subclass-cost-value').textContent = expCost + ' EXP Rolls';
+    document.getElementById('subclass-cost-note').textContent = `(Based on Rank ${primaryRank} in ${primaryClass})`;
+    
+    // Show error or selection
+    const errorDiv = document.getElementById('subclass-error');
+    const selectionDiv = document.getElementById('subclass-selection');
+    const costDisplay = document.getElementById('subclass-cost-display');
+    
+    if (errorMessage) {
+      errorDiv.textContent = errorMessage;
+      errorDiv.style.display = 'block';
+      selectionDiv.style.display = 'none';
+      costDisplay.style.display = 'none';
+    } else {
+      errorDiv.style.display = 'none';
+      selectionDiv.style.display = 'block';
+      costDisplay.style.display = 'flex';
+      
+      // Populate class options
+      this.populateSubclassOptions(currentClasses, isSyrin);
+    }
+    
+    // Store target slot and cost for confirm
+    modal.dataset.targetSlot = targetSlot;
+    modal.dataset.expCost = expCost;
+    
+    // Update confirm button state
+    this.updateSubclassConfirmButton();
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+
+  /**
+   * Populate the sub-class dropdown with available classes
+   */
+  populateSubclassOptions(currentClasses, isSyrin) {
+    const select = document.getElementById('subclass-select');
+    const restrictionNote = document.getElementById('subclass-restriction-note');
+    
+    // All available classes
+    const allClasses = [
+      'Anti-Paladin', 'Bard', 'Berserker', 'Cavalier', 'Cleric', 'Druid',
+      'Fighter', 'Mage', 'Monk', 'Paladin', 'Ranger', 'Rogue', 'Sorcerer', 'Warlord'
+    ];
+    
+    // Classes that cannot multi-class at all
+    const cannotMulticlass = ['anti-paladin', 'berserker', 'cavalier', 'monk', 'paladin'];
+    
+    // Incompatible pairs
+    const incompatibilities = {
+      'cleric': ['druid'],
+      'druid': ['cleric'],
+      'ranger': ['fighter'],
+      'fighter': ['ranger'],
+      'sorcerer': ['bard', 'mage'],
+      'bard': ['sorcerer'],
+      'mage': ['sorcerer']
+    };
+    
+    // Build list of incompatible classes based on current classes
+    const incompatibleClasses = new Set();
+    currentClasses.forEach(cls => {
+      const clsLower = cls.toLowerCase();
+      if (incompatibilities[clsLower]) {
+        incompatibilities[clsLower].forEach(inc => incompatibleClasses.add(inc));
+      }
+    });
+    
+    // Clear and rebuild options
+    select.innerHTML = '<option value="">-- Select a Class --</option>';
+    
+    const restrictions = [];
+    
+    allClasses.forEach(cls => {
+      const clsLower = cls.toLowerCase();
+      
+      // Skip if already has this class
+      if (currentClasses.includes(clsLower)) return;
+      
+      // Skip if cannot multi-class
+      if (cannotMulticlass.includes(clsLower)) {
+        restrictions.push(`${cls} cannot multi-class`);
+        return;
+      }
+      
+      // Skip if Syrin and Mage/Sorcerer
+      if (isSyrin && (clsLower === 'mage' || clsLower === 'sorcerer')) {
+        restrictions.push(`Syrin cannot be ${cls}`);
+        return;
+      }
+      
+      // Skip if incompatible with current classes
+      if (incompatibleClasses.has(clsLower)) {
+        const conflictWith = currentClasses.find(c => {
+          const incs = incompatibilities[c.toLowerCase()];
+          return incs && incs.includes(clsLower);
+        });
+        restrictions.push(`${cls} incompatible with ${conflictWith}`);
+        return;
+      }
+      
+      // Add option
+      const option = document.createElement('option');
+      option.value = cls;
+      option.textContent = cls;
+      select.appendChild(option);
+    });
+    
+    // Show restrictions note if any
+    if (restrictions.length > 0) {
+      restrictionNote.innerHTML = '<strong>Unavailable:</strong> ' + restrictions.join('; ');
+      restrictionNote.style.display = 'block';
+    } else {
+      restrictionNote.style.display = 'none';
+    }
+  },
+
+  /**
+   * Update the confirm button state for Add Sub-class
+   */
+  updateSubclassConfirmButton() {
+    const select = document.getElementById('subclass-select');
+    const confirmBtn = document.getElementById('add-subclass-confirm');
+    const modal = document.getElementById('add-subclass-modal');
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    const expCost = parseInt(modal?.dataset.expCost, 10) || 0;
+    
+    const selectedClass = select?.value || '';
+    const canAfford = expRolls >= expCost;
+    
+    if (confirmBtn) {
+      confirmBtn.disabled = !selectedClass || !canAfford;
+      
+      if (!canAfford && selectedClass) {
+        confirmBtn.textContent = `Not enough EXP (need ${expCost})`;
+      } else if (selectedClass) {
+        confirmBtn.textContent = `Add ${selectedClass} (${expCost} EXP)`;
+      } else {
+        confirmBtn.textContent = 'Add Sub-class';
+      }
+    }
+  },
+
+  /**
+   * Close the Add Sub-class modal
+   */
+  closeAddSubclassModal() {
+    const modal = document.getElementById('add-subclass-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Confirm adding the sub-class
+   */
+  confirmAddSubclass() {
+    const modal = document.getElementById('add-subclass-modal');
+    const select = document.getElementById('subclass-select');
+    const selectedClass = select?.value || '';
+    const targetSlot = modal?.dataset.targetSlot || '';
+    const expCost = parseInt(modal?.dataset.expCost, 10) || 0;
+    
+    if (!selectedClass || !targetSlot) return;
+    
+    // Set the new class
+    const classInput = document.getElementById(`class-${targetSlot}`);
+    const rankInput = document.getElementById(`rank-${targetSlot}`);
+    
+    if (classInput) {
+      classInput.value = selectedClass;
+      classInput.dispatchEvent(new Event('input', { bubbles: true }));
+      classInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    if (rankInput) {
+      rankInput.value = 0;
+      rankInput.dispatchEvent(new Event('input', { bubbles: true }));
+      rankInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    // Deduct EXP rolls
+    const expRollsInput = document.getElementById('exp-rolls');
+    if (expRollsInput) {
+      const currentExp = parseInt(expRollsInput.value, 10) || 0;
+      expRollsInput.value = Math.max(0, currentExp - expCost);
+      expRollsInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // Trigger recalculations
+    this.recalculateAll();
+    this.updateMagicVisibility();
+    this.updatePrereqKeys();
+    
+    // Close modal and show success
+    this.closeAddSubclassModal();
+    
+    // Show confirmation message
+    alert(`Added ${selectedClass} as your ${targetSlot === 'secondary' ? '2nd' : '3rd'} class at Rank 0!\n\nSpent ${expCost} EXP Rolls.`);
+    
+    // Auto-save
+    this.scheduleAutoSave();
   },
 
   /**

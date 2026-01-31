@@ -3556,6 +3556,84 @@ select:focus {
   max-height: 85vh;
 }
 
+/* Add Subclass Modal */
+.add-subclass-modal-content {
+  max-width: 500px;
+  width: 90%;
+}
+
+.subclass-cost-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.subclass-cost-label {
+  font-weight: 600;
+  color: var(--text-header);
+}
+
+.subclass-cost-value {
+  font-weight: 700;
+  color: #c62828;
+  font-size: 1.1rem;
+}
+
+.subclass-cost-note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.subclass-error {
+  padding: 1rem;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  border-radius: 5px;
+  color: #c62828;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.subclass-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subclass-selection label {
+  font-weight: 600;
+  color: var(--text-header);
+}
+
+.subclass-select {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-medium);
+  border-radius: 5px;
+  background: white;
+  font-family: var(--font-body);
+}
+
+.subclass-select:focus {
+  border-color: var(--border-gold);
+  outline: none;
+}
+
+.subclass-restriction-note {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
 .improve-skills-instructions {
   text-align: center;
   color: var(--text-secondary);
