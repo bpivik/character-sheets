@@ -15,11 +15,157 @@
  */
 
 const RANKED_CLASS_ABILITIES = {
-  // Classes will be populated as data is provided
-  // Example structure:
-  // bard: [
-  //   { name: "Ability Name", rank: 1, prereqs: "Skill 50%", summary: "Description" },
-  // ],
+  bard: [
+    // Rank 1
+    { 
+      name: "Agile", 
+      rank: 1, 
+      prereqs: "Evade 50% OR Acrobatics 50%",
+      summary: "+4 Initiative (Unburdened, Light armor max)"
+    },
+    { 
+      name: "Artful Dodger", 
+      rank: 1, 
+      prereqs: "Evade 50%",
+      summary: "+10% Evade, dodge melee without falling prone (Unburdened, Light armor max)"
+    },
+    { 
+      name: "Inspire Competence", 
+      rank: 1, 
+      prereqs: "Musicianship 60%; Willpower 60%",
+      summary: "1 MP: allies within 30ft get +10% to skills for 5 rounds"
+    },
+    { 
+      name: "Language (Druids' Cant)", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Secret druidic language for nature communication (Druidic bards only)"
+    },
+    { 
+      name: "Language (Thieves' Cant)", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Secret language for discussing illicit activities (Arcane bards only)"
+    },
+    { 
+      name: "Skirmishing", 
+      rank: 1, 
+      prereqs: "Athletics 50%; Combat Style 50%",
+      summary: "Ranged attacks while running (capped by Athletics)"
+    },
+    { 
+      name: "Swashbuckling", 
+      rank: 1, 
+      prereqs: "Combat Style 50%",
+      summary: "Attack/Evade while jumping or swinging, ignore Athletics cap (Unburdened, Light armor max)"
+    },
+    { 
+      name: "Unarmored Defense", 
+      rank: 1, 
+      prereqs: "Artful Dodger; Evade 50% OR Acrobatics 50%",
+      summary: "Evade rolls one grade easier (unarmored, Unburdened)"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+    
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 bonus Action Point for Parry/Evade only (one reaction per attack)"
+    },
+    { 
+      name: "Inspire Courage II", 
+      rank: 2, 
+      prereqs: "Musicianship 100%; Willpower 100%",
+      summary: "As Inspire Courage I but +10% bonus and +2 rounds duration"
+    },
+    { 
+      name: "Suggestion", 
+      rank: 2, 
+      prereqs: "Musicianship 70%; Willpower 70%",
+      summary: "1 MP: implant Suggestion spell on Fascinated target; 1 Grade harder if woven into performance"
+    },
+    
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Inspire Greatness", 
+      rank: 3, 
+      prereqs: "Musicianship 90%; Willpower 90%",
+      summary: "3 MP: 2 allies (+2/Rank beyond 3) get +10% skills/Resistance, first attack damage halved, 5 rounds/Rank"
+    },
+    { 
+      name: "Song of Freedom", 
+      rank: 3, 
+      prereqs: "Musicianship 100%; Willpower 100%",
+      summary: "3 MP: 1 min performance breaks Enchantment/Charm on ally within 30ft (Intensity = skill/10)"
+    },
+    
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes I",
+      summary: "Use Defensive Reflexes twice per combat (not on same attack, not with Luck Points)"
+    },
+    { 
+      name: "Inspire Heroics", 
+      rank: 4, 
+      prereqs: "Musicianship 110%; Willpower 110%",
+      summary: "3 MP: self or 1 ally (+2 at Rank 5) gets +20% to Resistance, Evade, Parry; 5 rounds/Rank"
+    },
+    { 
+      name: "Mass Suggestion", 
+      rank: 4, 
+      prereqs: "Musicianship 120%; Willpower 120%",
+      summary: "As Suggestion but affects all Fascinated subjects"
+    },
+    
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes III", 
+      rank: 5, 
+      prereqs: "Defensive Reflexes II",
+      summary: "Use Defensive Reflexes three times per combat (not on same attack, not with Luck Points)"
+    },
+    { 
+      name: "Inspire Courage III", 
+      rank: 5, 
+      prereqs: "Musicianship 120%; Willpower 120%",
+      summary: "As Inspire Courage I but +15% bonus and +3 rounds duration"
+    },
+  ],
+  
+  // More classes to be added...
 };
 
 /**
