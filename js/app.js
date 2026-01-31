@@ -5449,47 +5449,82 @@ const App = {
           <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
           <div class="combat-skill-header"><span>Combat Skill</span><span>%</span></div>
           <div class="skill-list">
-            <div class="skill-item"><span>${combatName}</span><span>${combatPct}%</span></div>
-            <div class="skill-item"><span>Unarmed</span><span>${unarmedPct}%</span></div>
+            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll d100">🎲</button></span></div>
+            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll d100">🎲</button></span></div>
           </div>
-          <div style="margin-top:8px; border-top:1px solid var(--border-light); padding-top:8px;">
-          <div class="skill-list weapons-list">
         `;
         
-        let found = false;
-        // Check melee weapons
-        for (let i = 0; i < 4; i++) {
+        // Collect melee weapons
+        let meleeWeapons = [];
+        for (let i = 0; i < 6; i++) {
           const name = document.getElementById(`melee-${i}-name`)?.value;
           const dmg = document.getElementById(`melee-${i}-damage`)?.value;
-          if (name && dmg) {
-            html += `<div class="skill-item weapon-row"><span>${name}</span><span class="damage-roll">${dmg} <button class="dice-btn" data-damage="${dmg}" title="Roll damage">🎲</button></span></div>`;
-            found = true;
-          } else if (name) {
-            html += `<div class="skill-item"><span>${name}</span><span>-</span></div>`;
-            found = true;
+          if (name) {
+            meleeWeapons.push({ name, dmg });
           }
         }
-        // Check ranged weapons
-        for (let i = 0; i < 4; i++) {
+        
+        // Collect ranged weapons
+        let rangedWeapons = [];
+        for (let i = 0; i < 5; i++) {
           const name = document.getElementById(`ranged-${i}-name`)?.value;
           const dmg = document.getElementById(`ranged-${i}-damage`)?.value;
-          if (name && dmg) {
-            html += `<div class="skill-item weapon-row"><span>${name}</span><span class="damage-roll">${dmg} <button class="dice-btn" data-damage="${dmg}" title="Roll damage">🎲</button></span></div>`;
-            found = true;
-          } else if (name) {
-            html += `<div class="skill-item"><span>${name}</span><span>-</span></div>`;
-            found = true;
+          if (name) {
+            rangedWeapons.push({ name, dmg });
           }
         }
+        
         // Unarmed damage
         const unarmedDmg = document.getElementById('unarmed-damage')?.value;
-        if (unarmedDmg) {
-          html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage">🎲</button></span></div>`;
+        
+        // Melee section
+        if (meleeWeapons.length > 0 || unarmedDmg) {
+          html += `<div style="margin-top:8px; border-top:1px solid var(--border-light); padding-top:8px;">
+            <div class="weapon-section-label">Melee</div>
+            <div class="skill-list weapons-list">`;
+          
+          meleeWeapons.forEach(w => {
+            if (w.dmg) {
+              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage">🎲</button></span></div>`;
+            } else {
+              html += `<div class="skill-item"><span>${w.name}</span><span>-</span></div>`;
+            }
+          });
+          
+          // Add Unarmed to melee
+          if (unarmedDmg) {
+            html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage">🎲</button></span></div>`;
+          }
+          
+          html += '</div></div>';
         }
-        if (!found) {
-          html += '<div class="skill-item"><span style="color:#999;">No weapons</span></div>';
+        
+        // Ranged section
+        if (rangedWeapons.length > 0) {
+          html += `<div style="margin-top:8px; border-top:1px solid var(--border-light); padding-top:8px;">
+            <div class="weapon-section-label">Ranged</div>
+            <div class="skill-list weapons-list">`;
+          
+          rangedWeapons.forEach(w => {
+            if (w.dmg) {
+              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage">🎲</button></span></div>`;
+            } else {
+              html += `<div class="skill-item"><span>${w.name}</span><span>-</span></div>`;
+            }
+          });
+          
+          html += '</div></div>';
         }
-        html += '</div></div>';
+        
+        // No weapons message
+        if (meleeWeapons.length === 0 && rangedWeapons.length === 0 && !unarmedDmg) {
+          html += `<div style="margin-top:8px; border-top:1px solid var(--border-light); padding-top:8px;">
+            <div class="skill-list weapons-list">
+              <div class="skill-item"><span style="color:#999;">No weapons</span></div>
+            </div>
+          </div>`;
+        }
+        
         return html;
       }
     },
@@ -6146,7 +6181,7 @@ const App = {
         return;
       }
       
-      // Handle dice buttons
+      // Handle dice buttons (damage rolls)
       const diceBtn = e.target.closest('.dice-btn');
       if (diceBtn) {
         e.stopPropagation();
@@ -6156,7 +6191,93 @@ const App = {
         }
         return;
       }
+      
+      // Handle d100 buttons (skill rolls)
+      const d100Btn = e.target.closest('.d100-btn');
+      if (d100Btn) {
+        e.stopPropagation();
+        const skillName = d100Btn.dataset.skill;
+        const targetPct = parseInt(d100Btn.dataset.target, 10) || 50;
+        this.rollD100(skillName, targetPct);
+        return;
+      }
     });
+  },
+
+  /**
+   * Roll d100 for a skill check and show result
+   */
+  rollD100(skillName, targetPct) {
+    // Roll d100 (1-100)
+    const roll = Math.floor(Math.random() * 100) + 1;
+    
+    // Determine result
+    let result = '';
+    let resultClass = '';
+    
+    // Critical success: roll <= 1/10 of skill (minimum 01)
+    const critThreshold = Math.max(1, Math.floor(targetPct / 10));
+    // Fumble: roll >= 100 - (100 - skill)/10, or 96-00 if skill >= 100
+    const fumbleThreshold = targetPct >= 100 ? 100 : Math.min(100, 100 - Math.floor((100 - targetPct) / 10) + 1);
+    
+    if (roll <= critThreshold) {
+      result = 'Critical!';
+      resultClass = 'roll-critical';
+    } else if (roll === 100 || (roll >= 96 && roll > targetPct)) {
+      result = 'Fumble!';
+      resultClass = 'roll-fumble';
+    } else if (roll <= targetPct) {
+      result = 'Success';
+      resultClass = 'roll-success';
+    } else {
+      result = 'Failure';
+      resultClass = 'roll-failure';
+    }
+    
+    this.showD100Result(skillName, targetPct, roll, result, resultClass);
+  },
+
+  /**
+   * Show d100 roll result overlay
+   */
+  showD100Result(skillName, targetPct, roll, result, resultClass) {
+    // Create or get overlay
+    let overlay = document.getElementById('d100-result-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'd100-result-overlay';
+      overlay.className = 'damage-result-overlay';
+      overlay.innerHTML = `
+        <div class="damage-result-content d100-result-content">
+          <div class="d100-skill-name"></div>
+          <div class="d100-target"></div>
+          <div class="d100-roll"></div>
+          <div class="d100-result"></div>
+          <button class="damage-close">OK</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      
+      overlay.querySelector('.damage-close').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+      
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('visible');
+        }
+      });
+    }
+    
+    overlay.querySelector('.d100-skill-name').textContent = skillName;
+    overlay.querySelector('.d100-target').textContent = `Target: ${targetPct}%`;
+    overlay.querySelector('.d100-roll').textContent = roll.toString().padStart(2, '0');
+    
+    const resultEl = overlay.querySelector('.d100-result');
+    resultEl.textContent = result;
+    resultEl.className = 'd100-result ' + resultClass;
+    
+    overlay.classList.add('visible');
   },
 
   /**

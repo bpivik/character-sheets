@@ -4032,6 +4032,93 @@ select:focus {
   background: #d4b44a;
 }
 
+/* D100 Skill Roll Result Overlay */
+.d100-result-content {
+  text-align: center;
+}
+
+.d100-skill-name {
+  font-size: 1.2rem;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.d100-target {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.d100-roll {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+  font-family: monospace;
+}
+
+.d100-result {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.d100-result.roll-critical {
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+}
+
+.d100-result.roll-success {
+  color: #4ade80;
+  text-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+}
+
+.d100-result.roll-failure {
+  color: #f87171;
+}
+
+.d100-result.roll-fumble {
+  color: #e94560;
+  text-shadow: 0 0 20px rgba(233, 69, 96, 0.7);
+}
+
+/* Weapon section labels */
+.weapon-section-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* D100 button styling */
+.d100-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.d100-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.skill-roll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 #btn-reset-summary {
   align-self: flex-start;
 }
