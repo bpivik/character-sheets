@@ -403,8 +403,35 @@ const App = {
     // Class fields need special handling to update combat skill name
     const classFields = ['class-primary', 'class-secondary', 'class-tertiary'];
     
-    // Rank fields need to update rank name
+    // Rank fields need to update rank name and recalculate attributes
     const rankFields = ['rank-primary', 'rank-secondary', 'rank-tertiary'];
+    
+    // Set up dedicated rank field listeners for immediate recalculation
+    rankFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        const handleRankChange = () => {
+          let val = parseInt(field.value, 10) || 0;
+          val = Math.max(0, Math.min(5, val));
+          field.value = val;
+          this.character.info[this.camelCase(fieldId)] = val;
+          this.recalculateAll();
+          this.scheduleAutoSave();
+        };
+        field.addEventListener('input', handleRankChange);
+        field.addEventListener('change', handleRankChange);
+      }
+    });
+    
+    // Set up species field listener for immediate recalculation (human luck bonus)
+    const speciesField = document.getElementById('species');
+    if (speciesField) {
+      const handleSpeciesChange = () => {
+        this.recalculateAll();
+      };
+      speciesField.addEventListener('input', handleSpeciesChange);
+      speciesField.addEventListener('change', handleSpeciesChange);
+    }
     
     infoFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
@@ -413,7 +440,7 @@ const App = {
           const key = this.camelCase(fieldId);
           this.character.info[key] = e.target.value;
           
-          // Clamp rank values to 0-5
+          // Clamp rank values to 0-5 (also handled above, but keep for consistency)
           if (rankFields.includes(fieldId)) {
             let val = parseInt(e.target.value, 10);
             if (!isNaN(val)) {
@@ -421,8 +448,6 @@ const App = {
               e.target.value = val;
               this.character.info[key] = val;
             }
-            // Recalculate attributes when rank changes (affects action points, luck, HP)
-            this.recalculateAll();
           }
           
           this.scheduleAutoSave();
@@ -2923,10 +2948,15 @@ const App = {
     }
     
     // Check if character is human (for luck bonus)
-    const species = document.getElementById('species')?.value?.toLowerCase() || '';
+    const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
+    // Debug logging
+    console.log('recalculateAll called:', { combinedRank, species, isHuman, originalsLocked: this.character.originalsLocked });
+    
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
+    
+    console.log('Calculator results:', results.derived);
     
     // Only update original values if NOT locked
     if (!this.character.originalsLocked) {
