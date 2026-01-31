@@ -8500,8 +8500,7 @@ const App = {
       });
       
       document.getElementById('exp-btn-unlock-abilities').addEventListener('click', () => {
-        // TODO: Implement class abilities
-        alert('Unlock Class Abilities - Coming soon!');
+        this.openUnlockAbilitiesModal();
       });
       
       document.getElementById('exp-btn-learn-skills').addEventListener('click', () => {
@@ -9403,6 +9402,474 @@ const App = {
     
     // Show confirmation message
     alert(`Added ${selectedClass} as your ${targetSlot === 'secondary' ? '2nd' : '3rd'} class at Rank 0!\n\nSpent ${expCost} EXP Rolls.`);
+    
+    // Auto-save
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Open the Unlock Class Abilities modal
+   */
+  openUnlockAbilitiesModal() {
+    // Close the main EXP modal
+    this.closeExpModal();
+    
+    // Get character's classes and ranks
+    const classes = this.getCharacterClasses();
+    
+    if (classes.length === 0) {
+      alert('You must have at least one class to unlock abilities.');
+      return;
+    }
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('unlock-abilities-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'unlock-abilities-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content unlock-abilities-modal-content">
+          <div class="modal-header">
+            <h3>Unlock Class Abilities</h3>
+            <button class="modal-close" id="unlock-abilities-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="exp-rolls-display">
+              <span class="exp-rolls-label">Available EXP Rolls:</span>
+              <span class="exp-rolls-value" id="unlock-abilities-exp-rolls">0</span>
+            </div>
+            <div class="class-tabs" id="unlock-abilities-class-tabs"></div>
+            <div class="rank-tabs" id="unlock-abilities-rank-tabs"></div>
+            <div class="abilities-container" id="unlock-abilities-container">
+              <div class="abilities-section available-abilities">
+                <h4>Available Abilities</h4>
+                <div class="abilities-list" id="available-abilities-list"></div>
+              </div>
+              <hr class="abilities-divider">
+              <div class="abilities-section unqualified-abilities">
+                <h4>Not Yet Qualified</h4>
+                <div class="abilities-list" id="unqualified-abilities-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="unlock-abilities-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="unlock-abilities-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="unlock-abilities-confirm" disabled>Unlock Selected</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close button
+      document.getElementById('unlock-abilities-modal-close').addEventListener('click', () => {
+        this.closeUnlockAbilitiesModal();
+      });
+      
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeUnlockAbilitiesModal();
+        }
+      });
+      
+      // Escape to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          this.closeUnlockAbilitiesModal();
+        }
+      });
+      
+      // Back button
+      document.getElementById('unlock-abilities-back').addEventListener('click', () => {
+        this.closeUnlockAbilitiesModal();
+        this.openExpModal();
+      });
+      
+      // Cancel button
+      document.getElementById('unlock-abilities-cancel').addEventListener('click', () => {
+        this.closeUnlockAbilitiesModal();
+      });
+      
+      // Confirm button
+      document.getElementById('unlock-abilities-confirm').addEventListener('click', () => {
+        this.confirmUnlockAbilities();
+      });
+    }
+    
+    // Store classes info on modal
+    modal.dataset.classes = JSON.stringify(classes);
+    
+    // Update EXP rolls display
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    document.getElementById('unlock-abilities-exp-rolls').textContent = expRolls;
+    
+    // Build class tabs
+    this.buildClassTabs(classes);
+    
+    // Select first class by default
+    if (classes.length > 0) {
+      this.selectClassTab(classes[0].name, classes[0].rank);
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+
+  /**
+   * Get character's classes and ranks
+   */
+  getCharacterClasses() {
+    const classes = [];
+    
+    const primary = document.getElementById('class-primary')?.value?.trim();
+    const primaryRank = parseInt(document.getElementById('rank-primary')?.value, 10) || 0;
+    if (primary) {
+      classes.push({ name: primary, rank: primaryRank, slot: 'primary' });
+    }
+    
+    const secondary = document.getElementById('class-secondary')?.value?.trim();
+    const secondaryRank = parseInt(document.getElementById('rank-secondary')?.value, 10) || 0;
+    if (secondary) {
+      classes.push({ name: secondary, rank: secondaryRank, slot: 'secondary' });
+    }
+    
+    const tertiary = document.getElementById('class-tertiary')?.value?.trim();
+    const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
+    if (tertiary) {
+      classes.push({ name: tertiary, rank: tertiaryRank, slot: 'tertiary' });
+    }
+    
+    return classes;
+  },
+
+  /**
+   * Build class tabs for the unlock abilities modal
+   */
+  buildClassTabs(classes) {
+    const container = document.getElementById('unlock-abilities-class-tabs');
+    container.innerHTML = '';
+    
+    classes.forEach((cls, index) => {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'class-tab' + (index === 0 ? ' active' : '');
+      tab.dataset.className = cls.name;
+      tab.dataset.classRank = cls.rank;
+      tab.innerHTML = `${cls.name} <span class="rank-badge">Rank ${cls.rank}</span>`;
+      tab.addEventListener('click', () => {
+        this.selectClassTab(cls.name, cls.rank);
+      });
+      container.appendChild(tab);
+    });
+  },
+
+  /**
+   * Select a class tab and populate rank tabs
+   */
+  selectClassTab(className, classRank) {
+    // Update active class tab
+    document.querySelectorAll('.class-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.className === className);
+    });
+    
+    // Store selected class
+    const modal = document.getElementById('unlock-abilities-modal');
+    modal.dataset.selectedClass = className;
+    modal.dataset.selectedClassRank = classRank;
+    
+    // Build rank tabs (0 through current rank)
+    this.buildRankTabs(classRank);
+    
+    // Select highest rank by default (most likely what they want)
+    this.selectRankTab(classRank);
+  },
+
+  /**
+   * Build rank tabs for the selected class
+   */
+  buildRankTabs(maxRank) {
+    const container = document.getElementById('unlock-abilities-rank-tabs');
+    container.innerHTML = '';
+    
+    for (let r = 0; r <= maxRank; r++) {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'rank-tab' + (r === maxRank ? ' active' : '');
+      tab.dataset.rank = r;
+      tab.textContent = `Rank ${r}`;
+      tab.addEventListener('click', () => {
+        this.selectRankTab(r);
+      });
+      container.appendChild(tab);
+    }
+  },
+
+  /**
+   * Select a rank tab and populate abilities
+   */
+  selectRankTab(rank) {
+    // Update active rank tab
+    document.querySelectorAll('.rank-tab').forEach(tab => {
+      tab.classList.toggle('active', parseInt(tab.dataset.rank, 10) === rank);
+    });
+    
+    const modal = document.getElementById('unlock-abilities-modal');
+    modal.dataset.selectedRank = rank;
+    
+    // Populate abilities for selected class and rank
+    const className = modal.dataset.selectedClass;
+    this.populateAbilities(className, rank);
+  },
+
+  /**
+   * Populate abilities list for a class and rank
+   */
+  populateAbilities(className, rank) {
+    const availableList = document.getElementById('available-abilities-list');
+    const unqualifiedList = document.getElementById('unqualified-abilities-list');
+    
+    availableList.innerHTML = '';
+    unqualifiedList.innerHTML = '';
+    
+    // Get abilities for this class at this rank
+    const abilities = getRankedAbilitiesForClass(className, rank);
+    
+    if (abilities.length === 0) {
+      availableList.innerHTML = '<p class="no-abilities">No abilities available at this rank.</p>';
+      unqualifiedList.innerHTML = '';
+      document.querySelector('.abilities-divider').style.display = 'none';
+      document.querySelector('.unqualified-abilities').style.display = 'none';
+      return;
+    }
+    
+    // Get acquired abilities
+    const acquiredAbilities = this.getAcquiredAbilities();
+    
+    // Helper to get skill value
+    const getSkillValue = (skillName) => this.getSkillValueByName(skillName);
+    
+    // Sort abilities into qualified and unqualified
+    const qualified = [];
+    const unqualified = [];
+    
+    abilities.forEach(ability => {
+      // Check if already acquired
+      if (acquiredAbilities.has(ability.name)) {
+        // Show as acquired (greyed out)
+        qualified.push({ ...ability, acquired: true });
+        return;
+      }
+      
+      // Check prerequisites
+      const prereqCheck = checkAbilityPrereqs(ability.prereqs, acquiredAbilities, getSkillValue);
+      
+      if (prereqCheck.met) {
+        qualified.push({ ...ability, acquired: false });
+      } else {
+        unqualified.push({ ...ability, missing: prereqCheck.missing });
+      }
+    });
+    
+    // Render qualified abilities
+    if (qualified.length === 0) {
+      availableList.innerHTML = '<p class="no-abilities">All abilities at this rank require prerequisites you don\'t have yet.</p>';
+    } else {
+      qualified.forEach(ability => {
+        availableList.appendChild(this.createAbilityRow(ability, rank));
+      });
+    }
+    
+    // Render unqualified abilities
+    if (unqualified.length > 0) {
+      document.querySelector('.abilities-divider').style.display = '';
+      document.querySelector('.unqualified-abilities').style.display = '';
+      unqualified.forEach(ability => {
+        unqualifiedList.appendChild(this.createAbilityRow(ability, rank, true));
+      });
+    } else {
+      document.querySelector('.abilities-divider').style.display = 'none';
+      document.querySelector('.unqualified-abilities').style.display = 'none';
+    }
+    
+    // Update confirm button
+    this.updateUnlockConfirmButton();
+  },
+
+  /**
+   * Create an ability row element
+   */
+  createAbilityRow(ability, rank, disabled = false) {
+    const row = document.createElement('label');
+    row.className = 'ability-row' + (ability.acquired ? ' acquired' : '') + (disabled ? ' disabled' : '');
+    
+    const cost = rank; // EXP cost = rank
+    
+    let html = `
+      <input type="checkbox" name="unlock-ability" value="${ability.name}" 
+        data-cost="${cost}" ${ability.acquired || disabled ? 'disabled' : ''}>
+      <div class="ability-info">
+        <div class="ability-header">
+          <span class="ability-name">${ability.name}</span>
+          <span class="ability-cost">${cost} EXP</span>
+        </div>
+        <div class="ability-summary">${ability.summary}</div>
+    `;
+    
+    if (ability.acquired) {
+      html += `<div class="ability-status acquired">✓ Already Acquired</div>`;
+    } else if (ability.missing && ability.missing.length > 0) {
+      html += `<div class="ability-status missing">⚠ Requires: ${ability.missing.join(', ')}</div>`;
+    }
+    
+    html += `</div>`;
+    row.innerHTML = html;
+    
+    // Add change listener
+    const checkbox = row.querySelector('input');
+    if (checkbox && !checkbox.disabled) {
+      checkbox.addEventListener('change', () => this.updateUnlockConfirmButton());
+    }
+    
+    return row;
+  },
+
+  /**
+   * Get set of acquired abilities
+   */
+  getAcquiredAbilities() {
+    // Load from character data
+    const abilities = new Set(this.character.acquiredAbilities || []);
+    return abilities;
+  },
+
+  /**
+   * Get skill value by name (for prereq checking)
+   */
+  getSkillValueByName(skillName) {
+    const normalized = skillName.toLowerCase().trim();
+    
+    // Map common names to element IDs
+    const skillMappings = {
+      'evade': 'evade-current',
+      'acrobatics': 'prof-skill-acrobatics', // Professional skill
+      'athletics': 'athletics-current',
+      'willpower': 'willpower-current',
+      'musicianship': 'musicianship-percent',
+      'combat style': 'combat-skill-1-percent',
+      'combat skill': 'combat-skill-1-percent',
+    };
+    
+    // Try direct mapping first
+    if (skillMappings[normalized]) {
+      const el = document.getElementById(skillMappings[normalized]);
+      if (el) return parseInt(el.value, 10) || 0;
+    }
+    
+    // Try standard skills
+    const standardId = `${normalized.replace(/\s+/g, '-')}-current`;
+    const standardEl = document.getElementById(standardId);
+    if (standardEl) return parseInt(standardEl.value, 10) || 0;
+    
+    // Try professional skills
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const nameEl = document.getElementById(`prof-skill-${i}-name`);
+      const valueEl = document.getElementById(`prof-skill-${i}-current`);
+      if (nameEl && nameEl.value.toLowerCase().trim() === normalized) {
+        return parseInt(valueEl?.value, 10) || 0;
+      }
+    }
+    
+    // Try magic skills
+    const magicMappings = {
+      'musicianship': 'musicianship-percent',
+      'channel': 'channel-percent',
+      'piety': 'piety-percent',
+    };
+    if (magicMappings[normalized]) {
+      const el = document.getElementById(magicMappings[normalized]);
+      if (el) return parseInt(el.value, 10) || 0;
+    }
+    
+    return 0;
+  },
+
+  /**
+   * Update the unlock confirm button state
+   */
+  updateUnlockConfirmButton() {
+    const checked = document.querySelectorAll('#unlock-abilities-modal input[name="unlock-ability"]:checked');
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    const confirmBtn = document.getElementById('unlock-abilities-confirm');
+    
+    let totalCost = 0;
+    checked.forEach(cb => {
+      totalCost += parseInt(cb.dataset.cost, 10) || 0;
+    });
+    
+    const canAfford = expRolls >= totalCost;
+    
+    if (confirmBtn) {
+      confirmBtn.disabled = checked.length === 0 || !canAfford;
+      
+      if (checked.length === 0) {
+        confirmBtn.textContent = 'Unlock Selected';
+      } else if (!canAfford) {
+        confirmBtn.textContent = `Not enough EXP (need ${totalCost}, have ${expRolls})`;
+      } else {
+        confirmBtn.textContent = `Unlock ${checked.length} Ability${checked.length > 1 ? 'ies' : ''} (${totalCost} EXP)`;
+      }
+    }
+  },
+
+  /**
+   * Close the unlock abilities modal
+   */
+  closeUnlockAbilitiesModal() {
+    const modal = document.getElementById('unlock-abilities-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Confirm unlocking selected abilities
+   */
+  confirmUnlockAbilities() {
+    const checked = document.querySelectorAll('#unlock-abilities-modal input[name="unlock-ability"]:checked');
+    if (checked.length === 0) return;
+    
+    let totalCost = 0;
+    const newAbilities = [];
+    
+    checked.forEach(cb => {
+      totalCost += parseInt(cb.dataset.cost, 10) || 0;
+      newAbilities.push(cb.value);
+    });
+    
+    // Add to acquired abilities
+    if (!this.character.acquiredAbilities) {
+      this.character.acquiredAbilities = [];
+    }
+    newAbilities.forEach(name => {
+      if (!this.character.acquiredAbilities.includes(name)) {
+        this.character.acquiredAbilities.push(name);
+      }
+    });
+    
+    // Deduct EXP rolls
+    const expRollsInput = document.getElementById('exp-rolls');
+    if (expRollsInput) {
+      const currentExp = parseInt(expRollsInput.value, 10) || 0;
+      expRollsInput.value = Math.max(0, currentExp - totalCost);
+      expRollsInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // Close modal and show success
+    this.closeUnlockAbilitiesModal();
+    
+    alert(`Unlocked ${newAbilities.length} ability${newAbilities.length > 1 ? 'ies' : ''}:\n\n• ${newAbilities.join('\n• ')}\n\nSpent ${totalCost} EXP Rolls.`);
     
     // Auto-save
     this.scheduleAutoSave();
