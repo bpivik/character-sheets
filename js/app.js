@@ -521,8 +521,8 @@ const App = {
             if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
               this.updateSheetTypeFromSpecies(previousSpecies);
               field.dataset.previousValue = currentSpecies;
-              // Recalculate for human luck bonus
-              this.recalculateAll();
+              // Recalculate for human luck bonus - force update even if locked
+              this.recalculateAll(true);
             }
             
             this.updateMagicVisibility();
@@ -850,27 +850,16 @@ const App = {
   },
   
   /**
-   * Toggle editing of Characteristics and original Attribute values
+   * Toggle editing of Characteristics only (Attributes are always auto-calculated)
    */
   toggleOriginalsEditing() {
-    const derivedOriginals = document.querySelectorAll('.derived-readonly');
     const charInputs = document.querySelectorAll('.char-readonly, .char-editable');
     const btn = document.getElementById('unlock-originals-btn');
     
-    const isCurrentlyReadonly = derivedOriginals[0]?.hasAttribute('readonly');
+    // Check current state based on characteristics
+    const isCurrentlyReadonly = charInputs[0]?.classList.contains('char-readonly');
     
-    // Toggle Derived Attributes
-    derivedOriginals.forEach(input => {
-      if (isCurrentlyReadonly) {
-        input.removeAttribute('readonly');
-        input.classList.add('derived-editable');
-      } else {
-        input.setAttribute('readonly', '');
-        input.classList.remove('derived-editable');
-      }
-    });
-    
-    // Toggle Characteristics
+    // Toggle Characteristics only (Attributes remain auto-calculated and readonly)
     charInputs.forEach(input => {
       if (isCurrentlyReadonly) {
         input.removeAttribute('readonly');
@@ -883,22 +872,17 @@ const App = {
       }
     });
     
-    // Update locked state
+    // Update locked state (still track this for saving purposes)
     this.character.originalsLocked = !isCurrentlyReadonly;
-    
-    // If we just locked, save the current original values
-    if (!isCurrentlyReadonly) {
-      this.saveDerivedOriginalValues();
-    }
     
     this.scheduleAutoSave();
     
     if (btn) {
       if (isCurrentlyReadonly) {
-        btn.textContent = '🔓 Lock Characteristics and Original Attributes';
+        btn.textContent = '🔓 Lock Characteristics';
         btn.classList.add('unlocked');
       } else {
-        btn.textContent = '🔒 Unlock Characteristics and Original Attributes';
+        btn.textContent = '🔒 Unlock Characteristics';
         btn.classList.remove('unlocked');
       }
     }
@@ -2952,7 +2936,13 @@ const App = {
     const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
+    // Debug logging
+    console.log('recalculateAll called:', { combinedRank, species, isHuman, forceUpdate, originalsLocked: this.character.originalsLocked });
+    
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
+    
+    console.log('Calculator results:', results.derived);
+    console.log('Will update:', !this.character.originalsLocked || forceUpdate);
     
     // Update original values if NOT locked OR if forceUpdate is true (rank/species changes)
     if (!this.character.originalsLocked || forceUpdate) {

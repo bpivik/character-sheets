@@ -182,8 +182,9 @@ const LUCK_POINTS_TABLE = [
   // Each additional 6 points: +1
 ];
 
-// Luck Points by Rank (cumulative bonus: Rank 1: +1, Rank 2: +1+2=3, Rank 3: +1+2+3=6, etc.)
-const LUCK_BY_RANK = [0, 1, 3, 6, 10, 15];
+// Luck Points by Rank (bonus starts at Rank 2: +1, Rank 3: +2 more, Rank 4: +3 more, Rank 5: +4 more)
+// Cumulative: R0=0, R1=0, R2=1, R3=3, R4=6, R5=10
+const LUCK_BY_RANK = [0, 0, 1, 3, 6, 10];
 
 // Hit Points base table by CON+SIZ for each location type
 // Columns: 1-5, 6-10, 11-15, 16-20, 21-25, 26-30, 31-35, 36-40 (each +5 adds +1)
