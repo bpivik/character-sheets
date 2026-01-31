@@ -703,3 +703,24 @@
 [data-theme="dark"] .ability-widget-item {
   border-bottom-color: #333;
 }
+
+/* Characteristic increase modal in dark mode */
+[data-theme="dark"] .char-option {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+[data-theme="dark"] .char-option:hover {
+  background: #3a3a3a;
+  border-color: var(--border-gold);
+}
+
+[data-theme="dark"] .char-option.at-max {
+  background: #1a1a1a;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .char-option.at-max:hover {
+  background: #1a1a1a;
+  border-color: #444;
+}

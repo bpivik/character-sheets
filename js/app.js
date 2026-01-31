@@ -10420,15 +10420,60 @@ const App = {
       });
     }
     
-    // Update current values display
+    // Get species for characteristic maximums
+    const speciesName = document.getElementById('species')?.value || '';
+    const charMaxes = SpeciesData.getAllCharacteristicMaxes(speciesName);
+    
+    // Update current values display and check maximums
     const chars = ['str', 'con', 'siz', 'dex', 'int', 'pow', 'cha'];
+    let anyAvailable = false;
+    
     chars.forEach(char => {
+      const charUpper = char.toUpperCase();
       const input = document.getElementById(`${char}-value`);
       const display = document.getElementById(`char-inc-${char}-val`);
+      const radio = modal.querySelector(`input[name="char-increase"][value="${charUpper}"]`);
+      const label = radio?.closest('.char-option');
+      
       if (input && display) {
-        display.textContent = `(${input.value || 0})`;
+        const currentVal = parseInt(input.value, 10) || 0;
+        const maxVal = charMaxes ? charMaxes[charUpper] : null;
+        
+        if (maxVal && currentVal >= maxVal) {
+          // At maximum - disable and show note
+          display.textContent = `(${currentVal}) MAX`;
+          if (radio) {
+            radio.disabled = true;
+          }
+          if (label) {
+            label.classList.add('at-max');
+          }
+        } else {
+          // Still has room to increase
+          display.textContent = `(${currentVal})`;
+          if (radio) {
+            radio.disabled = false;
+          }
+          if (label) {
+            label.classList.remove('at-max');
+          }
+          anyAvailable = true;
+        }
       }
     });
+    
+    // If no characteristics are available, show a message
+    const noOptionsMsg = modal.querySelector('.no-char-options-msg');
+    if (!anyAvailable) {
+      if (!noOptionsMsg) {
+        const msg = document.createElement('p');
+        msg.className = 'no-char-options-msg';
+        msg.textContent = 'All characteristics are at their species maximum.';
+        modal.querySelector('.char-increase-options').appendChild(msg);
+      }
+    } else if (noOptionsMsg) {
+      noOptionsMsg.remove();
+    }
     
     // Store the rank
     modal.dataset.rank = rank;
@@ -10477,6 +10522,9 @@ const App = {
       if (this.character.attributes) {
         this.character.attributes[charName] = newVal;
       }
+      
+      // Update all skill percentages that use this characteristic
+      this.updateSkillPercentagesForCharacteristic(charName);
       
       // Trigger recalculations
       charInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -10540,6 +10588,158 @@ const App = {
       
       this.pendingAbilityUnlock = null;
       this.scheduleAutoSave();
+    }
+  },
+
+  /**
+   * Update all skill percentages when a characteristic increases
+   * @param {string} charName - The characteristic that increased (e.g., "STR")
+   */
+  updateSkillPercentagesForCharacteristic(charName) {
+    const charUpper = charName.toUpperCase();
+    
+    // Standard skills
+    const standardSkillIds = {
+      athletics: 'athletics-percent',
+      boating: 'boating-percent',
+      brawn: 'brawn-percent',
+      conceal: 'conceal-percent',
+      customs: 'customs-percent',
+      dance: 'dance-percent',
+      deceit: 'deceit-percent',
+      drive: 'drive-percent',
+      endurance: 'endurance-percent',
+      evade: 'evade-percent',
+      firstAid: 'first-aid-percent',
+      influence: 'influence-percent',
+      insight: 'insight-percent',
+      locale: 'locale-percent',
+      perception: 'perception-percent',
+      ride: 'ride-percent',
+      sing: 'sing-percent',
+      stealth: 'stealth-percent',
+      swim: 'swim-percent',
+      willpower: 'willpower-percent'
+    };
+    
+    // Check standard skills
+    if (typeof SKILL_DEFINITIONS !== 'undefined' && SKILL_DEFINITIONS.standard) {
+      Object.entries(SKILL_DEFINITIONS.standard).forEach(([key, skill]) => {
+        if (skill.attrs && skill.attrs.includes(charUpper)) {
+          const inputId = standardSkillIds[key];
+          if (inputId) {
+            const input = document.getElementById(inputId);
+            if (input && input.value) {
+              const increment = skill.multiplier === 2 ? 2 : 1;
+              input.value = (parseInt(input.value, 10) || 0) + increment;
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
+        }
+      });
+    }
+    
+    // Combat skills
+    if (charUpper === 'STR' || charUpper === 'DEX') {
+      // Combat Style 1
+      const combat1 = document.getElementById('combat-skill-1-percent');
+      if (combat1 && combat1.value) {
+        combat1.value = (parseInt(combat1.value, 10) || 0) + 1;
+        combat1.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      // Unarmed
+      const unarmed = document.getElementById('unarmed-percent');
+      if (unarmed && unarmed.value) {
+        unarmed.value = (parseInt(unarmed.value, 10) || 0) + 1;
+        unarmed.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    
+    // Professional skills - check each one
+    for (let i = 1; i <= 19; i++) {
+      const skillNameEl = document.getElementById(`pro-skill-${i}-name`);
+      const skillPctEl = document.getElementById(`pro-skill-${i}-percent`);
+      
+      if (skillNameEl && skillPctEl && skillNameEl.value && skillPctEl.value) {
+        const skillName = skillNameEl.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+        const proDef = SKILL_DEFINITIONS.professional?.[skillName];
+        
+        if (proDef && proDef.attrs && proDef.attrs.includes(charUpper)) {
+          const increment = proDef.multiplier === 2 ? 2 : 1;
+          skillPctEl.value = (parseInt(skillPctEl.value, 10) || 0) + increment;
+          skillPctEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
+    
+    // Magic skills
+    const magicSkillIds = {
+      channel: { id: 'channel-percent', attrs: ['INT', 'POW'] },
+      piety: { id: 'piety-percent', attrs: ['CHA', 'POW'] },
+      arcaneCasting: { id: 'arcane-casting-percent', attrs: ['INT', 'POW'] },
+      arcaneKnowledge: { id: 'arcane-knowledge-percent', attrs: ['INT'], multiplier: 2 },
+      arcaneSorcery: { id: 'arcane-sorcery-percent', attrs: ['CHA', 'POW'] },
+      sorcerousWisdom: { id: 'sorcerous-wisdom-percent', attrs: ['CHA', 'INT'] },
+      musicianship: { id: 'musicianship-percent', attrs: ['DEX', 'CHA'] },
+      lyricalMagic: { id: 'lyrical-magic-percent', attrs: ['CHA', 'POW'] }
+    };
+    
+    Object.values(magicSkillIds).forEach(skill => {
+      if (skill.attrs.includes(charUpper)) {
+        const input = document.getElementById(skill.id);
+        if (input && input.value) {
+          const increment = skill.multiplier === 2 ? 2 : 1;
+          input.value = (parseInt(input.value, 10) || 0) + increment;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    });
+    
+    // Beliefs (Alignments, Passions, Oaths) - POW or INT or CHA
+    if (charUpper === 'POW' || charUpper === 'INT') {
+      // Alignments and Passions use POW+INT
+      for (let i = 0; i < 2; i++) {
+        const alignPct = document.getElementById(`alignment-${i}-percent`);
+        if (alignPct && alignPct.value) {
+          alignPct.value = (parseInt(alignPct.value, 10) || 0) + 1;
+          alignPct.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      for (let i = 0; i < 6; i++) {
+        const passionPct = document.getElementById(`passion-${i}-percent`);
+        if (passionPct && passionPct.value) {
+          passionPct.value = (parseInt(passionPct.value, 10) || 0) + 1;
+          passionPct.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
+    if (charUpper === 'POW' || charUpper === 'CHA') {
+      // Oaths use POW+CHA
+      for (let i = 0; i < 4; i++) {
+        const oathPct = document.getElementById(`oath-${i}-percent`);
+        if (oathPct && oathPct.value) {
+          oathPct.value = (parseInt(oathPct.value, 10) || 0) + 1;
+          oathPct.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
+    
+    // Languages - INT+CHA
+    if (charUpper === 'INT' || charUpper === 'CHA') {
+      // Native tongue
+      const nativePct = document.getElementById('native-tongue-percent');
+      if (nativePct && nativePct.value) {
+        nativePct.value = (parseInt(nativePct.value, 10) || 0) + 1;
+        nativePct.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      // Additional languages
+      for (let i = 0; i < 5; i++) {
+        const langPct = document.getElementById(`language-${i}-percent`);
+        if (langPct && langPct.value) {
+          langPct.value = (parseInt(langPct.value, 10) || 0) + 1;
+          langPct.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
     }
   },
 
