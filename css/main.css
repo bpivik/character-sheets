@@ -1210,7 +1210,7 @@ select:focus {
 
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr 120px 45px 50px;
+  grid-template-columns: 1fr 135px 45px 50px;
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0;
