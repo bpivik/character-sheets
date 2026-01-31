@@ -5664,6 +5664,19 @@ const App = {
         result.classList.remove('active', 'success', 'info', 'warning');
         result.innerHTML = '';
       }
+      
+      // Show/hide spellcasting options based on character class
+      const hasSpells = this.hasSpellcastingAbility();
+      const spellOptions = ['pray-study', 'cast-spells', 'prepare-spell'];
+      spellOptions.forEach(value => {
+        const radio = overlay.querySelector(`input[name="short-rest-action"][value="${value}"]`);
+        if (radio) {
+          const optionLabel = radio.closest('.short-rest-option');
+          if (optionLabel) {
+            optionLabel.style.display = hasSpells ? '' : 'none';
+          }
+        }
+      });
     }
   },
 
@@ -5842,6 +5855,21 @@ const App = {
       semiconscious: 'Semi-conscious', coma: 'Coma'
     };
     return labels[state] || state;
+  },
+
+  /**
+   * Check if character has spellcasting ability (based on class selection)
+   */
+  hasSpellcastingAbility() {
+    const MAGIC_CLASSES = ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'mage', 'sorcerer', 'bard'];
+    
+    const classes = [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c);
+    
+    return classes.some(c => MAGIC_CLASSES.includes(c));
   },
 
   /**
