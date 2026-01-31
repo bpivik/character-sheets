@@ -36,16 +36,12 @@ const Calculator = {
   },
 
   /**
-   * Calculate Action Points from INT + DEX
+   * Calculate Action Points based on combined Rank
+   * Rank 0-1: 2, Rank 2: 3, Rank 3: 4, Rank 4: 6, Rank 5: 8
    */
-  calculateActionPoints(INT, DEX) {
-    const sum = (parseInt(INT) || 0) + (parseInt(DEX) || 0);
-    for (const entry of ACTION_POINTS_TABLE) {
-      if (sum <= entry.max) {
-        return entry.ap;
-      }
-    }
-    return 1;
+  calculateActionPoints(combinedRank) {
+    const rank = Math.min(Math.max(0, combinedRank), 5);
+    return ACTION_POINTS_BY_RANK[rank] || 2;
   },
 
   /**
@@ -53,6 +49,15 @@ const Calculator = {
    */
   calculateDamageModifier(STR, SIZ) {
     const sum = (parseInt(STR) || 0) + (parseInt(SIZ) || 0);
+    
+    // Handle values beyond the table (each 10 points continues progression)
+    if (sum > 130) {
+      const extraTens = Math.floor((sum - 130) / 10);
+      const diceProgression = ['+2d10+1d6', '+2d10+1d8', '+2d10+1d10', '+2d10+1d12', '+3d10'];
+      const idx = Math.min(extraTens, diceProgression.length - 1);
+      return diceProgression[idx];
+    }
+    
     for (const entry of DAMAGE_MOD_TABLE) {
       if (sum <= entry.max) {
         return entry.mod;
@@ -62,32 +67,63 @@ const Calculator = {
   },
 
   /**
-   * Calculate Healing Rate from CON
+   * Calculate Experience Modifier from CHA
+   * 6 or less: -1, 7-12: 0, 13-18: +1, each 6 points: +1
    */
-  calculateHealingRate(CON) {
-    const con = parseInt(CON) || 0;
-    for (const entry of HEALING_RATE_TABLE) {
-      if (con <= entry.max) {
-        return entry.rate;
-      }
-    }
-    return 1;
+  calculateExpMod(CHA) {
+    const cha = parseInt(CHA) || 0;
+    if (cha <= 6) return -1;
+    if (cha <= 12) return 0;
+    // Each 6 points above 12 adds +1
+    return Math.floor((cha - 7) / 6) + 1;
   },
 
   /**
-   * Calculate Initiative from (INT + DEX) / 2
+   * Calculate Healing Rate from CON
+   * 6 or less: 1, 7-12: 2, 13-18: 3, each 6 points: +1
    */
-  calculateInitiative(INT, DEX) {
-    const sum = (parseInt(INT) || 0) + (parseInt(DEX) || 0);
+  calculateHealingRate(CON) {
+    const con = parseInt(CON) || 0;
+    if (con <= 0) return 1;
+    return Math.ceil(con / 6);
+  },
+
+  /**
+   * Calculate Initiative from (DEX + INT) / 2 (round up)
+   */
+  calculateInitiative(DEX, INT) {
+    const sum = (parseInt(DEX) || 0) + (parseInt(INT) || 0);
     return Math.ceil(sum / 2);
   },
 
   /**
-   * Calculate Luck Points from POW / 6
+   * Calculate base Luck Points from POW
+   * 6 or less: 1, 7-12: 2, 13-18: 3, each 6 points: +1
    */
-  calculateLuckPoints(POW) {
+  calculateBaseLuck(POW) {
     const pow = parseInt(POW) || 0;
+    if (pow <= 0) return 1;
     return Math.ceil(pow / 6);
+  },
+
+  /**
+   * Calculate total Luck Points
+   * Base (from POW) + Human bonus (+1) + Rank bonus (cumulative)
+   * Rank bonuses: R1: +1, R2: +2, R3: +3, R4: +4, R5: +5 (cumulative)
+   */
+  calculateLuckPoints(POW, isHuman, combinedRank) {
+    let luck = this.calculateBaseLuck(POW);
+    
+    // Human racial bonus
+    if (isHuman) {
+      luck += 1;
+    }
+    
+    // Rank bonus (cumulative: rank 1 = +1, rank 2 = +1+2=3, rank 3 = +1+2+3=6, etc.)
+    const rank = Math.min(Math.max(0, combinedRank), 5);
+    luck += LUCK_BY_RANK[rank] || 0;
+    
+    return luck;
   },
 
   /**
@@ -98,30 +134,74 @@ const Calculator = {
   },
 
   /**
-   * Calculate base Hit Points for a location
-   * Base HP = (CON + SIZ) / 5, rounded up
+   * Get HP column index from CON+SIZ value
+   * 1-5: 0, 6-10: 1, 11-15: 2, ..., 36-40: 7, then +1 per 5
    */
-  calculateBaseHP(CON, SIZ) {
-    const sum = (parseInt(CON) || 0) + (parseInt(SIZ) || 0);
-    return Math.ceil(sum / 5);
+  getHPColumnIndex(conPlusSiz) {
+    if (conPlusSiz <= 5) return 0;
+    if (conPlusSiz <= 40) {
+      return Math.floor((conPlusSiz - 1) / 5);
+    }
+    // Beyond 40, each +5 adds to index
+    return 7 + Math.floor((conPlusSiz - 40) / 5);
+  },
+
+  /**
+   * Get base HP for a location type from the table
+   */
+  getBaseLocationHP(locationType, conPlusSiz) {
+    const colIndex = this.getHPColumnIndex(conPlusSiz);
+    const table = HP_TABLE[locationType];
+    if (!table) return 1;
+    
+    // If beyond table bounds, extrapolate (+1 per column beyond 7)
+    if (colIndex >= table.length) {
+      return table[table.length - 1] + (colIndex - table.length + 1);
+    }
+    
+    return table[colIndex];
+  },
+
+  /**
+   * Map location name to location type for HP lookup
+   */
+  getLocationType(locationName) {
+    const name = locationName.toLowerCase();
+    if (name.includes('head')) return 'head';
+    if (name.includes('chest')) return 'chest';
+    if (name.includes('abdomen')) return 'abdomen';
+    if (name.includes('arm')) return 'arm';
+    if (name.includes('leg')) return 'leg';
+    if (name.includes('wing')) return 'wing';
+    return 'leg'; // Default fallback
   },
 
   /**
    * Calculate HP for a specific hit location
+   * HP = base from table + rank bonus
    */
-  calculateLocationHP(CON, SIZ, hpMod) {
-    const baseHP = this.calculateBaseHP(CON, SIZ);
-    return Math.max(1, baseHP + (hpMod || 0));
+  calculateLocationHP(CON, SIZ, locationName, combinedRank) {
+    const conPlusSiz = (parseInt(CON) || 0) + (parseInt(SIZ) || 0);
+    const locationType = this.getLocationType(locationName);
+    
+    // Get base HP from table
+    let hp = this.getBaseLocationHP(locationType, conPlusSiz);
+    
+    // Add rank bonus
+    const rank = Math.min(Math.max(0, combinedRank), 5);
+    hp += HP_BONUS_BY_RANK[rank] || 0;
+    
+    return Math.max(1, hp);
   },
 
   /**
    * Calculate all hit location HPs
    */
-  calculateAllHitLocations(CON, SIZ, sheetType) {
+  calculateAllHitLocations(CON, SIZ, sheetType, combinedRank) {
     const locations = HIT_LOCATIONS[sheetType] || HIT_LOCATIONS.human;
     return locations.map(loc => ({
       ...loc,
-      hp: this.calculateLocationHP(CON, SIZ, loc.hpMod)
+      hp: this.calculateLocationHP(CON, SIZ, loc.location, combinedRank)
     }));
   },
 
@@ -269,7 +349,7 @@ const Calculator = {
   /**
    * Calculate all derived stats at once
    */
-  calculateAllDerived(attrs) {
+  calculateAllDerived(attrs, combinedRank, isHuman) {
     const STR = this.getAttr(attrs, 'STR');
     const CON = this.getAttr(attrs, 'CON');
     const SIZ = this.getAttr(attrs, 'SIZ');
@@ -279,28 +359,28 @@ const Calculator = {
     const CHA = this.getAttr(attrs, 'CHA');
 
     return {
-      actionPoints: this.calculateActionPoints(INT, DEX),
+      actionPoints: this.calculateActionPoints(combinedRank),
       damageModifier: this.calculateDamageModifier(STR, SIZ),
+      expMod: this.calculateExpMod(CHA),
       healingRate: this.calculateHealingRate(CON),
-      initiative: this.calculateInitiative(INT, DEX),
-      luckPoints: this.calculateLuckPoints(POW),
-      magicPoints: this.calculateMagicPoints(POW),
-      expMod: -1 // Fixed for most races
+      initiative: this.calculateInitiative(DEX, INT),
+      luckPoints: this.calculateLuckPoints(POW, isHuman, combinedRank),
+      magicPoints: this.calculateMagicPoints(POW)
     };
   },
 
   /**
    * Recalculate everything based on current attributes
    */
-  recalculateAll(attrs, sheetType) {
+  recalculateAll(attrs, sheetType, combinedRank, isHuman) {
     return {
-      derived: this.calculateAllDerived(attrs),
+      derived: this.calculateAllDerived(attrs, combinedRank || 0, isHuman || false),
       skills: this.calculateAllStandardSkills(attrs),
       beliefs: this.calculateBeliefBases(attrs),
       languages: this.calculateLanguageBases(attrs),
       magic: this.calculateMagicSkillBases(attrs),
       combat: this.calculateCombatSkillBase(attrs),
-      hitLocations: this.calculateAllHitLocations(attrs.CON, attrs.SIZ, sheetType)
+      hitLocations: this.calculateAllHitLocations(attrs.CON, attrs.SIZ, sheetType, combinedRank || 0)
     };
   }
 };

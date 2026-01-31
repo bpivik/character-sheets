@@ -122,7 +122,7 @@ const HIT_LOCATIONS = {
   ]
 };
 
-// Damage Modifier lookup table
+// Damage Modifier lookup table (based on STR+SIZ)
 const DAMAGE_MOD_TABLE = [
   { max: 5, mod: '-1d8' },
   { max: 10, mod: '-1d6' },
@@ -134,30 +134,70 @@ const DAMAGE_MOD_TABLE = [
   { max: 40, mod: '+1d6' },
   { max: 45, mod: '+1d8' },
   { max: 50, mod: '+1d10' },
-  { max: 55, mod: '+1d12' },
-  { max: 60, mod: '+2d6' },
-  { max: 65, mod: '+1d8+1d6' },
-  { max: 70, mod: '+2d8' },
-  { max: 75, mod: '+1d10+1d8' },
-  { max: 80, mod: '+2d10' },
-  { max: Infinity, mod: '+2d10+' }
+  { max: 60, mod: '+1d12' },
+  { max: 70, mod: '+2d6' },
+  { max: 80, mod: '+1d8+1d6' },
+  { max: 90, mod: '+2d8' },
+  { max: 100, mod: '+1d10+1d8' },
+  { max: 110, mod: '+2d10' },
+  { max: 120, mod: '+2d10+1d2' },
+  { max: 130, mod: '+2d10+1d4' }
+  // Each additional 10 points continues the progression
 ];
 
-// Action Points lookup table
-const ACTION_POINTS_TABLE = [
-  { max: 12, ap: 1 },
-  { max: 24, ap: 2 },
-  { max: 36, ap: 3 },
-  { max: Infinity, ap: 4 }
+// Action Points by combined Rank (base 2 for Rank 0-1, then bonuses stack)
+// Rank 0: 2, Rank 1: 2, Rank 2: 3 (+1), Rank 3: 4 (+1), Rank 4: 6 (+2), Rank 5: 8 (+2)
+const ACTION_POINTS_BY_RANK = [2, 2, 3, 4, 6, 8];
+
+// Experience Modifier lookup table (based on CHA)
+const EXP_MOD_TABLE = [
+  { max: 6, mod: -1 },
+  { max: 12, mod: 0 },
+  { max: 18, mod: 1 },
+  { max: 24, mod: 2 },
+  { max: 30, mod: 3 },
+  { max: 36, mod: 4 }
+  // Each additional 6 points: +1
 ];
 
-// Healing Rate lookup table
+// Healing Rate lookup table (based on CON)
 const HEALING_RATE_TABLE = [
   { max: 6, rate: 1 },
   { max: 12, rate: 2 },
   { max: 18, rate: 3 },
-  { max: Infinity, rate: 4 }
+  { max: 24, rate: 4 },
+  { max: 30, rate: 5 },
+  { max: 36, rate: 6 }
+  // Each additional 6 points: +1
 ];
+
+// Luck Points base lookup table (based on POW)
+const LUCK_POINTS_TABLE = [
+  { max: 6, luck: 1 },
+  { max: 12, luck: 2 },
+  { max: 18, luck: 3 },
+  { max: 24, luck: 4 },
+  { max: 30, luck: 5 },
+  { max: 36, luck: 6 }
+  // Each additional 6 points: +1
+];
+
+// Luck Points by Rank (cumulative bonus: Rank 1: +1, Rank 2: +1+2=3, Rank 3: +1+2+3=6, etc.)
+const LUCK_BY_RANK = [0, 1, 3, 6, 10, 15];
+
+// Hit Points base table by CON+SIZ for each location type
+// Columns: 1-5, 6-10, 11-15, 16-20, 21-25, 26-30, 31-35, 36-40 (each +5 adds +1)
+const HP_TABLE = {
+  head:    [1, 2, 3, 4, 5, 6, 7, 8],
+  chest:   [3, 4, 5, 6, 7, 8, 9, 10],
+  abdomen: [2, 3, 4, 5, 6, 7, 8, 9],
+  arm:     [1, 1, 2, 3, 4, 5, 6, 7],
+  leg:     [1, 2, 3, 4, 5, 6, 7, 8],
+  wing:    [1, 2, 3, 4, 5, 6, 7, 8]
+};
+
+// HP bonus by rank: Rank 2: +1, Rank 3: +1 more, Rank 4: +2 more, Rank 5: +2 more
+const HP_BONUS_BY_RANK = [0, 0, 1, 2, 4, 6];
 
 // Encumbrance thresholds
 const ENC_STATUS = [

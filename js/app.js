@@ -421,6 +421,8 @@ const App = {
               e.target.value = val;
               this.character.info[key] = val;
             }
+            // Recalculate attributes when rank changes (affects action points, luck, HP)
+            this.recalculateAll();
           }
           
           this.scheduleAutoSave();
@@ -494,6 +496,8 @@ const App = {
             if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
               this.updateSheetTypeFromSpecies(previousSpecies);
               field.dataset.previousValue = currentSpecies;
+              // Recalculate for human luck bonus
+              this.recalculateAll();
             }
             
             this.updateMagicVisibility();
@@ -1732,15 +1736,15 @@ const App = {
         <td>${loc.noArmor ? '<span class="no-armor-note">Wings may not have armor</span>' : `<input type="text" class="armor-input" id="loc-${i}-armor" placeholder="">`}</td>
         <td>${loc.noArmor ? '' : `<input type="number" class="ap-input" id="loc-${i}-ap" placeholder="0">`}</td>
         <td>
-          <input type="number" class="hp-max-input" id="loc-${i}-hp" placeholder="">
+          <input type="number" class="hp-max-input derived-readonly" id="loc-${i}-hp" placeholder="" readonly>
           /
           <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
         </td>
       `;
       tbody.appendChild(tr);
       
-      // Add event listeners
-      tr.querySelectorAll('input').forEach(input => {
+      // Add event listeners (only for editable inputs)
+      tr.querySelectorAll('input:not([readonly])').forEach(input => {
         input.addEventListener('input', () => this.scheduleAutoSave());
       });
       
@@ -1779,6 +1783,20 @@ const App = {
         apInput.addEventListener('input', () => {
           apInput.dataset.autoFilled = 'false';
         });
+      }
+    });
+  },
+
+  /**
+   * Update hit location HP values based on calculated results
+   */
+  updateHitLocationHPs(hitLocations) {
+    if (!hitLocations) return;
+    
+    hitLocations.forEach((loc, i) => {
+      const hpInput = document.getElementById(`loc-${i}-hp`);
+      if (hpInput) {
+        hpInput.value = loc.hp;
       }
     });
   },
@@ -2891,7 +2909,18 @@ const App = {
    */
   recalculateAll() {
     const attrs = this.character.attributes;
-    const results = Calculator.recalculateAll(attrs, this.sheetType);
+    
+    // Calculate combined rank from all classes
+    const primaryRank = parseInt(document.getElementById('rank-primary')?.value, 10) || 0;
+    const secondaryRank = parseInt(document.getElementById('rank-secondary')?.value, 10) || 0;
+    const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
+    const combinedRank = primaryRank + secondaryRank + tertiaryRank;
+    
+    // Check if character is human (for luck bonus)
+    const species = document.getElementById('species')?.value?.toLowerCase() || '';
+    const isHuman = species === 'human';
+    
+    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
     
     // Only update original values if NOT locked
     if (!this.character.originalsLocked) {
@@ -2929,6 +2958,9 @@ const App = {
       if (magicOrig) {
         magicOrig.value = results.derived.magicPoints;
       }
+      
+      // Update hit location HPs (original only)
+      this.updateHitLocationHPs(results.hitLocations);
       
       // Update weapon damage displays when damage modifier changes
       if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
