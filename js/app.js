@@ -5519,13 +5519,134 @@ const App = {
   },
 
   /**
-   * Long Rest: Fully recover to Fresh
+   * Long Rest: 8 hours of rest - restore MP and recover fatigue based on recovery times
    */
   longRest() {
-    if (this.character.fatigueState === 'fresh') {
-      return; // Already Fresh
+    const currentState = this.character.fatigueState || 'fresh';
+    const messages = [];
+    
+    // Recovery time mapping (hours to reach Fresh from each state)
+    const recoveryTimes = {
+      fresh: 0,
+      winded: 0.25,  // 15 min
+      tired: 3,
+      wearied: 6,
+      exhausted: 12,
+      debilitated: 18,
+      incapacitated: 24,
+      semiconscious: 36,
+      coma: 48
+    };
+    
+    // Long Rest outcomes (what state you end up in after 8 hours)
+    const longRestOutcome = {
+      fresh: 'fresh',
+      winded: 'fresh',
+      tired: 'fresh',
+      wearied: 'fresh',
+      exhausted: 'wearied',      // 12-8=4 hrs remaining
+      debilitated: 'exhausted',   // 18-8=10 hrs remaining
+      incapacitated: 'debilitated', // 24-8=16 hrs remaining
+      semiconscious: 'semiconscious', // No change - needs Cure Fatigue
+      coma: 'coma'                // No change - needs Cure Fatigue
+    };
+    
+    // Restore all Magic Points
+    const mpCurrent = document.getElementById('magic-points-current');
+    const mpMax = document.getElementById('magic-points-original');
+    if (mpCurrent && mpMax) {
+      const maxMP = parseInt(mpMax.dataset.originalValue || mpMax.value) || 0;
+      const currentMP = parseInt(mpCurrent.value) || 0;
+      if (maxMP > 0) {
+        mpCurrent.value = maxMP;
+        mpCurrent.dispatchEvent(new Event('input', { bubbles: true }));
+        if (currentMP < maxMP) {
+          messages.push(`<strong>Magic Points restored:</strong> ${currentMP} → ${maxMP}`);
+        } else {
+          messages.push(`<strong>Magic Points:</strong> Already at maximum (${maxMP})`);
+        }
+      }
     }
-    this.setFatigueState('fresh', true);
+    
+    // Calculate fatigue recovery
+    const newState = longRestOutcome[currentState] || currentState;
+    
+    if (currentState === 'semiconscious' || currentState === 'coma') {
+      messages.push(`<br><strong>Fatigue:</strong> ${this.formatFatigueState(currentState)}`);
+      messages.push(`<span style="color:#cc0000;">⚠ No recovery possible from ${this.formatFatigueState(currentState)} with rest alone.</span>`);
+      messages.push(`<em>A Cure Fatigue spell is required to recover from this state.</em>`);
+    } else if (newState !== currentState) {
+      const hoursNeeded = recoveryTimes[currentState];
+      const hoursRemaining = Math.max(0, hoursNeeded - 8);
+      this.setFatigueState(newState, true);
+      messages.push(`<br><strong>Fatigue recovery:</strong> ${this.formatFatigueState(currentState)} → ${this.formatFatigueState(newState)}`);
+      if (hoursRemaining > 0) {
+        messages.push(`<em>(${hoursRemaining} hours of recovery time remaining)</em>`);
+      }
+    } else {
+      messages.push(`<br><strong>Fatigue:</strong> Already ${this.formatFatigueState(currentState)}`);
+    }
+    
+    // Show the Long Rest result modal
+    this.showLongRestResult(messages.join('<br>'));
+  },
+
+  /**
+   * Show Long Rest result in a simple modal/alert
+   */
+  showLongRestResult(message) {
+    // Create or get the long rest result modal
+    let overlay = document.getElementById('long-rest-modal-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'long-rest-modal-overlay';
+      overlay.className = 'long-rest-modal-overlay';
+      overlay.innerHTML = `
+        <div class="long-rest-modal">
+          <div class="long-rest-modal-header">
+            <h3>⛺ Long Rest (8 hours)</h3>
+            <button class="long-rest-modal-close">&times;</button>
+          </div>
+          <div class="long-rest-modal-body" id="long-rest-modal-body">
+          </div>
+          <div class="long-rest-modal-footer">
+            <button class="btn btn-primary" id="btn-close-long-rest">Done</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      
+      // Add event listeners
+      overlay.querySelector('.long-rest-modal-close').addEventListener('click', () => {
+        this.closeLongRestModal();
+      });
+      overlay.querySelector('#btn-close-long-rest').addEventListener('click', () => {
+        this.closeLongRestModal();
+      });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.closeLongRestModal();
+        }
+      });
+    }
+    
+    // Set content and show
+    document.getElementById('long-rest-modal-body').innerHTML = message;
+    overlay.classList.add('active');
+    
+    // Refresh summary widgets
+    this.refreshSummaryWidget('fatigue');
+    this.refreshSummaryWidget('attributes');
+  },
+
+  /**
+   * Close the Long Rest modal
+   */
+  closeLongRestModal() {
+    const overlay = document.getElementById('long-rest-modal-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
   },
 
   /**
@@ -7214,8 +7335,7 @@ const App = {
         if (restAction === 'short') {
           this.shortRest();
         } else if (restAction === 'long') {
-          this.longRest();
-          this.refreshSummaryWidget('fatigue');
+          this.longRest(); // longRest now shows its own modal and refreshes widgets
         }
         return;
       }
