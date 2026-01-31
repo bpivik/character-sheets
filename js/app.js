@@ -3376,6 +3376,9 @@ const App = {
     const secondaryRank = parseInt(document.getElementById('rank-secondary')?.value, 10) || 0;
     const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
     
+    // Update prereq label visibility based on whether classes are selected
+    this.updatePrereqLabelVisibility(secondaryClass, tertiaryClass);
+    
     // Get rank requirements for each class slot
     const primaryReq = primaryClass ? window.ClassRankData.getNextRankRequirement(primaryRank, 'primary') : null;
     const secondaryReq = secondaryClass ? window.ClassRankData.getNextRankRequirement(secondaryRank, 'secondary') : null;
@@ -3523,6 +3526,29 @@ const App = {
       }
     };
     document.addEventListener('keydown', escHandler);
+  },
+  
+  /**
+   * Update visibility of prereq label links based on whether classes are selected
+   * Hide "Subclass 1 Prereq. Skill" if no secondary class
+   * Hide "Subclass 2 Prereq. Skill" if no tertiary class
+   */
+  updatePrereqLabelVisibility(secondaryClass, tertiaryClass) {
+    // Get the prereq row containers (the whole row with key icon + label)
+    const secondaryLabel = document.getElementById('prereq-label-secondary');
+    const tertiaryLabel = document.getElementById('prereq-label-tertiary');
+    
+    // Get parent prereq-row elements
+    const secondaryRow = secondaryLabel?.closest('.prereq-row');
+    const tertiaryRow = tertiaryLabel?.closest('.prereq-row');
+    
+    // Show/hide based on whether class is selected
+    if (secondaryRow) {
+      secondaryRow.style.display = secondaryClass ? '' : 'none';
+    }
+    if (tertiaryRow) {
+      tertiaryRow.style.display = tertiaryClass ? '' : 'none';
+    }
   },
   
   /**

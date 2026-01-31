@@ -112,14 +112,20 @@
               <label class="field-label">Gender</label>
               <input type="text" id="gender" class="field-input" placeholder="">
             </div>
-            <div class="field-row">
+            <div class="field-row field-row-with-rest">
               <label class="field-label">Age</label>
               <input type="number" id="age" class="field-input field-input-small" placeholder="">
               <label class="field-label">Handedness</label>
               <input type="text" id="handedness" class="field-input field-input-small" placeholder="">
               <div class="rest-buttons">
-                <button class="rest-btn rest-btn-short" id="btn-short-rest" title="Short Rest: Recover one Fatigue level (15 min – 12 hrs depending on state)">☀ Short Rest</button>
-                <button class="rest-btn rest-btn-long" id="btn-long-rest" title="Long Rest: Fully recover to Fresh">🌙 Long Rest</button>
+                <button class="rest-btn rest-btn-short" id="btn-short-rest" title="Short Rest: Recover one Fatigue level (15 min – 12 hrs depending on state)">
+                  <span class="rest-icon">☀</span>
+                  <span class="rest-text">Short Rest</span>
+                </button>
+                <button class="rest-btn rest-btn-long" id="btn-long-rest" title="Long Rest: Fully recover to Fresh">
+                  <span class="rest-icon">🛏️</span>
+                  <span class="rest-text">Long Rest</span>
+                </button>
               </div>
             </div>
           </div>
