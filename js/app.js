@@ -10598,28 +10598,28 @@ const App = {
   updateSkillPercentagesForCharacteristic(charName) {
     const charUpper = charName.toUpperCase();
     
-    // Standard skills
+    // Standard skills (uses skill-name-current for editable percent)
     const standardSkillIds = {
-      athletics: 'athletics-percent',
-      boating: 'boating-percent',
-      brawn: 'brawn-percent',
-      conceal: 'conceal-percent',
-      customs: 'customs-percent',
-      dance: 'dance-percent',
-      deceit: 'deceit-percent',
-      drive: 'drive-percent',
-      endurance: 'endurance-percent',
-      evade: 'evade-percent',
-      firstAid: 'first-aid-percent',
-      influence: 'influence-percent',
-      insight: 'insight-percent',
-      locale: 'locale-percent',
-      perception: 'perception-percent',
-      ride: 'ride-percent',
-      sing: 'sing-percent',
-      stealth: 'stealth-percent',
-      swim: 'swim-percent',
-      willpower: 'willpower-percent'
+      athletics: 'athletics-current',
+      boating: 'boating-current',
+      brawn: 'brawn-current',
+      conceal: 'conceal-current',
+      customs: 'customs-current',
+      dance: 'dance-current',
+      deceit: 'deceit-current',
+      drive: 'drive-current',
+      endurance: 'endurance-current',
+      evade: 'evade-current',
+      firstAid: 'first-aid-current',
+      influence: 'influence-current',
+      insight: 'insight-current',
+      locale: 'locale-current',
+      perception: 'perception-current',
+      ride: 'ride-current',
+      sing: 'sing-current',
+      stealth: 'stealth-current',
+      swim: 'swim-current',
+      willpower: 'willpower-current'
     };
     
     // Check standard skills
@@ -10655,10 +10655,10 @@ const App = {
       }
     }
     
-    // Professional skills - check each one
-    for (let i = 1; i <= 19; i++) {
-      const skillNameEl = document.getElementById(`pro-skill-${i}-name`);
-      const skillPctEl = document.getElementById(`pro-skill-${i}-percent`);
+    // Professional skills - check each one (uses prof-skill-X-name and prof-skill-X-current)
+    for (let i = 0; i < 19; i++) {
+      const skillNameEl = document.getElementById(`prof-skill-${i}-name`);
+      const skillPctEl = document.getElementById(`prof-skill-${i}-current`);
       
       if (skillNameEl && skillPctEl && skillNameEl.value && skillPctEl.value) {
         const skillName = skillNameEl.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
@@ -10697,16 +10697,16 @@ const App = {
     
     // Beliefs (Alignments, Passions, Oaths) - POW or INT or CHA
     if (charUpper === 'POW' || charUpper === 'INT') {
-      // Alignments and Passions use POW+INT
-      for (let i = 0; i < 2; i++) {
-        const alignPct = document.getElementById(`alignment-${i}-percent`);
+      // Alignments and Passions use POW+INT (1-indexed)
+      for (let i = 1; i <= 2; i++) {
+        const alignPct = document.getElementById(`alignment-${i}-current`);
         if (alignPct && alignPct.value) {
           alignPct.value = (parseInt(alignPct.value, 10) || 0) + 1;
           alignPct.dispatchEvent(new Event('input', { bubbles: true }));
         }
       }
-      for (let i = 0; i < 6; i++) {
-        const passionPct = document.getElementById(`passion-${i}-percent`);
+      for (let i = 1; i <= 6; i++) {
+        const passionPct = document.getElementById(`passion-${i}-current`);
         if (passionPct && passionPct.value) {
           passionPct.value = (parseInt(passionPct.value, 10) || 0) + 1;
           passionPct.dispatchEvent(new Event('input', { bubbles: true }));
@@ -10714,9 +10714,9 @@ const App = {
       }
     }
     if (charUpper === 'POW' || charUpper === 'CHA') {
-      // Oaths use POW+CHA
-      for (let i = 0; i < 4; i++) {
-        const oathPct = document.getElementById(`oath-${i}-percent`);
+      // Oaths use POW+CHA (1-indexed)
+      for (let i = 1; i <= 4; i++) {
+        const oathPct = document.getElementById(`oath-${i}-current`);
         if (oathPct && oathPct.value) {
           oathPct.value = (parseInt(oathPct.value, 10) || 0) + 1;
           oathPct.dispatchEvent(new Event('input', { bubbles: true }));
@@ -10727,14 +10727,14 @@ const App = {
     // Languages - INT+CHA
     if (charUpper === 'INT' || charUpper === 'CHA') {
       // Native tongue
-      const nativePct = document.getElementById('native-tongue-percent');
+      const nativePct = document.getElementById('native-tongue-current');
       if (nativePct && nativePct.value) {
         nativePct.value = (parseInt(nativePct.value, 10) || 0) + 1;
         nativePct.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      // Additional languages
-      for (let i = 0; i < 5; i++) {
-        const langPct = document.getElementById(`language-${i}-percent`);
+      // Additional languages (start at 2)
+      for (let i = 2; i <= 5; i++) {
+        const langPct = document.getElementById(`language-${i}-current`);
         if (langPct && langPct.value) {
           langPct.value = (parseInt(langPct.value, 10) || 0) + 1;
           langPct.dispatchEvent(new Event('input', { bubbles: true }));
