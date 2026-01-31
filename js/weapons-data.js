@@ -313,9 +313,18 @@ function composeDamage(baseDamage) {
  * @param {string} weaponName - The name entered by user
  */
 function autofillMeleeWeapon(index, weaponName) {
+  const nameInput = document.getElementById(`melee-${index}-name`);
+  
   if (!weaponName || weaponName.trim() === '') {
     // Clear all fields when name is emptied
     clearMeleeWeaponFields(index);
+    // Clear the user-modified flag so next weapon can autofill
+    if (nameInput) delete nameInput.dataset.userModified;
+    return false;
+  }
+  
+  // If this row has been user-modified, don't autofill
+  if (nameInput && nameInput.dataset.userModified === 'true') {
     return false;
   }
   
@@ -367,6 +376,9 @@ function clearMeleeWeaponFields(index) {
       }
     }
   });
+  // Clear the userModified flag on the name input
+  const nameInput = document.getElementById(`melee-${index}-name`);
+  if (nameInput) delete nameInput.dataset.userModified;
 }
 
 /**
@@ -647,9 +659,18 @@ function findRangedWeaponKey(userText) {
  * @param {string} weaponName - The name entered by user
  */
 function autofillRangedWeapon(index, weaponName) {
+  const nameInput = document.getElementById(`ranged-${index}-name`);
+  
   if (!weaponName || weaponName.trim() === '') {
     // Clear all fields when name is emptied
     clearRangedWeaponFields(index);
+    // Clear the user-modified flag so next weapon can autofill
+    if (nameInput) delete nameInput.dataset.userModified;
+    return false;
+  }
+  
+  // If this row has been user-modified, don't autofill
+  if (nameInput && nameInput.dataset.userModified === 'true') {
     return false;
   }
   
@@ -712,16 +733,25 @@ function clearRangedWeaponFields(index) {
       }
     }
   });
+  // Clear the userModified flag on the name input
+  const nameInput = document.getElementById(`ranged-${index}-name`);
+  if (nameInput) delete nameInput.dataset.userModified;
 }
 
 /**
  * Update all weapon damage displays based on current damage modifier
  * Called when damage modifier changes on Character page
+ * Skips rows that have been user-modified
  */
 function updateAllWeaponDamage() {
   // Update melee weapons (always add damage modifier)
   for (let i = 0; i < 6; i++) {
+    const nameInput = document.getElementById(`melee-${i}-name`);
     const damageInput = document.getElementById(`melee-${i}-damage`);
+    
+    // Skip if user has modified this row
+    if (nameInput && nameInput.dataset.userModified === 'true') continue;
+    
     if (damageInput && damageInput.dataset.baseDamage) {
       damageInput.value = composeDamage(damageInput.dataset.baseDamage);
     }
@@ -729,8 +759,12 @@ function updateAllWeaponDamage() {
   
   // Update ranged weapons (only if D.M. = Y)
   for (let i = 0; i < 5; i++) {
+    const nameInput = document.getElementById(`ranged-${i}-name`);
     const damageInput = document.getElementById(`ranged-${i}-damage`);
     const dmInput = document.getElementById(`ranged-${i}-dm`);
+    
+    // Skip if user has modified this row
+    if (nameInput && nameInput.dataset.userModified === 'true') continue;
     
     if (damageInput && damageInput.dataset.baseDamage) {
       const useDamageMod = dmInput && dmInput.value.toUpperCase() === 'Y';

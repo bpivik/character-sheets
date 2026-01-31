@@ -1865,8 +1865,16 @@ const App = {
           });
         }
         
+        // Mark row as user-modified when any non-name field is edited
         tr.querySelectorAll('input').forEach(input => {
-          input.addEventListener('input', () => this.scheduleAutoSave());
+          input.addEventListener('input', () => {
+            // If editing any field other than name, mark this row as user-modified
+            if (!input.id.endsWith('-name')) {
+              const nameInput = tr.querySelector(`#melee-${rowIndex}-name`);
+              if (nameInput) nameInput.dataset.userModified = 'true';
+            }
+            this.scheduleAutoSave();
+          });
         });
       }
     }
@@ -1907,8 +1915,16 @@ const App = {
           });
         }
         
+        // Mark row as user-modified when any non-name field is edited
         tr.querySelectorAll('input').forEach(input => {
-          input.addEventListener('input', () => this.scheduleAutoSave());
+          input.addEventListener('input', () => {
+            // If editing any field other than name, mark this row as user-modified
+            if (!input.id.endsWith('-name')) {
+              const nameInput = tr.querySelector(`#ranged-${rowIndex}-name`);
+              if (nameInput) nameInput.dataset.userModified = 'true';
+            }
+            this.scheduleAutoSave();
+          });
         });
       }
     }
@@ -2427,6 +2443,7 @@ const App = {
     if (this.character.combat && this.character.combat.meleeWeapons) {
       this.character.combat.meleeWeapons.forEach((weapon, i) => {
         const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
+        const nameInput = document.getElementById(`melee-${i}-name`);
         fields.forEach(field => {
           const input = document.getElementById(`melee-${i}-${field}`);
           if (input && weapon[field]) {
@@ -2437,6 +2454,10 @@ const App = {
             input.dataset.baseDamage = weapon.baseDamage;
           }
         });
+        // Restore userModified flag
+        if (nameInput && weapon.userModified) {
+          nameInput.dataset.userModified = 'true';
+        }
       });
     }
     
@@ -2444,6 +2465,7 @@ const App = {
     if (this.character.combat && this.character.combat.rangedWeapons) {
       this.character.combat.rangedWeapons.forEach((weapon, i) => {
         const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+        const nameInput = document.getElementById(`ranged-${i}-name`);
         fields.forEach(field => {
           const input = document.getElementById(`ranged-${i}-${field}`);
           if (input && weapon[field]) {
@@ -2454,6 +2476,10 @@ const App = {
             input.dataset.baseDamage = weapon.baseDamage;
           }
         });
+        // Restore userModified flag
+        if (nameInput && weapon.userModified) {
+          nameInput.dataset.userModified = 'true';
+        }
       });
     }
     
@@ -2691,6 +2717,7 @@ const App = {
     for (let i = 0; i < 6; i++) {
       const weapon = {};
       const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
+      const nameInput = document.getElementById(`melee-${i}-name`);
       fields.forEach(field => {
         const input = document.getElementById(`melee-${i}-${field}`);
         weapon[field] = input?.value || '';
@@ -2699,6 +2726,10 @@ const App = {
           weapon.baseDamage = input.dataset.baseDamage;
         }
       });
+      // Save userModified flag
+      if (nameInput?.dataset?.userModified === 'true') {
+        weapon.userModified = true;
+      }
       this.character.combat.meleeWeapons.push(weapon);
     }
     
@@ -2707,6 +2738,7 @@ const App = {
     for (let i = 0; i < 5; i++) {
       const weapon = {};
       const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+      const nameInput = document.getElementById(`ranged-${i}-name`);
       fields.forEach(field => {
         const input = document.getElementById(`ranged-${i}-${field}`);
         weapon[field] = input?.value || '';
@@ -2715,6 +2747,10 @@ const App = {
           weapon.baseDamage = input.dataset.baseDamage;
         }
       });
+      // Save userModified flag
+      if (nameInput?.dataset?.userModified === 'true') {
+        weapon.userModified = true;
+      }
       this.character.combat.rangedWeapons.push(weapon);
     }
     
