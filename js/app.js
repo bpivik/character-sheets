@@ -848,6 +848,22 @@ const App = {
         this.toggleOriginalsEditing();
       });
     }
+    
+    // Short Rest button - recover one fatigue level
+    const shortRestBtn = document.getElementById('btn-short-rest');
+    if (shortRestBtn) {
+      shortRestBtn.addEventListener('click', () => {
+        this.shortRest();
+      });
+    }
+    
+    // Long Rest button - fully recover to Fresh
+    const longRestBtn = document.getElementById('btn-long-rest');
+    if (longRestBtn) {
+      longRestBtn.addEventListener('click', () => {
+        this.longRest();
+      });
+    }
   },
   
   /**
@@ -5425,13 +5441,44 @@ const App = {
     
     // Update summary page
     this.updateCombatQuickRef();
-    if (typeof this.refreshSummaryWidgets === 'function') {
-      this.refreshSummaryWidgets();
+    if (typeof this.refreshSummaryWidget === 'function') {
+      this.refreshSummaryWidget('fatigue');
+      this.refreshSummaryWidget('combat');
+      this.refreshSummaryWidget('attributes');
+      this.refreshSummaryWidget('movement');
     }
     
     if (save) {
       this.scheduleAutoSave();
     }
+  },
+
+  /**
+   * Short Rest: Recover one fatigue level
+   * Order: coma → semiconscious → incapacitated → debilitated → exhausted → wearied → tired → winded → fresh
+   */
+  shortRest() {
+    const stateOrder = ['fresh','winded','tired','wearied','exhausted','debilitated','incapacitated','semiconscious','coma'];
+    const currentState = this.character.fatigueState || 'fresh';
+    const currentIndex = stateOrder.indexOf(currentState);
+    
+    if (currentIndex <= 0) {
+      // Already Fresh, nothing to recover
+      return;
+    }
+    
+    const newState = stateOrder[currentIndex - 1];
+    this.setFatigueState(newState, true);
+  },
+
+  /**
+   * Long Rest: Fully recover to Fresh
+   */
+  longRest() {
+    if (this.character.fatigueState === 'fresh') {
+      return; // Already Fresh
+    }
+    this.setFatigueState('fresh', true);
   },
 
   /**
@@ -6521,6 +6568,73 @@ const App = {
         html += '</div>';
         return html;
       }
+    },
+    'fatigue': {
+      name: 'Fatigue',
+      icon: '😓',
+      render: () => {
+        const currentState = App.character.fatigueState || 'fresh';
+        const stateLabels = {
+          fresh: 'Fresh', winded: 'Winded', tired: 'Tired', wearied: 'Wearied',
+          exhausted: 'Exhausted', debilitated: 'Debilitated', incapacitated: 'Incapacitated',
+          semiconscious: 'Semi-conscious', coma: 'Coma'
+        };
+        const fatigue = FATIGUE_PENALTIES[currentState] || FATIGUE_PENALTIES.fresh;
+        
+        // Color based on severity
+        let stateColor = '#228b22'; // Fresh = green
+        if (fatigue.skillPenalty >= 80) stateColor = '#cc0000'; // Herculean+ = red
+        else if (fatigue.skillPenalty >= 40) stateColor = '#b35900'; // Formidable = orange
+        else if (fatigue.skillPenalty >= 20) stateColor = '#cc9900'; // Hard = yellow-orange
+        if (!fatigue.canAct) stateColor = '#666'; // Incapacitated = grey
+        
+        let html = `<h4>Fatigue</h4>`;
+        html += `<div class="stat-row" style="margin-bottom:8px;">
+          <span class="stat-label">Current:</span>
+          <span class="stat-value-bold" style="color:${stateColor};">${stateLabels[currentState] || 'Fresh'}</span>
+        </div>`;
+        
+        // Compact button grid
+        html += `<div class="fatigue-widget-grid">`;
+        const states = ['fresh','winded','tired','wearied','exhausted','debilitated','incapacitated','semiconscious','coma'];
+        const shortLabels = {
+          fresh: 'Fresh', winded: 'Winded', tired: 'Tired', wearied: 'Wearied',
+          exhausted: 'Exhaust.', debilitated: 'Debil.', incapacitated: 'Incap.',
+          semiconscious: 'Semi-C.', coma: 'Coma'
+        };
+        states.forEach(state => {
+          const isActive = state === currentState;
+          const fp = FATIGUE_PENALTIES[state];
+          let cls = 'fatigue-widget-btn';
+          if (isActive) cls += ' fatigue-btn-active';
+          if (fp.skillPenalty >= 80) cls += ' fatigue-btn-severe';
+          else if (fp.skillPenalty >= 40) cls += ' fatigue-btn-moderate';
+          else if (fp.skillPenalty >= 20) cls += ' fatigue-btn-mild';
+          if (!fp.canAct) cls += ' fatigue-btn-disabled';
+          html += `<button class="${cls}" data-fatigue-state="${state}">${shortLabels[state]}</button>`;
+        });
+        html += `</div>`;
+        
+        // Show active effects summary
+        if (fatigue.skillPenalty > 0 || !fatigue.canAct) {
+          html += `<div style="margin-top:6px; font-size:0.72rem; color:var(--text-secondary); border-top:1px solid var(--border-light); padding-top:4px;">`;
+          if (!fatigue.canAct) {
+            html += `<div style="color:#cc0000;font-weight:600;">Cannot Act</div>`;
+          } else {
+            const effects = [];
+            if (fatigue.skillPenalty > 0) effects.push(`Skills: ${fatigue.skillGrade} (-${fatigue.skillPenalty}%)`);
+            if (fatigue.initiativePenalty > 0) effects.push(`Init: -${fatigue.initiativePenalty}`);
+            if (fatigue.apPenalty > 0) effects.push(`AP: -${fatigue.apPenalty}`);
+            if (fatigue.movementType === 'flat') effects.push(`Move: -${fatigue.movementFlat}'`);
+            else if (fatigue.movementType === 'halve') effects.push('Move: ½');
+            else if (fatigue.movementType === 'zero') effects.push('Move: Immobile');
+            html += effects.join(' · ');
+          }
+          html += `</div>`;
+        }
+        
+        return html;
+      }
     }
   },
   
@@ -6801,6 +6915,19 @@ const App = {
         const skillName = d100Btn.dataset.skill;
         const targetPct = parseInt(d100Btn.dataset.target, 10) || 50;
         this.rollD100(skillName, targetPct);
+        return;
+      }
+      
+      // Handle fatigue state buttons in summary widget
+      const fatigueBtn = e.target.closest('.fatigue-widget-btn');
+      if (fatigueBtn) {
+        e.stopPropagation();
+        const newState = fatigueBtn.dataset.fatigueState;
+        if (newState && FATIGUE_PENALTIES[newState]) {
+          this.setFatigueState(newState, true);
+          // Re-render the fatigue widget
+          this.refreshSummaryWidget('fatigue');
+        }
         return;
       }
     });
@@ -7223,6 +7350,25 @@ const App = {
         }
       }
     });
+  },
+  
+  /**
+   * Refresh a single widget on the summary canvas by ID
+   */
+  refreshSummaryWidget(widgetId) {
+    const canvas = document.getElementById('summary-canvas');
+    if (!canvas) return;
+    
+    const item = canvas.querySelector(`.widget-item[data-widget-id="${widgetId}"]`);
+    if (item) {
+      const widget = this.summaryWidgets[widgetId];
+      if (widget) {
+        const content = item.querySelector('.widget-content');
+        if (content) {
+          content.innerHTML = widget.render();
+        }
+      }
+    }
   },
 
   /**

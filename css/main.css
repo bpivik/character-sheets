@@ -2395,6 +2395,109 @@ select:focus {
   box-shadow: 0 0 3px rgba(204, 0, 0, 0.5);
 }
 
+/* Fatigue Summary Widget */
+.fatigue-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.fatigue-widget-btn {
+  font-size: 0.68rem;
+  padding: 3px 2px;
+  border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.fatigue-widget-btn:hover {
+  background: rgba(139, 105, 20, 0.12);
+  border-color: var(--border-gold, #8b6914);
+}
+
+.fatigue-widget-btn.fatigue-btn-active {
+  background: rgba(139, 105, 20, 0.2);
+  border-color: var(--border-gold, #8b6914);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--border-gold, #8b6914);
+}
+
+.fatigue-widget-btn.fatigue-btn-mild {
+  border-left: 2px solid #cc9900;
+}
+
+.fatigue-widget-btn.fatigue-btn-moderate {
+  border-left: 2px solid #b35900;
+}
+
+.fatigue-widget-btn.fatigue-btn-severe {
+  border-left: 2px solid #cc0000;
+}
+
+.fatigue-widget-btn.fatigue-btn-disabled {
+  border-left: 2px solid #666;
+  color: #888;
+}
+
+.fatigue-widget-btn.fatigue-btn-active.fatigue-btn-mild {
+  background: rgba(204, 153, 0, 0.15);
+  border-color: #cc9900;
+}
+
+.fatigue-widget-btn.fatigue-btn-active.fatigue-btn-moderate {
+  background: rgba(179, 89, 0, 0.15);
+  border-color: #b35900;
+}
+
+.fatigue-widget-btn.fatigue-btn-active.fatigue-btn-severe {
+  background: rgba(204, 0, 0, 0.12);
+  border-color: #cc0000;
+}
+
+.fatigue-widget-btn.fatigue-btn-active.fatigue-btn-disabled {
+  background: rgba(100, 100, 100, 0.15);
+  border-color: #666;
+}
+
+/* Rest Buttons on Character Page */
+.rest-buttons {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.rest-btn {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.4);
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.rest-btn:hover {
+  background: rgba(139, 105, 20, 0.12);
+  border-color: var(--border-gold, #8b6914);
+}
+
+.rest-btn-short {
+  border-left: 3px solid #cc9900;
+}
+
+.rest-btn-long {
+  border-left: 3px solid #228b22;
+}
+
 /* Special Abilities & Notes */
 .special-abilities-section {
   background: rgba(255,255,255,0.2);
