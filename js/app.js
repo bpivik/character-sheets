@@ -5449,8 +5449,8 @@ const App = {
           <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
           <div class="combat-skill-header"><span>Combat Skill</span><span>%</span></div>
           <div class="skill-list">
-            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll d100">🎲</button></span></div>
-            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll d100">🎲</button></span></div>
+            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll d100"><i class="fa-solid fa-dice-d10"></i></button></span></div>
+            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll d100"><i class="fa-solid fa-dice-d10"></i></button></span></div>
           </div>
         `;
         
@@ -5485,7 +5485,7 @@ const App = {
           
           meleeWeapons.forEach(w => {
             if (w.dmg) {
-              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage">🎲</button></span></div>`;
+              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage"><i class="fa-solid fa-dice-d6"></i></button></span></div>`;
             } else {
               html += `<div class="skill-item"><span>${w.name}</span><span>-</span></div>`;
             }
@@ -5493,7 +5493,7 @@ const App = {
           
           // Add Unarmed to melee
           if (unarmedDmg) {
-            html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage">🎲</button></span></div>`;
+            html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage"><i class="fa-solid fa-dice-d6"></i></button></span></div>`;
           }
           
           html += '</div></div>';
@@ -5507,7 +5507,7 @@ const App = {
           
           rangedWeapons.forEach(w => {
             if (w.dmg) {
-              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage">🎲</button></span></div>`;
+              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage"><i class="fa-solid fa-dice-d6"></i></button></span></div>`;
             } else {
               html += `<div class="skill-item"><span>${w.name}</span><span>-</span></div>`;
             }
@@ -6208,22 +6208,25 @@ const App = {
    * Roll d100 for a skill check and show result
    */
   rollD100(skillName, targetPct) {
-    // Roll d100 (1-100)
+    // Roll d100 (1-100, where 100 = "00")
     const roll = Math.floor(Math.random() * 100) + 1;
     
     // Determine result
     let result = '';
     let resultClass = '';
     
-    // Critical success: roll <= 1/10 of skill (minimum 01)
-    const critThreshold = Math.max(1, Math.floor(targetPct / 10));
-    // Fumble: roll >= 100 - (100 - skill)/10, or 96-00 if skill >= 100
-    const fumbleThreshold = targetPct >= 100 ? 100 : Math.min(100, 100 - Math.floor((100 - targetPct) / 10) + 1);
+    // Critical: 10% of skill value, always rounding UP
+    // e.g., 71% skill -> ceil(7.1) = 8, so roll of 8 or less is critical
+    const critThreshold = Math.ceil(targetPct / 10);
     
-    if (roll <= critThreshold) {
+    // Fumble: 99 or 00 (100), but skills over 100% only fumble on 00
+    const isFumble = targetPct >= 100 ? (roll === 100) : (roll >= 99);
+    
+    // Critical must also be a successful roll (roll <= skill)
+    if (roll <= critThreshold && roll <= targetPct && !isFumble) {
       result = 'Critical!';
       resultClass = 'roll-critical';
-    } else if (roll === 100 || (roll >= 96 && roll > targetPct)) {
+    } else if (isFumble) {
       result = 'Fumble!';
       resultClass = 'roll-fumble';
     } else if (roll <= targetPct) {

@@ -4101,9 +4101,10 @@ select:focus {
   border: none;
   cursor: pointer;
   padding: 2px 4px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
   opacity: 0.7;
-  transition: opacity 0.15s, transform 0.15s;
+  transition: opacity 0.15s, transform 0.15s, color 0.15s;
   z-index: 10;
   pointer-events: auto;
 }
@@ -4111,6 +4112,27 @@ select:focus {
 .d100-btn:hover {
   opacity: 1;
   transform: scale(1.2);
+  color: var(--border-gold);
+}
+
+/* Damage dice button styling */
+.dice-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s, color 0.15s;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.dice-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  color: #e94560;
 }
 
 .skill-roll {
