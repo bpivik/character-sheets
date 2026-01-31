@@ -3868,6 +3868,20 @@ select:focus {
   margin-bottom: 8px;
 }
 
+.combat-stats-grid.two-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.combat-skill-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0 0 4px 0;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
+}
+
 .combat-stat {
   text-align: center;
   padding: 4px;

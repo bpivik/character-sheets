@@ -5380,7 +5380,7 @@ const App = {
         
         let html = `
           <h4>Combat</h4>
-          <div class="combat-stats-grid">
+          <div class="combat-stats-grid two-col">
             <div class="combat-stat">
               <span class="stat-label">Initiative</span>
               <span class="stat-value">${initiative}</span>
@@ -5411,6 +5411,7 @@ const App = {
             </div>
           </div>
           <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
+          <div class="combat-skill-header"><span>Combat Skill</span><span>%</span></div>
           <div class="skill-list">
             <div class="skill-item"><span>${combatName}</span><span>${combatPct}%</span></div>
             <div class="skill-item"><span>Unarmed</span><span>${unarmedPct}%</span></div>
