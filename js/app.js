@@ -864,6 +864,38 @@ const App = {
         this.longRest();
       });
     }
+    
+    // Short Rest Modal buttons
+    const shortRestModalClose = document.getElementById('short-rest-modal-close');
+    if (shortRestModalClose) {
+      shortRestModalClose.addEventListener('click', () => {
+        this.closeShortRestModal();
+      });
+    }
+    
+    const applyShortRestBtn = document.getElementById('btn-apply-short-rest');
+    if (applyShortRestBtn) {
+      applyShortRestBtn.addEventListener('click', () => {
+        this.applyShortRestAction();
+      });
+    }
+    
+    const cancelShortRestBtn = document.getElementById('btn-cancel-short-rest');
+    if (cancelShortRestBtn) {
+      cancelShortRestBtn.addEventListener('click', () => {
+        this.closeShortRestModal();
+      });
+    }
+    
+    // Close modal on overlay click
+    const shortRestOverlay = document.getElementById('short-rest-modal-overlay');
+    if (shortRestOverlay) {
+      shortRestOverlay.addEventListener('click', (e) => {
+        if (e.target === shortRestOverlay) {
+          this.closeShortRestModal();
+        }
+      });
+    }
   },
   
   /**
@@ -5480,21 +5512,10 @@ const App = {
   },
 
   /**
-   * Short Rest: Recover one fatigue level
-   * Order: coma → semiconscious → incapacitated → debilitated → exhausted → wearied → tired → winded → fresh
+   * Short Rest: Open the Short Rest modal to choose an action
    */
   shortRest() {
-    const stateOrder = ['fresh','winded','tired','wearied','exhausted','debilitated','incapacitated','semiconscious','coma'];
-    const currentState = this.character.fatigueState || 'fresh';
-    const currentIndex = stateOrder.indexOf(currentState);
-    
-    if (currentIndex <= 0) {
-      // Already Fresh, nothing to recover
-      return;
-    }
-    
-    const newState = stateOrder[currentIndex - 1];
-    this.setFatigueState(newState, true);
+    this.openShortRestModal();
   },
 
   /**
@@ -5505,6 +5526,227 @@ const App = {
       return; // Already Fresh
     }
     this.setFatigueState('fresh', true);
+  },
+
+  /**
+   * Open the Short Rest modal
+   */
+  openShortRestModal() {
+    const overlay = document.getElementById('short-rest-modal-overlay');
+    if (overlay) {
+      overlay.classList.add('active');
+      // Clear any previous selection and result
+      const radios = overlay.querySelectorAll('input[name="short-rest-action"]');
+      radios.forEach(r => r.checked = false);
+      const result = document.getElementById('short-rest-result');
+      if (result) {
+        result.classList.remove('active', 'success', 'info', 'warning');
+        result.innerHTML = '';
+      }
+    }
+  },
+
+  /**
+   * Close the Short Rest modal
+   */
+  closeShortRestModal() {
+    const overlay = document.getElementById('short-rest-modal-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  },
+
+  /**
+   * Apply the selected Short Rest action
+   */
+  applyShortRestAction() {
+    const selected = document.querySelector('input[name="short-rest-action"]:checked');
+    if (!selected) {
+      this.showShortRestResult('warning', 'Please select a Rest Action.');
+      return;
+    }
+
+    const action = selected.value;
+    const stateOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
+    const currentState = this.character.fatigueState || 'fresh';
+    const currentIndex = stateOrder.indexOf(currentState);
+    
+    // Index boundaries for fatigue levels
+    const WINDED_INDEX = 1;
+    const EXHAUSTED_INDEX = 4;
+
+    switch (action) {
+      case 'eat-ration': {
+        // Remove one level if no greater than Exhausted (index <= 4)
+        let messages = [];
+        let newIndex = currentIndex;
+        
+        if (currentIndex <= EXHAUSTED_INDEX && currentIndex > 0) {
+          newIndex = currentIndex - 1;
+          messages.push(`Fatigue reduced from ${this.formatFatigueState(currentState)} to ${this.formatFatigueState(stateOrder[newIndex])}.`);
+          
+          // Bonus: if now no greater than Winded, remove another level
+          if (newIndex <= WINDED_INDEX && newIndex > 0) {
+            newIndex = newIndex - 1;
+            messages.push(`Bonus recovery (non-strenuous): now ${this.formatFatigueState(stateOrder[newIndex])}.`);
+          }
+          
+          this.setFatigueState(stateOrder[newIndex], true);
+        } else if (currentIndex > EXHAUSTED_INDEX) {
+          messages.push(`Cannot eat a ration while ${this.formatFatigueState(currentState)} (must be Exhausted or better).`);
+        } else {
+          messages.push('Already at Fresh - no fatigue to remove.');
+        }
+        
+        messages.push('Hunger quelled.');
+        this.showShortRestResult('success', messages.join('<br>'));
+        break;
+      }
+
+      case 'pray-study': {
+        // Regain 1 MP
+        const mpCurrent = document.getElementById('magic-points-current');
+        const mpMax = document.getElementById('magic-points-original');
+        let messages = [];
+        
+        if (mpCurrent && mpMax) {
+          const currentMP = parseInt(mpCurrent.value) || 0;
+          const maxMP = parseInt(mpMax.dataset.originalValue || mpMax.value) || 0;
+          
+          if (currentMP < maxMP) {
+            const newMP = currentMP + 1;
+            mpCurrent.value = newMP;
+            mpCurrent.dispatchEvent(new Event('input', { bubbles: true }));
+            messages.push(`Regained 1 Magic Point (now ${newMP}/${maxMP}).`);
+          } else {
+            messages.push('Magic Points already at maximum.');
+          }
+        }
+        
+        // Remove fatigue if no greater than Winded
+        if (currentIndex <= WINDED_INDEX && currentIndex > 0) {
+          const newIndex = currentIndex - 1;
+          this.setFatigueState(stateOrder[newIndex], true);
+          messages.push(`Fatigue reduced to ${this.formatFatigueState(stateOrder[newIndex])} (non-strenuous activity).`);
+        } else if (currentIndex > WINDED_INDEX) {
+          messages.push(`No fatigue recovery (currently ${this.formatFatigueState(currentState)}, must be Winded or better).`);
+        }
+        
+        this.showShortRestResult('success', messages.join('<br>'));
+        break;
+      }
+
+      case 'tend-wounds': {
+        this.showShortRestResult('info', 
+          '<strong>Tend to Wounds:</strong><br>' +
+          '• First Aid skill: 1 Rest Action (15 minutes)<br>' +
+          '• Healing skill: 4 Rest Actions (1 hour)<br><br>' +
+          '<em>This action does not remove Fatigue.</em>'
+        );
+        break;
+      }
+
+      case 'cast-spells': {
+        this.showShortRestResult('info', 
+          '<strong>Cast Spells:</strong><br>' +
+          'You may cast any number of healing or buff spells, limited by available Magic Points.<br><br>' +
+          '<em>This action does not remove Fatigue.</em>'
+        );
+        // Navigate to magic page after a brief delay
+        setTimeout(() => {
+          this.closeShortRestModal();
+          this.navigateToPage('page-magic1');
+        }, 1500);
+        return; // Don't close modal immediately
+      }
+
+      case 'prepare-spell': {
+        this.showShortRestResult('info', 
+          '<strong>Prepare a New Spell:</strong><br>' +
+          'Following at least 8 hours of sleep, you may memorize or forget an Arcane or Divine spell.<br><br>' +
+          '<em>This action does not remove Fatigue.</em>'
+        );
+        // Navigate to magic page after a brief delay
+        setTimeout(() => {
+          this.closeShortRestModal();
+          this.navigateToPage('page-magic1');
+        }, 1500);
+        return; // Don't close modal immediately
+      }
+
+      case 'dither': {
+        let messages = [];
+        
+        // Remove fatigue if no greater than Winded
+        if (currentIndex <= WINDED_INDEX && currentIndex > 0) {
+          const newIndex = currentIndex - 1;
+          this.setFatigueState(stateOrder[newIndex], true);
+          messages.push(`Fatigue reduced to ${this.formatFatigueState(stateOrder[newIndex])} (non-strenuous activity).`);
+        } else if (currentIndex > WINDED_INDEX) {
+          messages.push(`No fatigue recovery (currently ${this.formatFatigueState(currentState)}, must be Winded or better).`);
+        } else {
+          messages.push('Already at Fresh - nothing to do but wait.');
+        }
+        
+        messages.push('You waste 15 minutes doing nothing useful.');
+        this.showShortRestResult('success', messages.join('<br>'));
+        break;
+      }
+    }
+
+    // Close modal after a brief delay to show result
+    setTimeout(() => {
+      this.closeShortRestModal();
+    }, 2000);
+  },
+
+  /**
+   * Show a result message in the Short Rest modal
+   */
+  showShortRestResult(type, message) {
+    const result = document.getElementById('short-rest-result');
+    if (result) {
+      result.className = 'short-rest-result active ' + type;
+      result.innerHTML = message;
+    }
+  },
+
+  /**
+   * Format fatigue state for display
+   */
+  formatFatigueState(state) {
+    const labels = {
+      fresh: 'Fresh', winded: 'Winded', tired: 'Tired', wearied: 'Wearied',
+      exhausted: 'Exhausted', debilitated: 'Debilitated', incapacitated: 'Incapacitated',
+      semiconscious: 'Semi-conscious', coma: 'Coma'
+    };
+    return labels[state] || state;
+  },
+
+  /**
+   * Navigate to a specific page
+   */
+  navigateToPage(pageId) {
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+      // Hide all pages
+      document.querySelectorAll('.sheet-page').forEach(page => {
+        page.classList.remove('active');
+      });
+      // Show target page
+      targetPage.classList.add('active');
+      // Update nav
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.page === pageId) {
+          btn.classList.add('active');
+        }
+      });
+      // Store current page
+      try {
+        localStorage.setItem('mythras-current-page', pageId);
+      } catch (e) {}
+    }
   },
 
   /**
@@ -6659,6 +6901,13 @@ const App = {
           html += `</div>`;
         }
         
+        // Rest buttons with horizontal divider
+        html += `<hr style="border:none; border-top:2px solid var(--border-light); margin:10px 0 8px 0;">`;
+        html += `<div class="fatigue-widget-rest-buttons">
+          <button class="fatigue-widget-rest-btn fatigue-widget-rest-short" data-rest-action="short">☀ Short Rest</button>
+          <button class="fatigue-widget-rest-btn fatigue-widget-rest-long" data-rest-action="long">⛺ Long Rest</button>
+        </div>`;
+        
         return html;
       }
     }
@@ -6952,6 +7201,20 @@ const App = {
         if (newState && FATIGUE_PENALTIES[newState]) {
           this.setFatigueState(newState, true);
           // Re-render the fatigue widget
+          this.refreshSummaryWidget('fatigue');
+        }
+        return;
+      }
+      
+      // Handle rest buttons in fatigue widget
+      const restBtn = e.target.closest('.fatigue-widget-rest-btn');
+      if (restBtn) {
+        e.stopPropagation();
+        const restAction = restBtn.dataset.restAction;
+        if (restAction === 'short') {
+          this.shortRest();
+        } else if (restAction === 'long') {
+          this.longRest();
           this.refreshSummaryWidget('fatigue');
         }
         return;

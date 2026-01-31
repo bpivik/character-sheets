@@ -1487,6 +1487,75 @@
   <!-- Floating Dice Roller -->
   <button class="dice-fab" id="dice-fab" title="Roll D100">🎲</button>
   
+  <!-- Short Rest Modal -->
+  <div class="short-rest-modal-overlay" id="short-rest-modal-overlay">
+    <div class="short-rest-modal">
+      <div class="short-rest-modal-header">
+        <h3>☀ Short Rest (15 minutes)</h3>
+        <button class="short-rest-modal-close" id="short-rest-modal-close">&times;</button>
+      </div>
+      <div class="short-rest-modal-body">
+        <p class="short-rest-intro">Choose one 15-minute Rest Action to perform:</p>
+        
+        <div class="short-rest-options">
+          <label class="short-rest-option">
+            <input type="radio" name="short-rest-action" value="eat-ration">
+            <div class="short-rest-option-content">
+              <span class="short-rest-option-title">🍖 Eat a Ration</span>
+              <span class="short-rest-option-desc">Removes one level of Fatigue (if no greater than Exhausted) and quells hunger. If your Fatigue is then no greater than Winded, remove an additional level due to this being a non-strenuous activity. <em>(Once per day)</em></span>
+            </div>
+          </label>
+          
+          <label class="short-rest-option">
+            <input type="radio" name="short-rest-action" value="pray-study">
+            <div class="short-rest-option-content">
+              <span class="short-rest-option-title">📖 Pray to Deity / Study Spellbook</span>
+              <span class="short-rest-option-desc">Regain 1 Magic Point. If your Fatigue is no greater than Winded, remove one level due to this being a non-strenuous activity.</span>
+            </div>
+          </label>
+          
+          <label class="short-rest-option">
+            <input type="radio" name="short-rest-action" value="tend-wounds">
+            <div class="short-rest-option-content">
+              <span class="short-rest-option-title">🩹 Tend to Wounds</span>
+              <span class="short-rest-option-desc">Use the First Aid skill (one 15-minute action) or the Healing skill (four 15-minute actions, or one hour). <em>Does not remove Fatigue.</em></span>
+            </div>
+          </label>
+          
+          <label class="short-rest-option">
+            <input type="radio" name="short-rest-action" value="cast-spells">
+            <div class="short-rest-option-content">
+              <span class="short-rest-option-title">✨ Cast Spells</span>
+              <span class="short-rest-option-desc">Cast any number of spells to heal or buff party members, limited by available Magic Points. <em>Does not remove Fatigue.</em></span>
+            </div>
+          </label>
+          
+          <label class="short-rest-option">
+            <input type="radio" name="short-rest-action" value="prepare-spell">
+            <div class="short-rest-option-content">
+              <span class="short-rest-option-title">📜 Prepare a New Spell</span>
+              <span class="short-rest-option-desc">Following at least 8 hours of sleep, memorize or forget an Arcane or Divine spell. <em>Does not remove Fatigue.</em></span>
+            </div>
+          </label>
+          
+          <label class="short-rest-option">
+            <input type="radio" name="short-rest-action" value="dither">
+            <div class="short-rest-option-content">
+              <span class="short-rest-option-title">💤 Dither</span>
+              <span class="short-rest-option-desc">Waste 15 minutes doing nothing useful while waiting for others. If your Fatigue is no greater than Winded, remove one level due to this being a non-strenuous activity.</span>
+            </div>
+          </label>
+        </div>
+        
+        <div class="short-rest-result" id="short-rest-result"></div>
+      </div>
+      <div class="short-rest-modal-footer">
+        <button class="btn btn-primary" id="btn-apply-short-rest">Take Rest Action</button>
+        <button class="btn btn-secondary" id="btn-cancel-short-rest">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
   <div class="dice-overlay" id="dice-overlay">
     <div class="dice-overlay-content">
       <div class="flying-die d10-shape" id="flying-die-tens">
