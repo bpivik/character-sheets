@@ -416,11 +416,24 @@ const App = {
     rankFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
+        // Store previous value on focus
+        field.addEventListener('focus', () => {
+          field.dataset.previousRank = field.value || '0';
+        });
+        
         const handleRankChange = () => {
-          let val = parseInt(field.value, 10) || 0;
-          val = Math.max(0, Math.min(5, val));
-          field.value = val;
-          this.character.info[this.camelCase(fieldId)] = val;
+          const previousRank = parseInt(field.dataset.previousRank, 10) || 0;
+          let newRank = parseInt(field.value, 10) || 0;
+          newRank = Math.max(0, Math.min(5, newRank));
+          field.value = newRank;
+          field.dataset.previousRank = newRank;
+          this.character.info[this.camelCase(fieldId)] = newRank;
+          
+          // Check if rank decreased - need to remove abilities for higher ranks
+          if (newRank < previousRank) {
+            this.handleRankDecrease(fieldId, previousRank, newRank);
+          }
+          
           this.recalculateAll();
           this.scheduleAutoSave();
         };
@@ -2071,19 +2084,26 @@ const App = {
   },
   
   /**
-   * Handle ability input change - check duplicates, update tooltip
+   * Handle ability input change - check duplicates, update tooltip, track removals
    */
   handleAbilityChange(input) {
     const value = input.value.trim();
+    const previousValue = input.dataset.previousValue || '';
     
     // Get info button
     const wrapper = input.closest('.ability-input-wrapper');
     const infoBtn = wrapper ? wrapper.querySelector('.ability-info-btn') : null;
     
     if (!value) {
+      // Ability was cleared - remove from tracking if it was previously tracked
+      if (previousValue) {
+        this.removeAbilityFromTracking(previousValue);
+      }
+      
       // Reset tooltip for empty input
       input.title = 'Enter a Special Ability name';
       input.classList.remove('duplicate-warning');
+      input.dataset.previousValue = '';
       // Hide info button
       if (infoBtn) infoBtn.style.display = 'none';
       return;
@@ -2091,6 +2111,9 @@ const App = {
     
     // Convert to title case
     input.value = this.toTitleCase(value);
+    
+    // Store current value as previous for next change
+    input.dataset.previousValue = input.value;
     
     // Check for duplicates
     const isDuplicate = this.checkAbilityDuplicate(input);
@@ -2106,6 +2129,95 @@ const App = {
     
     // Show info button
     if (infoBtn) infoBtn.style.display = '';
+  },
+
+  /**
+   * Remove an ability from tracking when deleted from the sheet
+   */
+  removeAbilityFromTracking(abilityName) {
+    if (!abilityName) return;
+    
+    const baseName = abilityName.split('(')[0].trim().toLowerCase();
+    
+    // Remove from acquiredAbilities
+    if (this.character.acquiredAbilities) {
+      this.character.acquiredAbilities = this.character.acquiredAbilities.filter(name => {
+        const trackBaseName = name.split('(')[0].trim().toLowerCase();
+        return trackBaseName !== baseName && name.toLowerCase() !== abilityName.toLowerCase();
+      });
+    }
+    
+    // Special handling for Characteristic Increase
+    if (baseName === 'characteristic increase') {
+      // Clear all characteristic increases (user deleted the ability)
+      // Note: This doesn't reverse the stat increases - those remain
+      this.character.characteristicIncreases = [];
+    }
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Handle rank decrease - remove abilities and characteristic increases for ranks above the new rank
+   */
+  handleRankDecrease(rankFieldId, previousRank, newRank) {
+    // Determine which class this rank belongs to
+    const classFieldId = rankFieldId.replace('rank-', 'class-');
+    const className = document.getElementById(classFieldId)?.value?.trim().toLowerCase() || '';
+    
+    if (!className) return;
+    
+    // Remove characteristic increases for ranks above the new rank
+    if (this.character.characteristicIncreases && this.character.characteristicIncreases.length > 0) {
+      const removed = this.character.characteristicIncreases.filter(inc => inc.rank > newRank);
+      this.character.characteristicIncreases = this.character.characteristicIncreases.filter(inc => inc.rank <= newRank);
+      
+      // If we removed any, update the display on the sheet
+      if (removed.length > 0) {
+        // Notify user about removed characteristic increases
+        const removedList = removed.map(inc => `Rank ${inc.rank}: ${inc.char}`).join(', ');
+        console.log(`Removed Characteristic Increases due to rank decrease: ${removedList}`);
+        
+        // Update or remove the Characteristic Increase ability on sheet
+        if (this.character.characteristicIncreases.length > 0) {
+          const displayName = this.buildCharacteristicIncreaseName();
+          this.updateCharacteristicIncreaseOnSheet(displayName);
+        } else {
+          // Remove it entirely from the sheet
+          this.removeAbilityFromSheet('Characteristic Increase');
+        }
+      }
+    }
+    
+    // Note: For other abilities, we don't automatically remove them since
+    // the user may have purchased them with EXP and should decide what to do.
+    // The Unlock Abilities modal will show them as "Already Acquired" regardless.
+  },
+
+  /**
+   * Remove an ability from the Special Abilities sheet
+   */
+  removeAbilityFromSheet(abilityBaseName) {
+    const baseNameLower = abilityBaseName.toLowerCase();
+    
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.toLowerCase().startsWith(baseNameLower)) {
+          input.value = '';
+          input.dataset.previousValue = '';
+          this.updateAbilityTooltip(input);
+          
+          // Hide info button
+          const wrapper = input.closest('.ability-input-wrapper');
+          if (wrapper) {
+            const infoBtn = wrapper.querySelector('.ability-info-btn');
+            if (infoBtn) infoBtn.style.display = 'none';
+          }
+          return;
+        }
+      }
+    }
   },
   
   /**
@@ -2256,6 +2368,9 @@ const App = {
         const input = document.getElementById(`ability-${col}-${i}`);
         if (input) {
           const hasValue = input.value.trim();
+          
+          // Set previousValue for tracking (used when abilities are deleted)
+          input.dataset.previousValue = hasValue || '';
           
           // Update tooltip
           if (hasValue) {
@@ -7296,6 +7411,57 @@ const App = {
         
         return html;
       }
+    },
+    'special-abilities': {
+      name: 'Special Abilities',
+      icon: '⭐',
+      dynamic: true,
+      isAvailable: () => {
+        // Check if there are any special abilities
+        for (let col = 1; col <= 3; col++) {
+          for (let i = 0; i < 20; i++) {
+            const input = document.getElementById(`ability-${col}-${i}`);
+            if (input && input.value.trim()) return true;
+          }
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Special Abilities</h4>';
+        html += '<div class="abilities-widget-list collapsed" data-widget-id="special-abilities">';
+        
+        // Collect all abilities
+        const abilities = [];
+        for (let col = 1; col <= 3; col++) {
+          for (let i = 0; i < 20; i++) {
+            const input = document.getElementById(`ability-${col}-${i}`);
+            if (input && input.value.trim()) {
+              abilities.push(input.value.trim());
+            }
+          }
+        }
+        
+        // Sort alphabetically
+        abilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        
+        // Show first 5 by default, rest in collapsed section
+        const initialShow = 5;
+        abilities.forEach((ability, idx) => {
+          const description = window.AbilityDescriptions?.getDescription(ability) || '';
+          const escapedDesc = description.replace(/"/g, '&quot;');
+          const hiddenClass = idx >= initialShow ? ' hidden-ability' : '';
+          html += `<div class="ability-widget-item${hiddenClass}" title="${escapedDesc}">${ability}</div>`;
+        });
+        
+        html += '</div>';
+        
+        // Add expand/collapse button if more than initialShow
+        if (abilities.length > initialShow) {
+          html += `<button class="widget-expand-btn" data-widget-id="special-abilities">Show All (${abilities.length})</button>`;
+        }
+        
+        return html;
+      }
     }
   },
   
@@ -7599,6 +7765,27 @@ const App = {
           this.shortRest();
         } else if (restAction === 'long') {
           this.longRest(); // longRest now shows its own modal and refreshes widgets
+        }
+        return;
+      }
+      
+      // Handle widget expand/collapse buttons
+      const expandBtn = e.target.closest('.widget-expand-btn');
+      if (expandBtn) {
+        e.stopPropagation();
+        const widgetId = expandBtn.dataset.widgetId;
+        const list = canvas.querySelector(`[data-widget-id="${widgetId}"]`);
+        if (list) {
+          const isCollapsed = list.classList.contains('collapsed');
+          if (isCollapsed) {
+            list.classList.remove('collapsed');
+            expandBtn.textContent = 'Show Less';
+          } else {
+            list.classList.add('collapsed');
+            // Count total items
+            const totalItems = list.querySelectorAll('.ability-widget-item, .spell-widget-item').length;
+            expandBtn.textContent = `Show All (${totalItems})`;
+          }
         }
         return;
       }
@@ -10223,7 +10410,14 @@ const App = {
     const charInput = document.getElementById(`${charName.toLowerCase()}-value`);
     if (charInput) {
       const currentVal = parseInt(charInput.value, 10) || 0;
-      charInput.value = currentVal + 1;
+      const newVal = currentVal + 1;
+      charInput.value = newVal;
+      
+      // IMPORTANT: Also update the character data object (used by recalculateAll)
+      if (this.character.attributes) {
+        this.character.attributes[charName] = newVal;
+      }
+      
       // Trigger recalculations
       charInput.dispatchEvent(new Event('input', { bubbles: true }));
       charInput.dispatchEvent(new Event('change', { bubbles: true }));

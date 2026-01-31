@@ -4927,6 +4927,49 @@ select:focus {
   background: rgba(139, 69, 19, 0.1);
 }
 
+/* Expandable widget lists */
+.abilities-widget-list,
+.spell-widget-list {
+  max-height: none;
+}
+
+.abilities-widget-list.collapsed .hidden-ability,
+.spell-widget-list.collapsed .hidden-spell {
+  display: none;
+}
+
+.ability-widget-item {
+  padding: 4px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #eee;
+  cursor: help;
+}
+
+.ability-widget-item:last-child {
+  border-bottom: none;
+}
+
+.widget-expand-btn {
+  display: block;
+  width: 100%;
+  padding: 6px;
+  margin-top: 8px;
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #666;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.widget-expand-btn:hover {
+  background: linear-gradient(to bottom, #fff, #f0f0f0);
+  border-color: var(--border-gold);
+  color: var(--text-header);
+}
+
 .widget-content .hp-overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));

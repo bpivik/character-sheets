@@ -674,3 +674,32 @@
 [data-theme="dark"] .field-label-large {
   color: #e0e0e0;
 }
+
+/* Unarmed combat skill labels - must override default black text */
+[data-theme="dark"] .combat-skill-row.unarmed .combat-skill-name,
+[data-theme="dark"] .combat-skill-row.unarmed .combat-weapons-known {
+  color: var(--text-primary) !important;
+}
+
+/* Combat base formulas in dark mode */
+[data-theme="dark"] .combat-base {
+  color: var(--text-secondary);
+}
+
+/* Widget expand button in dark mode */
+[data-theme="dark"] .widget-expand-btn {
+  background: linear-gradient(to bottom, #333, #2a2a2a);
+  border-color: #444;
+  color: #aaa;
+}
+
+[data-theme="dark"] .widget-expand-btn:hover {
+  background: linear-gradient(to bottom, #444, #3a3a3a);
+  border-color: var(--border-gold);
+  color: var(--text-header);
+}
+
+/* Ability widget items in dark mode */
+[data-theme="dark"] .ability-widget-item {
+  border-bottom-color: #333;
+}
