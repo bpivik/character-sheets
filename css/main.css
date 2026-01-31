@@ -3735,6 +3735,19 @@ select:focus {
   color: #b71c1c;
 }
 
+.acquired-abilities h4 {
+  color: #546e7a;
+}
+
+.no-ranks-message {
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
 .abilities-divider {
   border: none;
   border-top: 2px dashed var(--border-medium);

@@ -9811,10 +9811,15 @@ const App = {
                 <h4>Available Abilities</h4>
                 <div class="abilities-list" id="available-abilities-list"></div>
               </div>
-              <hr class="abilities-divider">
+              <hr class="abilities-divider unqualified-divider">
               <div class="abilities-section unqualified-abilities">
                 <h4>Not Yet Qualified</h4>
                 <div class="abilities-list" id="unqualified-abilities-list"></div>
+              </div>
+              <hr class="abilities-divider acquired-divider">
+              <div class="abilities-section acquired-abilities">
+                <h4>Already Acquired</h4>
+                <div class="abilities-list" id="acquired-abilities-list"></div>
               </div>
             </div>
           </div>
@@ -9944,21 +9949,25 @@ const App = {
     modal.dataset.selectedClass = className;
     modal.dataset.selectedClassRank = classRank;
     
-    // Build rank tabs (0 through current rank)
+    // Build rank tabs (1 through current rank - Rank 0 has no abilities)
     this.buildRankTabs(classRank);
     
-    // Select highest rank by default (most likely what they want)
-    this.selectRankTab(classRank);
+    // Select highest rank by default (most likely what they want), minimum Rank 1
+    const selectedRank = Math.max(1, classRank);
+    if (classRank >= 1) {
+      this.selectRankTab(selectedRank);
+    }
   },
 
   /**
-   * Build rank tabs for the selected class
+   * Build rank tabs for the selected class (starting at Rank 1, since Rank 0 has no abilities)
    */
   buildRankTabs(maxRank) {
     const container = document.getElementById('unlock-abilities-rank-tabs');
     container.innerHTML = '';
     
-    for (let r = 0; r <= maxRank; r++) {
+    // Start at Rank 1 (Rank 0 has no purchasable abilities)
+    for (let r = 1; r <= maxRank; r++) {
       const tab = document.createElement('button');
       tab.type = 'button';
       tab.className = 'rank-tab' + (r === maxRank ? ' active' : '');
@@ -9968,6 +9977,11 @@ const App = {
         this.selectRankTab(r);
       });
       container.appendChild(tab);
+    }
+    
+    // If maxRank is 0, show a message
+    if (maxRank === 0) {
+      container.innerHTML = '<span class="no-ranks-message">Rank 0 has no purchasable abilities</span>';
     }
   },
 
@@ -9994,25 +10008,21 @@ const App = {
   populateAbilities(className, rank) {
     const availableList = document.getElementById('available-abilities-list');
     const unqualifiedList = document.getElementById('unqualified-abilities-list');
+    const acquiredList = document.getElementById('acquired-abilities-list');
     
     availableList.innerHTML = '';
     unqualifiedList.innerHTML = '';
-    
-    // Rank 0 has no purchasable abilities
-    if (rank === 0) {
-      availableList.innerHTML = '<p class="no-abilities">Rank 0 has no purchasable abilities.</p>';
-      document.querySelector('.abilities-divider').style.display = 'none';
-      document.querySelector('.unqualified-abilities').style.display = 'none';
-      return;
-    }
+    acquiredList.innerHTML = '';
     
     // Get abilities for this class at this rank
     const abilities = getRankedAbilitiesForClass(className, rank);
     
     if (abilities.length === 0) {
       availableList.innerHTML = '<p class="no-abilities">No abilities available at this rank for this class.</p>';
-      document.querySelector('.abilities-divider').style.display = 'none';
+      document.querySelector('.unqualified-divider').style.display = 'none';
       document.querySelector('.unqualified-abilities').style.display = 'none';
+      document.querySelector('.acquired-divider').style.display = 'none';
+      document.querySelector('.acquired-abilities').style.display = 'none';
       return;
     }
     
@@ -10052,7 +10062,7 @@ const App = {
       const repeatable = isRepeatableAbility(ability.name);
       
       if (alreadyHas && !repeatable) {
-        // Show as acquired (greyed out) - goes to bottom
+        // Show as acquired (greyed out) - goes to bottom section
         acquired.push({ ...ability, acquired: true });
         return;
       }
@@ -10067,31 +10077,37 @@ const App = {
       }
     });
     
-    // Render available abilities first
-    if (available.length === 0 && acquired.length === 0) {
-      availableList.innerHTML = '<p class="no-abilities">All abilities at this rank require prerequisites you don\'t have yet.</p>';
+    // Render available abilities
+    if (available.length === 0) {
+      availableList.innerHTML = '<p class="no-abilities">No abilities available to unlock at this rank.</p>';
     } else {
-      // Available abilities (selectable)
       available.forEach(ability => {
-        availableList.appendChild(this.createAbilityRow(ability, rank));
-      });
-      
-      // Already acquired abilities (at bottom, greyed out)
-      acquired.forEach(ability => {
         availableList.appendChild(this.createAbilityRow(ability, rank));
       });
     }
     
     // Render unqualified abilities
     if (unqualified.length > 0) {
-      document.querySelector('.abilities-divider').style.display = '';
+      document.querySelector('.unqualified-divider').style.display = '';
       document.querySelector('.unqualified-abilities').style.display = '';
       unqualified.forEach(ability => {
         unqualifiedList.appendChild(this.createAbilityRow(ability, rank, true));
       });
     } else {
-      document.querySelector('.abilities-divider').style.display = 'none';
+      document.querySelector('.unqualified-divider').style.display = 'none';
       document.querySelector('.unqualified-abilities').style.display = 'none';
+    }
+    
+    // Render acquired abilities (at the bottom)
+    if (acquired.length > 0) {
+      document.querySelector('.acquired-divider').style.display = '';
+      document.querySelector('.acquired-abilities').style.display = '';
+      acquired.forEach(ability => {
+        acquiredList.appendChild(this.createAbilityRow(ability, rank));
+      });
+    } else {
+      document.querySelector('.acquired-divider').style.display = 'none';
+      document.querySelector('.acquired-abilities').style.display = 'none';
     }
     
     // Update confirm button
