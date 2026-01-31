@@ -208,18 +208,24 @@ const ENC_STATUS = [
   { name: 'Overburdened', threshold: Infinity, penalty: 'Formidable', penaltyText: 'Formidable (-40%)', penaltyPercent: 40, skillGrades: 2 }
 ];
 
-// Fatigue states reference
-const FATIGUE_STATES = [
-  { state: 'Fresh', skills: '–', movement: '–', initiative: '–', ap: '–', recovery: '–' },
-  { state: 'Winded', skills: 'Hard', movement: '–', initiative: '–', ap: '–', recovery: '15 min.' },
-  { state: 'Tired', skills: 'Hard', movement: '-5 ft.', initiative: '–', ap: '–', recovery: '3 Hrs.' },
-  { state: 'Wearied', skills: 'Formid.', movement: '-5 ft.', initiative: '-2', ap: '–', recovery: '6 Hrs.' },
-  { state: 'Exhausted', skills: 'Formid.', movement: '1/2', initiative: '-4', ap: '-1', recovery: '12 Hrs.' },
-  { state: 'Debil', skills: 'Herc.', movement: '1/2', initiative: '-6', ap: '-2', recovery: '18 Hrs.' },
-  { state: 'Incap.', skills: 'Herc.', movement: 'Immobile', initiative: '-8', ap: '-3', recovery: '24 Hrs.' },
-  { state: 'Semi-consc.', skills: 'Hopeless', movement: 'N/A', initiative: 'N/A', ap: 'N/A', recovery: '36 Hrs.' },
-  { state: 'Coma', skills: 'N/A', movement: 'N/A', initiative: 'N/A', ap: 'N/A', recovery: '48 Hrs.' }
-];
+// Fatigue penalty data (functional - used by penalty engine)
+// skillPenalty: flat % subtracted from ALL skills
+// movementType: 'none' | 'flat' | 'halve' | 'zero'
+// movementFlat: feet subtracted (only when movementType='flat')
+// initiativePenalty: flat subtracted from initiative
+// apPenalty: flat subtracted from action points max
+// canAct: false means character is incapacitated (all values N/A)
+const FATIGUE_PENALTIES = {
+  fresh:         { skillPenalty: 0,   skillGrade: '',           movementType: 'none',  movementFlat: 0, initiativePenalty: 0, apPenalty: 0, canAct: true },
+  winded:        { skillPenalty: 20,  skillGrade: 'Hard',       movementType: 'none',  movementFlat: 0, initiativePenalty: 0, apPenalty: 0, canAct: true },
+  tired:         { skillPenalty: 20,  skillGrade: 'Hard',       movementType: 'flat',  movementFlat: 5, initiativePenalty: 0, apPenalty: 0, canAct: true },
+  wearied:       { skillPenalty: 40,  skillGrade: 'Formidable', movementType: 'flat',  movementFlat: 5, initiativePenalty: 2, apPenalty: 0, canAct: true },
+  exhausted:     { skillPenalty: 40,  skillGrade: 'Formidable', movementType: 'halve', movementFlat: 0, initiativePenalty: 4, apPenalty: 1, canAct: true },
+  debilitated:   { skillPenalty: 80,  skillGrade: 'Herculean',  movementType: 'halve', movementFlat: 0, initiativePenalty: 6, apPenalty: 2, canAct: true },
+  incapacitated: { skillPenalty: 80,  skillGrade: 'Herculean',  movementType: 'zero',  movementFlat: 0, initiativePenalty: 8, apPenalty: 3, canAct: true },
+  semiconscious: { skillPenalty: 100, skillGrade: 'Hopeless',   movementType: 'zero',  movementFlat: 0, initiativePenalty: 0, apPenalty: 0, canAct: false },
+  coma:          { skillPenalty: 100, skillGrade: 'N/A',        movementType: 'zero',  movementFlat: 0, initiativePenalty: 0, apPenalty: 0, canAct: false }
+};
 
 // Skill Grade modifiers
 const SKILL_GRADES = [

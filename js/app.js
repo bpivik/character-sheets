@@ -91,6 +91,9 @@ const App = {
     // Setup passion formula listeners
     this.setupPassionFormulaListeners();
     
+    // Setup fatigue radio buttons and penalty system
+    this.setupFatigueListeners();
+    
     // Initial calculations
     this.recalculateAll();
     
@@ -361,12 +364,12 @@ const App = {
     const movementCurrent = document.getElementById('movement-current');
     if (movementCurrent) {
       movementCurrent.addEventListener('input', (e) => {
-        // Handle ENC penalty
-        if (e.target.classList.contains('enc-penalty-init-move')) {
+        // Handle combined ENC + Fatigue penalty
+        if (e.target.classList.contains('enc-penalty-init-move') || e.target.classList.contains('fatigue-penalized')) {
           // User is editing while penalized - update original value
           e.target.dataset.originalValue = e.target.value;
-          // Re-apply penalty after a short delay
-          setTimeout(() => this.updateTotalEnc(), 10);
+          // Re-apply all penalties after a short delay
+          setTimeout(() => this.applyAllPenalties(), 10);
         } else if (e.target.dataset.originalValue !== undefined) {
           e.target.dataset.originalValue = e.target.value;
         }
@@ -562,13 +565,14 @@ const App = {
         field.addEventListener('input', (e) => {
           const key = this.camelCase(fieldId);
           
-          // Handle ENC penalty for initiative
-          if (fieldId === 'initiative-current' && e.target.classList.contains('enc-penalty-init-move')) {
+          // Handle combined ENC + Fatigue penalty for initiative and action points
+          if ((fieldId === 'initiative-current' || fieldId === 'action-points-current') &&
+              (e.target.classList.contains('enc-penalty-init-move') || e.target.classList.contains('fatigue-penalized'))) {
             // User is editing while penalized - update original value
             e.target.dataset.originalValue = e.target.value;
-            // Re-apply penalty after a short delay
-            setTimeout(() => this.updateTotalEnc(), 10);
-          } else if (fieldId === 'initiative-current') {
+            // Re-apply all penalties after a short delay
+            setTimeout(() => this.applyAllPenalties(), 10);
+          } else if (fieldId === 'initiative-current' || fieldId === 'action-points-current') {
             // Normal edit - also update originalValue if it exists
             if (e.target.dataset.originalValue !== undefined) {
               e.target.dataset.originalValue = e.target.value;
@@ -594,16 +598,15 @@ const App = {
         const skillKeyKebab = e.target.id.replace('-current', '');
         const skillKey = this.camelCase(skillKeyKebab);
         
-        // If there's an active penalty and user is editing, update the original value
-        if (e.target.classList.contains('enc-penalized-value')) {
+        // If there's any active penalty and user is editing, update the original value
+        if (e.target.classList.contains('enc-penalized-value') || e.target.classList.contains('fatigue-penalized')) {
           // User is editing a penalized field - treat the input as the NEW original
-          // and re-apply penalty
           const newOriginal = e.target.value;
           e.target.dataset.originalValue = newOriginal;
           this.character.standardSkills[skillKey] = newOriginal;
           
-          // Re-apply penalty display after a short delay
-          setTimeout(() => this.updateTotalEnc(), 10);
+          // Re-apply all penalties after a short delay
+          setTimeout(() => this.applyAllPenalties(), 10);
         } else {
           // Normal edit - also update originalValue if it exists
           if (e.target.dataset.originalValue !== undefined) {
@@ -635,15 +638,13 @@ const App = {
       const field = document.getElementById(fieldId);
       if (field) {
         field.addEventListener('input', () => {
-          // For percent fields, handle ENC penalty
+          // For percent fields, handle combined ENC + Fatigue penalty
           if (fieldId === 'combat-skill-1-percent' || fieldId === 'unarmed-percent') {
             // If field has a penalty applied, update the original value
-            if (field.classList.contains('enc-penalized-value')) {
-              const currentStatus = Calculator.getEncStatus(this.character.derived.totalEnc || 0, this.character.characteristics.str || 0);
-              const penaltyPercent = currentStatus.penaltyPercent || 0;
-              // User entered penalized value, calculate what original should be
-              const enteredValue = parseInt(field.value) || 0;
-              field.dataset.originalValue = enteredValue + penaltyPercent;
+            if (field.classList.contains('enc-penalized-value') || field.classList.contains('fatigue-penalized')) {
+              field.dataset.originalValue = field.value;
+              // Re-apply all penalties
+              setTimeout(() => this.applyAllPenalties(), 10);
             } else {
               // No penalty, original = current
               field.dataset.originalValue = field.value;
@@ -2638,6 +2639,14 @@ const App = {
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
     }
+    
+    // Restore fatigue state
+    if (this.character.fatigueState && this.character.fatigueState !== 'fresh') {
+      this.setFatigueState(this.character.fatigueState, false); // false = don't re-save yet
+    }
+    
+    // Ensure ALL skill fields have originalValue set for penalty system
+    this.initializeOriginalValues();
   },
 
   /**
@@ -2746,7 +2755,8 @@ const App = {
         this.character.professionalSkills.push({
           name: nameInput.value,
           base: baseInput.value,
-          current: currentInput.value
+          // Save original (pre-penalty) value if available
+          current: currentInput.dataset.originalValue || currentInput.value
         });
       }
     }
@@ -2759,7 +2769,7 @@ const App = {
     if (nameInput) {
       this.character.combat.skills.push({
         name: nameInput?.value || '',
-        percent: percentInput?.value || '',
+        percent: percentInput?.dataset.originalValue || percentInput?.value || '',
         weapons: weaponsInput?.value || ''
       });
     }
@@ -2767,7 +2777,7 @@ const App = {
     // Unarmed
     const unarmedInput = document.getElementById('unarmed-percent');
     if (unarmedInput) {
-      this.character.combat.unarmedPercent = unarmedInput.value;
+      this.character.combat.unarmedPercent = unarmedInput.dataset.originalValue || unarmedInput.value;
     }
     
     // Hit Locations
@@ -5157,11 +5167,8 @@ const App = {
       }
     });
     
-    // Update Initiative and Movement current values
-    this.updateEncInitiativeAndMovement(status);
-    
-    // Update Standard Skill percentages that have enc-indicator
-    this.updateEncAffectedSkillValues(status);
+    // Apply all penalties (ENC + Fatigue combined)
+    this.applyAllPenalties();
   },
   
   /**
@@ -5362,9 +5369,504 @@ const App = {
     });
   },
 
+  // ============================================================
+  // FATIGUE & UNIFIED PENALTY SYSTEM
+  // ============================================================
+
   /**
-   * Utility: Convert kebab-case to camelCase
+   * Setup fatigue radio button listeners
    */
+  setupFatigueListeners() {
+    const fatigueRadios = document.querySelectorAll('input[name="fatigue-state"]');
+    fatigueRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        this.setFatigueState(e.target.value, true);
+      });
+    });
+    
+    // Allow clicking anywhere on a fatigue row to select it
+    const fatigueRows = document.querySelectorAll('.fatigue-table tbody tr');
+    fatigueRows.forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Don't double-trigger if clicking the radio itself
+        if (e.target.type === 'radio') return;
+        const radio = row.querySelector('input[type="radio"]');
+        if (radio) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    });
+  },
+
+  /**
+   * Set the fatigue state and apply penalties
+   * @param {string} state - fatigue state key (e.g., 'fresh', 'wearied')
+   * @param {boolean} save - whether to trigger auto-save
+   */
+  setFatigueState(state, save = true) {
+    if (!FATIGUE_PENALTIES[state]) return;
+    
+    this.character.fatigueState = state;
+    
+    // Update radio button
+    const radio = document.querySelector(`input[name="fatigue-state"][value="${state}"]`);
+    if (radio) radio.checked = true;
+    
+    // Update active row highlight
+    document.querySelectorAll('.fatigue-table tbody tr').forEach(row => {
+      row.classList.remove('fatigue-active');
+    });
+    const activeRow = document.querySelector(`tr[data-fatigue="${state}"]`);
+    if (activeRow) activeRow.classList.add('fatigue-active');
+    
+    // Apply all penalties
+    this.applyAllPenalties();
+    
+    // Update summary page
+    this.updateCombatQuickRef();
+    if (typeof this.refreshSummaryWidgets === 'function') {
+      this.refreshSummaryWidgets();
+    }
+    
+    if (save) {
+      this.scheduleAutoSave();
+    }
+  },
+
+  /**
+   * Ensure all penalty-eligible fields have dataset.originalValue set.
+   * Called once on load after populateForm.
+   */
+  initializeOriginalValues() {
+    // Standard skills
+    document.querySelectorAll('.skill-input').forEach(input => {
+      if (input.value && input.dataset.originalValue === undefined) {
+        input.dataset.originalValue = input.value;
+      }
+    });
+    
+    // Professional skills
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const input = document.getElementById(`prof-skill-${i}-current`);
+      if (input && input.value && input.dataset.originalValue === undefined) {
+        input.dataset.originalValue = input.value;
+      }
+    }
+    
+    // Combat skills
+    ['combat-skill-1-percent', 'unarmed-percent'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input && input.value && input.dataset.originalValue === undefined) {
+        input.dataset.originalValue = input.value;
+      }
+    });
+    
+    // Initiative
+    const initCurrent = document.getElementById('initiative-current');
+    if (initCurrent && initCurrent.value && initCurrent.dataset.originalValue === undefined) {
+      initCurrent.dataset.originalValue = initCurrent.value;
+    }
+    
+    // Movement
+    const moveCurrent = document.getElementById('movement-current');
+    if (moveCurrent && moveCurrent.value && moveCurrent.dataset.originalValue === undefined) {
+      moveCurrent.dataset.originalValue = moveCurrent.value;
+    }
+    
+    // Action Points
+    const apOriginal = document.getElementById('action-points-original');
+    if (apOriginal && apOriginal.value && apOriginal.dataset.originalValue === undefined) {
+      apOriginal.dataset.originalValue = apOriginal.value;
+    }
+    const apCurrent = document.getElementById('action-points-current');
+    if (apCurrent && apCurrent.value && apCurrent.dataset.originalValue === undefined) {
+      apCurrent.dataset.originalValue = apCurrent.value;
+    }
+  },
+
+  /**
+   * Get current ENC status. Centralized helper.
+   */
+  getCurrentEncStatus() {
+    if (!this.character.encAutomation) {
+      return { name: 'Unburdened', penaltyPercent: 0, initiativePenalty: 0, movementPenalty: 0 };
+    }
+    const totalEnc = parseFloat(document.getElementById('total-enc')?.textContent) || 0;
+    const STR = parseInt(this.character.attributes?.STR) || 0;
+    return Calculator.getEncStatus(totalEnc, STR);
+  },
+
+  /**
+   * CENTRAL PENALTY ENGINE
+   * Applies both ENC and Fatigue penalties to all affected fields.
+   * Called whenever ENC or Fatigue state changes.
+   */
+  applyAllPenalties() {
+    const encStatus = this.getCurrentEncStatus();
+    const fatigueState = this.character.fatigueState || 'fresh';
+    const fatigue = FATIGUE_PENALTIES[fatigueState] || FATIGUE_PENALTIES.fresh;
+    
+    const encHasPenalty = (encStatus.name === 'Burdened' || encStatus.name === 'Overburdened');
+    const encPenaltyPercent = encHasPenalty ? (encStatus.penaltyPercent || 0) : 0;
+    const encIsBurdened = encStatus.name === 'Burdened';
+    
+    const fatigueHasPenalty = fatigue.skillPenalty > 0;
+    const fatigueSevere = fatigue.skillPenalty >= 60; // Herculean or worse
+    
+    // --- SKILLS ---
+    this.applySkillPenalties(encPenaltyPercent, encIsBurdened, encHasPenalty, fatigue);
+    
+    // --- INITIATIVE ---
+    this.applyInitiativePenalty(encStatus, fatigue);
+    
+    // --- MOVEMENT ---
+    this.applyMovementPenalty(encStatus, fatigue);
+    
+    // --- ACTION POINTS ---
+    this.applyActionPointPenalty(fatigue);
+    
+    // --- Update combat quick ref ---
+    this.updateCombatQuickRef();
+  },
+
+  /**
+   * Apply combined ENC + Fatigue penalties to all skill fields
+   */
+  applySkillPenalties(encPenaltyPercent, encIsBurdened, encHasPenalty, fatigue) {
+    const fatigueSkillPenalty = fatigue.skillPenalty || 0;
+    const fatigueSevere = fatigueSkillPenalty >= 60;
+    const fatigueActive = fatigueSkillPenalty > 0;
+    
+    // --- Standard Skills ---
+    document.querySelectorAll('.skill-row').forEach(row => {
+      const hasEncIndicator = row.querySelector('.enc-indicator') !== null;
+      const input = row.querySelector('.skill-input');
+      if (!input) return;
+      
+      // Store original if not set
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || 0;
+      const encPenalty = hasEncIndicator ? encPenaltyPercent : 0;
+      const totalPenalty = encPenalty + fatigueSkillPenalty;
+      const hasPenalty = totalPenalty > 0 && originalValue > 0;
+      
+      // Clear previous penalty classes
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+      
+      if (hasPenalty) {
+        const penalizedValue = Math.max(0, originalValue - totalPenalty);
+        input.value = penalizedValue;
+        
+        // Build tooltip
+        let tooltipParts = [`Original: ${originalValue}%`];
+        if (encPenalty > 0) tooltipParts.push(`ENC: -${encPenalty}%`);
+        if (fatigueSkillPenalty > 0) tooltipParts.push(`Fatigue (${fatigue.skillGrade}): -${fatigueSkillPenalty}%`);
+        tooltipParts.push(`Effective: ${penalizedValue}%`);
+        input.title = tooltipParts.join(', ');
+        
+        // Apply appropriate CSS classes
+        if (encPenalty > 0) {
+          input.classList.add('enc-penalized-value');
+          if (encIsBurdened) input.classList.add('enc-burdened-penalty');
+        }
+        if (fatigueActive) {
+          input.classList.add('fatigue-penalized');
+          if (fatigueSevere) input.classList.add('fatigue-severe');
+        }
+        if (!fatigue.canAct) {
+          input.classList.add('fatigue-incapacitated');
+        }
+      } else if (input.dataset.originalValue !== undefined) {
+        input.value = input.dataset.originalValue;
+        input.title = '';
+      }
+    });
+    
+    // --- Professional Skills ---
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const encIndicator = document.getElementById(`prof-skill-${i}-enc`);
+      const hasEncIndicator = encIndicator && encIndicator.style.display !== 'none';
+      const input = document.getElementById(`prof-skill-${i}-current`);
+      if (!input) continue;
+      
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || 0;
+      const encPenalty = hasEncIndicator ? encPenaltyPercent : 0;
+      const totalPenalty = encPenalty + fatigueSkillPenalty;
+      const hasPenalty = totalPenalty > 0 && originalValue > 0;
+      
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+      
+      if (hasPenalty) {
+        const penalizedValue = Math.max(0, originalValue - totalPenalty);
+        input.value = penalizedValue;
+        
+        let tooltipParts = [`Original: ${originalValue}%`];
+        if (encPenalty > 0) tooltipParts.push(`ENC: -${encPenalty}%`);
+        if (fatigueSkillPenalty > 0) tooltipParts.push(`Fatigue (${fatigue.skillGrade}): -${fatigueSkillPenalty}%`);
+        tooltipParts.push(`Effective: ${penalizedValue}%`);
+        input.title = tooltipParts.join(', ');
+        
+        if (encPenalty > 0) {
+          input.classList.add('enc-penalized-value');
+          if (encIsBurdened) input.classList.add('enc-burdened-penalty');
+        }
+        if (fatigueActive) {
+          input.classList.add('fatigue-penalized');
+          if (fatigueSevere) input.classList.add('fatigue-severe');
+        }
+        if (!fatigue.canAct) input.classList.add('fatigue-incapacitated');
+      } else if (input.dataset.originalValue !== undefined) {
+        input.value = input.dataset.originalValue;
+        input.title = '';
+      }
+    }
+    
+    // --- Combat Skills (STR+DEX based, always ENC-affected; fatigue affects all) ---
+    const combatSkillInputs = document.querySelectorAll('.enc-affected-combat');
+    combatSkillInputs.forEach(input => {
+      if (input.dataset.originalValue === undefined && input.value) {
+        input.dataset.originalValue = input.value;
+      }
+      
+      const originalValue = parseInt(input.dataset.originalValue) || 0;
+      const totalPenalty = encPenaltyPercent + fatigueSkillPenalty;
+      const hasPenalty = totalPenalty > 0 && originalValue > 0;
+      
+      input.classList.remove('enc-penalized-value', 'enc-burdened-penalty', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+      
+      if (hasPenalty) {
+        const penalizedValue = Math.max(0, originalValue - totalPenalty);
+        input.value = penalizedValue;
+        
+        let tooltipParts = [`Original: ${originalValue}%`];
+        if (encPenaltyPercent > 0) tooltipParts.push(`ENC: -${encPenaltyPercent}%`);
+        if (fatigueSkillPenalty > 0) tooltipParts.push(`Fatigue (${fatigue.skillGrade}): -${fatigueSkillPenalty}%`);
+        tooltipParts.push(`Effective: ${penalizedValue}%`);
+        input.title = tooltipParts.join(', ');
+        
+        if (encPenaltyPercent > 0) {
+          input.classList.add('enc-penalized-value');
+          if (encIsBurdened) input.classList.add('enc-burdened-penalty');
+        }
+        if (fatigueActive) {
+          input.classList.add('fatigue-penalized');
+          if (fatigueSevere) input.classList.add('fatigue-severe');
+        }
+        if (!fatigue.canAct) input.classList.add('fatigue-incapacitated');
+      } else if (input.dataset.originalValue !== undefined) {
+        input.value = input.dataset.originalValue;
+        input.title = '';
+      }
+    });
+  },
+
+  /**
+   * Apply combined ENC + Fatigue penalty to Initiative
+   */
+  applyInitiativePenalty(encStatus, fatigue) {
+    const initCurrent = document.getElementById('initiative-current');
+    if (!initCurrent) return;
+    
+    if (initCurrent.dataset.originalValue === undefined && initCurrent.value) {
+      initCurrent.dataset.originalValue = initCurrent.value;
+    }
+    
+    const originalInit = parseInt(initCurrent.dataset.originalValue) || 0;
+    const encInitPenalty = encStatus.initiativePenalty || 0;
+    const fatigueInitPenalty = fatigue.canAct ? (fatigue.initiativePenalty || 0) : originalInit; // if can't act, zero it
+    const totalPenalty = encInitPenalty + fatigueInitPenalty;
+    const hasPenalty = totalPenalty > 0;
+    
+    const encHasPenalty = (encStatus.name === 'Burdened' || encStatus.name === 'Overburdened');
+    const penaltyClass = encStatus.name === 'Burdened' ? 'burdened' : 'overburdened';
+    
+    initCurrent.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+    
+    if (hasPenalty) {
+      const penalizedInit = fatigue.canAct ? Math.max(0, originalInit - totalPenalty) : 0;
+      initCurrent.value = penalizedInit;
+      
+      let tooltipParts = [`Original: ${originalInit}`];
+      if (encInitPenalty > 0) tooltipParts.push(`ENC: -${encInitPenalty}`);
+      if (fatigue.initiativePenalty > 0) tooltipParts.push(`Fatigue: -${fatigue.initiativePenalty}`);
+      if (!fatigue.canAct) tooltipParts.push('Fatigue: Incapacitated');
+      initCurrent.title = tooltipParts.join(', ');
+      
+      if (encHasPenalty && encInitPenalty > 0) {
+        initCurrent.classList.add('enc-penalty-init-move', penaltyClass);
+      }
+      if (fatigue.initiativePenalty > 0 || !fatigue.canAct) {
+        initCurrent.classList.add('fatigue-penalized');
+        if (fatigue.skillPenalty >= 60) initCurrent.classList.add('fatigue-severe');
+        if (!fatigue.canAct) initCurrent.classList.add('fatigue-incapacitated');
+      }
+    } else {
+      initCurrent.value = initCurrent.dataset.originalValue;
+      initCurrent.title = '';
+    }
+  },
+
+  /**
+   * Apply combined ENC + Fatigue penalty to Movement
+   * Order: Start with original → subtract ENC → apply fatigue modifier
+   */
+  applyMovementPenalty(encStatus, fatigue) {
+    const moveCurrent = document.getElementById('movement-current');
+    if (!moveCurrent) return;
+    
+    if (moveCurrent.dataset.originalValue === undefined && moveCurrent.value) {
+      moveCurrent.dataset.originalValue = moveCurrent.value;
+    }
+    
+    const originalMove = parseInt(moveCurrent.dataset.originalValue) || 0;
+    const encMovePenalty = encStatus.movementPenalty || 0;
+    
+    // Step 1: Apply ENC (flat subtraction)
+    const afterEnc = Math.max(0, originalMove - encMovePenalty);
+    
+    // Step 2: Apply Fatigue on the ENC-adjusted value
+    let finalMove = afterEnc;
+    switch (fatigue.movementType) {
+      case 'none':
+        finalMove = afterEnc;
+        break;
+      case 'flat':
+        finalMove = Math.max(0, afterEnc - fatigue.movementFlat);
+        break;
+      case 'halve':
+        finalMove = Math.max(0, Math.floor(afterEnc / 2));
+        break;
+      case 'zero':
+        finalMove = 0;
+        break;
+    }
+    
+    const encHasPenalty = (encStatus.name === 'Burdened' || encStatus.name === 'Overburdened');
+    const penaltyClass = encStatus.name === 'Burdened' ? 'burdened' : 'overburdened';
+    const hasPenalty = (encMovePenalty > 0) || (fatigue.movementType !== 'none');
+    
+    moveCurrent.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+    
+    if (hasPenalty) {
+      moveCurrent.value = finalMove;
+      
+      let tooltipParts = [`Original: ${originalMove}'`];
+      if (encMovePenalty > 0) tooltipParts.push(`ENC: -${encMovePenalty}'`);
+      if (fatigue.movementType === 'flat') tooltipParts.push(`Fatigue: -${fatigue.movementFlat}'`);
+      else if (fatigue.movementType === 'halve') tooltipParts.push('Fatigue: halved');
+      else if (fatigue.movementType === 'zero') tooltipParts.push('Fatigue: immobile');
+      tooltipParts.push(`Effective: ${finalMove}'`);
+      moveCurrent.title = tooltipParts.join(', ');
+      
+      if (encHasPenalty && encMovePenalty > 0) {
+        moveCurrent.classList.add('enc-penalty-init-move', penaltyClass);
+      }
+      if (fatigue.movementType !== 'none') {
+        moveCurrent.classList.add('fatigue-penalized');
+        if (fatigue.skillPenalty >= 60) moveCurrent.classList.add('fatigue-severe');
+        if (!fatigue.canAct) moveCurrent.classList.add('fatigue-incapacitated');
+      }
+      
+      // Update movement speed display
+      this.updateMovementDisplayWithCombinedPenalty(finalMove, encHasPenalty, fatigue);
+    } else {
+      moveCurrent.value = moveCurrent.dataset.originalValue;
+      moveCurrent.title = '';
+      this.updateMovementDisplay();
+    }
+  },
+
+  /**
+   * Update movement speed display with combined ENC + Fatigue styling
+   */
+  updateMovementDisplayWithCombinedPenalty(baseMove, encHasPenalty, fatigue) {
+    const speeds = Calculator.calculateMovement(baseMove);
+    
+    const elements = ['walk-speed', 'run-speed', 'sprint-speed', 'swim-speed', 'climb-speed']
+      .map(id => document.getElementById(id))
+      .filter(Boolean);
+    
+    const penaltyClass = encHasPenalty ? 'burdened' : '';
+    
+    elements.forEach(el => {
+      el.classList.remove('enc-penalty-init-move', 'burdened', 'overburdened', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+      if (encHasPenalty) el.classList.add('enc-penalty-init-move', penaltyClass);
+      if (fatigue.movementType !== 'none') {
+        el.classList.add('fatigue-penalized');
+        if (fatigue.skillPenalty >= 60) el.classList.add('fatigue-severe');
+        if (!fatigue.canAct) el.classList.add('fatigue-incapacitated');
+      }
+    });
+    
+    const walkEl = document.getElementById('walk-speed');
+    const runEl = document.getElementById('run-speed');
+    const sprintEl = document.getElementById('sprint-speed');
+    const swimEl = document.getElementById('swim-speed');
+    const climbEl = document.getElementById('climb-speed');
+    
+    if (walkEl) walkEl.textContent = `${speeds.walk}'`;
+    if (runEl) runEl.textContent = `${speeds.run}'`;
+    if (sprintEl) sprintEl.textContent = `${speeds.sprint}'`;
+    if (swimEl) swimEl.textContent = `${speeds.swim}'`;
+    if (climbEl) climbEl.textContent = `${speeds.climb}'`;
+  },
+
+  /**
+   * Apply Fatigue penalty to Action Points
+   */
+  applyActionPointPenalty(fatigue) {
+    const apOriginal = document.getElementById('action-points-original');
+    const apCurrent = document.getElementById('action-points-current');
+    if (!apOriginal || !apCurrent) return;
+    
+    // Store original max AP
+    if (apOriginal.dataset.originalValue === undefined && apOriginal.value) {
+      apOriginal.dataset.originalValue = apOriginal.value;
+    }
+    if (apCurrent.dataset.originalValue === undefined && apCurrent.value) {
+      apCurrent.dataset.originalValue = apCurrent.value;
+    }
+    
+    const originalMax = parseInt(apOriginal.dataset.originalValue) || 2;
+    const originalCurrent = parseInt(apCurrent.dataset.originalValue) || originalMax;
+    const apPenalty = fatigue.canAct ? (fatigue.apPenalty || 0) : originalMax;
+    
+    apOriginal.classList.remove('fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+    apCurrent.classList.remove('fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
+    
+    if (apPenalty > 0) {
+      const newMax = fatigue.canAct ? Math.max(0, originalMax - apPenalty) : 0;
+      const newCurrent = Math.min(originalCurrent, newMax);
+      
+      apOriginal.value = newMax;
+      apCurrent.value = newCurrent;
+      
+      apOriginal.title = `Original Max: ${originalMax}, Fatigue: -${fatigue.canAct ? apPenalty : 'All'}`;
+      apOriginal.classList.add('fatigue-penalized');
+      apCurrent.classList.add('fatigue-penalized');
+      if (fatigue.skillPenalty >= 60) {
+        apOriginal.classList.add('fatigue-severe');
+        apCurrent.classList.add('fatigue-severe');
+      }
+      if (!fatigue.canAct) {
+        apOriginal.classList.add('fatigue-incapacitated');
+        apCurrent.classList.add('fatigue-incapacitated');
+      }
+    } else {
+      // Restore originals
+      apOriginal.value = apOriginal.dataset.originalValue;
+      apCurrent.value = apCurrent.dataset.originalValue;
+      apOriginal.title = '';
+    }
+  },
   camelCase(str) {
     return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
   },

@@ -87,6 +87,9 @@ const StorageManager = {
       // Whether original values are locked (user-edited)
       originalsLocked: false,
       
+      // Current fatigue state
+      fatigueState: 'fresh',
+      
       // Standard Skills (current values - base is calculated)
       standardSkills: {},
       

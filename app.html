@@ -1072,6 +1072,7 @@
             <table class="fatigue-table">
               <thead>
                 <tr>
+                  <th class="fatigue-col-radio"></th>
                   <th class="fatigue-col-state">State</th>
                   <th class="fatigue-col-skills">Skills</th>
                   <th class="fatigue-col-movement">Movement</th>
@@ -1081,15 +1082,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr data-fatigue="fresh"><td class="fatigue-state-name">Fresh</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
-                <tr data-fatigue="winded"><td class="fatigue-state-name">Winded</td><td>Hard</td><td>–</td><td>–</td><td>–</td><td>15 min.</td></tr>
-                <tr data-fatigue="tired"><td class="fatigue-state-name">Tired</td><td>Hard</td><td>-5 ft.</td><td>–</td><td>–</td><td>3 Hrs.</td></tr>
-                <tr data-fatigue="wearied"><td class="fatigue-state-name">Wearied</td><td>Formidable</td><td>-5 ft.</td><td>-2</td><td>–</td><td>6 Hrs.</td></tr>
-                <tr data-fatigue="exhausted"><td class="fatigue-state-name">Exhausted</td><td>Formidable</td><td>1/2</td><td>-4</td><td>-1</td><td>12 Hrs.</td></tr>
-                <tr data-fatigue="debilitated"><td class="fatigue-state-name">Debilitated</td><td>Herculean</td><td>1/2</td><td>-6</td><td>-2</td><td>18 Hrs.</td></tr>
-                <tr data-fatigue="incapacitated"><td class="fatigue-state-name">Incapacitated</td><td>Herculean</td><td>Immobile</td><td>-8</td><td>-3</td><td>24 Hrs.</td></tr>
-                <tr data-fatigue="semiconscious"><td class="fatigue-state-name">Semi-conscious</td><td>Hopeless</td><td>N/A</td><td>N/A</td><td>N/A</td><td>36 Hrs.</td></tr>
-                <tr data-fatigue="coma"><td class="fatigue-state-name">Coma</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>48 Hrs.</td></tr>
+                <tr data-fatigue="fresh" class="fatigue-active"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="fresh" checked></td><td class="fatigue-state-name">Fresh</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+                <tr data-fatigue="winded"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="winded"></td><td class="fatigue-state-name">Winded</td><td>Hard</td><td>–</td><td>–</td><td>–</td><td>15 min.</td></tr>
+                <tr data-fatigue="tired"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="tired"></td><td class="fatigue-state-name">Tired</td><td>Hard</td><td>-5 ft.</td><td>–</td><td>–</td><td>3 Hrs.</td></tr>
+                <tr data-fatigue="wearied"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="wearied"></td><td class="fatigue-state-name">Wearied</td><td>Formidable</td><td>-5 ft.</td><td>-2</td><td>–</td><td>6 Hrs.</td></tr>
+                <tr data-fatigue="exhausted"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="exhausted"></td><td class="fatigue-state-name">Exhausted</td><td>Formidable</td><td>1/2</td><td>-4</td><td>-1</td><td>12 Hrs.</td></tr>
+                <tr data-fatigue="debilitated"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="debilitated"></td><td class="fatigue-state-name">Debilitated</td><td>Herculean</td><td>1/2</td><td>-6</td><td>-2</td><td>18 Hrs.</td></tr>
+                <tr data-fatigue="incapacitated"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="incapacitated"></td><td class="fatigue-state-name">Incapacitated</td><td>Herculean</td><td>Immobile</td><td>-8</td><td>-3</td><td>24 Hrs.</td></tr>
+                <tr data-fatigue="semiconscious"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="semiconscious"></td><td class="fatigue-state-name">Semi-conscious</td><td>Hopeless</td><td>N/A</td><td>N/A</td><td>N/A</td><td>36 Hrs.</td></tr>
+                <tr data-fatigue="coma"><td class="fatigue-radio-cell"><input type="radio" name="fatigue-state" value="coma"></td><td class="fatigue-state-name">Coma</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>48 Hrs.</td></tr>
               </tbody>
             </table>
           </section>

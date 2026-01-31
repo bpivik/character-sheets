@@ -2284,10 +2284,27 @@ select:focus {
   letter-spacing: 0.03em;
 }
 
+/* Radio button column */
+.fatigue-col-radio {
+  width: 30px;
+  padding: 0 !important;
+}
+
+.fatigue-radio-cell {
+  padding: 0.15rem !important;
+}
+
+.fatigue-radio-cell input[type="radio"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--border-gold, #8b6914);
+}
+
 /* State column: bold, larger, left-aligned */
 .fatigue-col-state {
   text-align: left;
-  width: 25%;
+  width: 22%;
 }
 
 .fatigue-state-name {
@@ -2296,10 +2313,86 @@ select:focus {
   text-align: left;
   font-family: var(--font-header);
   color: var(--text-header);
+  cursor: pointer;
+}
+
+/* Clicking the state name also selects the radio */
+.fatigue-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fatigue-table tbody tr:hover {
+  background: rgba(139, 105, 20, 0.08);
+}
+
+/* Active fatigue row highlight */
+.fatigue-table tbody tr.fatigue-active {
+  background: rgba(139, 105, 20, 0.15);
+  box-shadow: inset 3px 0 0 var(--border-gold, #8b6914);
+}
+
+.fatigue-table tbody tr.fatigue-active .fatigue-state-name {
+  color: var(--border-gold, #8b6914);
 }
 
 .fatigue-table tbody tr:nth-child(even) {
   background: rgba(255,255,255,0.3);
+}
+
+.fatigue-table tbody tr:nth-child(even).fatigue-active {
+  background: rgba(139, 105, 20, 0.15);
+}
+
+/* Fatigue penalty visual styling on affected fields */
+.fatigue-penalized {
+  color: #b35900 !important;
+  font-style: italic;
+}
+
+.fatigue-penalized.fatigue-severe {
+  color: #cc0000 !important;
+}
+
+.fatigue-incapacitated {
+  color: #999 !important;
+  font-style: italic;
+}
+
+/* Combined ENC + Fatigue penalty styling */
+.enc-penalized-value.fatigue-penalized {
+  color: #8b0000 !important;
+  font-weight: 600;
+}
+
+/* Fatigue penalty note next to the ENC penalty note */
+.fatigue-penalty-note {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.fatigue-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b35900;
+  opacity: 0.4;
+}
+
+.fatigue-indicator.fatigue-penalty-active {
+  opacity: 1;
+  background: #b35900;
+  box-shadow: 0 0 3px rgba(179, 89, 0, 0.5);
+}
+
+.fatigue-indicator.fatigue-severe-active {
+  background: #cc0000;
+  box-shadow: 0 0 3px rgba(204, 0, 0, 0.5);
 }
 
 /* Special Abilities & Notes */
