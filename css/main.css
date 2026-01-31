@@ -538,6 +538,16 @@ select:focus {
   margin-bottom: 0;
 }
 
+.rank-section .combined-rank-row {
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border-gold);
+}
+
+.rank-section .combined-rank-row .field-label {
+  font-weight: bold;
+}
+
 .rank-section .field-label {
   font-size: 0.95rem;
   min-width: auto;

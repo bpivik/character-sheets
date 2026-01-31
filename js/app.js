@@ -2916,6 +2916,12 @@ const App = {
     const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
     const combinedRank = primaryRank + secondaryRank + tertiaryRank;
     
+    // Update the combined rank display field
+    const combinedRankField = document.getElementById('rank-combined');
+    if (combinedRankField) {
+      combinedRankField.value = combinedRank;
+    }
+    
     // Check if character is human (for luck bonus)
     const species = document.getElementById('species')?.value?.toLowerCase() || '';
     const isHuman = species === 'human';
