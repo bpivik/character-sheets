@@ -4032,6 +4032,24 @@ select:focus {
   background: #d4b44a;
 }
 
+/* Memorize Warning Overlay */
+.memorize-warning-content {
+  text-align: center;
+}
+
+.memorize-warning-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.memorize-warning-message {
+  font-size: 1.1rem;
+  color: #eee;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
 /* D100 Skill Roll Result Overlay */
 .d100-result-content {
   text-align: center;

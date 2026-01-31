@@ -2106,6 +2106,14 @@ const App = {
    */
   generateSpellRows() {
     const ranks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    const rankLabels = {
+      'cantrips': 'Cantrip',
+      'rank1': 'Rank 1',
+      'rank2': 'Rank 2',
+      'rank3': 'Rank 3',
+      'rank4': 'Rank 4',
+      'rank5': 'Rank 5'
+    };
     
     ranks.forEach(rank => {
       const tbody = document.getElementById(`${rank}-body`);
@@ -2126,6 +2134,28 @@ const App = {
         
         const nameInput = tr.querySelector(`#${rank}-${i}-name`);
         const costInput = tr.querySelector(`#${rank}-${i}-cost`);
+        const memCheck = tr.querySelector(`#${rank}-${i}-mem`);
+        
+        // Check memorize limit when checkbox is clicked
+        if (memCheck) {
+          memCheck.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              const maxInput = document.getElementById(`${rank}-max`);
+              const maxAllowed = parseInt(maxInput?.value, 10) || 0;
+              
+              // Count currently checked boxes in this rank
+              const currentlyMemorized = tbody.querySelectorAll('.spell-memorized:checked').length;
+              
+              if (currentlyMemorized > maxAllowed) {
+                e.target.checked = false;
+                const label = rankLabels[rank];
+                this.showMemorizeWarning(`You may only memorize ${maxAllowed} ${label} spell${maxAllowed !== 1 ? 's' : ''}. Forget one before you memorize another.`);
+                return;
+              }
+            }
+            this.scheduleAutoSave();
+          });
+        }
         
         // Auto-fill cost when spell name is selected/entered
         if (nameInput && costInput) {
@@ -2162,7 +2192,7 @@ const App = {
         }
         
         tr.querySelectorAll('input').forEach(input => {
-          if (input !== nameInput) {
+          if (input !== nameInput && input !== memCheck) {
             input.addEventListener('input', () => this.scheduleAutoSave());
           }
           input.addEventListener('change', () => this.scheduleAutoSave());
@@ -2175,6 +2205,40 @@ const App = {
         maxInput.addEventListener('input', () => this.scheduleAutoSave());
       }
     });
+  },
+
+  /**
+   * Show memorize limit warning
+   */
+  showMemorizeWarning(message) {
+    // Create or get warning overlay
+    let overlay = document.getElementById('memorize-warning-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'memorize-warning-overlay';
+      overlay.className = 'damage-result-overlay';
+      overlay.innerHTML = `
+        <div class="damage-result-content memorize-warning-content">
+          <div class="memorize-warning-icon">⚠️</div>
+          <div class="memorize-warning-message"></div>
+          <button class="damage-close">OK</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      
+      overlay.querySelector('.damage-close').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+      
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('visible');
+        }
+      });
+    }
+    
+    overlay.querySelector('.memorize-warning-message').textContent = message;
+    overlay.classList.add('visible');
   },
 
   /**
@@ -5449,8 +5513,8 @@ const App = {
           <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
           <div class="combat-skill-header"><span>Combat Skill</span><span>%</span></div>
           <div class="skill-list">
-            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll a d100!"><img src="https://game-icons.net/icons/ffffff/transparent/1x1/skoll/d10.svg" alt="d10" class="d10-icon"></button></span></div>
-            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll a d100!"><img src="https://game-icons.net/icons/ffffff/transparent/1x1/skoll/d10.svg" alt="d10" class="d10-icon"></button></span></div>
+            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll a d100!"><img src="images/d10.svg" alt="d10" class="d10-icon"></button></span></div>
+            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll a d100!"><img src="images/d10.svg" alt="d10" class="d10-icon"></button></span></div>
           </div>
         `;
         
