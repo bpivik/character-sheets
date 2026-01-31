@@ -3576,6 +3576,10 @@ select:focus {
   grid-template-columns: 1fr 1fr auto 1fr;
 }
 
+.skills-columns-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 .skill-column {
   display: flex;
   flex-direction: column;

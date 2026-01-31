@@ -8506,8 +8506,7 @@ const App = {
       });
       
       document.getElementById('exp-btn-passions').addEventListener('click', () => {
-        // TODO: Implement
-        alert('Strengthen Passions, Alignment, or Oaths - Coming soon!');
+        this.openStrengthenPassionsModal();
       });
     }
     
@@ -8831,6 +8830,268 @@ const App = {
     if (modal) {
       modal.classList.add('hidden');
     }
+  },
+
+  /**
+   * Open the Strengthen Passions, Alignment, or Oaths modal
+   */
+  openStrengthenPassionsModal() {
+    // Close the main EXP modal
+    this.closeExpModal();
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('strengthen-passions-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'strengthen-passions-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content improve-skills-modal-content">
+          <div class="modal-header">
+            <h3>Strengthen Passions, Alignment, or Oaths</h3>
+            <button class="modal-close" id="strengthen-passions-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="exp-rolls-display">
+              <span class="exp-rolls-label">Available EXP Rolls:</span>
+              <span class="exp-rolls-value" id="strengthen-passions-exp-rolls">0</span>
+            </div>
+            <p class="improve-skills-instructions">Select items to attempt strengthening (1 EXP Roll each):</p>
+            <div class="skills-columns skills-columns-3">
+              <div class="skill-column">
+                <h4>Alignment</h4>
+                <div class="skill-list" id="strengthen-alignment-list"></div>
+              </div>
+              <div class="skill-column">
+                <h4>Passions</h4>
+                <div class="skill-list" id="strengthen-passions-list"></div>
+              </div>
+              <div class="skill-column">
+                <h4>Oaths</h4>
+                <div class="skill-list" id="strengthen-oaths-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="strengthen-passions-back">Back</button>
+            <button type="button" class="btn btn-secondary" id="strengthen-passions-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="strengthen-passions-continue" disabled>Continue</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close button
+      document.getElementById('strengthen-passions-modal-close').addEventListener('click', () => {
+        this.closeStrengthenPassionsModal();
+      });
+      
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeStrengthenPassionsModal();
+        }
+      });
+      
+      // Escape to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          this.closeStrengthenPassionsModal();
+        }
+      });
+      
+      // Back button
+      document.getElementById('strengthen-passions-back').addEventListener('click', () => {
+        this.closeStrengthenPassionsModal();
+        this.openExpModal();
+      });
+      
+      // Cancel button
+      document.getElementById('strengthen-passions-cancel').addEventListener('click', () => {
+        this.closeStrengthenPassionsModal();
+      });
+      
+      // Continue button
+      document.getElementById('strengthen-passions-continue').addEventListener('click', () => {
+        this.processPassionStrengthening();
+      });
+    }
+    
+    // Populate the lists
+    this.populateStrengthenPassions();
+    
+    // Update EXP rolls display
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    document.getElementById('strengthen-passions-exp-rolls').textContent = expRolls;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+
+  /**
+   * Populate the Passions, Alignment, and Oaths lists for strengthening
+   */
+  populateStrengthenPassions() {
+    const alignmentContainer = document.getElementById('strengthen-alignment-list');
+    const passionsContainer = document.getElementById('strengthen-passions-list');
+    const oathsContainer = document.getElementById('strengthen-oaths-list');
+    
+    // Clear existing
+    alignmentContainer.innerHTML = '';
+    passionsContainer.innerHTML = '';
+    oathsContainer.innerHTML = '';
+    
+    // Helper to create row HTML
+    const createRow = (value, name, current) => {
+      return `
+        <label class="skill-checkbox-row">
+          <input type="checkbox" name="strengthen-passion" value="${value}" data-skill-value="${current}">
+          <span class="skill-name">${name}</span>
+          <span class="skill-value">${current}%</span>
+        </label>
+      `;
+    };
+    
+    // Alignment (2 fixed slots)
+    for (let i = 1; i <= 2; i++) {
+      const nameInput = document.getElementById(`alignment-${i}-name`);
+      const currentInput = document.getElementById(`alignment-${i}-current`);
+      
+      if (nameInput && nameInput.value.trim()) {
+        const name = nameInput.value.trim();
+        const current = currentInput?.value || '0';
+        alignmentContainer.innerHTML += createRow(`alignment:${i}`, name, current);
+      }
+    }
+    
+    if (alignmentContainer.innerHTML === '') {
+      alignmentContainer.innerHTML = '<p class="no-skills-message">No alignments defined</p>';
+    }
+    
+    // Passions (dynamically added, check container)
+    const passionsData = [];
+    const passionsContainerEl = document.getElementById('passions-container');
+    if (passionsContainerEl) {
+      const passionRows = passionsContainerEl.querySelectorAll('.belief-row');
+      passionRows.forEach(row => {
+        const index = row.dataset.index;
+        const nameInput = row.querySelector(`#passion-${index}-name`);
+        const currentInput = row.querySelector(`#passion-${index}-current`);
+        
+        if (nameInput && nameInput.value.trim()) {
+          passionsData.push({
+            index: index,
+            name: nameInput.value.trim(),
+            current: currentInput?.value || '0'
+          });
+        }
+      });
+    }
+    
+    // Sort alphabetically
+    passionsData.sort((a, b) => a.name.localeCompare(b.name));
+    
+    passionsData.forEach(passion => {
+      passionsContainer.innerHTML += createRow(`passion:${passion.index}`, passion.name, passion.current);
+    });
+    
+    if (passionsContainer.innerHTML === '') {
+      passionsContainer.innerHTML = '<p class="no-skills-message">No passions defined</p>';
+    }
+    
+    // Oaths (dynamically added, check container)
+    const oathsData = [];
+    const oathsContainerEl = document.getElementById('oaths-container');
+    if (oathsContainerEl) {
+      const oathRows = oathsContainerEl.querySelectorAll('.belief-row');
+      oathRows.forEach(row => {
+        const index = row.dataset.index;
+        const nameInput = row.querySelector(`#oath-${index}-name`);
+        const currentInput = row.querySelector(`#oath-${index}-current`);
+        
+        if (nameInput && nameInput.value.trim()) {
+          oathsData.push({
+            index: index,
+            name: nameInput.value.trim(),
+            current: currentInput?.value || '0'
+          });
+        }
+      });
+    }
+    
+    // Sort alphabetically
+    oathsData.sort((a, b) => a.name.localeCompare(b.name));
+    
+    oathsData.forEach(oath => {
+      oathsContainer.innerHTML += createRow(`oath:${oath.index}`, oath.name, oath.current);
+    });
+    
+    if (oathsContainer.innerHTML === '') {
+      oathsContainer.innerHTML = '<p class="no-skills-message">No oaths defined</p>';
+    }
+    
+    // Add change listeners to enable/disable Continue button
+    this.updateStrengthenContinueButton();
+    document.querySelectorAll('#strengthen-passions-modal input[name="strengthen-passion"]').forEach(cb => {
+      cb.addEventListener('change', () => this.updateStrengthenContinueButton());
+    });
+  },
+
+  /**
+   * Update the Continue button state for Strengthen Passions modal
+   */
+  updateStrengthenContinueButton() {
+    const checked = document.querySelectorAll('#strengthen-passions-modal input[name="strengthen-passion"]:checked');
+    const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    const continueBtn = document.getElementById('strengthen-passions-continue');
+    
+    if (continueBtn) {
+      continueBtn.disabled = checked.length === 0 || checked.length > expRolls;
+      
+      // Update button text to show count
+      if (checked.length > expRolls) {
+        continueBtn.textContent = `Not enough EXP (${checked.length} selected, ${expRolls} available)`;
+      } else if (checked.length > 0) {
+        continueBtn.textContent = `Continue (${checked.length} selected)`;
+      } else {
+        continueBtn.textContent = 'Continue';
+      }
+    }
+  },
+
+  /**
+   * Close the Strengthen Passions modal
+   */
+  closeStrengthenPassionsModal() {
+    const modal = document.getElementById('strengthen-passions-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Process the passion/alignment/oath strengthening - reuse the skill improvement flow
+   */
+  processPassionStrengthening() {
+    const checked = document.querySelectorAll('#strengthen-passions-modal input[name="strengthen-passion"]:checked');
+    
+    if (checked.length === 0) return;
+    
+    // Gather selected items with their display names
+    // Reuse skillsToImprove since the improvement process is the same
+    this.skillsToImprove = Array.from(checked).map(cb => {
+      const row = cb.closest('.skill-checkbox-row');
+      const nameSpan = row.querySelector('.skill-name');
+      return {
+        id: cb.value,
+        name: nameSpan?.textContent || cb.value,
+        currentValue: parseInt(cb.dataset.skillValue, 10) || 0
+      };
+    });
+    
+    // Close the selection modal and open the roll method modal
+    this.closeStrengthenPassionsModal();
+    this.openRollMethodModal();
   },
 
   /**
@@ -9229,7 +9490,7 @@ const App = {
    * Update a skill value on the character sheet
    */
   updateSkillValue(skillId, newValue) {
-    // Parse skill ID format: "standard:skillname", "prof:index", "combat", "magic:id"
+    // Parse skill ID format: "standard:skillname", "prof:index", "combat", "magic:id", "alignment:index", "passion:index", "oath:index"
     const [type, id] = skillId.split(':');
     let el = null;
     
@@ -9249,6 +9510,15 @@ const App = {
     } else if (type === 'magic') {
       // Magical skills
       el = document.getElementById(id);
+    } else if (type === 'alignment') {
+      // Alignment uses alignment-{index}-current
+      el = document.getElementById(`alignment-${id}-current`);
+    } else if (type === 'passion') {
+      // Passions use passion-{index}-current
+      el = document.getElementById(`passion-${id}-current`);
+    } else if (type === 'oath') {
+      // Oaths use oath-{index}-current
+      el = document.getElementById(`oath-${id}-current`);
     }
     
     if (el) {
