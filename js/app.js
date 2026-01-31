@@ -5449,8 +5449,8 @@ const App = {
           <div style="border-top:1px solid var(--border-light); margin:8px 0;"></div>
           <div class="combat-skill-header"><span>Combat Skill</span><span>%</span></div>
           <div class="skill-list">
-            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll d100"><i class="fa-solid fa-dice-d10"></i></button></span></div>
-            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll d100"><i class="fa-solid fa-dice-d10"></i></button></span></div>
+            <div class="skill-item"><span>${combatName}</span><span class="skill-roll">${combatPct}% <button class="d100-btn" data-skill="${combatName}" data-target="${combatPct}" title="Roll d100"><i class="fa-sharp-duotone fa-light fa-dice-d10"></i></button></span></div>
+            <div class="skill-item"><span>Unarmed</span><span class="skill-roll">${unarmedPct}% <button class="d100-btn" data-skill="Unarmed" data-target="${unarmedPct}" title="Roll d100"><i class="fa-sharp-duotone fa-light fa-dice-d10"></i></button></span></div>
           </div>
         `;
         
@@ -5485,7 +5485,7 @@ const App = {
           
           meleeWeapons.forEach(w => {
             if (w.dmg) {
-              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage"><i class="fa-solid fa-dice-d6"></i></button></span></div>`;
+              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage">🎲</button></span></div>`;
             } else {
               html += `<div class="skill-item"><span>${w.name}</span><span>-</span></div>`;
             }
@@ -5493,7 +5493,7 @@ const App = {
           
           // Add Unarmed to melee
           if (unarmedDmg) {
-            html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage"><i class="fa-solid fa-dice-d6"></i></button></span></div>`;
+            html += `<div class="skill-item weapon-row"><span>Unarmed</span><span class="damage-roll">${unarmedDmg} <button class="dice-btn" data-damage="${unarmedDmg}" title="Roll damage">🎲</button></span></div>`;
           }
           
           html += '</div></div>';
@@ -5507,7 +5507,7 @@ const App = {
           
           rangedWeapons.forEach(w => {
             if (w.dmg) {
-              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage"><i class="fa-solid fa-dice-d6"></i></button></span></div>`;
+              html += `<div class="skill-item weapon-row"><span>${w.name}</span><span class="damage-roll">${w.dmg} <button class="dice-btn" data-damage="${w.dmg}" title="Roll damage">🎲</button></span></div>`;
             } else {
               html += `<div class="skill-item"><span>${w.name}</span><span>-</span></div>`;
             }
