@@ -235,7 +235,19 @@ const AbilityDescriptions = {
 AbilityDescriptions.getDescription = function(abilityName) {
   if (!abilityName) return null;
   const normalized = abilityName.toLowerCase().trim();
-  return this[normalized] || null;
+  
+  // First try exact match
+  if (this[normalized]) {
+    return this[normalized];
+  }
+  
+  // Try base name (before parentheses) - e.g., "Weapon Specialization (Longsword)" -> "Weapon Specialization"
+  const baseName = normalized.split('(')[0].trim();
+  if (baseName !== normalized && this[baseName]) {
+    return this[baseName];
+  }
+  
+  return null;
 };
 
 /**

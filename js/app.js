@@ -2018,6 +2018,10 @@ const App = {
       
       // 20 rows per column = 60 total abilities
       for (let i = 0; i < 20; i++) {
+        // Create wrapper for input + info button
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ability-input-wrapper';
+        
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'ability-input';
@@ -2027,13 +2031,38 @@ const App = {
         // Set default tooltip
         input.title = 'Enter a Special Ability name';
         
+        // Info button (shows when there's content)
+        const infoBtn = document.createElement('button');
+        infoBtn.type = 'button';
+        infoBtn.className = 'ability-info-btn';
+        infoBtn.innerHTML = 'ℹ';
+        infoBtn.title = 'Click for ability details';
+        infoBtn.style.display = 'none';
+        
         // Handle ability changes
         input.addEventListener('blur', (e) => {
           this.handleAbilityChange(e.target);
         });
         
-        input.addEventListener('input', () => this.scheduleAutoSave());
-        container.appendChild(input);
+        input.addEventListener('input', () => {
+          // Show/hide info button based on content
+          infoBtn.style.display = input.value.trim() ? '' : 'none';
+          this.scheduleAutoSave();
+        });
+        
+        // Info button click handler
+        infoBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const abilityName = input.value.trim();
+          if (abilityName) {
+            this.showAbilityDetail(abilityName);
+          }
+        });
+        
+        wrapper.appendChild(input);
+        wrapper.appendChild(infoBtn);
+        container.appendChild(wrapper);
       }
     }
   },
@@ -2044,10 +2073,16 @@ const App = {
   handleAbilityChange(input) {
     const value = input.value.trim();
     
+    // Get info button
+    const wrapper = input.closest('.ability-input-wrapper');
+    const infoBtn = wrapper ? wrapper.querySelector('.ability-info-btn') : null;
+    
     if (!value) {
       // Reset tooltip for empty input
       input.title = 'Enter a Special Ability name';
       input.classList.remove('duplicate-warning');
+      // Hide info button
+      if (infoBtn) infoBtn.style.display = 'none';
       return;
     }
     
@@ -2065,6 +2100,9 @@ const App = {
     
     // Update tooltip with ability description
     this.updateAbilityTooltip(input);
+    
+    // Show info button
+    if (infoBtn) infoBtn.style.display = '';
   },
   
   /**
@@ -2075,6 +2113,9 @@ const App = {
     const currentValue = currentInput.value.trim().toLowerCase();
     if (!currentValue) return false;
     
+    // Get base name for repeatable ability check
+    const currentBaseName = currentValue.split('(')[0].trim();
+    
     // Check all other ability inputs (3 columns, 20 rows each)
     for (let col = 1; col <= 3; col++) {
       for (let i = 0; i < 20; i++) {
@@ -2083,7 +2124,7 @@ const App = {
         
         const otherValue = input.value.trim().toLowerCase();
         if (otherValue === currentValue) {
-          // Show warning
+          // Exact duplicate - show warning
           const keepDuplicate = confirm(
             `This ability "${currentInput.value}" already exists in another slot.\n\n` +
             `Do you want to keep this duplicate?\n\n` +
@@ -2098,6 +2139,9 @@ const App = {
           }
           return true;
         }
+        
+        // For repeatable abilities (like Weapon Specialization), different specializations are OK
+        // Only warn if it's an exact duplicate, not just same base name
       }
     }
     return false;
@@ -2126,16 +2170,103 @@ const App = {
       input.title = value;
     }
   },
+
+  /**
+   * Show ability detail popup
+   */
+  showAbilityDetail(abilityName) {
+    if (!abilityName) return;
+    
+    // Get or create the popup overlay
+    let overlay = document.getElementById('ability-detail-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ability-detail-overlay';
+      overlay.className = 'ability-detail-overlay';
+      overlay.innerHTML = `
+        <div class="ability-detail-popup">
+          <div class="ability-detail-header">
+            <h3 class="ability-detail-title"></h3>
+            <button class="ability-detail-close">&times;</button>
+          </div>
+          <div class="ability-detail-body">
+            <p class="ability-detail-description"></p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      
+      // Close handlers
+      overlay.querySelector('.ability-detail-close').addEventListener('click', () => {
+        this.closeAbilityDetail();
+      });
+      
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.closeAbilityDetail();
+        }
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+          this.closeAbilityDetail();
+        }
+      });
+    }
+    
+    // Get the description
+    let description = 'No description available for this ability.';
+    if (window.AbilityDescriptions) {
+      const desc = AbilityDescriptions.getDescription(abilityName);
+      if (desc) {
+        description = desc;
+      }
+    }
+    
+    // Get base name for title (capitalize properly)
+    const displayName = this.toTitleCase(abilityName);
+    
+    // Update content
+    overlay.querySelector('.ability-detail-title').textContent = displayName;
+    overlay.querySelector('.ability-detail-description').textContent = description;
+    
+    // Show overlay
+    overlay.classList.add('active');
+  },
+
+  /**
+   * Close ability detail popup
+   */
+  closeAbilityDetail() {
+    const overlay = document.getElementById('ability-detail-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  },
   
   /**
-   * Update all ability tooltips (called on load)
+   * Update all ability tooltips and info buttons (called on load)
    */
   updateAllAbilityTooltips() {
     for (let col = 1; col <= 3; col++) {
       for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
-          this.updateAbilityTooltip(input);
+        if (input) {
+          const hasValue = input.value.trim();
+          
+          // Update tooltip
+          if (hasValue) {
+            this.updateAbilityTooltip(input);
+          }
+          
+          // Show/hide info button
+          const wrapper = input.closest('.ability-input-wrapper');
+          if (wrapper) {
+            const infoBtn = wrapper.querySelector('.ability-info-btn');
+            if (infoBtn) {
+              infoBtn.style.display = hasValue ? '' : 'none';
+            }
+          }
         }
       }
     }
@@ -2165,6 +2296,16 @@ const App = {
         if (input && !input.value.trim()) {
           input.value = this.toTitleCase(abilityName);
           this.updateAbilityTooltip(input);
+          
+          // Show the info button
+          const wrapper = input.closest('.ability-input-wrapper');
+          if (wrapper) {
+            const infoBtn = wrapper.querySelector('.ability-info-btn');
+            if (infoBtn) {
+              infoBtn.style.display = '';
+            }
+          }
+          
           return true;
         }
       }
@@ -9667,12 +9808,19 @@ const App = {
     availableList.innerHTML = '';
     unqualifiedList.innerHTML = '';
     
+    // Rank 0 has no purchasable abilities
+    if (rank === 0) {
+      availableList.innerHTML = '<p class="no-abilities">Rank 0 has no purchasable abilities.</p>';
+      document.querySelector('.abilities-divider').style.display = 'none';
+      document.querySelector('.unqualified-abilities').style.display = 'none';
+      return;
+    }
+    
     // Get abilities for this class at this rank
     const abilities = getRankedAbilitiesForClass(className, rank);
     
     if (abilities.length === 0) {
-      availableList.innerHTML = '<p class="no-abilities">No abilities available at this rank.</p>';
-      unqualifiedList.innerHTML = '';
+      availableList.innerHTML = '<p class="no-abilities">No abilities available at this rank for this class.</p>';
       document.querySelector('.abilities-divider').style.display = 'none';
       document.querySelector('.unqualified-abilities').style.display = 'none';
       return;
@@ -9684,15 +9832,21 @@ const App = {
     // Helper to get skill value
     const getSkillValue = (skillName) => this.getSkillValueByName(skillName);
     
-    // Sort abilities into qualified and unqualified
-    const qualified = [];
-    const unqualified = [];
+    // Sort abilities into categories
+    const available = [];      // Can select
+    const acquired = [];       // Already have (shown at bottom)
+    const unqualified = [];    // Missing prereqs
     
     abilities.forEach(ability => {
-      // Check if already acquired
-      if (acquiredAbilities.has(ability.name)) {
-        // Show as acquired (greyed out)
-        qualified.push({ ...ability, acquired: true });
+      // Check if already acquired (using base name matching)
+      const alreadyHas = hasAbility(ability.name, acquiredAbilities);
+      
+      // Check if this is a repeatable ability (can take multiple times)
+      const repeatable = isRepeatableAbility(ability.name);
+      
+      if (alreadyHas && !repeatable) {
+        // Show as acquired (greyed out) - goes to bottom
+        acquired.push({ ...ability, acquired: true });
         return;
       }
       
@@ -9700,17 +9854,23 @@ const App = {
       const prereqCheck = checkAbilityPrereqs(ability.prereqs, acquiredAbilities, getSkillValue);
       
       if (prereqCheck.met) {
-        qualified.push({ ...ability, acquired: false });
+        available.push({ ...ability, acquired: false, repeatable });
       } else {
         unqualified.push({ ...ability, missing: prereqCheck.missing });
       }
     });
     
-    // Render qualified abilities
-    if (qualified.length === 0) {
+    // Render available abilities first
+    if (available.length === 0 && acquired.length === 0) {
       availableList.innerHTML = '<p class="no-abilities">All abilities at this rank require prerequisites you don\'t have yet.</p>';
     } else {
-      qualified.forEach(ability => {
+      // Available abilities (selectable)
+      available.forEach(ability => {
+        availableList.appendChild(this.createAbilityRow(ability, rank));
+      });
+      
+      // Already acquired abilities (at bottom, greyed out)
+      acquired.forEach(ability => {
         availableList.appendChild(this.createAbilityRow(ability, rank));
       });
     }

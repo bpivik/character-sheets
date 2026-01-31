@@ -8,115 +8,38 @@
  * - "AbilityName" (no %) = requires that ability first
  * - "AbilityName; SkillName 50%" = requires ability AND skill (semicolon = AND)
  * - null = no prerequisites
+ * 
+ * Special flags:
+ * - repeatable: true = can be taken multiple times (e.g., Weapon Specialization)
+ * - specialType: 'weapon-spec' = triggers weapon specialization sub-selection
  */
 
 const RANKED_CLASS_ABILITIES = {
-  bard: [
-    // Rank 0
-    { 
-      name: "Starting Ability Placeholder", 
-      rank: 0, 
-      prereqs: null,
-      summary: "Placeholder for Rank 0 ability"
-    },
-    
-    // Rank 1
-    { 
-      name: "Agile", 
-      rank: 1, 
-      prereqs: "Evade 50% OR Acrobatics 50%",
-      summary: "+4 Initiative (Unburdened, Light armor max)"
-    },
-    { 
-      name: "Artful Dodger", 
-      rank: 1, 
-      prereqs: "Evade 50%",
-      summary: "+10% Evade, dodge melee without falling prone (Unburdened, Light armor max)"
-    },
-    { 
-      name: "Inspire Competence", 
-      rank: 1, 
-      prereqs: "Musicianship 60%; Willpower 60%",
-      summary: "1 MP: allies within 30ft get +10% to skills for 5 rounds"
-    },
-    { 
-      name: "Language (Druids' Cant)", 
-      rank: 1, 
-      prereqs: null,
-      summary: "Secret druidic language for nature communication (Druidic bards only)"
-    },
-    { 
-      name: "Language (Thieves' Cant)", 
-      rank: 1, 
-      prereqs: null,
-      summary: "Secret language for discussing illicit activities (Arcane bards only)"
-    },
-    { 
-      name: "Skirmishing", 
-      rank: 1, 
-      prereqs: "Athletics 50%; Combat Style 50%",
-      summary: "Ranged attacks while running (capped by Athletics)"
-    },
-    { 
-      name: "Swashbuckling", 
-      rank: 1, 
-      prereqs: "Combat Style 50%",
-      summary: "Attack/Evade while jumping or swinging, ignore Athletics cap (Unburdened, Light armor max)"
-    },
-    { 
-      name: "Unarmored Defense", 
-      rank: 1, 
-      prereqs: "Artful Dodger; Evade 50% OR Acrobatics 50%",
-      summary: "Evade rolls one grade easier (unarmored, Unburdened)"
-    },
-    { 
-      name: "Weapon Precision", 
-      rank: 1, 
-      prereqs: null,
-      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
-    },
-    
-    // Rank 2 placeholder
-    { 
-      name: "Rank 2 Ability Placeholder", 
-      rank: 2, 
-      prereqs: null,
-      summary: "Placeholder for Rank 2 ability"
-    },
-  ],
-  
-  fighter: [
-    // Rank 1
-    { 
-      name: "Agile", 
-      rank: 1, 
-      prereqs: "Evade 50% OR Acrobatics 50%",
-      summary: "+4 Initiative (Unburdened, Light armor max)"
-    },
-    { 
-      name: "Skirmishing", 
-      rank: 1, 
-      prereqs: "Athletics 50%; Combat Style 50%",
-      summary: "Ranged attacks while running (capped by Athletics)"
-    },
-    
-    // Rank 2 - Fighter gets some abilities at higher ranks
-    { 
-      name: "Artful Dodger", 
-      rank: 2, 
-      prereqs: "Evade 50%",
-      summary: "+10% Evade, dodge melee without falling prone (Unburdened, Light armor max)"
-    },
-  ],
-  
-  // Add more classes as data is provided...
+  // Classes will be populated as data is provided
+  // Example structure:
+  // bard: [
+  //   { name: "Ability Name", rank: 1, prereqs: "Skill 50%", summary: "Description" },
+  // ],
+};
+
+/**
+ * Abilities that can be taken multiple times (with different specializations)
+ */
+const REPEATABLE_ABILITIES = {
+  'Weapon Specialization': {
+    types: ['Melee', 'Ranged', 'Shield'],
+    // Ranged grants additional abilities
+    grantsAbilities: {
+      'Ranged': ['Quick Shot', 'Improved Aim', 'Reduced Reload Time']
+    }
+  }
 };
 
 /**
  * Get abilities for a class at a specific rank
  */
 function getRankedAbilitiesForClass(className, rank) {
-  const classKey = className.toLowerCase().replace('-', '').trim();
+  const classKey = className.toLowerCase().replace('-', '').replace(' ', '').trim();
   const abilities = RANKED_CLASS_ABILITIES[classKey];
   if (!abilities) return [];
   return abilities.filter(a => a.rank === rank);
@@ -126,7 +49,7 @@ function getRankedAbilitiesForClass(className, rank) {
  * Get all abilities for a class up to a specific rank
  */
 function getAllRankedAbilitiesUpToRank(className, maxRank) {
-  const classKey = className.toLowerCase().replace('-', '').trim();
+  const classKey = className.toLowerCase().replace('-', '').replace(' ', '').trim();
   const abilities = RANKED_CLASS_ABILITIES[classKey];
   if (!abilities) return [];
   return abilities.filter(a => a.rank <= maxRank);
@@ -197,16 +120,58 @@ function checkSingleCondition(condition, acquiredAbilities, getSkillValue) {
     }
   }
   
-  // Otherwise it's an ability requirement
-  if (acquiredAbilities.has(condition)) {
-    return { met: true };
-  } else {
-    return { met: false, reason: `${condition} ability` };
+  // Otherwise it's an ability requirement - check base name (before parentheses)
+  const baseCondition = condition.split('(')[0].trim();
+  
+  // Check if any acquired ability matches (with or without parenthetical suffix)
+  for (const acquired of acquiredAbilities) {
+    const baseAcquired = acquired.split('(')[0].trim();
+    if (baseAcquired.toLowerCase() === baseCondition.toLowerCase()) {
+      return { met: true };
+    }
   }
+  
+  return { met: false, reason: `${condition} ability` };
+}
+
+/**
+ * Check if character has a specific ability (accounting for parenthetical variants)
+ * e.g., "Weapon Specialization" matches "Weapon Specialization (Longsword)"
+ */
+function hasAbility(abilityName, acquiredAbilities) {
+  const baseName = abilityName.split('(')[0].trim().toLowerCase();
+  
+  for (const acquired of acquiredAbilities) {
+    const baseAcquired = acquired.split('(')[0].trim().toLowerCase();
+    if (baseAcquired === baseName) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if an ability is repeatable (can be taken multiple times)
+ */
+function isRepeatableAbility(abilityName) {
+  const baseName = abilityName.split('(')[0].trim();
+  return REPEATABLE_ABILITIES.hasOwnProperty(baseName);
+}
+
+/**
+ * Get the repeatable ability info
+ */
+function getRepeatableAbilityInfo(abilityName) {
+  const baseName = abilityName.split('(')[0].trim();
+  return REPEATABLE_ABILITIES[baseName] || null;
 }
 
 // Make available globally
 window.RANKED_CLASS_ABILITIES = RANKED_CLASS_ABILITIES;
+window.REPEATABLE_ABILITIES = REPEATABLE_ABILITIES;
 window.getRankedAbilitiesForClass = getRankedAbilitiesForClass;
 window.getAllRankedAbilitiesUpToRank = getAllRankedAbilitiesUpToRank;
 window.checkAbilityPrereqs = checkAbilityPrereqs;
+window.hasAbility = hasAbility;
+window.isRepeatableAbility = isRepeatableAbility;
+window.getRepeatableAbilityInfo = getRepeatableAbilityInfo;
