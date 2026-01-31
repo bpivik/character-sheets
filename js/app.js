@@ -2142,6 +2142,40 @@ const App = {
   },
 
   /**
+   * Add an ability to the Special Abilities section (first empty slot)
+   * @param {string} abilityName - Name of the ability to add
+   * @returns {boolean} - True if successfully added
+   */
+  addAbilityToSheet(abilityName) {
+    // Check if ability already exists
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim().toLowerCase() === abilityName.toLowerCase()) {
+          // Already exists
+          return true;
+        }
+      }
+    }
+    
+    // Find first empty slot
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && !input.value.trim()) {
+          input.value = this.toTitleCase(abilityName);
+          this.updateAbilityTooltip(input);
+          return true;
+        }
+      }
+    }
+    
+    // No empty slots found
+    console.warn(`No empty ability slots available for: ${abilityName}`);
+    return false;
+  },
+
+  /**
    * Sort special abilities alphabetically
    */
   sortSpecialAbilities() {
@@ -9739,8 +9773,19 @@ const App = {
    * Get set of acquired abilities
    */
   getAcquiredAbilities() {
-    // Load from character data
+    // Start with tracked acquired abilities
     const abilities = new Set(this.character.acquiredAbilities || []);
+    
+    // Also include abilities already on the sheet (manually added or from auto-grant)
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          abilities.add(input.value.trim());
+        }
+      }
+    }
+    
     return abilities;
   },
 
@@ -9848,7 +9893,7 @@ const App = {
       newAbilities.push(cb.value);
     });
     
-    // Add to acquired abilities
+    // Add to acquired abilities tracking
     if (!this.character.acquiredAbilities) {
       this.character.acquiredAbilities = [];
     }
@@ -9856,6 +9901,11 @@ const App = {
       if (!this.character.acquiredAbilities.includes(name)) {
         this.character.acquiredAbilities.push(name);
       }
+    });
+    
+    // Add abilities to the Special Abilities section on Combat page
+    newAbilities.forEach(name => {
+      this.addAbilityToSheet(name);
     });
     
     // Deduct EXP rolls
@@ -9869,7 +9919,7 @@ const App = {
     // Close modal and show success
     this.closeUnlockAbilitiesModal();
     
-    alert(`Unlocked ${newAbilities.length} ability${newAbilities.length > 1 ? 'ies' : ''}:\n\n• ${newAbilities.join('\n• ')}\n\nSpent ${totalCost} EXP Rolls.`);
+    alert(`Unlocked ${newAbilities.length} ability${newAbilities.length > 1 ? 'ies' : ''}:\n\n• ${newAbilities.join('\n• ')}\n\nSpent ${totalCost} EXP Rolls.\n\nAbilities added to Special Abilities on Combat page.`);
     
     // Auto-save
     this.scheduleAutoSave();
