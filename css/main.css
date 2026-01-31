@@ -4012,18 +4012,9 @@ select:focus {
 .damage-total {
   font-size: 4rem;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-  margin-bottom: 16px;
-}
-
-.damage-total.damage-high {
   color: #e94560;
   text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
-}
-
-.damage-total.damage-low {
-  color: #666;
+  margin-bottom: 16px;
 }
 
 .damage-close {

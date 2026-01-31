@@ -6226,15 +6226,6 @@ const App = {
     overlay.querySelector('.damage-breakdown').textContent = breakdown;
     overlay.querySelector('.damage-total').textContent = result.total;
     
-    // Add color based on roll
-    const totalEl = overlay.querySelector('.damage-total');
-    totalEl.className = 'damage-total';
-    if (result.total >= 10) {
-      totalEl.classList.add('damage-high');
-    } else if (result.total <= 2) {
-      totalEl.classList.add('damage-low');
-    }
-    
     overlay.classList.add('visible');
   },
   
