@@ -5899,6 +5899,9 @@ const App = {
         }
       });
     }
+    
+    // Setup event delegation for widget buttons (spin buttons, dice rolls)
+    this.setupWidgetEventListeners();
   },
   
   /**
@@ -6053,9 +6056,6 @@ const App = {
     item.appendChild(removeBtn);
     canvas.appendChild(item);
     
-    // Setup event listeners for interactive widgets (combat stats, dice rolls)
-    this.setupWidgetEventListeners(content);
-    
     if (save) {
       this.saveSummaryLayout();
     }
@@ -6063,18 +6063,27 @@ const App = {
 
   /**
    * Setup event listeners for interactive widget elements
+   * Uses event delegation on the canvas for reliability
    */
-  setupWidgetEventListeners(container) {
-    // Spinner buttons for combat stats
-    container.querySelectorAll('.spin-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+  setupWidgetEventListeners() {
+    // Get the canvas element for event delegation
+    const canvas = document.getElementById('summary-canvas');
+    if (!canvas || canvas.dataset.listenersAttached) return;
+    
+    // Mark as attached to prevent duplicate listeners
+    canvas.dataset.listenersAttached = 'true';
+    
+    // Event delegation for all widget buttons
+    canvas.addEventListener('click', (e) => {
+      // Handle spin buttons
+      const spinBtn = e.target.closest('.spin-btn');
+      if (spinBtn) {
         e.stopPropagation();
-        const targetId = btn.dataset.target;
-        const max = parseInt(btn.dataset.max, 10) || 99;
-        const isUp = btn.classList.contains('spin-up');
+        const targetId = spinBtn.dataset.target;
+        const max = parseInt(spinBtn.dataset.max, 10) || 99;
+        const isUp = spinBtn.classList.contains('spin-up');
         
-        // Find the value span (sibling)
-        const spinner = btn.closest('.stat-spinner');
+        const spinner = spinBtn.closest('.stat-spinner');
         const valueSpan = spinner?.querySelector('.stat-value');
         
         if (!valueSpan) return;
@@ -6097,18 +6106,19 @@ const App = {
         }
         
         this.scheduleAutoSave();
-      });
-    });
-    
-    // Dice roll buttons for weapons
-    container.querySelectorAll('.dice-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+        return;
+      }
+      
+      // Handle dice buttons
+      const diceBtn = e.target.closest('.dice-btn');
+      if (diceBtn) {
         e.stopPropagation();
-        const damage = btn.dataset.damage;
+        const damage = diceBtn.dataset.damage;
         if (damage) {
           this.rollDamage(damage);
         }
-      });
+        return;
+      }
     });
   },
 
