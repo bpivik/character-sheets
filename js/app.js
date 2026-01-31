@@ -97,6 +97,9 @@ const App = {
     // Initial calculations
     this.recalculateAll();
     
+    // Restore characteristic increase display name if applicable
+    this.restoreCharacteristicIncreaseDisplay();
+    
     console.log('Initialization complete!');
   },
 
@@ -9829,6 +9832,10 @@ const App = {
     // Get acquired abilities
     const acquiredAbilities = this.getAcquiredAbilities();
     
+    // Get characteristic increases for this character
+    const charIncreases = this.character.characteristicIncreases || [];
+    const charIncreasesAtThisRank = charIncreases.filter(inc => inc.rank === rank);
+    
     // Helper to get skill value
     const getSkillValue = (skillName) => this.getSkillValueByName(skillName);
     
@@ -9838,6 +9845,19 @@ const App = {
     const unqualified = [];    // Missing prereqs
     
     abilities.forEach(ability => {
+      // Special handling for Characteristic Increase - once per rank
+      if (ability.name === 'Characteristic Increase') {
+        if (charIncreasesAtThisRank.length > 0) {
+          // Already took it at this rank
+          const charTaken = charIncreasesAtThisRank[0].char;
+          acquired.push({ ...ability, acquired: true, acquiredNote: `+1 ${charTaken}` });
+        } else {
+          // Available to take at this rank
+          available.push({ ...ability, acquired: false });
+        }
+        return;
+      }
+      
       // Check if already acquired (using base name matching)
       const alreadyHas = hasAbility(ability.name, acquiredAbilities);
       
@@ -9912,7 +9932,10 @@ const App = {
     `;
     
     if (ability.acquired) {
-      html += `<div class="ability-status acquired">✓ Already Acquired</div>`;
+      const acquiredText = ability.acquiredNote 
+        ? `✓ Already Acquired (${ability.acquiredNote})`
+        : '✓ Already Acquired';
+      html += `<div class="ability-status acquired">${acquiredText}</div>`;
     } else if (ability.missing && ability.missing.length > 0) {
       html += `<div class="ability-status missing">⚠ Requires: ${ability.missing.join(', ')}</div>`;
     }
@@ -10047,12 +10070,272 @@ const App = {
     
     let totalCost = 0;
     const newAbilities = [];
+    let characteristicIncreaseRank = null;
     
     checked.forEach(cb => {
-      totalCost += parseInt(cb.dataset.cost, 10) || 0;
-      newAbilities.push(cb.value);
+      const cost = parseInt(cb.dataset.cost, 10) || 0;
+      totalCost += cost;
+      const abilityName = cb.value;
+      
+      // Check for Characteristic Increase - needs special handling
+      if (abilityName === 'Characteristic Increase') {
+        characteristicIncreaseRank = cost; // The rank is the cost
+      } else {
+        newAbilities.push(abilityName);
+      }
     });
     
+    // If Characteristic Increase was selected, show the selection modal
+    if (characteristicIncreaseRank !== null) {
+      // Store the other abilities and cost for after characteristic selection
+      this.pendingAbilityUnlock = {
+        abilities: newAbilities,
+        totalCost: totalCost,
+        characteristicRank: characteristicIncreaseRank
+      };
+      this.closeUnlockAbilitiesModal();
+      this.showCharacteristicIncreaseModal(characteristicIncreaseRank);
+      return;
+    }
+    
+    // No Characteristic Increase - proceed normally
+    this.finalizeAbilityUnlock(newAbilities, totalCost);
+  },
+
+  /**
+   * Show the characteristic selection modal for Characteristic Increase ability
+   */
+  showCharacteristicIncreaseModal(rank) {
+    let modal = document.getElementById('characteristic-increase-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'characteristic-increase-modal';
+      modal.className = 'modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="modal-content characteristic-increase-modal-content">
+          <div class="modal-header">
+            <h3>Characteristic Increase</h3>
+            <button class="modal-close" id="char-increase-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="char-increase-instructions">Choose a Characteristic to increase by +1:</p>
+            <div class="char-increase-options">
+              <label class="char-option"><input type="radio" name="char-increase" value="STR"><span class="char-label">STR</span><span class="char-current" id="char-inc-str-val"></span></label>
+              <label class="char-option"><input type="radio" name="char-increase" value="CON"><span class="char-label">CON</span><span class="char-current" id="char-inc-con-val"></span></label>
+              <label class="char-option"><input type="radio" name="char-increase" value="SIZ"><span class="char-label">SIZ</span><span class="char-current" id="char-inc-siz-val"></span></label>
+              <label class="char-option"><input type="radio" name="char-increase" value="DEX"><span class="char-label">DEX</span><span class="char-current" id="char-inc-dex-val"></span></label>
+              <label class="char-option"><input type="radio" name="char-increase" value="INT"><span class="char-label">INT</span><span class="char-current" id="char-inc-int-val"></span></label>
+              <label class="char-option"><input type="radio" name="char-increase" value="POW"><span class="char-label">POW</span><span class="char-current" id="char-inc-pow-val"></span></label>
+              <label class="char-option"><input type="radio" name="char-increase" value="CHA"><span class="char-label">CHA</span><span class="char-current" id="char-inc-cha-val"></span></label>
+            </div>
+            <p class="char-increase-note">Note: Cannot exceed racial maximum.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="char-increase-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="char-increase-confirm" disabled>Confirm</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Close handlers
+      document.getElementById('char-increase-modal-close').addEventListener('click', () => {
+        this.closeCharacteristicIncreaseModal();
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeCharacteristicIncreaseModal();
+        }
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          this.closeCharacteristicIncreaseModal();
+        }
+      });
+      
+      // Cancel button
+      document.getElementById('char-increase-cancel').addEventListener('click', () => {
+        this.closeCharacteristicIncreaseModal();
+      });
+      
+      // Radio button change
+      modal.querySelectorAll('input[name="char-increase"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.getElementById('char-increase-confirm').disabled = false;
+        });
+      });
+      
+      // Confirm button
+      document.getElementById('char-increase-confirm').addEventListener('click', () => {
+        this.confirmCharacteristicIncrease();
+      });
+    }
+    
+    // Update current values display
+    const chars = ['str', 'con', 'siz', 'dex', 'int', 'pow', 'cha'];
+    chars.forEach(char => {
+      const input = document.getElementById(`${char}-value`);
+      const display = document.getElementById(`char-inc-${char}-val`);
+      if (input && display) {
+        display.textContent = `(${input.value || 0})`;
+      }
+    });
+    
+    // Store the rank
+    modal.dataset.rank = rank;
+    
+    // Reset selection
+    modal.querySelectorAll('input[name="char-increase"]').forEach(radio => {
+      radio.checked = false;
+    });
+    document.getElementById('char-increase-confirm').disabled = true;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+
+  /**
+   * Close the characteristic increase modal
+   */
+  closeCharacteristicIncreaseModal() {
+    const modal = document.getElementById('characteristic-increase-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+    // Clear pending unlock if cancelled
+    this.pendingAbilityUnlock = null;
+  },
+
+  /**
+   * Confirm the characteristic increase selection
+   */
+  confirmCharacteristicIncrease() {
+    const modal = document.getElementById('characteristic-increase-modal');
+    const selected = modal.querySelector('input[name="char-increase"]:checked');
+    if (!selected) return;
+    
+    const charName = selected.value; // e.g., "STR"
+    const rank = parseInt(modal.dataset.rank, 10);
+    
+    // Get current value and increase it
+    const charInput = document.getElementById(`${charName.toLowerCase()}-value`);
+    if (charInput) {
+      const currentVal = parseInt(charInput.value, 10) || 0;
+      charInput.value = currentVal + 1;
+      // Trigger recalculations
+      charInput.dispatchEvent(new Event('input', { bubbles: true }));
+      charInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    // Track the characteristic increase
+    if (!this.character.characteristicIncreases) {
+      this.character.characteristicIncreases = [];
+    }
+    this.character.characteristicIncreases.push({ rank, char: charName });
+    
+    // Build the ability name with all increases
+    const abilityDisplayName = this.buildCharacteristicIncreaseName();
+    
+    // Close modal
+    modal.classList.add('hidden');
+    
+    // Now finalize the ability unlock with the other abilities
+    const pending = this.pendingAbilityUnlock;
+    if (pending) {
+      // Add the characteristic increase ability to the list
+      const allAbilities = [...pending.abilities];
+      
+      // Add to acquired abilities tracking (use base name for prereq checking)
+      if (!this.character.acquiredAbilities) {
+        this.character.acquiredAbilities = [];
+      }
+      
+      // Add other abilities
+      allAbilities.forEach(name => {
+        if (!this.character.acquiredAbilities.includes(name)) {
+          this.character.acquiredAbilities.push(name);
+        }
+      });
+      
+      // Add abilities to sheet
+      allAbilities.forEach(name => {
+        this.addAbilityToSheet(name);
+      });
+      
+      // Update or add the Characteristic Increase ability on sheet
+      this.updateCharacteristicIncreaseOnSheet(abilityDisplayName);
+      
+      // Deduct EXP rolls
+      const expRollsInput = document.getElementById('exp-rolls');
+      if (expRollsInput) {
+        const currentExp = parseInt(expRollsInput.value, 10) || 0;
+        expRollsInput.value = Math.max(0, currentExp - pending.totalCost);
+        expRollsInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      
+      // Recalculate everything
+      this.recalculateAll();
+      
+      // Show success message
+      const allNames = [...allAbilities];
+      allNames.push(`Characteristic Increase (+1 ${charName})`);
+      
+      alert(`Unlocked ${allNames.length} ability${allNames.length > 1 ? 'ies' : ''}:\n\n• ${allNames.join('\n• ')}\n\nSpent ${pending.totalCost} EXP Rolls.\n\nAbilities added to Special Abilities on Combat page.`);
+      
+      this.pendingAbilityUnlock = null;
+      this.scheduleAutoSave();
+    }
+  },
+
+  /**
+   * Build the display name for Characteristic Increase with all ranks/chars
+   */
+  buildCharacteristicIncreaseName() {
+    const increases = this.character.characteristicIncreases || [];
+    if (increases.length === 0) return 'Characteristic Increase';
+    
+    const parts = increases.map(inc => `Rank ${inc.rank}: ${inc.char}`);
+    return `Characteristic Increase (${parts.join(', ')})`;
+  },
+
+  /**
+   * Update or add the Characteristic Increase ability on the sheet
+   */
+  updateCharacteristicIncreaseOnSheet(displayName) {
+    // Look for existing Characteristic Increase entry
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.toLowerCase().startsWith('characteristic increase')) {
+          // Update existing entry
+          input.value = displayName;
+          this.updateAbilityTooltip(input);
+          return;
+        }
+      }
+    }
+    
+    // Not found, add new
+    this.addAbilityToSheet(displayName);
+  },
+
+  /**
+   * Restore the Characteristic Increase display name on page load
+   */
+  restoreCharacteristicIncreaseDisplay() {
+    const increases = this.character.characteristicIncreases || [];
+    if (increases.length === 0) return;
+    
+    const displayName = this.buildCharacteristicIncreaseName();
+    this.updateCharacteristicIncreaseOnSheet(displayName);
+  },
+
+  /**
+   * Finalize the ability unlock (when no Characteristic Increase is involved)
+   */
+  finalizeAbilityUnlock(newAbilities, totalCost) {
     // Add to acquired abilities tracking
     if (!this.character.acquiredAbilities) {
       this.character.acquiredAbilities = [];

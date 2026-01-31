@@ -174,7 +174,11 @@ const StorageManager = {
       images: {
         fullBody: null,
         portrait: null
-      }
+      },
+      
+      // Abilities tracking
+      acquiredAbilities: [],
+      characteristicIncreases: []
     };
   },
 

@@ -3972,6 +3972,69 @@ select:focus {
   font-style: italic;
 }
 
+/* Characteristic Increase Modal */
+.characteristic-increase-modal-content {
+  max-width: 400px;
+  width: 90%;
+}
+
+.char-increase-instructions {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-body);
+  margin-bottom: 1rem;
+}
+
+.char-increase-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.char-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--border-light);
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.char-option:hover {
+  border-color: var(--border-gold);
+  background: #fffef5;
+}
+
+.char-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--border-gold);
+}
+
+.char-option .char-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-header);
+  min-width: 40px;
+}
+
+.char-option .char-current {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.char-increase-note {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 1rem;
+}
+
 .improve-skills-instructions {
   text-align: center;
   color: var(--text-secondary);
