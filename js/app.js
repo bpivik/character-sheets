@@ -415,7 +415,7 @@ const App = {
           val = Math.max(0, Math.min(5, val));
           field.value = val;
           this.character.info[this.camelCase(fieldId)] = val;
-          this.recalculateAll(true); // Force update even if locked
+          this.recalculateAll();
           this.scheduleAutoSave();
         };
         field.addEventListener('input', handleRankChange);
@@ -427,7 +427,7 @@ const App = {
     const speciesField = document.getElementById('species');
     if (speciesField) {
       const handleSpeciesChange = () => {
-        this.recalculateAll(true); // Force update even if locked
+        this.recalculateAll();
       };
       speciesField.addEventListener('input', handleSpeciesChange);
       speciesField.addEventListener('change', handleSpeciesChange);
@@ -522,7 +522,7 @@ const App = {
               this.updateSheetTypeFromSpecies(previousSpecies);
               field.dataset.previousValue = currentSpecies;
               // Recalculate for human luck bonus - force update even if locked
-              this.recalculateAll(true);
+              this.recalculateAll();
             }
             
             this.updateMagicVisibility();
@@ -2335,29 +2335,12 @@ const App = {
       }
     }
     
-    // Restore locked original values if locked
+    // Restore locked characteristics state if locked
     if (this.character.originalsLocked) {
-      const originalMapping = {
-        'action-points-original': 'actionPointsOriginal',
-        'damage-mod-original': 'damageModOriginal',
-        'exp-mod-original': 'expModOriginal',
-        'healing-rate-original': 'healingRateOriginal',
-        'initiative-original': 'initiativeOriginal',
-        'luck-original': 'luckOriginal',
-        'magic-points-original': 'magicPointsOriginal'
-      };
-      
-      for (const [fieldId, key] of Object.entries(originalMapping)) {
-        const field = document.getElementById(fieldId);
-        if (field && this.character.derived[key] !== undefined) {
-          field.value = this.character.derived[key];
-        }
-      }
-      
       // Update button state to show locked
       const btn = document.getElementById('unlock-originals-btn');
       if (btn) {
-        btn.textContent = '🔒 Unlock Characteristics and Original Attributes';
+        btn.textContent = '🔒 Unlock Characteristics';
         btn.classList.remove('unlocked');
       }
     }
@@ -2915,9 +2898,8 @@ const App = {
 
   /**
    * Recalculate all derived values
-   * @param {boolean} forceUpdate - If true, bypasses originalsLocked check (used for rank/species changes)
    */
-  recalculateAll(forceUpdate = false) {
+  recalculateAll() {
     const attrs = this.character.attributes;
     
     // Calculate combined rank from all classes
@@ -2936,58 +2918,57 @@ const App = {
     const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
-    // Debug logging
-    console.log('recalculateAll called:', { combinedRank, species, isHuman, forceUpdate, originalsLocked: this.character.originalsLocked });
-    
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
     
-    console.log('Calculator results:', results.derived);
-    console.log('Will update:', !this.character.originalsLocked || forceUpdate);
+    // Always update original attribute values (they are auto-calculated and readonly)
+    const apOrig = document.getElementById('action-points-original');
+    if (apOrig) {
+      apOrig.value = results.derived.actionPoints;
+    }
     
-    // Update original values if NOT locked OR if forceUpdate is true (rank/species changes)
-    if (!this.character.originalsLocked || forceUpdate) {
-      const apOrig = document.getElementById('action-points-original');
-      if (apOrig) {
-        apOrig.value = results.derived.actionPoints;
-      }
-      
-      const dmgOrig = document.getElementById('damage-mod-original');
-      if (dmgOrig) {
-        dmgOrig.value = results.derived.damageModifier;
-      }
-      
-      const expOrig = document.getElementById('exp-mod-original');
-      if (expOrig) {
-        expOrig.value = results.derived.expMod;
-      }
-      
-      const healOrig = document.getElementById('healing-rate-original');
-      if (healOrig) {
-        healOrig.value = results.derived.healingRate;
-      }
-      
-      const initOrig = document.getElementById('initiative-original');
-      if (initOrig) {
-        initOrig.value = results.derived.initiative;
-      }
-      
-      const luckOrig = document.getElementById('luck-original');
-      if (luckOrig) {
-        luckOrig.value = results.derived.luckPoints;
-      }
-      
-      const magicOrig = document.getElementById('magic-points-original');
-      if (magicOrig) {
-        magicOrig.value = results.derived.magicPoints;
-      }
-      
-      // Update hit location HPs (original only)
-      this.updateHitLocationHPs(results.hitLocations);
-      
-      // Update weapon damage displays when damage modifier changes
-      if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-        window.WeaponData.updateAllWeaponDamage();
-      }
+    const dmgOrig = document.getElementById('damage-mod-original');
+    if (dmgOrig) {
+      dmgOrig.value = results.derived.damageModifier;
+    }
+    
+    const expOrig = document.getElementById('exp-mod-original');
+    if (expOrig) {
+      expOrig.value = results.derived.expMod;
+    }
+    
+    const healOrig = document.getElementById('healing-rate-original');
+    if (healOrig) {
+      healOrig.value = results.derived.healingRate;
+    }
+    
+    const initOrig = document.getElementById('initiative-original');
+    if (initOrig) {
+      initOrig.value = results.derived.initiative;
+    }
+    
+    const luckOrig = document.getElementById('luck-original');
+    if (luckOrig) {
+      luckOrig.value = results.derived.luckPoints;
+    }
+    
+    const magicOrig = document.getElementById('magic-points-original');
+    if (magicOrig) {
+      magicOrig.value = results.derived.magicPoints;
+    }
+    
+    // Update hit location HPs (original only)
+    this.updateHitLocationHPs(results.hitLocations);
+    
+    // Update movement rate from species
+    const movementOrig = document.getElementById('movement-original');
+    if (movementOrig && window.SpeciesData) {
+      const speciesData = window.SpeciesData.getSpecies(species);
+      movementOrig.value = speciesData ? speciesData.movement : 20;
+    }
+    
+    // Update weapon damage displays when damage modifier changes
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
     }
     
     // Tenacity Max is always equal to POW (not affected by lock)
@@ -5052,9 +5033,10 @@ const App = {
    * Update movement display
    */
   updateMovementDisplay() {
-    // Use current movement value (from the movement-current input)
+    // Use current movement value, fall back to original if current is empty
     const movementCurrent = document.getElementById('movement-current');
-    const baseMovement = parseInt(movementCurrent?.value) || parseInt(this.character.derived.movementCurrent) || parseInt(this.character.derived.movementBase) || 0;
+    const movementOriginal = document.getElementById('movement-original');
+    const baseMovement = parseInt(movementCurrent?.value) || parseInt(movementOriginal?.value) || parseInt(this.character.derived.movementCurrent) || parseInt(this.character.derived.movementBase) || 0;
     const speeds = Calculator.calculateMovement(baseMovement);
     
     const walkEl = document.getElementById('walk-speed');
