@@ -286,11 +286,26 @@ function checkSingleCondition(condition, acquiredAbilities, getSkillValue) {
  */
 function hasAbility(abilityName, acquiredAbilities) {
   const baseName = abilityName.split('(')[0].trim().toLowerCase();
+  const fullName = abilityName.toLowerCase().trim();
+  
+  // Normalize apostrophes for comparison
+  const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
+  const normalizedFullName = normalizeApostrophes(fullName);
   
   for (const acquired of acquiredAbilities) {
     const baseAcquired = acquired.split('(')[0].trim().toLowerCase();
-    if (baseAcquired === baseName) {
-      return true;
+    const normalizedAcquired = normalizeApostrophes(acquired.toLowerCase().trim());
+    
+    // For "Language" abilities, require exact match (Language (X) != Language (Y))
+    if (baseName === 'language') {
+      if (normalizedAcquired === normalizedFullName) {
+        return true;
+      }
+    } else {
+      // For other abilities, base name matching is fine
+      if (baseAcquired === baseName) {
+        return true;
+      }
     }
   }
   return false;
