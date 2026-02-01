@@ -73,6 +73,9 @@ const App = {
     // Sync Professional Skills values to Magic page (must happen after populateForm and autoAdd)
     this.syncProfessionalSkillsToMagicPage();
     
+    // Clean up orphaned class features (Cants without abilities, etc.)
+    this.cleanupOrphanedClassFeatures();
+    
     // Restore last viewed page (after magic visibility so we don't restore hidden pages)
     this.restoreCurrentPage();
     
@@ -4869,31 +4872,46 @@ const App = {
   
   /**
    * Handle special class actions (Druid language, Monk unarmed, Sorcerer familiar)
+   * Only triggers special actions if the corresponding class abilities have been acquired
    */
   handleClassSpecialActions(className, rank) {
     if (!window.ClassAbilities) return;
     
     const classKey = className.toLowerCase().trim();
     
+    // Get current abilities on the sheet
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    
     // Check all ranks up to current for special actions
     for (let r = 1; r <= rank; r++) {
       const actions = window.ClassAbilities.getSpecialActions(className, r);
       if (!actions) continue;
       
-      // Add language (Druid)
+      // Add language (Druid/Rogue) - only if user has at least one rank 1 ability from that class
       if (actions.addLanguage) {
-        this.addLanguageIfNotExists(actions.addLanguage);
+        const classRank1Abilities = window.ClassAbilities.getAbilitiesForClassAndRank(className, 1) || [];
+        const hasAnyRank1Ability = classRank1Abilities.some(ability => 
+          existingAbilities.includes(ability.toLowerCase().trim())
+        );
+        
+        if (hasAnyRank1Ability) {
+          this.addLanguageIfNotExists(actions.addLanguage);
+        }
       }
       
-      // Add/update Unarmed weapon (Monk)
+      // Add/update Unarmed weapon (Monk) - only if user has Unarmed Proficiency
       if (actions.addUnarmed) {
-        this.addOrUpdateUnarmedWeapon(actions.addUnarmed);
+        if (existingAbilities.includes('unarmed proficiency')) {
+          this.addOrUpdateUnarmedWeapon(actions.addUnarmed);
+        }
       }
       if (actions.changeUnarmedDamage) {
-        this.updateUnarmedDamage(actions.changeUnarmedDamage);
+        if (existingAbilities.includes('unarmed proficiency')) {
+          this.updateUnarmedDamage(actions.changeUnarmedDamage);
+        }
       }
       
-      // Add spell (Sorcerer Familiar)
+      // Add spell (Sorcerer Familiar) - always add if class is Sorcerer at rank 1+
       if (actions.addSpell) {
         this.addSpellIfNotExists(actions.addSpell.rank, actions.addSpell.spell);
       }
@@ -5125,10 +5143,15 @@ const App = {
       for (let i = 2; i <= 7; i++) {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
-        if (nameInput && nameInput.dataset.classLanguage === 'druid') {
-          nameInput.value = '';
-          if (currentInput) currentInput.value = '';
-          delete nameInput.dataset.classLanguage;
+        if (nameInput) {
+          const langName = nameInput.value.toLowerCase().trim();
+          // Check by dataset OR by language name
+          if (nameInput.dataset.classLanguage === 'druid' || 
+              langName === "druids' cant" || langName === "druid's cant") {
+            nameInput.value = '';
+            if (currentInput) currentInput.value = '';
+            delete nameInput.dataset.classLanguage;
+          }
         }
       }
     }
@@ -5138,10 +5161,15 @@ const App = {
       for (let i = 2; i <= 7; i++) {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
-        if (nameInput && nameInput.dataset.classLanguage === 'rogue') {
-          nameInput.value = '';
-          if (currentInput) currentInput.value = '';
-          delete nameInput.dataset.classLanguage;
+        if (nameInput) {
+          const langName = nameInput.value.toLowerCase().trim();
+          // Check by dataset OR by language name
+          if (nameInput.dataset.classLanguage === 'rogue' || 
+              langName === "thieves' cant" || langName === "thief's cant") {
+            nameInput.value = '';
+            if (currentInput) currentInput.value = '';
+            delete nameInput.dataset.classLanguage;
+          }
         }
       }
     }
@@ -5181,6 +5209,58 @@ const App = {
           
           const costInput = document.getElementById(`rank1-${i}-cost`);
           if (costInput) costInput.value = '';
+        }
+      }
+    }
+  },
+  
+  /**
+   * Clean up orphaned class features (Cants without abilities, etc.)
+   * Called on init to fix corrupted data
+   */
+  cleanupOrphanedClassFeatures() {
+    if (!window.ClassAbilities) return;
+    
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    
+    // Check for Druids' Cant without Druid abilities
+    const druidRank1 = (window.ClassAbilities.getAbilitiesForClassAndRank('druid', 1) || [])
+      .map(a => a.toLowerCase().trim());
+    const hasDruidAbilities = druidRank1.some(ability => existingAbilities.includes(ability));
+    
+    if (!hasDruidAbilities) {
+      // Remove orphaned Druids' Cant
+      for (let i = 2; i <= 7; i++) {
+        const nameInput = document.getElementById(`language-${i}-name`);
+        const currentInput = document.getElementById(`language-${i}-current`);
+        if (nameInput) {
+          const langName = nameInput.value.toLowerCase().trim();
+          if (langName === "druids' cant" || langName === "druid's cant") {
+            nameInput.value = '';
+            if (currentInput) currentInput.value = '';
+            delete nameInput.dataset.classLanguage;
+          }
+        }
+      }
+    }
+    
+    // Check for Thieves' Cant without Rogue abilities
+    const rogueRank1 = (window.ClassAbilities.getAbilitiesForClassAndRank('rogue', 1) || [])
+      .map(a => a.toLowerCase().trim());
+    const hasRogueAbilities = rogueRank1.some(ability => existingAbilities.includes(ability));
+    
+    if (!hasRogueAbilities) {
+      // Remove orphaned Thieves' Cant
+      for (let i = 2; i <= 7; i++) {
+        const nameInput = document.getElementById(`language-${i}-name`);
+        const currentInput = document.getElementById(`language-${i}-current`);
+        if (nameInput) {
+          const langName = nameInput.value.toLowerCase().trim();
+          if (langName === "thieves' cant" || langName === "thief's cant") {
+            nameInput.value = '';
+            if (currentInput) currentInput.value = '';
+            delete nameInput.dataset.classLanguage;
+          }
         }
       }
     }
