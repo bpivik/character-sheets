@@ -5065,16 +5065,26 @@ const App = {
   },
   
   /**
-   * Remove abilities granted by a class
+   * Remove abilities granted by a class (both auto-granted and purchased ranked abilities)
    */
   removeClassAbilities(className) {
-    if (!window.ClassAbilities) return;
+    // Get auto-granted class abilities
+    const classAbilities = window.ClassAbilities ? 
+      (window.ClassAbilities.getAllAbilitiesForClass(className) || []) : [];
     
-    const classAbilities = window.ClassAbilities.getAllAbilitiesForClass(className);
-    if (!classAbilities || classAbilities.length === 0) return;
+    // Get ranked purchasable abilities for this class
+    const rankedAbilities = window.RANKED_CLASS_ABILITIES && window.RANKED_CLASS_ABILITIES[className.toLowerCase()] ?
+      window.RANKED_CLASS_ABILITIES[className.toLowerCase()].map(a => a.name) : [];
     
-    // Normalize class abilities for comparison
-    const normalizedClassAbilities = classAbilities.map(a => a.toLowerCase().trim());
+    // Combine both lists
+    const allClassAbilities = [...classAbilities, ...rankedAbilities];
+    if (allClassAbilities.length === 0) return;
+    
+    // Normalize for comparison
+    const normalizedClassAbilities = allClassAbilities.map(a => a.toLowerCase().trim());
+    
+    // Track abilities that were actually removed
+    const removedAbilities = [];
     
     // Check each ability slot (3 columns x 20 rows)
     for (let col = 1; col <= 3; col++) {
@@ -5083,13 +5093,17 @@ const App = {
         if (!input || !input.value.trim()) continue;
         
         const ability = input.value.toLowerCase().trim();
+        // Also check without parenthetical suffixes (e.g., "Language (Thieves' Cant)" -> "language (thieves' cant)")
+        const abilityBase = ability;
         
         // Check if this ability belongs to the removed class
-        if (normalizedClassAbilities.includes(ability)) {
+        if (normalizedClassAbilities.some(ca => abilityBase.startsWith(ca.toLowerCase()) || ca.toLowerCase() === abilityBase)) {
           // Check if another class also grants this ability
-          const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className);
+          const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className) || 
+                                    this.rankedAbilityGrantedByOtherClass(ability, className);
           
           if (!otherClassesGrant) {
+            removedAbilities.push(input.value.trim()); // Store original case
             input.value = '';
             input.title = 'Enter a Special Ability name';
             input.classList.remove('duplicate-warning');
@@ -5099,10 +5113,66 @@ const App = {
       }
     }
     
+    // Also remove from acquiredAbilities tracking
+    if (this.character.acquiredAbilities && removedAbilities.length > 0) {
+      this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => {
+        const normalizedAcquired = a.toLowerCase().trim();
+        return !removedAbilities.some(r => r.toLowerCase().trim() === normalizedAcquired);
+      });
+    }
+    
+    // Also remove any ranked abilities from acquiredAbilities that belong to this class
+    // (even if they weren't on the sheet)
+    if (this.character.acquiredAbilities) {
+      const rankedAbilitiesLower = rankedAbilities.map(a => a.toLowerCase().trim());
+      this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => {
+        const normalizedAcquired = a.toLowerCase().trim();
+        // Check if this is a ranked ability for the removed class
+        const isRankedForClass = rankedAbilitiesLower.some(ra => 
+          normalizedAcquired === ra || normalizedAcquired.startsWith(ra.split('(')[0].trim())
+        );
+        if (isRankedForClass) {
+          // Check if another class also has this ranked ability
+          return this.rankedAbilityGrantedByOtherClass(a, className);
+        }
+        return true;
+      });
+    }
+    
     // Handle removal of special class features
     this.removeClassSpecialFeatures(className);
     
     this.scheduleAutoSave();
+  },
+  
+  /**
+   * Check if a ranked ability is available from another active class
+   */
+  rankedAbilityGrantedByOtherClass(abilityName, excludeClass) {
+    if (!window.RANKED_CLASS_ABILITIES) return false;
+    
+    const currentClasses = [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c && c !== excludeClass.toLowerCase());
+    
+    const normalizedAbility = abilityName.toLowerCase().trim();
+    
+    for (const cls of currentClasses) {
+      const rankedAbilities = window.RANKED_CLASS_ABILITIES[cls];
+      if (rankedAbilities) {
+        if (rankedAbilities.some(a => {
+          const abilityLower = a.name.toLowerCase().trim();
+          return normalizedAbility === abilityLower || 
+                 normalizedAbility.startsWith(abilityLower.split('(')[0].trim());
+        })) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   },
   
   /**
@@ -5138,6 +5208,9 @@ const App = {
   removeClassSpecialFeatures(className) {
     const classKey = className.toLowerCase().trim();
     
+    // Track removed language abilities for acquiredAbilities cleanup
+    const removedLanguageAbilities = [];
+    
     // Remove Druid's Cant language
     if (classKey === 'druid') {
       for (let i = 2; i <= 7; i++) {
@@ -5148,6 +5221,7 @@ const App = {
           // Check by dataset OR by language name
           if (nameInput.dataset.classLanguage === 'druid' || 
               langName === "druids' cant" || langName === "druid's cant") {
+            removedLanguageAbilities.push("Language (Druids' Cant)");
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
             delete nameInput.dataset.classLanguage;
@@ -5166,12 +5240,43 @@ const App = {
           // Check by dataset OR by language name
           if (nameInput.dataset.classLanguage === 'rogue' || 
               langName === "thieves' cant" || langName === "thief's cant") {
+            removedLanguageAbilities.push("Language (Thieves' Cant)");
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
             delete nameInput.dataset.classLanguage;
           }
         }
       }
+    }
+    
+    // Bards can also have Druids' Cant or Thieves' Cant from ranked abilities
+    if (classKey === 'bard') {
+      for (let i = 2; i <= 7; i++) {
+        const nameInput = document.getElementById(`language-${i}-name`);
+        const currentInput = document.getElementById(`language-${i}-current`);
+        if (nameInput) {
+          const langName = nameInput.value.toLowerCase().trim();
+          // Check if it's a Bard-specific language
+          if (nameInput.dataset.classLanguage === 'bard') {
+            if (langName === "druids' cant" || langName === "druid's cant") {
+              removedLanguageAbilities.push("Language (Druids' Cant)");
+            } else if (langName === "thieves' cant" || langName === "thief's cant") {
+              removedLanguageAbilities.push("Language (Thieves' Cant)");
+            }
+            nameInput.value = '';
+            if (currentInput) currentInput.value = '';
+            delete nameInput.dataset.classLanguage;
+          }
+        }
+      }
+    }
+    
+    // Remove from acquiredAbilities tracking
+    if (this.character.acquiredAbilities && removedLanguageAbilities.length > 0) {
+      this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => {
+        const normalizedA = a.toLowerCase().trim();
+        return !removedLanguageAbilities.some(r => r.toLowerCase().trim() === normalizedA);
+      });
     }
     
     // Remove Monk's Unarmed weapon
@@ -7638,20 +7743,79 @@ const App = {
     'magic-skills': {
       name: 'Magic Skills',
       icon: '✨',
+      hasContent: () => {
+        // Check if user has any magic class
+        const classes = [
+          document.getElementById('class-primary')?.value?.toLowerCase().trim() || '',
+          document.getElementById('class-secondary')?.value?.toLowerCase().trim() || '',
+          document.getElementById('class-tertiary')?.value?.toLowerCase().trim() || ''
+        ].filter(c => c);
+        
+        const divineClasses = ['cleric', 'druid', 'paladin', 'ranger', 'monk', 'anti-paladin'];
+        const arcaneClasses = ['mage'];
+        const sorcererClasses = ['sorcerer'];
+        const bardClasses = ['bard'];
+        
+        return classes.some(c => 
+          divineClasses.includes(c) || 
+          arcaneClasses.includes(c) || 
+          sorcererClasses.includes(c) || 
+          bardClasses.includes(c)
+        );
+      },
       render: () => {
-        const channel = document.getElementById('channel-percent')?.value || '-';
-        const piety = document.getElementById('piety-percent')?.value || '-';
-        const arcCast = document.getElementById('arcane-casting-percent')?.value || '-';
-        const arcKnow = document.getElementById('arcane-knowledge-percent')?.value || '-';
-        return `
-          <h4>Magic Skills</h4>
-          <div class="skill-list">
-            <div class="skill-item"><span>Channel</span><span>${channel}%</span></div>
-            <div class="skill-item"><span>Piety</span><span>${piety}%</span></div>
-            <div class="skill-item"><span>Arcane Casting</span><span>${arcCast}%</span></div>
-            <div class="skill-item"><span>Arcane Knowledge</span><span>${arcKnow}%</span></div>
-          </div>
-        `;
+        const classes = [
+          document.getElementById('class-primary')?.value?.toLowerCase().trim() || '',
+          document.getElementById('class-secondary')?.value?.toLowerCase().trim() || '',
+          document.getElementById('class-tertiary')?.value?.toLowerCase().trim() || ''
+        ].filter(c => c);
+        
+        const divineClasses = ['cleric', 'druid', 'paladin', 'ranger', 'monk', 'anti-paladin'];
+        const arcaneClasses = ['mage'];
+        const sorcererClasses = ['sorcerer'];
+        const bardClasses = ['bard'];
+        
+        const hasDivine = classes.some(c => divineClasses.includes(c));
+        const hasArcane = classes.some(c => arcaneClasses.includes(c));
+        const hasSorcerer = classes.some(c => sorcererClasses.includes(c));
+        const hasBard = classes.some(c => bardClasses.includes(c));
+        
+        let html = '<h4>Magic Skills</h4><div class="skill-list">';
+        
+        if (hasDivine) {
+          const channel = document.getElementById('channel-percent')?.value || '-';
+          const piety = document.getElementById('piety-percent')?.value || '-';
+          html += `<div class="skill-item"><span>Channel</span><span>${channel}%</span></div>`;
+          html += `<div class="skill-item"><span>Piety</span><span>${piety}%</span></div>`;
+        }
+        
+        if (hasArcane) {
+          const arcCast = document.getElementById('arcane-casting-percent')?.value || '-';
+          const arcKnow = document.getElementById('arcane-knowledge-percent')?.value || '-';
+          html += `<div class="skill-item"><span>Arcane Casting</span><span>${arcCast}%</span></div>`;
+          html += `<div class="skill-item"><span>Arcane Knowledge</span><span>${arcKnow}%</span></div>`;
+        }
+        
+        if (hasSorcerer) {
+          const sorcery = document.getElementById('arcane-sorcery-percent')?.value || '-';
+          const wisdom = document.getElementById('sorcerous-wisdom-percent')?.value || '-';
+          html += `<div class="skill-item"><span>Arcane Sorcery</span><span>${sorcery}%</span></div>`;
+          html += `<div class="skill-item"><span>Sorcerous Wisdom</span><span>${wisdom}%</span></div>`;
+        }
+        
+        if (hasBard) {
+          const music = document.getElementById('musicianship-percent')?.value || '-';
+          const lyrical = document.getElementById('lyrical-magic-percent')?.value || '-';
+          html += `<div class="skill-item"><span>Musicianship</span><span>${music}%</span></div>`;
+          html += `<div class="skill-item"><span>Lyrical Magic</span><span>${lyrical}%</span></div>`;
+        }
+        
+        if (!hasDivine && !hasArcane && !hasSorcerer && !hasBard) {
+          html += '<div class="skill-item"><span>No magic class selected</span></div>';
+        }
+        
+        html += '</div>';
+        return html;
       }
     },
     'movement': {
@@ -10825,6 +10989,20 @@ const App = {
       }
     }
     
+    // Also check Languages section for Language abilities (e.g., Druids' Cant, Thieves' Cant)
+    // Check native tongue
+    const nativeName = document.getElementById('native-tongue-name')?.value?.trim();
+    if (nativeName) {
+      abilities.add(`Language (${nativeName})`);
+    }
+    // Check additional languages
+    for (let i = 2; i <= 7; i++) {
+      const langName = document.getElementById(`language-${i}-name`)?.value?.trim();
+      if (langName) {
+        abilities.add(`Language (${langName})`);
+      }
+    }
+    
     return abilities;
   },
 
@@ -11438,8 +11616,17 @@ const App = {
     });
     
     // Add abilities to the Special Abilities section on Combat page
+    // Language abilities are handled specially - they go to Languages section
     newAbilities.forEach(name => {
-      this.addAbilityToSheet(name);
+      if (name.toLowerCase().startsWith('language (')) {
+        // Extract language name from "Language (Druids' Cant)" format
+        const match = name.match(/Language \(([^)]+)\)/i);
+        if (match) {
+          this.addLanguageIfNotExists(match[1]);
+        }
+      } else {
+        this.addAbilityToSheet(name);
+      }
     });
     
     // Check for special actions based on abilities being unlocked
