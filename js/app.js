@@ -10523,12 +10523,15 @@ const App = {
         this.character.attributes[charName] = newVal;
       }
       
-      // Update all skill percentages that use this characteristic
-      this.updateSkillPercentagesForCharacteristic(charName);
-      
-      // Trigger recalculations
+      // Trigger recalculations FIRST (this updates BASE values)
       charInput.dispatchEvent(new Event('input', { bubbles: true }));
       charInput.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      // Update all skill percentages AFTER recalculations complete
+      // Use setTimeout to ensure recalculations finish first
+      setTimeout(() => {
+        this.updateSkillPercentagesForCharacteristic(charName);
+      }, 50);
     }
     
     // Track the characteristic increase
@@ -10696,16 +10699,12 @@ const App = {
     Object.entries(magicSkillIds).forEach(([name, skill]) => {
       if (skill.attrs.includes(charUpper)) {
         const input = document.getElementById(skill.id);
-        console.log(`Magic skill ${name}: id=${skill.id}, input found=${!!input}, value="${input?.value}", type=${typeof input?.value}`);
         if (input && input.value !== '' && input.value !== null) {
           const increment = skill.multiplier === 2 ? 2 : 1;
           const currentVal = parseInt(input.value, 10) || 0;
-          console.log(`  -> Updating ${name} from ${currentVal} to ${currentVal + increment}`);
           input.value = currentVal + increment;
           input.dispatchEvent(new Event('input', { bubbles: true }));
           input.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-          console.log(`  -> Skipped ${name}: value check failed`);
         }
       }
     });
@@ -10770,8 +10769,6 @@ const App = {
     
     // Sync magic skills between pages
     this.syncMagicSkillValues();
-    
-    console.log(`Updated skills for ${charUpper} characteristic increase`);
   },
 
   /**
