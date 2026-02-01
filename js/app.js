@@ -2582,7 +2582,7 @@ const App = {
     
     if (removeBtn) {
       removeBtn.addEventListener('click', () => {
-        this.removeLastEmptyClassAbilityRow();
+        this.removeLastClassAbilityRow();
       });
     }
   },
@@ -2653,23 +2653,28 @@ const App = {
   },
   
   /**
-   * Remove last empty class ability row
+   * Remove last class ability row (warn if has content)
    */
-  removeLastEmptyClassAbilityRow() {
+  removeLastClassAbilityRow() {
     const container = document.getElementById('class-abilities-list');
     if (!container || container.children.length === 0) return;
     
-    // Find last empty row
     const rows = Array.from(container.children);
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const input = rows[i].querySelector('.class-ability-input');
-      if (input && !input.value.trim()) {
-        rows[i].remove();
-        this.reindexClassAbilityRows();
-        this.scheduleAutoSave();
-        return;
-      }
+    const lastRow = rows[rows.length - 1];
+    const input = lastRow.querySelector('.class-ability-input');
+    const hasContent = input && input.value.trim();
+    
+    if (hasContent) {
+      // Remove ability effect before deleting
+      this.removeAbilityEffect(input.value);
+      
+      const confirmed = confirm(`Remove "${input.value.trim()}"?\n\nThis will delete this ability.`);
+      if (!confirmed) return;
     }
+    
+    lastRow.remove();
+    this.reindexClassAbilityRows();
+    this.scheduleAutoSave();
   },
   
   /**
@@ -9984,72 +9989,80 @@ const App = {
   setupAddRowButtons() {
     // Professional Skills
     document.getElementById('btn-add-prof-skill')?.addEventListener('click', () => this.addProfessionalSkillRow());
-    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeLastEmptyRow('professional-skills-container', '.skill-row.professional', '.skill-name'));
+    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeLastRow('professional-skills-container', '.skill-row.professional', '.skill-name'));
     
     // Languages
     document.getElementById('btn-add-language')?.addEventListener('click', () => this.addLanguageRow());
-    document.getElementById('btn-remove-language')?.addEventListener('click', () => this.removeLastEmptyLanguageRow());
+    document.getElementById('btn-remove-language')?.addEventListener('click', () => this.removeLastLanguageRow());
     
     // Oaths
     document.getElementById('btn-add-oath')?.addEventListener('click', () => this.addOathRow());
-    document.getElementById('btn-remove-oath')?.addEventListener('click', () => this.removeLastEmptyRow('oaths-container', '.belief-row', '.belief-name'));
+    document.getElementById('btn-remove-oath')?.addEventListener('click', () => this.removeLastRow('oaths-container', '.belief-row', '.belief-name'));
     
     // Passions
     document.getElementById('btn-add-passion')?.addEventListener('click', () => this.addPassionRow());
-    document.getElementById('btn-remove-passion')?.addEventListener('click', () => this.removeLastEmptyRow('passions-container', '.belief-row', '.belief-name'));
+    document.getElementById('btn-remove-passion')?.addEventListener('click', () => this.removeLastRow('passions-container', '.belief-row', '.belief-name'));
     
     // Equipment
     document.getElementById('btn-add-equipment')?.addEventListener('click', () => this.addEquipmentRow());
-    document.getElementById('btn-remove-equipment')?.addEventListener('click', () => this.removeLastEmptyRow('equipment-container', '.equipment-row', '.equipment-name'));
+    document.getElementById('btn-remove-equipment')?.addEventListener('click', () => this.removeLastRow('equipment-container', '.equipment-row', '.equipment-name'));
     
     // Melee Weapons
     document.getElementById('btn-add-melee')?.addEventListener('click', () => this.addMeleeWeaponRow());
-    document.getElementById('btn-remove-melee')?.addEventListener('click', () => this.removeLastEmptyRow('melee-weapons-body', 'tr', '.weapon-name'));
+    document.getElementById('btn-remove-melee')?.addEventListener('click', () => this.removeLastRow('melee-weapons-body', 'tr', '.weapon-name'));
     
     // Ranged Weapons
     document.getElementById('btn-add-ranged')?.addEventListener('click', () => this.addRangedWeaponRow());
-    document.getElementById('btn-remove-ranged')?.addEventListener('click', () => this.removeLastEmptyRow('ranged-weapons-body', 'tr', '.weapon-name'));
+    document.getElementById('btn-remove-ranged')?.addEventListener('click', () => this.removeLastRow('ranged-weapons-body', 'tr', '.weapon-name'));
   },
   
   /**
-   * Remove last empty row from a section
+   * Remove last row from a section (warn if has content)
    */
-  removeLastEmptyRow(containerId, rowSelector, dataFieldSelector) {
+  removeLastRow(containerId, rowSelector, dataFieldSelector) {
     const container = document.getElementById(containerId);
     if (!container) return;
     
     const rows = Array.from(container.querySelectorAll(rowSelector));
+    if (rows.length === 0) return;
     
-    // Find last empty row
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const dataField = rows[i].querySelector(dataFieldSelector);
-      if (dataField && !dataField.value.trim()) {
-        rows[i].remove();
-        this.reindexSection(containerId, rowSelector);
-        this.scheduleAutoSave();
-        return;
-      }
+    const lastRow = rows[rows.length - 1];
+    const dataField = lastRow.querySelector(dataFieldSelector);
+    const hasContent = dataField && dataField.value.trim();
+    
+    if (hasContent) {
+      // Warn user before deleting row with content
+      const confirmed = confirm(`Remove "${dataField.value.trim()}"?\n\nThis will delete this row.`);
+      if (!confirmed) return;
     }
+    
+    lastRow.remove();
+    this.reindexSection(containerId, rowSelector);
+    this.scheduleAutoSave();
   },
   
   /**
-   * Remove last empty language row (skip native tongue)
+   * Remove last language row (skip native tongue, warn if has content)
    */
-  removeLastEmptyLanguageRow() {
+  removeLastLanguageRow() {
     const container = document.getElementById('language-container');
     if (!container) return;
     
     const rows = Array.from(container.querySelectorAll('.language-row:not(.native)'));
+    if (rows.length === 0) return;
     
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const nameField = rows[i].querySelector('.language-name');
-      if (nameField && !nameField.value.trim()) {
-        rows[i].remove();
-        this.reindexLanguages();
-        this.scheduleAutoSave();
-        return;
-      }
+    const lastRow = rows[rows.length - 1];
+    const nameField = lastRow.querySelector('.language-name');
+    const hasContent = nameField && nameField.value.trim();
+    
+    if (hasContent) {
+      const confirmed = confirm(`Remove "${nameField.value.trim()}"?\n\nThis will delete this language.`);
+      if (!confirmed) return;
     }
+    
+    lastRow.remove();
+    this.reindexLanguages();
+    this.scheduleAutoSave();
   },
 
   /**
