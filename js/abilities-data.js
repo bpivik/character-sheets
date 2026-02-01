@@ -5,7 +5,7 @@
 
 const AbilityDescriptions = {
   "agelessness": "Maintain current age & avoid Aging penalties. Immune to magical aging.",
-  "agile": "While Unburdened (ENC < STR×2) and wearing light armor or less, the character can use heightened reflexes in combat. Requires 60% or higher in Evade or Acrobatics. Add one-tenth of your Athletics skill as a bonus to your Initiative roll (1d10). For example, Athletics 60% grants +6 to Initiative.",
+  "agile": "+4 Initiative bonus. While Unburdened (ENC < STR×2) and wearing light armor or less, the character can use heightened reflexes in combat. Vulpan gain this ability from their species. Class and species versions do not stack.",
   "alter self": "As per spell Alter Self.",
   "amphibious": "Breathe underwater and on dry land with no difficulty.",
   "animal companion 1": "Call & befriend 1 animal companion nearby. See description.",

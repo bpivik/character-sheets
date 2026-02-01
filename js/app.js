@@ -462,19 +462,25 @@ const App = {
           this.abilityMatchesFuzzy(currentAbility, baseAbility)
         );
         
-        // Only remove if it's a species ability and not granted by class
-        if (isSpeciesAbility && input.dataset.classAbility !== 'species') {
-          // Check if granted by another source (class)
-          if (!input.dataset.classAbility) {
-            input.value = '';
-            input.title = 'Enter a Special Ability name';
-            input.classList.remove('duplicate-warning');
-          }
-        } else if (isSpeciesAbility && input.dataset.classAbility === 'species') {
+        // Only remove if it's a species ability and marked as species-granted
+        if (isSpeciesAbility && input.dataset.classAbility === 'species') {
+          // Remove ability effect before clearing
+          this.removeAbilityEffect(currentAbility);
+          
           input.value = '';
           input.title = 'Enter a Special Ability name';
           input.classList.remove('duplicate-warning');
+          input.dataset.previousValue = '';
           delete input.dataset.classAbility;
+          
+          // Hide the info button
+          const wrapper = input.closest('.ability-input-wrapper');
+          if (wrapper) {
+            const infoBtn = wrapper.querySelector('.ability-info-btn');
+            if (infoBtn) {
+              infoBtn.style.display = 'none';
+            }
+          }
         }
       }
     }
@@ -5837,10 +5843,24 @@ const App = {
         const input = document.getElementById(`ability-${col}-${i}`);
         if (input && !input.value.trim()) {
           input.value = this.toTitleCase(abilityName);
+          input.dataset.previousValue = input.value; // Track for removal
           if (sourceClass) {
             input.dataset.classAbility = sourceClass.toLowerCase();
           }
           this.updateAbilityTooltip(input);
+          
+          // Show the info button
+          const wrapper = input.closest('.ability-input-wrapper');
+          if (wrapper) {
+            const infoBtn = wrapper.querySelector('.ability-info-btn');
+            if (infoBtn) {
+              infoBtn.style.display = '';
+            }
+          }
+          
+          // Apply ability effect if applicable
+          this.applyAbilityEffect(abilityName);
+          
           return true;
         }
       }
