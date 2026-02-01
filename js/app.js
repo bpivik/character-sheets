@@ -4921,7 +4921,7 @@ const App = {
   /**
    * Add a language to the first empty language slot
    */
-  addLanguageIfNotExists(languageName) {
+  addLanguageIfNotExists(languageName, sourceClass = null) {
     // Check native tongue first
     const nativeName = document.getElementById('native-tongue-name');
     if (nativeName && nativeName.value.toLowerCase().trim() === languageName.toLowerCase().trim()) {
@@ -4941,6 +4941,17 @@ const App = {
     const chaVal = parseInt(document.getElementById('cha-value')?.value, 10) || 0;
     const baseValue = intVal + chaVal;
     
+    // Determine source class for tracking
+    let classSource = sourceClass;
+    if (!classSource) {
+      // Infer from language name
+      if (languageName.toLowerCase().includes('druid')) {
+        classSource = 'druid';
+      } else if (languageName.toLowerCase().includes('thie')) {
+        classSource = 'rogue';
+      }
+    }
+    
     // Find first empty slot (starting at 2)
     for (let i = 2; i <= 7; i++) {
       const nameInput = document.getElementById(`language-${i}-name`);
@@ -4948,7 +4959,9 @@ const App = {
       
       if (nameInput && !nameInput.value.trim()) {
         nameInput.value = languageName;
-        nameInput.dataset.classLanguage = languageName.toLowerCase().includes('druid') ? 'druid' : 'rogue';
+        if (classSource) {
+          nameInput.dataset.classLanguage = classSource.toLowerCase();
+        }
         
         // Set the current value to base percentage
         if (currentInput) {
@@ -5251,18 +5264,21 @@ const App = {
     
     // Bards can also have Druids' Cant or Thieves' Cant from ranked abilities
     if (classKey === 'bard') {
+      // Always remove these from acquiredAbilities for Bards, regardless of Languages section state
+      removedLanguageAbilities.push("Language (Druids' Cant)");
+      removedLanguageAbilities.push("Language (Thieves' Cant)");
+      
       for (let i = 2; i <= 7; i++) {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput) {
           const langName = nameInput.value.toLowerCase().trim();
-          // Check if it's a Bard-specific language
-          if (nameInput.dataset.classLanguage === 'bard') {
-            if (langName === "druids' cant" || langName === "druid's cant") {
-              removedLanguageAbilities.push("Language (Druids' Cant)");
-            } else if (langName === "thieves' cant" || langName === "thief's cant") {
-              removedLanguageAbilities.push("Language (Thieves' Cant)");
-            }
+          // Check by dataset OR by language name for bard languages
+          const isBardLanguage = nameInput.dataset.classLanguage === 'bard' ||
+            langName === "druids' cant" || langName === "druid's cant" ||
+            langName === "thieves' cant" || langName === "thief's cant";
+          
+          if (isBardLanguage) {
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
             delete nameInput.dataset.classLanguage;
@@ -5369,6 +5385,57 @@ const App = {
         }
       }
     }
+    
+    // Clean up orphaned acquiredAbilities - remove entries that aren't on the sheet or in languages
+    this.cleanupOrphanedAcquiredAbilities();
+  },
+  
+  /**
+   * Remove acquiredAbilities entries that don't correspond to actual abilities on the sheet
+   */
+  cleanupOrphanedAcquiredAbilities() {
+    if (!this.character.acquiredAbilities || this.character.acquiredAbilities.length === 0) return;
+    
+    // Get all abilities currently on the sheet
+    const sheetAbilities = new Set();
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          sheetAbilities.add(input.value.trim().toLowerCase());
+        }
+      }
+    }
+    
+    // Get all languages on the sheet (for Language abilities)
+    const languages = new Set();
+    const nativeName = document.getElementById('native-tongue-name')?.value?.trim();
+    if (nativeName) {
+      languages.add(`language (${nativeName.toLowerCase()})`);
+    }
+    for (let i = 2; i <= 7; i++) {
+      const langName = document.getElementById(`language-${i}-name`)?.value?.trim();
+      if (langName) {
+        languages.add(`language (${langName.toLowerCase()})`);
+      }
+    }
+    
+    // Filter acquiredAbilities to only include those actually present
+    this.character.acquiredAbilities = this.character.acquiredAbilities.filter(ability => {
+      const normalized = ability.toLowerCase().trim();
+      
+      // Check if it's on the abilities sheet
+      if (sheetAbilities.has(normalized)) return true;
+      
+      // Check if it's a language ability that exists
+      if (normalized.startsWith('language (') && languages.has(normalized)) return true;
+      
+      // Also keep Characteristic Increase entries (they're tracked differently)
+      if (normalized.startsWith('characteristic increase')) return true;
+      
+      // Not found - remove from tracking
+      return false;
+    });
   },
   
   /**
@@ -7468,12 +7535,37 @@ const App = {
         const culture = document.getElementById('culture')?.value || '-';
         const primaryClass = document.getElementById('class-primary')?.value || '-';
         const rank = document.getElementById('rank-primary')?.value || '0';
+        const rankName = document.getElementById('rank-name')?.value || '-';
+        const height = document.getElementById('height')?.value || '-';
+        const weight = document.getElementById('weight')?.value || '-';
+        const age = document.getElementById('age')?.value || '-';
+        const handedness = document.getElementById('handedness')?.value || '-';
+        const hair = document.getElementById('hair')?.value || '-';
+        const eyes = document.getElementById('eyes')?.value || '-';
+        const expRolls = document.getElementById('exp-rolls')?.value || '0';
+        const tenacityCurrent = document.getElementById('tenacity-current')?.value || '-';
+        const tenacityMax = document.getElementById('tenacity-max')?.value || '-';
+        
         return `
           <h4>Character Info</h4>
           <div class="stat-row"><span class="stat-label">Name:</span><span class="stat-value">${name}</span></div>
           <div class="stat-row"><span class="stat-label">Species:</span><span class="stat-value">${species}</span></div>
           <div class="stat-row"><span class="stat-label">Culture:</span><span class="stat-value">${culture}</span></div>
           <div class="stat-row"><span class="stat-label">Class:</span><span class="stat-value">${primaryClass} (Rank ${rank})</span></div>
+          <div class="stat-row"><span class="stat-label">Rank Name:</span><span class="stat-value">${rankName}</span></div>
+          <div class="stat-row"><span class="stat-label">Height:</span><span class="stat-value">${height}</span></div>
+          <div class="stat-row"><span class="stat-label">Weight:</span><span class="stat-value">${weight}</span></div>
+          <div class="stat-row"><span class="stat-label">Age:</span><span class="stat-value">${age}</span></div>
+          <div class="stat-row"><span class="stat-label">Handedness:</span><span class="stat-value">${handedness}</span></div>
+          <div class="stat-row"><span class="stat-label">Hair:</span><span class="stat-value">${hair}</span></div>
+          <div class="stat-row"><span class="stat-label">Eyes:</span><span class="stat-value">${eyes}</span></div>
+          <hr style="border:none;border-top:1px solid #ccc;margin:8px 0;">
+          <div class="stat-row">
+            <span class="stat-label">EXP Rolls:</span>
+            <span class="stat-value-bold">${expRolls}</span>
+            <button type="button" class="btn btn-small widget-exp-btn" style="margin-left:8px;font-size:0.7rem;padding:2px 6px;">Spend EXP</button>
+          </div>
+          <div class="stat-row"><span class="stat-label">Tenacity:</span><span class="stat-value">${tenacityCurrent} / ${tenacityMax}</span></div>
         `;
       }
     },
@@ -7894,18 +7986,6 @@ const App = {
         `;
       }
     },
-    'tenacity': {
-      name: 'Tenacity',
-      icon: '🔥',
-      render: () => {
-        const current = document.getElementById('tenacity-current')?.value || '-';
-        const max = document.getElementById('tenacity-max')?.value || '-';
-        return `
-          <h4>Tenacity</h4>
-          <div class="stat-row"><span class="stat-label">Current:</span><span class="stat-value">${current} / ${max}</span></div>
-        `;
-      }
-    },
     'spells-cantrips': {
       name: 'Cantrips',
       icon: '✨',
@@ -8271,6 +8351,14 @@ const App = {
       canvas.classList.remove('drag-over');
       
       const widgetId = e.dataTransfer.getData('text/plain');
+      const source = e.dataTransfer.getData('source');
+      
+      // Only add from palette, not when reordering from canvas
+      if (source === 'canvas') {
+        // This is a reorder operation, handled by widget drop handlers
+        return;
+      }
+      
       if (widgetId && this.summaryWidgets[widgetId]) {
         this.addWidgetToCanvas(widgetId);
         this.removeWidgetFromPalette(widgetId);
@@ -8560,6 +8648,14 @@ const App = {
             expandBtn.textContent = `Show All (${totalItems})`;
           }
         }
+        return;
+      }
+      
+      // Handle Spend EXP button in Character Info widget
+      const expBtn = e.target.closest('.widget-exp-btn');
+      if (expBtn) {
+        e.stopPropagation();
+        this.showExpModal();
         return;
       }
     });
@@ -11099,8 +11195,12 @@ const App = {
    * Confirm unlocking selected abilities
    */
   confirmUnlockAbilities() {
+    const modal = document.getElementById('unlock-abilities-modal');
     const checked = document.querySelectorAll('#unlock-abilities-modal input[name="unlock-ability"]:checked');
     if (checked.length === 0) return;
+    
+    // Get the current class context
+    const currentClass = modal?.dataset?.selectedClass || '';
     
     let totalCost = 0;
     const newAbilities = [];
@@ -11125,7 +11225,8 @@ const App = {
       this.pendingAbilityUnlock = {
         abilities: newAbilities,
         totalCost: totalCost,
-        characteristicRank: characteristicIncreaseRank
+        characteristicRank: characteristicIncreaseRank,
+        sourceClass: currentClass
       };
       this.closeUnlockAbilitiesModal();
       this.showCharacteristicIncreaseModal(characteristicIncreaseRank);
@@ -11133,7 +11234,7 @@ const App = {
     }
     
     // No Characteristic Increase - proceed normally
-    this.finalizeAbilityUnlock(newAbilities, totalCost);
+    this.finalizeAbilityUnlock(newAbilities, totalCost, currentClass);
   },
 
   /**
@@ -11338,6 +11439,7 @@ const App = {
     if (pending) {
       // Add the characteristic increase ability to the list
       const allAbilities = [...pending.abilities];
+      const sourceClass = pending.sourceClass || '';
       
       // Add to acquired abilities tracking (use base name for prereq checking)
       if (!this.character.acquiredAbilities) {
@@ -11351,9 +11453,16 @@ const App = {
         }
       });
       
-      // Add abilities to sheet
+      // Add abilities to sheet (Language abilities go to Languages section)
       allAbilities.forEach(name => {
-        this.addAbilityToSheet(name);
+        if (name.toLowerCase().startsWith('language (')) {
+          const match = name.match(/Language \(([^)]+)\)/i);
+          if (match) {
+            this.addLanguageIfNotExists(match[1], sourceClass);
+          }
+        } else {
+          this.addAbilityToSheet(name);
+        }
       });
       
       // Update or add the Characteristic Increase ability on sheet
@@ -11604,7 +11713,7 @@ const App = {
   /**
    * Finalize the ability unlock (when no Characteristic Increase is involved)
    */
-  finalizeAbilityUnlock(newAbilities, totalCost) {
+  finalizeAbilityUnlock(newAbilities, totalCost, sourceClass = '') {
     // Add to acquired abilities tracking
     if (!this.character.acquiredAbilities) {
       this.character.acquiredAbilities = [];
@@ -11622,7 +11731,7 @@ const App = {
         // Extract language name from "Language (Druids' Cant)" format
         const match = name.match(/Language \(([^)]+)\)/i);
         if (match) {
-          this.addLanguageIfNotExists(match[1]);
+          this.addLanguageIfNotExists(match[1], sourceClass);
         }
       } else {
         this.addAbilityToSheet(name);
