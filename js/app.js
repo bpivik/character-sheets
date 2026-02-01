@@ -70,7 +70,9 @@ const App = {
       }
     },
     'weapon precision': {
-      description: 'Use better of STR+SIZ or STR+DEX for Damage Modifier',
+      description: 'Use STR+DEX for Damage Modifier with finesse weapons',
+      // List of weapons that benefit from Weapon Precision
+      eligibleWeapons: ['club', 'dagger', 'garrote', 'knife', 'shortsword', 'short sword', 'main gauche', 'main-gauche', 'rapier', 'unarmed', 'dart', 'sling', 'short bow', 'shortbow', 'javelin'],
       apply: function(app) {
         const strVal = parseInt(document.getElementById('str-value')?.value, 10) || 0;
         const sizVal = parseInt(document.getElementById('siz-value')?.value, 10) || 0;
@@ -83,31 +85,32 @@ const App = {
         const dmgStrSiz = app.getDamageModifierForSum(strSiz);
         const dmgStrDex = app.getDamageModifierForSum(strDex);
         
-        // Compare which is better (higher on the progression)
-        const better = app.compareDamageModifiers(dmgStrSiz, dmgStrDex);
+        // Show the WP Damage Mod row
+        const wpRow = document.getElementById('wp-damage-row');
+        const wpOrigField = document.getElementById('wp-damage-mod-original');
+        const wpCurrField = document.getElementById('wp-damage-mod-current');
         
-        // Only apply if STR+DEX is better
-        if (better === dmgStrDex && dmgStrDex !== dmgStrSiz) {
-          const origField = document.getElementById('damage-mod-original');
-          const currField = document.getElementById('damage-mod-current');
-          if (origField) origField.value = dmgStrDex;
-          if (currField) currField.value = dmgStrDex;
-          // Store original for removal
-          app.activeAbilityEffects['weapon precision'].originalDamage = dmgStrSiz;
+        if (wpRow && wpOrigField && wpCurrField) {
+          // Always show WP row when ability is active, with STR+DEX based modifier
+          wpRow.style.display = '';
+          wpOrigField.value = dmgStrDex;
+          wpCurrField.value = dmgStrDex;
+          
+          // Store values for comparison/removal
+          app.activeAbilityEffects['weapon precision'].strDexDamage = dmgStrDex;
+          app.activeAbilityEffects['weapon precision'].strSizDamage = dmgStrSiz;
         }
       },
       remove: function(app) {
-        // Restore original STR+SIZ based damage modifier
-        const effectData = app.activeAbilityEffects['weapon precision'];
-        if (effectData && effectData.originalDamage) {
-          const origField = document.getElementById('damage-mod-original');
-          const currField = document.getElementById('damage-mod-current');
-          if (origField) origField.value = effectData.originalDamage;
-          if (currField) currField.value = effectData.originalDamage;
-        } else {
-          // Recalculate from scratch
-          app.recalculateAll();
+        // Hide the WP Damage Mod row
+        const wpRow = document.getElementById('wp-damage-row');
+        if (wpRow) {
+          wpRow.style.display = 'none';
         }
+        const wpOrigField = document.getElementById('wp-damage-mod-original');
+        const wpCurrField = document.getElementById('wp-damage-mod-current');
+        if (wpOrigField) wpOrigField.value = '';
+        if (wpCurrField) wpCurrField.value = '';
       }
     },
     'lucky': {

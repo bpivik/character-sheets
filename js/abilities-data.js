@@ -218,7 +218,7 @@ const AbilityDescriptions = {
   "vaulting": "If Unburdened, can use Acrobatics to pole vault over obstacles. See description.",
   "very agile": "If Extremely Unburdened & wearing no armor, add 1/10 Mysticism to your Initiative, min. 5. Noted above.",
   "weapon master": "Dbl Critical in your chosen weapon specialization.",
-  "weapon precision": "When using small weapons, Dmg Mod is based on STR+DEX.",
+  "weapon precision": "When using finesse weapons (clubs, daggers, garrotes, knives, shortswords, main gauche, rapiers, unarmed, darts, slings, short bows, javelins), use STR+DEX for Damage Modifier instead of STR+SIZ if better. Bonus cannot exceed 2× weapon's damage die.",
   "weapon specialization": "Specialize in 1 weapon. See description. Weapon:",
   "wild casting": "Cast spells while shape changed.",
   "woodland languages": "Add 1 Language of woodland species at INT+CHA+40.",

@@ -759,6 +759,24 @@ select:focus {
   cursor: text;
 }
 
+/* Weapon Precision Damage Modifier row */
+.wp-damage-row {
+  background: rgba(100, 149, 237, 0.1);
+  border-radius: 4px;
+  margin: 2px 0;
+  padding: 0.4rem 0.3rem !important;
+}
+
+.wp-damage-row .derived-label {
+  color: #4a6fa5;
+  font-style: italic;
+}
+
+.wp-damage-row .derived-input {
+  background: rgba(100, 149, 237, 0.15) !important;
+  border-color: rgba(100, 149, 237, 0.4) !important;
+}
+
 /* Characteristics readonly/editable states */
 .attribute-input.char-readonly {
   background: rgba(255,255,255,0.5) !important;

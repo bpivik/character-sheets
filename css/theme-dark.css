@@ -717,6 +717,20 @@
   color: #999;
 }
 
+/* Weapon Precision Damage row in dark mode */
+[data-theme="dark"] .wp-damage-row {
+  background: rgba(100, 149, 237, 0.15);
+}
+
+[data-theme="dark"] .wp-damage-row .derived-label {
+  color: #7aa3d9;
+}
+
+[data-theme="dark"] .wp-damage-row .derived-input {
+  background: rgba(100, 149, 237, 0.2) !important;
+  border-color: rgba(100, 149, 237, 0.5) !important;
+}
+
 /* Characteristic increase modal in dark mode */
 [data-theme="dark"] .char-option {
   background: #2a2a2a;
