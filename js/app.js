@@ -6079,6 +6079,8 @@ const App = {
         this.updateRankName();
         this.updatePrereqKeys();
         this.updateSpellMemorization();
+        this.updateClassSpells();
+        this.updateClassAbilities();
         this.scheduleAutoSave();
       }
       prompt.remove();

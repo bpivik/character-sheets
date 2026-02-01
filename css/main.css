@@ -3419,7 +3419,7 @@ select:focus {
 
 .rank-prompt-dialog {
   background: white;
-  border: 3px solid var(--primary-gold);
+  border: 3px solid #b8960c;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   padding: 1.5rem 2rem;
@@ -3455,7 +3455,7 @@ select:focus {
 
 .rank-prompt-input:focus {
   outline: none;
-  border-color: var(--primary-gold);
+  border-color: #b8960c;
 }
 
 .rank-prompt-buttons {
@@ -3485,7 +3485,7 @@ select:focus {
 }
 
 .rank-prompt-ok {
-  background: var(--primary-gold);
+  background: #b8960c;
   color: white;
   border: none;
 }
