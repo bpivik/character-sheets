@@ -112,6 +112,7 @@ const App = {
     },
     'lucky': {
       description: '+1 Luck Point',
+      persistent: true, // Don't reapply on recalculation - only apply once when gained
       apply: function(app) {
         const origField = document.getElementById('luck-original');
         const currField = document.getElementById('luck-current');
@@ -139,6 +140,7 @@ const App = {
     },
     'gifted': {
       description: '+1 Experience Roll',
+      persistent: true, // Don't reapply on recalculation - only apply once when gained
       apply: function(app) {
         const expField = document.getElementById('exp-rolls');
         if (expField) {
@@ -641,6 +643,9 @@ const App = {
       }
     }
     
+    // Auto-set culture based on species (only when species changes)
+    this.autoSetCultureForSpecies(newSpeciesLower);
+    
     // Remove previous species ability effects
     if (prevData && prevData.abilities && prevData.abilities.length > 0) {
       prevData.abilities.forEach(ability => {
@@ -649,15 +654,57 @@ const App = {
     }
     
     // Populate the Species Abilities section (replaces old content)
-    this.populateSpeciesAbilitiesSection(newData ? newData.abilities : []);
+    // Pass true to apply persistent effects since this is a user-initiated species change
+    this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
     
     this.scheduleAutoSave();
   },
   
   /**
-   * Populate the dedicated Species Abilities section
+   * Auto-set culture based on species
+   * - Human, Half-Elf, Half-Orc: No change (can choose any)
+   * - Abyssar, Dwarf, Gnome: Barbarian
+   * - Elf, Halfling, Khelmar, Syrin: Civilized
+   * - Vulpan: Nomad
    */
-  populateSpeciesAbilitiesSection(abilities) {
+  autoSetCultureForSpecies(species) {
+    const cultureField = document.getElementById('culture');
+    if (!cultureField) return;
+    
+    // Species with no automatic culture (player's choice)
+    const freeChoiceSpecies = ['human', 'half-elf', 'half-orc'];
+    if (!species || freeChoiceSpecies.includes(species)) {
+      // Don't change culture for these species
+      return;
+    }
+    
+    // Species locked to Barbarian
+    const barbarianSpecies = ['abyssar', 'dwarf', 'gnome'];
+    if (barbarianSpecies.includes(species)) {
+      cultureField.value = 'Barbarian';
+      return;
+    }
+    
+    // Species locked to Civilized
+    const civilizedSpecies = ['elf', 'halfling', 'khelmar', 'syrin'];
+    if (civilizedSpecies.includes(species)) {
+      cultureField.value = 'Civilized';
+      return;
+    }
+    
+    // Vulpan is Nomad
+    if (species === 'vulpan') {
+      cultureField.value = 'Nomad';
+      return;
+    }
+  },
+  
+  /**
+   * Populate the dedicated Species Abilities section
+   * @param {Array} abilities - List of ability names
+   * @param {boolean} applyPersistentEffects - If true, apply persistent effects (for species changes after init)
+   */
+  populateSpeciesAbilitiesSection(abilities, applyPersistentEffects = false) {
     const container = document.getElementById('species-abilities-list');
     if (!container) return;
     
@@ -700,8 +747,16 @@ const App = {
       row.appendChild(infoBtn);
       container.appendChild(row);
       
-      // Apply ability effect
-      this.applyAbilityEffect(ability);
+      // Apply ability effect (skip persistent if not requested)
+      const baseName = ability.split('(')[0].trim().toLowerCase();
+      const effect = this.ABILITY_EFFECTS[baseName];
+      if (effect && effect.persistent && !applyPersistentEffects) {
+        // Skip persistent effects during init - saved values already include them
+        // Just mark as active
+        this.activeAbilityEffects[baseName] = { active: true };
+      } else {
+        this.applyAbilityEffect(ability);
+      }
     });
   },
   
@@ -4351,10 +4406,20 @@ const App = {
   /**
    * Re-apply ability effects after recalculation
    * This is called after base values are recalculated to re-add bonuses
+   * Skips persistent effects (like Lucky, Gifted) which modify input fields
    */
   reapplyAbilityEffects() {
-    // Clear active tracking (base values were just recalculated)
-    this.activeAbilityEffects = {};
+    // Remember which persistent effects were already active (don't clear them)
+    const persistentEffects = {};
+    for (const [baseName, data] of Object.entries(this.activeAbilityEffects)) {
+      const effect = this.ABILITY_EFFECTS[baseName];
+      if (effect && effect.persistent) {
+        persistentEffects[baseName] = data;
+      }
+    }
+    
+    // Clear non-persistent active tracking (base values were just recalculated)
+    this.activeAbilityEffects = { ...persistentEffects };
     
     // Check all class abilities on the sheet and apply their effects
     const classContainer = document.getElementById('class-abilities-list');
@@ -4364,7 +4429,8 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           const effect = this.ABILITY_EFFECTS[baseName];
-          if (effect && !this.activeAbilityEffects[baseName]) {
+          // Skip persistent effects - they were already applied when gained
+          if (effect && !effect.persistent && !this.activeAbilityEffects[baseName]) {
             this.activeAbilityEffects[baseName] = { active: true };
             effect.apply(this);
           }
@@ -4377,7 +4443,8 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       const effect = this.ABILITY_EFFECTS[baseName];
-      if (effect && !this.activeAbilityEffects[baseName]) {
+      // Skip persistent effects - they were already applied when gained
+      if (effect && !effect.persistent && !this.activeAbilityEffects[baseName]) {
         this.activeAbilityEffects[baseName] = { active: true };
         effect.apply(this);
       }
@@ -9126,51 +9193,93 @@ const App = {
       }
     },
     'special-abilities': {
-      name: 'Special Abilities',
+      name: 'Abilities',
       icon: '⭐',
       dynamic: true,
       isAvailable: () => {
-        // Check if there are any special abilities
-        for (let col = 1; col <= 3; col++) {
-          for (let i = 0; i < 20; i++) {
-            const input = document.getElementById(`ability-${col}-${i}`);
-            if (input && input.value.trim()) return true;
+        // Check if there are any class abilities
+        const classContainer = document.getElementById('class-abilities-list');
+        if (classContainer) {
+          const inputs = classContainer.querySelectorAll('.class-ability-input');
+          for (const input of inputs) {
+            if (input.value.trim()) return true;
+          }
+        }
+        // Check if there are any species abilities
+        const speciesContainer = document.getElementById('species-abilities-list');
+        if (speciesContainer) {
+          const inputs = speciesContainer.querySelectorAll('.species-ability-input');
+          for (const input of inputs) {
+            if (input.value.trim()) return true;
           }
         }
         return false;
       },
       render: () => {
-        let html = '<h4>Special Abilities</h4>';
+        let html = '<h4>Abilities</h4>';
         html += '<div class="abilities-widget-list collapsed" data-widget-id="special-abilities">';
         
-        // Collect all abilities
-        const abilities = [];
-        for (let col = 1; col <= 3; col++) {
-          for (let i = 0; i < 20; i++) {
-            const input = document.getElementById(`ability-${col}-${i}`);
-            if (input && input.value.trim()) {
-              abilities.push(input.value.trim());
+        // Collect class abilities
+        const classAbilities = [];
+        const classContainer = document.getElementById('class-abilities-list');
+        if (classContainer) {
+          const inputs = classContainer.querySelectorAll('.class-ability-input');
+          inputs.forEach(input => {
+            if (input.value.trim()) {
+              classAbilities.push(input.value.trim());
             }
-          }
+          });
         }
         
-        // Sort alphabetically
-        abilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        // Collect species abilities
+        const speciesAbilities = [];
+        const speciesContainer = document.getElementById('species-abilities-list');
+        if (speciesContainer) {
+          const inputs = speciesContainer.querySelectorAll('.species-ability-input');
+          inputs.forEach(input => {
+            if (input.value.trim()) {
+              speciesAbilities.push(input.value.trim());
+            }
+          });
+        }
         
-        // Show first 5 by default, rest in collapsed section
+        // Sort each group alphabetically
+        classAbilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        speciesAbilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        
+        let totalCount = 0;
         const initialShow = 5;
-        abilities.forEach((ability, idx) => {
-          const description = window.AbilityDescriptions?.getDescription(ability) || '';
-          const escapedDesc = description.replace(/"/g, '&quot;');
-          const hiddenClass = idx >= initialShow ? ' hidden-ability' : '';
-          html += `<div class="ability-widget-item${hiddenClass}" title="${escapedDesc}">${ability}</div>`;
-        });
+        
+        // Class abilities first
+        if (classAbilities.length > 0) {
+          html += '<div class="ability-group-label">Class Abilities</div>';
+          classAbilities.forEach((ability, idx) => {
+            const description = window.AbilityDescriptions?.getDescription(ability) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            const hiddenClass = totalCount >= initialShow ? ' hidden-ability' : '';
+            html += `<div class="ability-widget-item${hiddenClass}" title="${escapedDesc}">${ability}</div>`;
+            totalCount++;
+          });
+        }
+        
+        // Species abilities second
+        if (speciesAbilities.length > 0) {
+          const hiddenClass = totalCount >= initialShow ? ' hidden-ability' : '';
+          html += `<div class="ability-group-label${hiddenClass}">Species Abilities</div>`;
+          speciesAbilities.forEach((ability) => {
+            const description = window.AbilityDescriptions?.getDescription(ability) || '';
+            const escapedDesc = description.replace(/"/g, '&quot;');
+            const hiddenClass2 = totalCount >= initialShow ? ' hidden-ability' : '';
+            html += `<div class="ability-widget-item${hiddenClass2}" title="${escapedDesc}">${ability}</div>`;
+            totalCount++;
+          });
+        }
         
         html += '</div>';
         
         // Add expand/collapse button if more than initialShow
-        if (abilities.length > initialShow) {
-          html += `<button class="widget-expand-btn" data-widget-id="special-abilities">Show All (${abilities.length})</button>`;
+        if (totalCount > initialShow) {
+          html += `<button class="widget-expand-btn" data-widget-id="special-abilities">Show All (${totalCount})</button>`;
         }
         
         return html;

@@ -704,6 +704,11 @@
   border-bottom-color: #333;
 }
 
+[data-theme="dark"] .ability-group-label {
+  color: #999;
+  border-top-color: #444;
+}
+
 /* Characteristic increase modal in dark mode */
 [data-theme="dark"] .char-option {
   background: #2a2a2a;

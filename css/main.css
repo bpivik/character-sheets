@@ -5208,6 +5208,20 @@ select:focus {
   border-bottom: none;
 }
 
+.ability-group-label {
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: #666;
+  padding: 6px 0 2px 0;
+  margin-top: 4px;
+  border-top: 1px solid #ddd;
+}
+
+.ability-group-label:first-child {
+  margin-top: 0;
+  border-top: none;
+}
+
 .widget-expand-btn {
   display: block;
   width: 100%;
