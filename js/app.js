@@ -10693,15 +10693,19 @@ const App = {
       lyricalMagic: { id: 'lyrical-magic-percent', attrs: ['CHA', 'POW'] }
     };
     
-    Object.values(magicSkillIds).forEach(skill => {
+    Object.entries(magicSkillIds).forEach(([name, skill]) => {
       if (skill.attrs.includes(charUpper)) {
         const input = document.getElementById(skill.id);
+        console.log(`Magic skill ${name}: id=${skill.id}, input found=${!!input}, value="${input?.value}", type=${typeof input?.value}`);
         if (input && input.value !== '' && input.value !== null) {
           const increment = skill.multiplier === 2 ? 2 : 1;
           const currentVal = parseInt(input.value, 10) || 0;
+          console.log(`  -> Updating ${name} from ${currentVal} to ${currentVal + increment}`);
           input.value = currentVal + increment;
           input.dispatchEvent(new Event('input', { bubbles: true }));
           input.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+          console.log(`  -> Skipped ${name}: value check failed`);
         }
       }
     });
