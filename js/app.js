@@ -281,7 +281,7 @@ const App = {
     this.compactSection('oaths-container', '.belief-row', '.belief-name');
     
     // Compact Professional Skills
-    this.compactSection('professional-skills-container', '.skill-row.professional', '.skill-name');
+    this.compactSection('professional-skills-container', '.professional-skill-row', '.prof-skill-name');
     
     // Compact Languages (but keep native tongue)
     this.compactLanguages();
@@ -412,13 +412,19 @@ const App = {
   },
   
   updateProfSkillRowIds(row, index) {
-    const name = row.querySelector('.skill-name');
-    const base = row.querySelector('.skill-base');
-    const current = row.querySelector('.skill-current');
+    const prereq = row.querySelector('.prereq-keys');
+    const name = row.querySelector('.prof-skill-name');
+    const base = row.querySelector('.prof-skill-base');
+    const baseVal = row.querySelector('.prof-skill-base-val');
+    const current = row.querySelector('.prof-skill-current');
+    const enc = row.querySelector('.prof-enc-indicator');
     
+    if (prereq) prereq.id = `prof-skill-${index}-prereq`;
     if (name) name.id = `prof-skill-${index}-name`;
     if (base) base.id = `prof-skill-${index}-base`;
+    if (baseVal) baseVal.id = `prof-skill-${index}-base-val`;
     if (current) current.id = `prof-skill-${index}-current`;
+    if (enc) enc.id = `prof-skill-${index}-enc`;
   },
   
   updateEquipmentRowIds(row, index) {
@@ -9989,7 +9995,7 @@ const App = {
   setupAddRowButtons() {
     // Professional Skills
     document.getElementById('btn-add-prof-skill')?.addEventListener('click', () => this.addProfessionalSkillRow());
-    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeLastRow('professional-skills-container', '.skill-row.professional', '.skill-name'));
+    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeLastRow('professional-skills-container', '.professional-skill-row', '.prof-skill-name'));
     
     // Languages
     document.getElementById('btn-add-language')?.addEventListener('click', () => this.addLanguageRow());
