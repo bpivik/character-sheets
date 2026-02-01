@@ -4558,6 +4558,9 @@ const App = {
         }
       }
     });
+    
+    // Set up click handlers for the dynamically added keys
+    this.setupPrereqKeyClicks();
   },
   
   /**
@@ -5230,10 +5233,12 @@ const App = {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput) {
-          const langName = nameInput.value.toLowerCase().trim();
+          // Normalize apostrophes for comparison
+          const langName = nameInput.value.toLowerCase().trim().replace(/[']/g, "'");
           // Check by dataset OR by language name
           if (nameInput.dataset.classLanguage === 'druid' || 
               langName === "druids' cant" || langName === "druid's cant") {
+            removedLanguageAbilities.push("Language (Druids' Cant)");
             removedLanguageAbilities.push("Language (Druids' Cant)");
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
@@ -5249,10 +5254,12 @@ const App = {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput) {
-          const langName = nameInput.value.toLowerCase().trim();
+          // Normalize apostrophes for comparison
+          const langName = nameInput.value.toLowerCase().trim().replace(/[']/g, "'");
           // Check by dataset OR by language name
           if (nameInput.dataset.classLanguage === 'rogue' || 
               langName === "thieves' cant" || langName === "thief's cant") {
+            removedLanguageAbilities.push("Language (Thieves' Cant)");
             removedLanguageAbilities.push("Language (Thieves' Cant)");
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
@@ -5267,12 +5274,16 @@ const App = {
       // Always remove these from acquiredAbilities for Bards, regardless of Languages section state
       removedLanguageAbilities.push("Language (Druids' Cant)");
       removedLanguageAbilities.push("Language (Thieves' Cant)");
+      // Also add variants with straight apostrophes
+      removedLanguageAbilities.push("Language (Druids' Cant)");
+      removedLanguageAbilities.push("Language (Thieves' Cant)");
       
       for (let i = 2; i <= 7; i++) {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput) {
-          const langName = nameInput.value.toLowerCase().trim();
+          // Normalize apostrophes for comparison (both curly ' and straight ')
+          const langName = nameInput.value.toLowerCase().trim().replace(/[']/g, "'");
           // Check by dataset OR by language name for bard languages
           const isBardLanguage = nameInput.dataset.classLanguage === 'bard' ||
             langName === "druids' cant" || langName === "druid's cant" ||
@@ -5290,8 +5301,12 @@ const App = {
     // Remove from acquiredAbilities tracking
     if (this.character.acquiredAbilities && removedLanguageAbilities.length > 0) {
       this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => {
-        const normalizedA = a.toLowerCase().trim();
-        return !removedLanguageAbilities.some(r => r.toLowerCase().trim() === normalizedA);
+        // Normalize apostrophes for comparison
+        const normalizedA = a.toLowerCase().trim().replace(/[']/g, "'");
+        return !removedLanguageAbilities.some(r => {
+          const normalizedR = r.toLowerCase().trim().replace(/[']/g, "'");
+          return normalizedR === normalizedA;
+        });
       });
     }
     
@@ -5355,7 +5370,8 @@ const App = {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput) {
-          const langName = nameInput.value.toLowerCase().trim();
+          // Normalize apostrophes for comparison
+          const langName = nameInput.value.toLowerCase().trim().replace(/[']/g, "'");
           if (langName === "druids' cant" || langName === "druid's cant") {
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
@@ -5376,7 +5392,8 @@ const App = {
         const nameInput = document.getElementById(`language-${i}-name`);
         const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput) {
-          const langName = nameInput.value.toLowerCase().trim();
+          // Normalize apostrophes for comparison
+          const langName = nameInput.value.toLowerCase().trim().replace(/[']/g, "'");
           if (langName === "thieves' cant" || langName === "thief's cant") {
             nameInput.value = '';
             if (currentInput) currentInput.value = '';
@@ -8655,7 +8672,7 @@ const App = {
       const expBtn = e.target.closest('.widget-exp-btn');
       if (expBtn) {
         e.stopPropagation();
-        this.showExpModal();
+        this.openExpModal();
         return;
       }
     });
