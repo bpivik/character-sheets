@@ -676,11 +676,25 @@ const App = {
       }
     });
     
-    // Set up species field listener for immediate recalculation (human luck bonus)
+    // Set up species field listener for immediate recalculation and species features update
     const speciesField = document.getElementById('species');
     if (speciesField) {
+      // Store initial value for change detection
+      speciesField.dataset.previousValue = speciesField.value || '';
+      
       const handleSpeciesChange = () => {
+        const previousSpecies = speciesField.dataset.previousValue || '';
+        const currentSpecies = speciesField.value || '';
+        
+        // Only update species features if actually changed
+        if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
+          this.updateSheetTypeFromSpecies(previousSpecies);
+          speciesField.dataset.previousValue = currentSpecies;
+        }
+        
         this.recalculateAll();
+        this.updateMagicVisibility();
+        this.scheduleAutoSave();
       };
       speciesField.addEventListener('input', handleSpeciesChange);
       speciesField.addEventListener('change', handleSpeciesChange);
@@ -765,26 +779,10 @@ const App = {
           });
         }
         
-        // Add blur listener for species field to update sheet type
+        // Species field is handled separately above with input/change listeners
+        // Skip adding duplicate listeners here
         if (fieldId === 'species') {
-          // Store initial species value
-          field.dataset.previousValue = field.value || '';
-          
-          field.addEventListener('blur', () => {
-            const previousSpecies = field.dataset.previousValue || '';
-            const currentSpecies = field.value || '';
-            
-            // Only update if species actually changed
-            if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
-              this.updateSheetTypeFromSpecies(previousSpecies);
-              field.dataset.previousValue = currentSpecies;
-              // Recalculate for human luck bonus - force update even if locked
-              this.recalculateAll();
-            }
-            
-            this.updateMagicVisibility();
-            this.scheduleAutoSave();
-          });
+          // Do nothing - handled in the main species listener above
         }
         
         // Add blur listener for rank fields to update rank name and prereq keys
