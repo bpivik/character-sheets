@@ -3341,7 +3341,19 @@ const App = {
         const col = Math.floor(i / 20) + 1;
         const row = i % 20;
         const input = document.getElementById(`ability-${col}-${row}`);
-        if (input && ability) input.value = this.toTitleCase(ability);
+        if (input && ability) {
+          // Handle both new format (object with name/source) and old format (string)
+          if (typeof ability === 'object' && ability.name) {
+            input.value = this.toTitleCase(ability.name);
+            if (ability.source) {
+              input.dataset.classAbility = ability.source;
+            }
+          } else if (typeof ability === 'string') {
+            input.value = this.toTitleCase(ability);
+          }
+          // Set previousValue for tracking
+          input.dataset.previousValue = input.value;
+        }
       });
       // Update tooltips after loading abilities
       this.updateAllAbilityTooltips();
@@ -3621,7 +3633,11 @@ const App = {
       for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`ability-${col}-${i}`);
         if (input) {
-          this.character.combat.specialAbilities.push(input.value);
+          // Save both the ability name and its source (species, class name, or null)
+          this.character.combat.specialAbilities.push({
+            name: input.value,
+            source: input.dataset.classAbility || null
+          });
         }
       }
     }
