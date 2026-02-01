@@ -10629,10 +10629,12 @@ const App = {
           const inputId = standardSkillIds[key];
           if (inputId) {
             const input = document.getElementById(inputId);
-            if (input && input.value) {
+            if (input && input.value !== '' && input.value !== null) {
               const increment = skill.multiplier === 2 ? 2 : 1;
-              input.value = (parseInt(input.value, 10) || 0) + increment;
+              const currentVal = parseInt(input.value, 10) || 0;
+              input.value = currentVal + increment;
               input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
             }
           }
         }
@@ -10643,15 +10645,19 @@ const App = {
     if (charUpper === 'STR' || charUpper === 'DEX') {
       // Combat Style 1
       const combat1 = document.getElementById('combat-skill-1-percent');
-      if (combat1 && combat1.value) {
-        combat1.value = (parseInt(combat1.value, 10) || 0) + 1;
+      if (combat1 && combat1.value !== '' && combat1.value !== null) {
+        const currentVal = parseInt(combat1.value, 10) || 0;
+        combat1.value = currentVal + 1;
         combat1.dispatchEvent(new Event('input', { bubbles: true }));
+        combat1.dispatchEvent(new Event('change', { bubbles: true }));
       }
       // Unarmed
       const unarmed = document.getElementById('unarmed-percent');
-      if (unarmed && unarmed.value) {
-        unarmed.value = (parseInt(unarmed.value, 10) || 0) + 1;
+      if (unarmed && unarmed.value !== '' && unarmed.value !== null) {
+        const currentVal = parseInt(unarmed.value, 10) || 0;
+        unarmed.value = currentVal + 1;
         unarmed.dispatchEvent(new Event('input', { bubbles: true }));
+        unarmed.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
     
@@ -10661,14 +10667,16 @@ const App = {
       const skillNameEl = document.getElementById(`prof-skill-${i}-name`);
       const skillPctEl = document.getElementById(`prof-skill-${i}-current`);
       
-      if (skillNameEl && skillPctEl && skillNameEl.value && skillPctEl.value) {
+      if (skillNameEl && skillPctEl && skillNameEl.value && skillPctEl.value !== '' && skillPctEl.value !== null) {
         const skillName = skillNameEl.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
         const proDef = SKILL_DEFINITIONS.professional?.[skillName];
         
         if (proDef && proDef.attrs && proDef.attrs.includes(charUpper)) {
           const increment = proDef.multiplier === 2 ? 2 : 1;
-          skillPctEl.value = (parseInt(skillPctEl.value, 10) || 0) + increment;
+          const currentVal = parseInt(skillPctEl.value, 10) || 0;
+          skillPctEl.value = currentVal + increment;
           skillPctEl.dispatchEvent(new Event('input', { bubbles: true }));
+          skillPctEl.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     }
@@ -10688,10 +10696,12 @@ const App = {
     Object.values(magicSkillIds).forEach(skill => {
       if (skill.attrs.includes(charUpper)) {
         const input = document.getElementById(skill.id);
-        if (input && input.value) {
+        if (input && input.value !== '' && input.value !== null) {
           const increment = skill.multiplier === 2 ? 2 : 1;
-          input.value = (parseInt(input.value, 10) || 0) + increment;
+          const currentVal = parseInt(input.value, 10) || 0;
+          input.value = currentVal + increment;
           input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     });
@@ -10701,17 +10711,21 @@ const App = {
       // Alignments use POW+INT (1-indexed, 2 slots)
       for (let i = 1; i <= 2; i++) {
         const alignPct = document.getElementById(`alignment-${i}-current`);
-        if (alignPct && alignPct.value) {
-          alignPct.value = (parseInt(alignPct.value, 10) || 0) + 1;
+        if (alignPct && alignPct.value !== '' && alignPct.value !== null) {
+          const currentVal = parseInt(alignPct.value, 10) || 0;
+          alignPct.value = currentVal + 1;
           alignPct.dispatchEvent(new Event('input', { bubbles: true }));
+          alignPct.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
       // Passions use POW+INT (1-indexed, 4 slots)
       for (let i = 1; i <= 4; i++) {
         const passionPct = document.getElementById(`passion-${i}-current`);
-        if (passionPct && passionPct.value) {
-          passionPct.value = (parseInt(passionPct.value, 10) || 0) + 1;
+        if (passionPct && passionPct.value !== '' && passionPct.value !== null) {
+          const currentVal = parseInt(passionPct.value, 10) || 0;
+          passionPct.value = currentVal + 1;
           passionPct.dispatchEvent(new Event('input', { bubbles: true }));
+          passionPct.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     }
@@ -10719,9 +10733,11 @@ const App = {
       // Oaths use POW+CHA (1-indexed, 4 slots)
       for (let i = 1; i <= 4; i++) {
         const oathPct = document.getElementById(`oath-${i}-current`);
-        if (oathPct && oathPct.value) {
-          oathPct.value = (parseInt(oathPct.value, 10) || 0) + 1;
+        if (oathPct && oathPct.value !== '' && oathPct.value !== null) {
+          const currentVal = parseInt(oathPct.value, 10) || 0;
+          oathPct.value = currentVal + 1;
           oathPct.dispatchEvent(new Event('input', { bubbles: true }));
+          oathPct.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     }
@@ -10730,19 +10746,28 @@ const App = {
     if (charUpper === 'INT' || charUpper === 'CHA') {
       // Native tongue
       const nativePct = document.getElementById('native-tongue-current');
-      if (nativePct && nativePct.value) {
-        nativePct.value = (parseInt(nativePct.value, 10) || 0) + 1;
+      if (nativePct && nativePct.value !== '' && nativePct.value !== null) {
+        const currentVal = parseInt(nativePct.value, 10) || 0;
+        nativePct.value = currentVal + 1;
         nativePct.dispatchEvent(new Event('input', { bubbles: true }));
+        nativePct.dispatchEvent(new Event('change', { bubbles: true }));
       }
       // Additional languages (2-7)
       for (let i = 2; i <= 7; i++) {
         const langPct = document.getElementById(`language-${i}-current`);
-        if (langPct && langPct.value) {
-          langPct.value = (parseInt(langPct.value, 10) || 0) + 1;
+        if (langPct && langPct.value !== '' && langPct.value !== null) {
+          const currentVal = parseInt(langPct.value, 10) || 0;
+          langPct.value = currentVal + 1;
           langPct.dispatchEvent(new Event('input', { bubbles: true }));
+          langPct.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     }
+    
+    // Sync magic skills between pages
+    this.syncMagicSkillValues();
+    
+    console.log(`Updated skills for ${charUpper} characteristic increase`);
   },
 
   /**
