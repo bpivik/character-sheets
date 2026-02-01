@@ -9,6 +9,108 @@ const App = {
   
   // Current sheet type
   sheetType: 'human',
+  
+  // Track active ability effects (to prevent stacking and enable removal)
+  activeAbilityEffects: {},
+  
+  // Ability effects configuration - abilities that modify stats/skills
+  ABILITY_EFFECTS: {
+    'agile': {
+      description: '+4 Initiative',
+      apply: function(app) {
+        const origField = document.getElementById('initiative-original');
+        const currField = document.getElementById('initiative-current');
+        if (origField) {
+          const origVal = parseInt(origField.value, 10) || 0;
+          origField.value = origVal + 4;
+        }
+        if (currField) {
+          const currVal = parseInt(currField.value, 10) || 0;
+          currField.value = currVal + 4;
+        }
+      },
+      remove: function(app) {
+        const origField = document.getElementById('initiative-original');
+        const currField = document.getElementById('initiative-current');
+        if (origField) {
+          const origVal = parseInt(origField.value, 10) || 0;
+          origField.value = origVal - 4;
+        }
+        if (currField) {
+          const currVal = parseInt(currField.value, 10) || 0;
+          currField.value = currVal - 4;
+        }
+      }
+    },
+    'artful dodger': {
+      description: '+10 Evade',
+      apply: function(app) {
+        const baseField = document.getElementById('evade-base');
+        const currField = document.getElementById('evade-current');
+        if (baseField) {
+          const baseVal = parseInt(baseField.textContent, 10) || 0;
+          baseField.textContent = baseVal + 10;
+        }
+        if (currField) {
+          const currVal = parseInt(currField.value, 10) || 0;
+          currField.value = currVal + 10;
+        }
+      },
+      remove: function(app) {
+        const baseField = document.getElementById('evade-base');
+        const currField = document.getElementById('evade-current');
+        if (baseField) {
+          const baseVal = parseInt(baseField.textContent, 10) || 0;
+          baseField.textContent = baseVal - 10;
+        }
+        if (currField) {
+          const currVal = parseInt(currField.value, 10) || 0;
+          currField.value = currVal - 10;
+        }
+      }
+    },
+    'weapon precision': {
+      description: 'Use better of STR+SIZ or STR+DEX for Damage Modifier',
+      apply: function(app) {
+        const strVal = parseInt(document.getElementById('str-value')?.value, 10) || 0;
+        const sizVal = parseInt(document.getElementById('siz-value')?.value, 10) || 0;
+        const dexVal = parseInt(document.getElementById('dex-value')?.value, 10) || 0;
+        
+        const strSiz = strVal + sizVal;
+        const strDex = strVal + dexVal;
+        
+        // Get damage modifier for each
+        const dmgStrSiz = app.getDamageModifierForSum(strSiz);
+        const dmgStrDex = app.getDamageModifierForSum(strDex);
+        
+        // Compare which is better (higher on the progression)
+        const better = app.compareDamageModifiers(dmgStrSiz, dmgStrDex);
+        
+        // Only apply if STR+DEX is better
+        if (better === dmgStrDex && dmgStrDex !== dmgStrSiz) {
+          const origField = document.getElementById('damage-mod-original');
+          const currField = document.getElementById('damage-mod-current');
+          if (origField) origField.value = dmgStrDex;
+          if (currField) currField.value = dmgStrDex;
+          // Store original for removal
+          app.activeAbilityEffects['weapon precision'].originalDamage = dmgStrSiz;
+        }
+      },
+      remove: function(app) {
+        // Restore original STR+SIZ based damage modifier
+        const effectData = app.activeAbilityEffects['weapon precision'];
+        if (effectData && effectData.originalDamage) {
+          const origField = document.getElementById('damage-mod-original');
+          const currField = document.getElementById('damage-mod-current');
+          if (origField) origField.value = effectData.originalDamage;
+          if (currField) currField.value = effectData.originalDamage;
+        } else {
+          // Recalculate from scratch
+          app.recalculateAll();
+        }
+      }
+    }
+  },
 
   /**
    * Initialize the application
@@ -108,6 +210,9 @@ const App = {
     
     // Initial calculations
     this.recalculateAll();
+    
+    // Restore ability effects (Agile, Artful Dodger, etc.) after calculations
+    this.restoreAbilityEffects();
     
     // Restore characteristic increase display name if applicable
     this.restoreCharacteristicIncreaseDisplay();
@@ -2195,6 +2300,8 @@ const App = {
       input.classList.add('duplicate-warning');
     } else {
       input.classList.remove('duplicate-warning');
+      // Apply ability effect if this is a new ability (not a duplicate)
+      this.applyAbilityEffect(input.value);
     }
     
     // Update tooltip with ability description
@@ -2227,7 +2334,165 @@ const App = {
       this.character.characteristicIncreases = [];
     }
     
+    // Check for ability effects to remove
+    this.removeAbilityEffect(abilityName);
+    
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Check if an ability has a special effect and apply it
+   */
+  applyAbilityEffect(abilityName) {
+    if (!abilityName) return;
+    
+    const baseName = abilityName.split('(')[0].trim().toLowerCase();
+    const effect = this.ABILITY_EFFECTS[baseName];
+    
+    if (!effect) return;
+    
+    // Check if effect is already active (no stacking)
+    if (this.activeAbilityEffects[baseName]) {
+      console.log(`Ability effect "${baseName}" already active, not stacking.`);
+      return;
+    }
+    
+    // Mark as active and apply
+    this.activeAbilityEffects[baseName] = { active: true };
+    effect.apply(this);
+    console.log(`Applied ability effect: ${baseName} (${effect.description})`);
+  },
+
+  /**
+   * Remove an ability's special effect
+   */
+  removeAbilityEffect(abilityName) {
+    if (!abilityName) return;
+    
+    const baseName = abilityName.split('(')[0].trim().toLowerCase();
+    const effect = this.ABILITY_EFFECTS[baseName];
+    
+    if (!effect) return;
+    
+    // Check if effect is active
+    if (!this.activeAbilityEffects[baseName]) {
+      return; // Effect wasn't active
+    }
+    
+    // Check if the ability still exists elsewhere on the sheet (from another class)
+    if (this.hasAbilityOnSheet(baseName)) {
+      console.log(`Ability "${baseName}" still exists on sheet, keeping effect.`);
+      return;
+    }
+    
+    // Remove the effect
+    effect.remove(this);
+    delete this.activeAbilityEffects[baseName];
+    console.log(`Removed ability effect: ${baseName}`);
+  },
+
+  /**
+   * Check if an ability (by base name) still exists on the sheet
+   */
+  hasAbilityOnSheet(baseName) {
+    const normalizedBase = baseName.toLowerCase().trim();
+    
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          const abilityBase = input.value.split('(')[0].trim().toLowerCase();
+          if (abilityBase === normalizedBase) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Get damage modifier for a given STR+SIZ or STR+DEX sum
+   */
+  getDamageModifierForSum(sum) {
+    const table = [
+      { max: 5, mod: '-1d8' },
+      { max: 10, mod: '-1d6' },
+      { max: 15, mod: '-1d4' },
+      { max: 20, mod: '-1d2' },
+      { max: 25, mod: '+0' },
+      { max: 30, mod: '+1d2' },
+      { max: 35, mod: '+1d4' },
+      { max: 40, mod: '+1d6' },
+      { max: 45, mod: '+1d8' },
+      { max: 50, mod: '+1d10' },
+      { max: 60, mod: '+1d12' },
+      { max: 70, mod: '+2d6' },
+      { max: 80, mod: '+1d8+1d6' },
+      { max: 90, mod: '+2d8' },
+      { max: 100, mod: '+1d10+1d8' },
+      { max: 110, mod: '+2d10' },
+      { max: 120, mod: '+2d10+1d2' },
+      { max: 130, mod: '+2d10+1d4' }
+    ];
+    
+    // Handle values beyond the table
+    if (sum > 130) {
+      const extraTens = Math.floor((sum - 130) / 10);
+      const diceProgression = ['+2d10+1d6', '+2d10+1d8', '+2d10+1d10', '+2d10+1d12', '+3d10'];
+      const idx = Math.min(extraTens, diceProgression.length - 1);
+      return diceProgression[idx];
+    }
+    
+    for (const entry of table) {
+      if (sum <= entry.max) {
+        return entry.mod;
+      }
+    }
+    return '+0';
+  },
+
+  /**
+   * Compare two damage modifiers and return the better (higher) one
+   */
+  compareDamageModifiers(mod1, mod2) {
+    // Convert damage modifiers to a numeric ranking for comparison
+    const ranking = [
+      '-1d8', '-1d6', '-1d4', '-1d2', '+0',
+      '+1d2', '+1d4', '+1d6', '+1d8', '+1d10', '+1d12',
+      '+2d6', '+1d8+1d6', '+2d8', '+1d10+1d8', '+2d10',
+      '+2d10+1d2', '+2d10+1d4', '+2d10+1d6', '+2d10+1d8', '+2d10+1d10', '+2d10+1d12', '+3d10'
+    ];
+    
+    const rank1 = ranking.indexOf(mod1);
+    const rank2 = ranking.indexOf(mod2);
+    
+    // If not found in ranking, assume it's high
+    const effectiveRank1 = rank1 === -1 ? 100 : rank1;
+    const effectiveRank2 = rank2 === -1 ? 100 : rank2;
+    
+    return effectiveRank1 >= effectiveRank2 ? mod1 : mod2;
+  },
+
+  /**
+   * Restore ability effects on page load
+   */
+  restoreAbilityEffects() {
+    // Check all abilities on the sheet and apply their effects
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          const baseName = input.value.split('(')[0].trim().toLowerCase();
+          const effect = this.ABILITY_EFFECTS[baseName];
+          if (effect && !this.activeAbilityEffects[baseName]) {
+            this.activeAbilityEffects[baseName] = { active: true };
+            effect.apply(this);
+            console.log(`Restored ability effect: ${baseName}`);
+          }
+        }
+      }
+    }
   },
 
   /**
@@ -2574,6 +2839,7 @@ const App = {
         const input = document.getElementById(`ability-${col}-${i}`);
         if (input && !input.value.trim()) {
           input.value = this.toTitleCase(abilityName);
+          input.dataset.previousValue = input.value; // Track for removal
           this.updateAbilityTooltip(input);
           
           // Show the info button
@@ -2584,6 +2850,9 @@ const App = {
               infoBtn.style.display = '';
             }
           }
+          
+          // Apply ability effect if applicable
+          this.applyAbilityEffect(abilityName);
           
           return true;
         }
@@ -3578,6 +3847,34 @@ const App = {
     
     // Populate class abilities
     this.updateClassAbilities(null);
+    
+    // Re-apply ability effects (Agile, Artful Dodger, Weapon Precision)
+    // These modify calculated values and need to be reapplied after base recalculation
+    this.reapplyAbilityEffects();
+  },
+  
+  /**
+   * Re-apply ability effects after recalculation
+   * This is called after base values are recalculated to re-add bonuses
+   */
+  reapplyAbilityEffects() {
+    // Clear active tracking (base values were just recalculated)
+    this.activeAbilityEffects = {};
+    
+    // Check all abilities on the sheet and apply their effects
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          const baseName = input.value.split('(')[0].trim().toLowerCase();
+          const effect = this.ABILITY_EFFECTS[baseName];
+          if (effect && !this.activeAbilityEffects[baseName]) {
+            this.activeAbilityEffects[baseName] = { active: true };
+            effect.apply(this);
+          }
+        }
+      }
+    }
   },
 
   /**
