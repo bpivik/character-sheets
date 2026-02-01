@@ -8382,7 +8382,8 @@ const App = {
       if (expandBtn) {
         e.stopPropagation();
         const widgetId = expandBtn.dataset.widgetId;
-        const list = canvas.querySelector(`[data-widget-id="${widgetId}"]`);
+        // Find the list specifically (not the widget-item container)
+        const list = canvas.querySelector(`.abilities-widget-list[data-widget-id="${widgetId}"], .spell-widget-list[data-widget-id="${widgetId}"]`);
         if (list) {
           const isCollapsed = list.classList.contains('collapsed');
           if (isCollapsed) {
