@@ -64,6 +64,12 @@ const App = {
     this.updatePrereqKeys();
     this.updateMagicVisibility();
     
+    // Setup magic skill sync listeners (for two-way sync between magic page and professional skills)
+    this.setupMagicSkillSyncListeners();
+    
+    // Auto-add magic skills to professional skills based on class
+    this.autoAddMagicSkillsToProfessional();
+    
     // Restore last viewed page (after magic visibility so we don't restore hidden pages)
     this.restoreCurrentPage();
     
@@ -516,6 +522,9 @@ const App = {
             this.updatePrereqKeys();
             this.updateMagicVisibility();
             this.updateSpellMemorization();
+            
+            // Auto-add magic skills to professional skills for new class
+            this.autoAddMagicSkillsToProfessional();
             
             // Update class spells after a brief delay to ensure rank is set
             setTimeout(() => {
@@ -1003,14 +1012,35 @@ const App = {
       const currentInput = row.querySelector('.prof-skill-current');
       const prereqKeys = row.querySelector('.prereq-keys');
       
-      // Convert to title case on blur
-      nameInput.addEventListener('blur', () => {
-        if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
-          prereqKeys.dataset.skillName = nameInput.value;
+      // Track previous name for deletion detection
+      nameInput.dataset.previousName = '';
+      
+      // Store previous name on focus (before editing)
+      nameInput.addEventListener('focus', (e) => {
+        e.target.dataset.previousName = e.target.value.trim();
+      });
+      
+      // Convert to title case on blur and handle name changes
+      nameInput.addEventListener('blur', (e) => {
+        const newName = e.target.value.trim();
+        const previousName = e.target.dataset.previousName || '';
+        
+        if (newName) {
+          // Check for duplicate magic skill
+          if (this.checkForDuplicateMagicSkill(newName, i)) {
+            alert(`${this.toTitleCase(newName)} already exists in Professional Skills. Please remove the duplicate.`);
+          }
+          
+          e.target.value = this.toTitleCase(newName);
+          prereqKeys.dataset.skillName = e.target.value;
           this.updatePrereqKeys();
           this.scheduleAutoSave();
+        } else if (previousName) {
+          // Name was cleared - handle deletion
+          this.handleProfSkillDeletion(i, previousName);
         }
+        
+        e.target.dataset.previousName = e.target.value.trim();
       });
       
       // Auto-fill formula when skill name is entered
@@ -1043,8 +1073,8 @@ const App = {
           e.target.dataset.originalValue = e.target.value;
         }
         this.updateProfessionalSkillData(i);
-        // Sync Musicianship if this is that skill and user is a Bard
-        this.syncMusicianshipIfBard(i);
+        // Sync to magic page if this is a magic skill
+        this.syncProfSkillToMagic(i);
         this.scheduleAutoSave();
       });
     }
@@ -5118,6 +5148,244 @@ const App = {
         input.value = syncTarget.value;
       }
     });
+  },
+  
+  /**
+   * Magic skills configuration - maps skill names to magic page field IDs and class requirements
+   */
+  MAGIC_SKILL_CONFIG: {
+    'channel': { magicId: 'channel-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'monk'] },
+    'piety': { magicId: 'piety-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'monk'] },
+    'arcane casting': { magicId: 'arcane-casting-percent', classes: ['mage'] },
+    'arcane knowledge': { magicId: 'arcane-knowledge-percent', classes: ['mage'] },
+    'arcane sorcery': { magicId: 'arcane-sorcery-percent', classes: ['sorcerer'] },
+    'sorcerous wisdom': { magicId: 'sorcerous-wisdom-percent', classes: ['sorcerer'] },
+    'musicianship': { magicId: 'musicianship-percent', classes: ['bard'] },
+    'lyrical magic': { magicId: 'lyrical-magic-percent', classes: ['bard'] }
+  },
+  
+  /**
+   * Get current character classes (lowercase)
+   */
+  getCurrentClasses() {
+    return [
+      document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+      document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+    ].filter(c => c);
+  },
+  
+  /**
+   * Check if a magic skill is relevant to current classes
+   */
+  isMagicSkillRelevant(skillName) {
+    const normalizedName = skillName.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+    const config = this.MAGIC_SKILL_CONFIG[normalizedName];
+    if (!config) return false;
+    
+    const currentClasses = this.getCurrentClasses();
+    return config.classes.some(cls => currentClasses.includes(cls));
+  },
+  
+  /**
+   * Sync a professional skill to the magic page (when pro skill value changes)
+   */
+  syncProfSkillToMagic(profSkillIndex) {
+    const nameInput = document.getElementById(`prof-skill-${profSkillIndex}-name`);
+    const currentInput = document.getElementById(`prof-skill-${profSkillIndex}-current`);
+    
+    if (!nameInput || !currentInput) return;
+    
+    const skillName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+    const config = this.MAGIC_SKILL_CONFIG[skillName];
+    
+    if (!config) return;
+    if (!this.isMagicSkillRelevant(skillName)) return;
+    
+    const magicInput = document.getElementById(config.magicId);
+    if (magicInput && magicInput.value !== currentInput.value) {
+      magicInput.value = currentInput.value;
+      magicInput.dispatchEvent(new Event('input', { bubbles: true }));
+      magicInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  },
+  
+  /**
+   * Sync a magic skill to professional skills (when magic page value changes)
+   */
+  syncMagicToProfSkill(magicFieldId, value) {
+    // Find which skill this magic field represents
+    let targetSkillName = null;
+    for (const [skillName, config] of Object.entries(this.MAGIC_SKILL_CONFIG)) {
+      if (config.magicId === magicFieldId) {
+        targetSkillName = skillName;
+        break;
+      }
+    }
+    
+    if (!targetSkillName) return;
+    if (!this.isMagicSkillRelevant(targetSkillName)) return;
+    
+    // Find this skill in professional skills
+    for (let i = 0; i < 22; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      
+      if (nameInput && currentInput) {
+        const profSkillName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+        if (profSkillName === targetSkillName) {
+          if (currentInput.value !== value) {
+            currentInput.value = value;
+            currentInput.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          return; // Found and updated
+        }
+      }
+    }
+  },
+  
+  /**
+   * Handle professional skill deletion - also clear magic skill if applicable
+   */
+  handleProfSkillDeletion(profSkillIndex, previousSkillName) {
+    if (!previousSkillName) return;
+    
+    const normalizedName = previousSkillName.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+    const config = this.MAGIC_SKILL_CONFIG[normalizedName];
+    
+    if (!config) return;
+    
+    // Clear the magic page field
+    const magicInput = document.getElementById(config.magicId);
+    if (magicInput && magicInput.value) {
+      magicInput.value = '';
+      magicInput.dispatchEvent(new Event('input', { bubbles: true }));
+      magicInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  },
+  
+  /**
+   * Check for duplicate magic skills in professional skills
+   */
+  checkForDuplicateMagicSkill(skillName, excludeIndex) {
+    const normalizedName = skillName.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+    
+    // Check if it's a magic skill
+    if (!this.MAGIC_SKILL_CONFIG[normalizedName]) return false;
+    
+    // Check other professional skill slots
+    for (let i = 0; i < 22; i++) {
+      if (i === excludeIndex) continue;
+      
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      if (nameInput) {
+        const existingName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+        if (existingName === normalizedName) {
+          return true; // Duplicate found
+        }
+      }
+    }
+    return false;
+  },
+  
+  /**
+   * Setup magic skill sync listeners on magic page inputs
+   */
+  setupMagicSkillSyncListeners() {
+    Object.values(this.MAGIC_SKILL_CONFIG).forEach(config => {
+      const magicInput = document.getElementById(config.magicId);
+      if (magicInput) {
+        magicInput.addEventListener('input', (e) => {
+          this.syncMagicToProfSkill(config.magicId, e.target.value);
+        });
+      }
+    });
+  },
+  
+  /**
+   * Auto-add magic skills to Professional Skills based on class
+   * Called when class changes or during initialization
+   */
+  autoAddMagicSkillsToProfessional() {
+    const currentClasses = this.getCurrentClasses();
+    if (currentClasses.length === 0) return;
+    
+    // Determine which magic skills should be present
+    const requiredSkills = [];
+    for (const [skillName, config] of Object.entries(this.MAGIC_SKILL_CONFIG)) {
+      if (config.classes.some(cls => currentClasses.includes(cls))) {
+        requiredSkills.push({
+          name: this.toTitleCase(skillName),
+          magicId: config.magicId
+        });
+      }
+    }
+    
+    if (requiredSkills.length === 0) return;
+    
+    // Check which skills are already in professional skills
+    const existingSkills = new Set();
+    for (let i = 0; i < 22; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      if (nameInput && nameInput.value.trim()) {
+        existingSkills.add(nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim());
+      }
+    }
+    
+    // Add missing skills
+    for (const skill of requiredSkills) {
+      const normalizedName = skill.name.toLowerCase();
+      if (!existingSkills.has(normalizedName)) {
+        // Find empty slot
+        for (let i = 0; i < 22; i++) {
+          const nameInput = document.getElementById(`prof-skill-${i}-name`);
+          const baseInput = document.getElementById(`prof-skill-${i}-base`);
+          const currentInput = document.getElementById(`prof-skill-${i}-current`);
+          
+          if (nameInput && !nameInput.value.trim()) {
+            // Found empty slot - add the skill
+            nameInput.value = skill.name;
+            nameInput.dataset.previousName = skill.name;
+            
+            // Auto-fill formula
+            if (baseInput) {
+              this.autoFillProfessionalSkillFormula(nameInput, baseInput);
+            }
+            
+            // Copy value from magic page
+            const magicInput = document.getElementById(skill.magicId);
+            if (magicInput && magicInput.value && currentInput) {
+              currentInput.value = magicInput.value;
+            }
+            
+            // Update data
+            this.updateProfessionalSkillData(i);
+            this.calculateProfessionalSkillBase(i);
+            this.updateProfSkillEncIndicator(i);
+            
+            break; // Move to next required skill
+          }
+        }
+      } else {
+        // Skill exists - sync values from magic page
+        for (let i = 0; i < 22; i++) {
+          const nameInput = document.getElementById(`prof-skill-${i}-name`);
+          if (nameInput) {
+            const existingName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+            if (existingName === normalizedName) {
+              const currentInput = document.getElementById(`prof-skill-${i}-current`);
+              const magicInput = document.getElementById(skill.magicId);
+              if (currentInput && magicInput && magicInput.value) {
+                if (currentInput.value !== magicInput.value) {
+                  currentInput.value = magicInput.value;
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
   },
   
   /**
