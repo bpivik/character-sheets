@@ -523,7 +523,8 @@ const App = {
             this.updateMagicVisibility();
             this.updateSpellMemorization();
             
-            // Auto-add magic skills to professional skills for new class
+            // Handle magic skills - remove obsolete ones first, then add new ones
+            this.removeObsoleteMagicSkills();
             this.autoAddMagicSkillsToProfessional();
             
             // Update class spells after a brief delay to ensure rank is set
@@ -5300,6 +5301,48 @@ const App = {
         });
       }
     });
+  },
+  
+  /**
+   * Remove magic skills from Professional Skills when their class is no longer present
+   */
+  removeObsoleteMagicSkills() {
+    const currentClasses = this.getCurrentClasses();
+    
+    // Check each professional skill slot
+    for (let i = 0; i < 22; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const baseInput = document.getElementById(`prof-skill-${i}-base`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      
+      if (!nameInput || !nameInput.value.trim()) continue;
+      
+      const skillName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+      const config = this.MAGIC_SKILL_CONFIG[skillName];
+      
+      // If this is a magic skill, check if its class is still present
+      if (config) {
+        const hasRequiredClass = config.classes.some(cls => currentClasses.includes(cls));
+        
+        if (!hasRequiredClass) {
+          // Class removed - clear this skill from professional skills
+          nameInput.value = '';
+          nameInput.dataset.previousName = '';
+          if (baseInput) baseInput.value = '';
+          if (currentInput) currentInput.value = '';
+          
+          // Also clear from magic page
+          const magicInput = document.getElementById(config.magicId);
+          if (magicInput) {
+            magicInput.value = '';
+            magicInput.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          
+          // Update data
+          this.updateProfessionalSkillData(i);
+        }
+      }
+    }
   },
   
   /**
