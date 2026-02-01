@@ -113,6 +113,12 @@ const App = {
   },
 
   /**
+   * Track scroll positions per page
+   */
+  pageScrollPositions: {},
+  currentPageId: null,
+  
+  /**
    * Set up tab navigation
    */
   setupNavigation() {
@@ -122,6 +128,11 @@ const App = {
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         const targetPage = tab.dataset.page;
+        
+        // Save scroll position of current page before switching
+        if (this.currentPageId) {
+          this.pageScrollPositions[this.currentPageId] = window.scrollY;
+        }
         
         // Update tab states
         tabs.forEach(t => t.classList.remove('active'));
@@ -134,6 +145,17 @@ const App = {
             page.classList.add('active');
           }
         });
+        
+        // Update current page tracker
+        this.currentPageId = targetPage;
+        
+        // Restore scroll position for target page (or scroll to top if none saved)
+        const savedScroll = this.pageScrollPositions[targetPage];
+        if (savedScroll !== undefined) {
+          window.scrollTo(0, savedScroll);
+        } else {
+          window.scrollTo(0, 0);
+        }
         
         // Save current page to localStorage
         try {
@@ -176,10 +198,22 @@ const App = {
           document.querySelectorAll('.sheet-page').forEach(p => p.classList.remove('active'));
           tab.classList.add('active');
           page.classList.add('active');
+          this.currentPageId = savedPage;
+        } else {
+          // Default to main page
+          this.currentPageId = 'main';
         }
+      } else {
+        // No saved page - default to main
+        this.currentPageId = 'main';
       }
+      
+      // Always scroll to top on fresh load
+      window.scrollTo(0, 0);
     } catch (e) {
       // Ignore storage errors
+      this.currentPageId = 'main';
+      window.scrollTo(0, 0);
     }
   },
 
@@ -6645,6 +6679,11 @@ const App = {
   navigateToPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
+      // Save scroll position of current page before switching
+      if (this.currentPageId) {
+        this.pageScrollPositions[this.currentPageId] = window.scrollY;
+      }
+      
       // Hide all pages
       document.querySelectorAll('.sheet-page').forEach(page => {
         page.classList.remove('active');
@@ -6658,9 +6697,22 @@ const App = {
           btn.classList.add('active');
         }
       });
+      
+      // Extract page name from pageId (e.g., 'page-magic1' -> 'magic1')
+      const pageName = pageId.replace('page-', '');
+      this.currentPageId = pageName;
+      
+      // Restore scroll position for target page (or scroll to top if none saved)
+      const savedScroll = this.pageScrollPositions[pageName];
+      if (savedScroll !== undefined) {
+        window.scrollTo(0, savedScroll);
+      } else {
+        window.scrollTo(0, 0);
+      }
+      
       // Store current page
       try {
-        localStorage.setItem('mythras-current-page', pageId);
+        localStorage.setItem('mythras-current-page', pageName);
       } catch (e) {}
       
       // If navigating to magic pages, sync professional skill values
