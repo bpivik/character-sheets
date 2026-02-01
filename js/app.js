@@ -2075,8 +2075,8 @@ const App = {
         input.id = `ability-${col}-${i}`;
         input.placeholder = '';
         
-        // Set default tooltip
-        input.title = 'Enter a Special Ability name';
+        // No hover tooltip - use info button for popup details
+        input.title = '';
         
         // Info button (shows when there's content)
         const infoBtn = document.createElement('button');
@@ -2299,21 +2299,36 @@ const App = {
   updateAbilityTooltip(input) {
     const value = input.value.trim();
     
+    // Remove hover tooltip - we use click popup instead
+    input.title = '';
+    
     if (!value) {
-      input.title = 'Enter a Special Ability name';
       return;
     }
     
-    // Look up description from AbilityDescriptions
-    if (window.AbilityDescriptions) {
-      const description = AbilityDescriptions.getDescription(value);
-      if (description) {
-        input.title = description;
-      } else {
-        input.title = value; // Just show the ability name if no description
+    // The click handler is set up in setupAbilityInputs
+  },
+
+  /**
+   * Setup click handlers for ability inputs to show popup
+   */
+  setupAbilityInputClickHandlers() {
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && !input.dataset.clickHandlerSet) {
+          input.dataset.clickHandlerSet = 'true';
+          input.style.cursor = 'pointer';
+          
+          // Show popup on click (but allow text selection/editing)
+          input.addEventListener('dblclick', (e) => {
+            const abilityName = e.target.value.trim();
+            if (abilityName) {
+              this.showAbilityDetail(abilityName);
+            }
+          });
+        }
       }
-    } else {
-      input.title = value;
     }
   },
 
@@ -2336,7 +2351,7 @@ const App = {
             <button class="ability-detail-close">&times;</button>
           </div>
           <div class="ability-detail-body">
-            <p class="ability-detail-description"></p>
+            <div class="ability-detail-description"></div>
           </div>
         </div>
       `;
@@ -2362,6 +2377,8 @@ const App = {
     
     // Get the description
     let description = 'No description available for this ability.';
+    let source = '';
+    
     if (window.AbilityDescriptions) {
       const desc = AbilityDescriptions.getDescription(abilityName);
       if (desc) {
@@ -2369,12 +2386,46 @@ const App = {
       }
     }
     
+    // Check if it's a species ability
+    const speciesName = document.getElementById('species')?.value || '';
+    if (speciesName && window.SpeciesData) {
+      if (SpeciesData.isSpeciesAbility(abilityName, speciesName)) {
+        source = `Species Ability (${this.toTitleCase(speciesName)})`;
+      }
+    }
+    
+    // Check if it's a class ability
+    if (!source) {
+      const classes = this.getCurrentClasses();
+      for (const cls of classes) {
+        if (window.ClassAbilitiesData && ClassAbilitiesData[cls]) {
+          const classAbilities = ClassAbilitiesData[cls].map(a => a.toLowerCase());
+          if (classAbilities.includes(abilityName.toLowerCase().replace(/\s*\(.*\)/, '').trim())) {
+            source = `Class Ability (${this.toTitleCase(cls)})`;
+            break;
+          }
+        }
+      }
+    }
+    
     // Get base name for title (capitalize properly)
     const displayName = this.toTitleCase(abilityName);
     
+    // Format the description with HTML
+    let formattedContent = `<p class="ability-description-text">${description}</p>`;
+    
+    if (source) {
+      formattedContent += `<p class="ability-source"><strong>Source:</strong> ${source}</p>`;
+    }
+    
+    // Add a note about "See description" abilities
+    if (description.toLowerCase().includes('see description')) {
+      formattedContent += `<p class="ability-note"><em>Refer to the Classic Fantasy rulebook for complete details.</em></p>`;
+    }
+    
     // Update content
     overlay.querySelector('.ability-detail-title').textContent = displayName;
-    overlay.querySelector('.ability-detail-description').textContent = description;
+    overlay.querySelector('.ability-detail-description').innerHTML = formattedContent;
     
     // Show overlay
     overlay.classList.add('active');
@@ -2403,10 +2454,8 @@ const App = {
           // Set previousValue for tracking (used when abilities are deleted)
           input.dataset.previousValue = hasValue || '';
           
-          // Update tooltip
-          if (hasValue) {
-            this.updateAbilityTooltip(input);
-          }
+          // Update tooltip (removes hover, we use click popup instead)
+          this.updateAbilityTooltip(input);
           
           // Show/hide info button
           const wrapper = input.closest('.ability-input-wrapper');
@@ -2419,6 +2468,9 @@ const App = {
         }
       }
     }
+    
+    // Setup click handlers for popups
+    this.setupAbilityInputClickHandlers();
   },
 
   /**

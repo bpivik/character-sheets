@@ -724,3 +724,29 @@
   background: #1a1a1a;
   border-color: #444;
 }
+
+/* Ability detail popup in dark mode */
+[data-theme="dark"] .ability-detail-popup {
+  background: linear-gradient(180deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: var(--border-gold);
+}
+
+[data-theme="dark"] .ability-detail-body {
+  background: #1f1f1f;
+}
+
+[data-theme="dark"] .ability-description-text,
+[data-theme="dark"] .ability-detail-description {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ability-source {
+  color: var(--text-secondary);
+  border-top-color: #444;
+}
+
+[data-theme="dark"] .ability-note {
+  background: rgba(184, 134, 11, 0.15);
+  color: var(--text-secondary);
+}
+
