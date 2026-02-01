@@ -4836,23 +4836,46 @@ const App = {
    * Add a language to the first empty language slot
    */
   addLanguageIfNotExists(languageName) {
-    // Check if language already exists
-    for (let i = 1; i <= 4; i++) {
+    // Check native tongue first
+    const nativeName = document.getElementById('native-tongue-name');
+    if (nativeName && nativeName.value.toLowerCase().trim() === languageName.toLowerCase().trim()) {
+      return; // Already exists as native tongue
+    }
+    
+    // Check if language already exists in additional languages (2-7)
+    for (let i = 2; i <= 7; i++) {
       const nameInput = document.getElementById(`language-${i}-name`);
       if (nameInput && nameInput.value.toLowerCase().trim() === languageName.toLowerCase().trim()) {
         return; // Already exists
       }
     }
     
-    // Find first empty slot
-    for (let i = 1; i <= 4; i++) {
+    // Calculate base value (INT+CHA)
+    const intVal = parseInt(document.getElementById('int-value')?.value, 10) || 0;
+    const chaVal = parseInt(document.getElementById('cha-value')?.value, 10) || 0;
+    const baseValue = intVal + chaVal;
+    
+    // Find first empty slot (starting at 2)
+    for (let i = 2; i <= 7; i++) {
       const nameInput = document.getElementById(`language-${i}-name`);
+      const currentInput = document.getElementById(`language-${i}-current`);
+      
       if (nameInput && !nameInput.value.trim()) {
         nameInput.value = languageName;
-        nameInput.dataset.classLanguage = 'druid';
+        nameInput.dataset.classLanguage = languageName.toLowerCase().includes('druid') ? 'druid' : 'rogue';
+        
+        // Set the current value to base percentage
+        if (currentInput) {
+          currentInput.value = baseValue;
+        }
+        
+        this.scheduleAutoSave();
         return;
       }
     }
+    
+    // No empty slots - could potentially add a new row here
+    console.warn(`No empty language slots to add ${languageName}`);
   },
   
   /**
@@ -5031,10 +5054,25 @@ const App = {
     
     // Remove Druid's Cant language
     if (classKey === 'druid') {
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 2; i <= 7; i++) {
         const nameInput = document.getElementById(`language-${i}-name`);
+        const currentInput = document.getElementById(`language-${i}-current`);
         if (nameInput && nameInput.dataset.classLanguage === 'druid') {
           nameInput.value = '';
+          if (currentInput) currentInput.value = '';
+          delete nameInput.dataset.classLanguage;
+        }
+      }
+    }
+    
+    // Remove Thieves' Cant language
+    if (classKey === 'rogue') {
+      for (let i = 2; i <= 7; i++) {
+        const nameInput = document.getElementById(`language-${i}-name`);
+        const currentInput = document.getElementById(`language-${i}-current`);
+        if (nameInput && nameInput.dataset.classLanguage === 'rogue') {
+          nameInput.value = '';
+          if (currentInput) currentInput.value = '';
           delete nameInput.dataset.classLanguage;
         }
       }

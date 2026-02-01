@@ -3985,6 +3985,7 @@ select:focus {
   line-height: 1.7;
   color: var(--text-body);
   margin: 0 0 1rem 0;
+  white-space: pre-line;
 }
 
 .ability-source {

@@ -63,7 +63,11 @@ const ClassAbilities = {
   },
   
   rogue: {
-    rank1: ["Climb Walls", "Hide in Shadows", "Sneak Attack", "Subterfuge"]
+    rank1: ["Climb Walls", "Hide in Shadows", "Sneak Attack", "Subterfuge"],
+    // Special: Also adds "Thieves' Cant" as a language
+    specialActions: {
+      rank1: { addLanguage: "Thieves' Cant" }
+    }
   },
   
   sorcerer: {
