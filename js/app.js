@@ -2550,13 +2550,20 @@ const App = {
    * @returns {boolean} - True if successfully added
    */
   addAbilityToSheet(abilityName) {
+    // Normalize apostrophes for comparison
+    const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
+    const normalizedName = normalizeApostrophes(abilityName.toLowerCase());
+    
     // Check if ability already exists
     for (let col = 1; col <= 3; col++) {
       for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim().toLowerCase() === abilityName.toLowerCase()) {
-          // Already exists
-          return true;
+        if (input && input.value.trim()) {
+          const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
+          if (normalizedExisting === normalizedName) {
+            // Already exists
+            return true;
+          }
         }
       }
     }
@@ -4923,26 +4930,37 @@ const App = {
   
   /**
    * Add a language to the first empty language slot
+   * Also adds "Language (X)" to Special Abilities for class-granted languages
    */
   addLanguageIfNotExists(languageName, sourceClass = null) {
+    // Normalize apostrophes for comparison
+    const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
+    const normalizedLangName = normalizeApostrophes(languageName.toLowerCase().trim());
+    
     // Check native tongue first
     const nativeName = document.getElementById('native-tongue-name');
-    if (nativeName && nativeName.value.toLowerCase().trim() === languageName.toLowerCase().trim()) {
-      return; // Already exists as native tongue
+    if (nativeName) {
+      const normalizedNative = normalizeApostrophes(nativeName.value.toLowerCase().trim());
+      if (normalizedNative === normalizedLangName) {
+        return; // Already exists as native tongue
+      }
     }
     
     // Check if language already exists in additional languages (2-7)
     for (let i = 2; i <= 7; i++) {
       const nameInput = document.getElementById(`language-${i}-name`);
-      if (nameInput && nameInput.value.toLowerCase().trim() === languageName.toLowerCase().trim()) {
-        return; // Already exists
+      if (nameInput) {
+        const normalizedExisting = normalizeApostrophes(nameInput.value.toLowerCase().trim());
+        if (normalizedExisting === normalizedLangName) {
+          return; // Already exists
+        }
       }
     }
     
-    // Calculate base value (INT+CHA)
+    // Calculate current value (INT+CHA+40 for class-granted languages)
     const intVal = parseInt(document.getElementById('int-value')?.value, 10) || 0;
     const chaVal = parseInt(document.getElementById('cha-value')?.value, 10) || 0;
-    const baseValue = intVal + chaVal;
+    const currentValue = intVal + chaVal + 40;
     
     // Determine source class for tracking
     let classSource = sourceClass;
@@ -4966,10 +4984,14 @@ const App = {
           nameInput.dataset.classLanguage = classSource.toLowerCase();
         }
         
-        // Set the current value to base percentage
+        // Set the current value to INT+CHA+40
         if (currentInput) {
-          currentInput.value = baseValue;
+          currentInput.value = currentValue;
         }
+        
+        // Also add to Special Abilities as "Language (X)"
+        const abilityName = `Language (${languageName})`;
+        this.addAbilityToSheet(abilityName);
         
         this.scheduleAutoSave();
         return;
@@ -5310,6 +5332,11 @@ const App = {
       });
     }
     
+    // Also remove Language abilities from Special Abilities section
+    if (removedLanguageAbilities.length > 0) {
+      this.removeLanguageAbilitiesFromSheet(removedLanguageAbilities);
+    }
+    
     // Remove Monk's Unarmed weapon
     if (classKey === 'monk') {
       for (let i = 1; i <= 5; i++) {
@@ -5469,6 +5496,38 @@ const App = {
       }
     }
     return abilities;
+  },
+  
+  /**
+   * Remove Language abilities from Special Abilities section
+   */
+  removeLanguageAbilitiesFromSheet(languageAbilities) {
+    const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
+    const normalizedTargets = languageAbilities.map(a => normalizeApostrophes(a.toLowerCase().trim()));
+    
+    for (let col = 1; col <= 3; col++) {
+      for (let i = 0; i < 20; i++) {
+        const input = document.getElementById(`ability-${col}-${i}`);
+        if (input && input.value.trim()) {
+          const normalizedValue = normalizeApostrophes(input.value.toLowerCase().trim());
+          if (normalizedTargets.includes(normalizedValue)) {
+            input.value = '';
+            input.title = 'Enter a Special Ability name';
+            input.classList.remove('duplicate-warning');
+            delete input.dataset.classAbility;
+            
+            // Hide the info button
+            const wrapper = input.closest('.ability-input-wrapper');
+            if (wrapper) {
+              const infoBtn = wrapper.querySelector('.ability-info-btn');
+              if (infoBtn) {
+                infoBtn.style.display = 'none';
+              }
+            }
+          }
+        }
+      }
+    }
   },
   
   /**
