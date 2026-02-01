@@ -982,7 +982,13 @@
 
         <!-- Melee Weapons Table -->
         <section class="weapons-section melee-weapons">
-          <h3 class="section-header">Melee Weapons</h3>
+          <div class="section-header-row">
+            <h3 class="section-header">Melee Weapons</h3>
+            <div class="header-buttons">
+              <button type="button" class="btn btn-small btn-add-row" id="btn-add-melee" title="Add melee weapon">+</button>
+              <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-melee" title="Remove last empty row">−</button>
+            </div>
+          </div>
           <table class="weapons-table">
             <thead>
               <tr>
@@ -1003,7 +1009,13 @@
 
         <!-- Ranged Weapons Table -->
         <section class="weapons-section ranged-weapons">
-          <h3 class="section-header">Ranged Weapons</h3>
+          <div class="section-header-row">
+            <h3 class="section-header">Ranged Weapons</h3>
+            <div class="header-buttons">
+              <button type="button" class="btn btn-small btn-add-row" id="btn-add-ranged" title="Add ranged weapon">+</button>
+              <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ranged" title="Remove last empty row">−</button>
+            </div>
+          </div>
           <table class="weapons-table">
             <thead>
               <tr>
@@ -1114,18 +1126,12 @@
               <h3 class="section-header">Class Abilities</h3>
               <div class="header-buttons">
                 <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
+                <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
+                <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
               </div>
             </div>
-            <div class="abilities-columns">
-              <div class="abilities-column" id="abilities-col-1">
-                <!-- Class abilities column 1 -->
-              </div>
-              <div class="abilities-column" id="abilities-col-2">
-                <!-- Class abilities column 2 -->
-              </div>
-              <div class="abilities-column" id="abilities-col-3">
-                <!-- Class abilities column 3 -->
-              </div>
+            <div class="class-abilities-list" id="class-abilities-list">
+              <!-- Dynamically populated -->
             </div>
           </section>
 

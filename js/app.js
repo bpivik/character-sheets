@@ -264,7 +264,186 @@ const App = {
     // Restore characteristic increase display name if applicable
     this.restoreCharacteristicIncreaseDisplay();
     
+    // Compact dynamic sections to only show filled rows
+    this.compactDynamicSections();
+    
     console.log('Initialization complete!');
+  },
+  
+  /**
+   * Compact all dynamic sections to only show filled rows
+   */
+  compactDynamicSections() {
+    // Compact Passions
+    this.compactSection('passions-container', '.belief-row', '.belief-name');
+    
+    // Compact Oaths
+    this.compactSection('oaths-container', '.belief-row', '.belief-name');
+    
+    // Compact Professional Skills
+    this.compactSection('professional-skills-container', '.skill-row.professional', '.skill-name');
+    
+    // Compact Languages (but keep native tongue)
+    this.compactLanguages();
+    
+    // Compact Equipment
+    this.compactSection('equipment-container', '.equipment-row', '.equipment-name');
+    
+    // Compact Class Abilities
+    this.compactClassAbilities();
+    
+    // Compact Melee Weapons
+    this.compactSection('melee-weapons-body', 'tr', '.weapon-name');
+    
+    // Compact Ranged Weapons
+    this.compactSection('ranged-weapons-body', 'tr', '.weapon-name');
+  },
+  
+  /**
+   * Compact a section by removing empty rows
+   * @param {string} containerId - ID of the container element
+   * @param {string} rowSelector - CSS selector for rows
+   * @param {string} dataFieldSelector - CSS selector for the primary data field to check
+   */
+  compactSection(containerId, rowSelector, dataFieldSelector) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const rows = Array.from(container.querySelectorAll(rowSelector));
+    
+    rows.forEach(row => {
+      const dataField = row.querySelector(dataFieldSelector);
+      if (dataField && !dataField.value.trim()) {
+        row.remove();
+      }
+    });
+    
+    // Reindex remaining rows
+    this.reindexSection(containerId, rowSelector);
+  },
+  
+  /**
+   * Compact languages section (keep native tongue, remove empty others)
+   */
+  compactLanguages() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    const rows = Array.from(container.querySelectorAll('.language-row'));
+    
+    rows.forEach(row => {
+      // Skip native tongue row
+      if (row.classList.contains('native')) return;
+      
+      const nameField = row.querySelector('.language-name');
+      if (nameField && !nameField.value.trim()) {
+        row.remove();
+      }
+    });
+    
+    this.reindexLanguages();
+  },
+  
+  /**
+   * Compact class abilities section
+   */
+  compactClassAbilities() {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    const rows = Array.from(container.querySelectorAll('.class-ability-row'));
+    
+    rows.forEach(row => {
+      const input = row.querySelector('.class-ability-input');
+      if (input && !input.value.trim()) {
+        row.remove();
+      }
+    });
+    
+    this.reindexClassAbilityRows();
+  },
+  
+  /**
+   * Reindex rows in a section after compaction
+   */
+  reindexSection(containerId, rowSelector) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const rows = container.querySelectorAll(rowSelector);
+    rows.forEach((row, index) => {
+      row.dataset.index = index;
+      
+      // Update IDs for known section types
+      if (containerId === 'passions-container') {
+        this.updatePassionRowIds(row, index + 1);
+      } else if (containerId === 'oaths-container') {
+        this.updateOathRowIds(row, index + 1);
+      } else if (containerId === 'professional-skills-container') {
+        this.updateProfSkillRowIds(row, index);
+      } else if (containerId === 'equipment-container') {
+        this.updateEquipmentRowIds(row, index);
+      } else if (containerId === 'melee-weapons-body' || containerId === 'ranged-weapons-body') {
+        // Weapon rows handled separately
+      }
+    });
+  },
+  
+  updatePassionRowIds(row, num) {
+    const name = row.querySelector('.belief-name');
+    const formula = row.querySelector('.belief-formula-input');
+    const base = row.querySelector('.belief-base');
+    const current = row.querySelector('.belief-input');
+    
+    if (name) name.id = `passion-${num}-name`;
+    if (formula) formula.id = `passion-${num}-formula`;
+    if (base) base.id = `passion-${num}-base`;
+    if (current) current.id = `passion-${num}-current`;
+  },
+  
+  updateOathRowIds(row, num) {
+    const name = row.querySelector('.belief-name');
+    const base = row.querySelector('.belief-base');
+    const current = row.querySelector('.belief-input');
+    
+    if (name) name.id = `oath-${num}-name`;
+    if (base) base.id = `oath-${num}-base`;
+    if (current) current.id = `oath-${num}-current`;
+  },
+  
+  updateProfSkillRowIds(row, index) {
+    const name = row.querySelector('.skill-name');
+    const base = row.querySelector('.skill-base');
+    const current = row.querySelector('.skill-current');
+    
+    if (name) name.id = `prof-skill-${index}-name`;
+    if (base) base.id = `prof-skill-${index}-base`;
+    if (current) current.id = `prof-skill-${index}-current`;
+  },
+  
+  updateEquipmentRowIds(row, index) {
+    const name = row.querySelector('.equipment-name');
+    const enc = row.querySelector('.equipment-enc');
+    
+    if (name) name.id = `equip-${index}-name`;
+    if (enc) enc.id = `equip-${index}-enc`;
+  },
+  
+  reindexLanguages() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.language-row:not(.native)');
+    rows.forEach((row, index) => {
+      const num = index + 2; // Start from 2 (native tongue is 1)
+      const name = row.querySelector('.language-name');
+      const base = row.querySelector('.language-base');
+      const current = row.querySelector('.language-input');
+      
+      if (name) name.id = `language-${num}-name`;
+      if (base) base.id = `language-${num}-base`;
+      if (current) current.id = `language-${num}-current`;
+    });
   },
 
   /**
@@ -2185,7 +2364,7 @@ const App = {
       for (let i = 0; i < 6; i++) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><input type="text" id="melee-${i}-name" placeholder=""></td>
+          <td><input type="text" id="melee-${i}-name" class="weapon-name" placeholder=""></td>
           <td><input type="text" id="melee-${i}-hands" placeholder=""></td>
           <td><input type="text" id="melee-${i}-damage" placeholder=""></td>
           <td><input type="text" id="melee-${i}-size" placeholder=""></td>
@@ -2232,7 +2411,7 @@ const App = {
       for (let i = 0; i < 5; i++) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><input type="text" id="ranged-${i}-name" placeholder=""></td>
+          <td><input type="text" id="ranged-${i}-name" class="weapon-name" placeholder=""></td>
           <td><input type="text" id="ranged-${i}-hands" placeholder=""></td>
           <td><input type="text" id="ranged-${i}-damage" placeholder=""></td>
           <td><input type="text" id="ranged-${i}-dm" placeholder=""></td>
@@ -2275,66 +2454,283 @@ const App = {
       }
     }
   },
+  
+  /**
+   * Add a new melee weapon row
+   */
+  addMeleeWeaponRow() {
+    const meleeBody = document.getElementById('melee-weapons-body');
+    if (!meleeBody) return;
+    
+    const i = meleeBody.querySelectorAll('tr').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" id="melee-${i}-name" class="weapon-name" placeholder=""></td>
+      <td><input type="text" id="melee-${i}-hands" placeholder=""></td>
+      <td><input type="text" id="melee-${i}-damage" placeholder=""></td>
+      <td><input type="text" id="melee-${i}-size" placeholder=""></td>
+      <td><input type="text" id="melee-${i}-effects" placeholder=""></td>
+      <td><input type="text" id="melee-${i}-aphp" placeholder=""></td>
+      <td><input type="text" id="melee-${i}-traits" placeholder=""></td>
+    `;
+    meleeBody.appendChild(tr);
+    
+    const nameInput = tr.querySelector(`#melee-${i}-name`);
+    const rowIndex = i;
+    if (nameInput) {
+      nameInput.addEventListener('blur', () => {
+        if (nameInput.value.trim()) {
+          nameInput.value = this.toTitleCase(nameInput.value.trim());
+        }
+        if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
+          window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
+          this.scheduleAutoSave();
+        }
+      });
+    }
+    
+    tr.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        if (!input.id.endsWith('-name')) {
+          const nameInput = tr.querySelector(`#melee-${rowIndex}-name`);
+          if (nameInput) nameInput.dataset.userModified = 'true';
+        }
+        this.scheduleAutoSave();
+      });
+    });
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Add a new ranged weapon row
+   */
+  addRangedWeaponRow() {
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (!rangedBody) return;
+    
+    const i = rangedBody.querySelectorAll('tr').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" id="ranged-${i}-name" class="weapon-name" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-hands" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-damage" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-dm" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-range" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-load" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-effects" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-impl" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-aphp" placeholder=""></td>
+      <td><input type="text" id="ranged-${i}-traits" placeholder=""></td>
+    `;
+    rangedBody.appendChild(tr);
+    
+    const nameInput = tr.querySelector(`#ranged-${i}-name`);
+    const rowIndex = i;
+    if (nameInput) {
+      nameInput.addEventListener('blur', () => {
+        if (nameInput.value.trim()) {
+          nameInput.value = this.toTitleCase(nameInput.value.trim());
+        }
+        if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
+          window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
+          this.scheduleAutoSave();
+        }
+      });
+    }
+    
+    tr.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        if (!input.id.endsWith('-name')) {
+          const nameInput = tr.querySelector(`#ranged-${rowIndex}-name`);
+          if (nameInput) nameInput.dataset.userModified = 'true';
+        }
+        this.scheduleAutoSave();
+      });
+    });
+    
+    this.scheduleAutoSave();
+  },
 
   /**
-   * Generate special ability inputs - 3 column layout with 20 rows each
+   * Generate class ability inputs - dynamic list that only shows filled abilities
    */
   generateSpecialAbilities() {
-    for (let col = 1; col <= 3; col++) {
-      const container = document.getElementById(`abilities-col-${col}`);
-      if (!container) continue;
-      
-      container.innerHTML = '';
-      
-      // 20 rows per column = 60 total abilities
-      for (let i = 0; i < 20; i++) {
-        // Create wrapper for input + info button
-        const wrapper = document.createElement('div');
-        wrapper.className = 'ability-input-wrapper';
-        
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'ability-input';
-        input.id = `ability-${col}-${i}`;
-        input.placeholder = '';
-        
-        // No hover tooltip - use info button for popup details
-        input.title = '';
-        
-        // Info button (shows when there's content)
-        const infoBtn = document.createElement('button');
-        infoBtn.type = 'button';
-        infoBtn.className = 'ability-info-btn';
-        infoBtn.innerHTML = 'ℹ';
-        infoBtn.title = 'Click for ability details';
-        infoBtn.style.display = 'none';
-        
-        // Handle ability changes
-        input.addEventListener('blur', (e) => {
-          this.handleAbilityChange(e.target);
-        });
-        
-        input.addEventListener('input', () => {
-          // Show/hide info button based on content
-          infoBtn.style.display = input.value.trim() ? '' : 'none';
-          this.scheduleAutoSave();
-        });
-        
-        // Info button click handler
-        infoBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const abilityName = input.value.trim();
-          if (abilityName) {
-            this.showAbilityDetail(abilityName);
-          }
-        });
-        
-        wrapper.appendChild(input);
-        wrapper.appendChild(infoBtn);
-        container.appendChild(wrapper);
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Setup add/remove buttons
+    this.setupClassAbilityButtons();
+    
+    // Initial abilities will be populated by populateForm
+  },
+  
+  /**
+   * Setup add/remove buttons for class abilities
+   */
+  setupClassAbilityButtons() {
+    const addBtn = document.getElementById('btn-add-ability');
+    const removeBtn = document.getElementById('btn-remove-ability');
+    
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        this.addClassAbilityRow();
+      });
+    }
+    
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        this.removeLastEmptyClassAbilityRow();
+      });
+    }
+  },
+  
+  /**
+   * Add a new class ability row
+   */
+  addClassAbilityRow(abilityName = '', source = null) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return null;
+    
+    const index = container.children.length;
+    
+    const row = document.createElement('div');
+    row.className = 'class-ability-row';
+    row.dataset.index = index;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'class-ability-input';
+    input.id = `ability-${index}`;
+    input.placeholder = '';
+    input.value = abilityName ? this.toTitleCase(abilityName) : '';
+    input.dataset.previousValue = input.value;
+    if (source) {
+      input.dataset.classAbility = source;
+    }
+    
+    const infoBtn = document.createElement('button');
+    infoBtn.type = 'button';
+    infoBtn.className = 'class-ability-info-btn';
+    infoBtn.innerHTML = 'ℹ';
+    infoBtn.title = 'Click for ability details';
+    infoBtn.style.display = abilityName ? '' : 'none';
+    
+    // Handle ability changes
+    input.addEventListener('blur', () => {
+      this.handleAbilityChange(input);
+      this.cleanupEmptyClassAbilityRows();
+    });
+    
+    input.addEventListener('input', () => {
+      infoBtn.style.display = input.value.trim() ? '' : 'none';
+      this.scheduleAutoSave();
+    });
+    
+    // Info button click handler
+    infoBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const name = input.value.trim();
+      if (name) {
+        this.showAbilityDetail(name);
+      }
+    });
+    
+    row.appendChild(input);
+    row.appendChild(infoBtn);
+    container.appendChild(row);
+    
+    // Apply ability effect if applicable
+    if (abilityName) {
+      this.applyAbilityEffect(abilityName);
+    }
+    
+    this.scheduleAutoSave();
+    return input;
+  },
+  
+  /**
+   * Remove last empty class ability row
+   */
+  removeLastEmptyClassAbilityRow() {
+    const container = document.getElementById('class-abilities-list');
+    if (!container || container.children.length === 0) return;
+    
+    // Find last empty row
+    const rows = Array.from(container.children);
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const input = rows[i].querySelector('.class-ability-input');
+      if (input && !input.value.trim()) {
+        rows[i].remove();
+        this.reindexClassAbilityRows();
+        this.scheduleAutoSave();
+        return;
       }
     }
+  },
+  
+  /**
+   * Clean up empty class ability rows (except keep at least one for input)
+   */
+  cleanupEmptyClassAbilityRows() {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    const rows = Array.from(container.children);
+    const filledRows = rows.filter(row => {
+      const input = row.querySelector('.class-ability-input');
+      return input && input.value.trim();
+    });
+    
+    // Keep only filled rows
+    rows.forEach(row => {
+      const input = row.querySelector('.class-ability-input');
+      if (input && !input.value.trim()) {
+        row.remove();
+      }
+    });
+    
+    this.reindexClassAbilityRows();
+  },
+  
+  /**
+   * Reindex class ability rows after removal
+   */
+  reindexClassAbilityRows() {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    const rows = container.children;
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].dataset.index = i;
+      const input = rows[i].querySelector('.class-ability-input');
+      if (input) {
+        input.id = `ability-${i}`;
+      }
+    }
+  },
+  
+  /**
+   * Get all class abilities from dynamic list
+   */
+  getAllClassAbilities() {
+    const abilities = [];
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return abilities;
+    
+    const inputs = container.querySelectorAll('.class-ability-input');
+    inputs.forEach(input => {
+      if (input.value.trim()) {
+        abilities.push({
+          name: input.value.trim(),
+          source: input.dataset.classAbility || null
+        });
+      }
+    });
+    return abilities;
   },
   
   /**
@@ -2468,15 +2864,17 @@ const App = {
   },
 
   /**
-   * Check if an ability (by base name) still exists on the sheet
+   * Check if an ability (by base name) still exists on the sheet (class or species)
    */
   hasAbilityOnSheet(baseName) {
     const normalizedBase = baseName.toLowerCase().trim();
     
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
+    // Check class abilities
+    const classContainer = document.getElementById('class-abilities-list');
+    if (classContainer) {
+      const inputs = classContainer.querySelectorAll('.class-ability-input');
+      for (const input of inputs) {
+        if (input.value.trim()) {
           const abilityBase = input.value.split('(')[0].trim().toLowerCase();
           if (abilityBase === normalizedBase) {
             return true;
@@ -2484,6 +2882,16 @@ const App = {
         }
       }
     }
+    
+    // Check species abilities
+    const speciesAbilities = this.getSpeciesAbilities();
+    for (const ability of speciesAbilities) {
+      const abilityBase = ability.split('(')[0].trim().toLowerCase();
+      if (abilityBase === normalizedBase) {
+        return true;
+      }
+    }
+    
     return false;
   },
 
@@ -2555,10 +2963,11 @@ const App = {
    */
   restoreAbilityEffects() {
     // Check all class abilities on the sheet and apply their effects
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
+    const classContainer = document.getElementById('class-abilities-list');
+    if (classContainer) {
+      const inputs = classContainer.querySelectorAll('.class-ability-input');
+      inputs.forEach(input => {
+        if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           const effect = this.ABILITY_EFFECTS[baseName];
           if (effect && !this.activeAbilityEffects[baseName]) {
@@ -2567,7 +2976,7 @@ const App = {
             console.log(`Restored ability effect: ${baseName}`);
           }
         }
-      }
+      });
     }
     
     // Also check species abilities (already applied in initSpeciesAbilities, but ensure coverage)
@@ -2621,27 +3030,20 @@ const App = {
   },
 
   /**
-   * Remove an ability from the Special Abilities sheet
+   * Remove an ability from the Class Abilities sheet
    */
   removeAbilityFromSheet(abilityBaseName) {
     const baseNameLower = abilityBaseName.toLowerCase();
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
     
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.toLowerCase().startsWith(baseNameLower)) {
-          input.value = '';
-          input.dataset.previousValue = '';
-          this.updateAbilityTooltip(input);
-          
-          // Hide info button
-          const wrapper = input.closest('.ability-input-wrapper');
-          if (wrapper) {
-            const infoBtn = wrapper.querySelector('.ability-info-btn');
-            if (infoBtn) infoBtn.style.display = 'none';
-          }
-          return;
-        }
+    const rows = Array.from(container.querySelectorAll('.class-ability-row'));
+    for (const row of rows) {
+      const input = row.querySelector('.class-ability-input');
+      if (input && input.value.toLowerCase().startsWith(baseNameLower)) {
+        row.remove();
+        this.reindexClassAbilityRows();
+        return;
       }
     }
   },
@@ -2657,33 +3059,34 @@ const App = {
     // Get base name for repeatable ability check
     const currentBaseName = currentValue.split('(')[0].trim();
     
-    // Check all other ability inputs (3 columns, 20 rows each)
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (!input || input === currentInput) continue;
+    // Check all other ability inputs
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return false;
+    
+    const inputs = container.querySelectorAll('.class-ability-input');
+    for (const input of inputs) {
+      if (input === currentInput) continue;
+      
+      const otherValue = input.value.trim().toLowerCase();
+      if (otherValue === currentValue) {
+        // Exact duplicate - show warning
+        const keepDuplicate = confirm(
+          `This ability "${currentInput.value}" already exists in another slot.\n\n` +
+          `Do you want to keep this duplicate?\n\n` +
+          `Click OK to keep, Cancel to clear this entry.`
+        );
         
-        const otherValue = input.value.trim().toLowerCase();
-        if (otherValue === currentValue) {
-          // Exact duplicate - show warning
-          const keepDuplicate = confirm(
-            `This ability "${currentInput.value}" already exists in another slot.\n\n` +
-            `Do you want to keep this duplicate?\n\n` +
-            `Click OK to keep, Cancel to clear this entry.`
-          );
-          
-          if (!keepDuplicate) {
-            currentInput.value = '';
-            currentInput.title = 'Enter a Special Ability name';
-            this.scheduleAutoSave();
-            return false;
-          }
-          return true;
+        if (!keepDuplicate) {
+          const row = currentInput.closest('.class-ability-row');
+          if (row) row.remove();
+          this.reindexClassAbilityRows();
+          this.scheduleAutoSave();
+          return false;
         }
-        
-        // For repeatable abilities (like Weapon Specialization), different specializations are OK
-        // Only warn if it's an exact duplicate, not just same base name
+        return true;
       }
+      // For repeatable abilities (like Weapon Specialization), different specializations are OK
+      // Only warn if it's an exact duplicate, not just same base name
     }
     return false;
   },
@@ -2708,23 +3111,8 @@ const App = {
    * Setup click handlers for ability inputs to show popup
    */
   setupAbilityInputClickHandlers() {
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && !input.dataset.clickHandlerSet) {
-          input.dataset.clickHandlerSet = 'true';
-          input.style.cursor = 'pointer';
-          
-          // Show popup on click (but allow text selection/editing)
-          input.addEventListener('dblclick', (e) => {
-            const abilityName = e.target.value.trim();
-            if (abilityName) {
-              this.showAbilityDetail(abilityName);
-            }
-          });
-        }
-      }
-    }
+    // For class abilities, the click handlers are set up when rows are created
+    // This function is kept for compatibility but doesn't need to iterate old columns
   },
 
   /**
@@ -3417,24 +3805,16 @@ const App = {
       });
     }
     
-    // Special Abilities (3 columns x 20 rows = 60 total)
+    // Special Abilities (dynamic format)
     if (this.character.combat && this.character.combat.specialAbilities) {
-      this.character.combat.specialAbilities.forEach((ability, i) => {
-        const col = Math.floor(i / 20) + 1;
-        const row = i % 20;
-        const input = document.getElementById(`ability-${col}-${row}`);
-        if (input && ability) {
+      this.character.combat.specialAbilities.forEach((ability) => {
+        if (ability) {
           // Handle both new format (object with name/source) and old format (string)
-          if (typeof ability === 'object' && ability.name) {
-            input.value = this.toTitleCase(ability.name);
-            if (ability.source) {
-              input.dataset.classAbility = ability.source;
-            }
-          } else if (typeof ability === 'string') {
-            input.value = this.toTitleCase(ability);
+          if (typeof ability === 'object' && ability.name && ability.name.trim()) {
+            this.addClassAbilityRow(ability.name, ability.source);
+          } else if (typeof ability === 'string' && ability.trim()) {
+            this.addClassAbilityRow(ability);
           }
-          // Set previousValue for tracking
-          input.dataset.previousValue = input.value;
         }
       });
       // Update tooltips after loading abilities
@@ -3709,19 +4089,19 @@ const App = {
       this.character.combat.rangedWeapons.push(weapon);
     }
     
-    // Special Abilities (3 columns x 20 rows = 60 total)
+    // Special Abilities (dynamic list format)
     this.character.combat.specialAbilities = [];
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input) {
-          // Save both the ability name and its source (species, class name, or null)
+    const abilityContainer = document.getElementById('class-abilities-list');
+    if (abilityContainer) {
+      const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
+      abilityInputs.forEach(input => {
+        if (input.value.trim()) {
           this.character.combat.specialAbilities.push({
-            name: input.value,
+            name: input.value.trim(),
             source: input.dataset.classAbility || null
           });
         }
-      }
+      });
     }
     
     // Flying Speed
@@ -3966,10 +4346,11 @@ const App = {
     this.activeAbilityEffects = {};
     
     // Check all class abilities on the sheet and apply their effects
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
+    const classContainer = document.getElementById('class-abilities-list');
+    if (classContainer) {
+      const inputs = classContainer.querySelectorAll('.class-ability-input');
+      inputs.forEach(input => {
+        if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           const effect = this.ABILITY_EFFECTS[baseName];
           if (effect && !this.activeAbilityEffects[baseName]) {
@@ -3977,7 +4358,7 @@ const App = {
             effect.apply(this);
           }
         }
-      }
+      });
     }
     
     // Also check species abilities
@@ -5895,86 +6276,51 @@ const App = {
   },
   
   /**
-   * Get all current special abilities
+   * Get all current special abilities (class abilities)
    */
   getAllSpecialAbilities() {
     const abilities = [];
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
+    const container = document.getElementById('class-abilities-list');
+    if (container) {
+      const inputs = container.querySelectorAll('.class-ability-input');
+      inputs.forEach(input => {
+        if (input.value.trim()) {
           abilities.push(input.value.trim());
         }
-      }
+      });
     }
     return abilities;
   },
   
   /**
-   * Remove Language abilities from Special Abilities section
+   * Remove Language abilities from Class Abilities section
    */
   removeLanguageAbilitiesFromSheet(languageAbilities) {
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const normalizedTargets = languageAbilities.map(a => normalizeApostrophes(a.toLowerCase().trim()));
     
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
-          const normalizedValue = normalizeApostrophes(input.value.toLowerCase().trim());
-          if (normalizedTargets.includes(normalizedValue)) {
-            input.value = '';
-            input.title = 'Enter a Special Ability name';
-            input.classList.remove('duplicate-warning');
-            delete input.dataset.classAbility;
-            
-            // Hide the info button
-            const wrapper = input.closest('.ability-input-wrapper');
-            if (wrapper) {
-              const infoBtn = wrapper.querySelector('.ability-info-btn');
-              if (infoBtn) {
-                infoBtn.style.display = 'none';
-              }
-            }
-          }
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    const rows = Array.from(container.querySelectorAll('.class-ability-row'));
+    rows.forEach(row => {
+      const input = row.querySelector('.class-ability-input');
+      if (input && input.value.trim()) {
+        const normalizedValue = normalizeApostrophes(input.value.toLowerCase().trim());
+        if (normalizedTargets.includes(normalizedValue)) {
+          row.remove();
         }
       }
-    }
+    });
+    
+    this.reindexClassAbilityRows();
   },
   
   /**
-   * Add a special ability to the first empty slot
+   * Add a special ability (alias for addClassAbilityRow for compatibility)
    */
   addSpecialAbility(abilityName, sourceClass = null) {
-    // Find first empty slot (3 columns x 20 rows)
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && !input.value.trim()) {
-          input.value = this.toTitleCase(abilityName);
-          input.dataset.previousValue = input.value; // Track for removal
-          if (sourceClass) {
-            input.dataset.classAbility = sourceClass.toLowerCase();
-          }
-          this.updateAbilityTooltip(input);
-          
-          // Show the info button
-          const wrapper = input.closest('.ability-input-wrapper');
-          if (wrapper) {
-            const infoBtn = wrapper.querySelector('.ability-info-btn');
-            if (infoBtn) {
-              infoBtn.style.display = '';
-            }
-          }
-          
-          // Apply ability effect if applicable
-          this.applyAbilityEffect(abilityName);
-          
-          return true;
-        }
-      }
-    }
-    return false; // No empty slots
+    return this.addClassAbilityRow(abilityName, sourceClass);
   },
   
   /**
@@ -9638,23 +9984,72 @@ const App = {
   setupAddRowButtons() {
     // Professional Skills
     document.getElementById('btn-add-prof-skill')?.addEventListener('click', () => this.addProfessionalSkillRow());
-    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeRow('professional-skills-container', 'professional-skill-row', 'Professional Skill'));
+    document.getElementById('btn-remove-prof-skill')?.addEventListener('click', () => this.removeLastEmptyRow('professional-skills-container', '.skill-row.professional', '.skill-name'));
     
     // Languages
     document.getElementById('btn-add-language')?.addEventListener('click', () => this.addLanguageRow());
-    document.getElementById('btn-remove-language')?.addEventListener('click', () => this.removeLanguageRow());
+    document.getElementById('btn-remove-language')?.addEventListener('click', () => this.removeLastEmptyLanguageRow());
     
     // Oaths
     document.getElementById('btn-add-oath')?.addEventListener('click', () => this.addOathRow());
-    document.getElementById('btn-remove-oath')?.addEventListener('click', () => this.removeBeliefRow('oaths-container', 'Oath'));
+    document.getElementById('btn-remove-oath')?.addEventListener('click', () => this.removeLastEmptyRow('oaths-container', '.belief-row', '.belief-name'));
     
     // Passions
     document.getElementById('btn-add-passion')?.addEventListener('click', () => this.addPassionRow());
-    document.getElementById('btn-remove-passion')?.addEventListener('click', () => this.removeBeliefRow('passions-container', 'Passion'));
+    document.getElementById('btn-remove-passion')?.addEventListener('click', () => this.removeLastEmptyRow('passions-container', '.belief-row', '.belief-name'));
     
     // Equipment
     document.getElementById('btn-add-equipment')?.addEventListener('click', () => this.addEquipmentRow());
-    document.getElementById('btn-remove-equipment')?.addEventListener('click', () => this.removeEquipmentRow());
+    document.getElementById('btn-remove-equipment')?.addEventListener('click', () => this.removeLastEmptyRow('equipment-container', '.equipment-row', '.equipment-name'));
+    
+    // Melee Weapons
+    document.getElementById('btn-add-melee')?.addEventListener('click', () => this.addMeleeWeaponRow());
+    document.getElementById('btn-remove-melee')?.addEventListener('click', () => this.removeLastEmptyRow('melee-weapons-body', 'tr', '.weapon-name'));
+    
+    // Ranged Weapons
+    document.getElementById('btn-add-ranged')?.addEventListener('click', () => this.addRangedWeaponRow());
+    document.getElementById('btn-remove-ranged')?.addEventListener('click', () => this.removeLastEmptyRow('ranged-weapons-body', 'tr', '.weapon-name'));
+  },
+  
+  /**
+   * Remove last empty row from a section
+   */
+  removeLastEmptyRow(containerId, rowSelector, dataFieldSelector) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const rows = Array.from(container.querySelectorAll(rowSelector));
+    
+    // Find last empty row
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const dataField = rows[i].querySelector(dataFieldSelector);
+      if (dataField && !dataField.value.trim()) {
+        rows[i].remove();
+        this.reindexSection(containerId, rowSelector);
+        this.scheduleAutoSave();
+        return;
+      }
+    }
+  },
+  
+  /**
+   * Remove last empty language row (skip native tongue)
+   */
+  removeLastEmptyLanguageRow() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    const rows = Array.from(container.querySelectorAll('.language-row:not(.native)'));
+    
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const nameField = rows[i].querySelector('.language-name');
+      if (nameField && !nameField.value.trim()) {
+        rows[i].remove();
+        this.reindexLanguages();
+        this.scheduleAutoSave();
+        return;
+      }
+    }
   },
 
   /**

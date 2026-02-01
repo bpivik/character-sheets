@@ -2961,7 +2961,97 @@ select:focus {
   color: white;
 }
 
-/* Class Abilities - bottom layout with scroll */
+/* Dynamic Class Abilities List */
+.class-abilities-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.15rem 0.4rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.class-ability-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.class-ability-input {
+  flex: 1;
+  padding: 0.35rem 0.3rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  min-height: 1.8rem;
+  box-sizing: border-box;
+}
+
+.class-ability-input:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.class-ability-input.duplicate-warning {
+  background-color: #fff3cd;
+  border-color: #ffc107;
+}
+
+.class-ability-info-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-color);
+  background: white;
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.class-ability-info-btn:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Add/Remove row buttons */
+.btn-add-row, .btn-remove-row {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add-row {
+  background: #5a8f5a;
+  color: white;
+  border: none;
+}
+
+.btn-add-row:hover {
+  background: #4a7f4a;
+}
+
+.btn-remove-row {
+  background: #8f5a5a;
+  color: white;
+  border: none;
+}
+
+.btn-remove-row:hover {
+  background: #7f4a4a;
+}
+
+/* Class Abilities - bottom layout with scroll (legacy - keep for compatibility) */
 .abilities-columns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
