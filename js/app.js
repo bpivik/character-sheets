@@ -9284,6 +9284,63 @@ const App = {
         
         return html;
       }
+    },
+    'equipment': {
+      name: 'Equipment',
+      icon: '🎒',
+      dynamic: true,
+      isAvailable: () => {
+        const container = document.getElementById('equipment-container');
+        if (!container) return false;
+        const rows = container.querySelectorAll('.equipment-row');
+        for (const row of rows) {
+          const nameInput = row.querySelector('.equipment-name');
+          if (nameInput && nameInput.value.trim()) return true;
+        }
+        return false;
+      },
+      render: () => {
+        let html = '<h4>Equipment</h4>';
+        html += '<div class="equipment-widget-list collapsed" data-widget-id="equipment">';
+        
+        // Collect equipment items
+        const items = [];
+        const container = document.getElementById('equipment-container');
+        if (container) {
+          const rows = container.querySelectorAll('.equipment-row');
+          rows.forEach(row => {
+            const nameInput = row.querySelector('.equipment-name');
+            const encInput = row.querySelector('.equipment-enc');
+            if (nameInput && nameInput.value.trim()) {
+              items.push({
+                name: nameInput.value.trim(),
+                enc: encInput?.value || '0'
+              });
+            }
+          });
+        }
+        
+        // Sort alphabetically
+        items.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+        
+        const initialShow = 8;
+        items.forEach((item, idx) => {
+          const hiddenClass = idx >= initialShow ? ' hidden-equipment' : '';
+          html += `<div class="equipment-widget-item${hiddenClass}">`;
+          html += `<span class="equip-name">${item.name}</span>`;
+          html += `<span class="equip-enc">${item.enc}</span>`;
+          html += `</div>`;
+        });
+        
+        html += '</div>';
+        
+        // Add expand/collapse button if more than initialShow
+        if (items.length > initialShow) {
+          html += `<button class="widget-expand-btn" data-widget-id="equipment">Show All (${items.length})</button>`;
+        }
+        
+        return html;
+      }
     }
   },
   
@@ -9605,7 +9662,7 @@ const App = {
         e.stopPropagation();
         const widgetId = expandBtn.dataset.widgetId;
         // Find the list specifically (not the widget-item container)
-        const list = canvas.querySelector(`.abilities-widget-list[data-widget-id="${widgetId}"], .spell-widget-list[data-widget-id="${widgetId}"]`);
+        const list = canvas.querySelector(`.abilities-widget-list[data-widget-id="${widgetId}"], .spell-widget-list[data-widget-id="${widgetId}"], .equipment-widget-list[data-widget-id="${widgetId}"]`);
         if (list) {
           const isCollapsed = list.classList.contains('collapsed');
           if (isCollapsed) {
@@ -9614,7 +9671,7 @@ const App = {
           } else {
             list.classList.add('collapsed');
             // Count total items
-            const totalItems = list.querySelectorAll('.ability-widget-item, .spell-widget-item').length;
+            const totalItems = list.querySelectorAll('.ability-widget-item, .spell-widget-item, .equipment-widget-item').length;
             expandBtn.textContent = `Show All (${totalItems})`;
           }
         }
@@ -10096,6 +10153,12 @@ const App = {
     if (langBtn) {
       langBtn.addEventListener('click', () => this.alphabetizeLanguages());
     }
+    
+    // Equipment
+    const equipBtn = document.getElementById('btn-alphabetize-equipment');
+    if (equipBtn) {
+      equipBtn.addEventListener('click', () => this.alphabetizeEquipment());
+    }
   },
 
   /**
@@ -10273,6 +10336,75 @@ const App = {
       }
     });
     
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Alphabetize equipment
+   */
+  alphabetizeEquipment() {
+    const container = document.getElementById('equipment-container');
+    if (!container) return;
+    
+    // Gather all equipment with data
+    const equipment = [];
+    const rows = container.querySelectorAll('.equipment-row');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.equipment-name');
+      const encInput = row.querySelector('.equipment-enc');
+      if (nameInput && nameInput.value.trim()) {
+        equipment.push({
+          name: nameInput.value.trim(),
+          enc: encInput?.value || ''
+        });
+      }
+    });
+    
+    // Sort alphabetically
+    equipment.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Clear container and re-create rows with sorted data
+    container.innerHTML = '';
+    equipment.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'equipment-row';
+      row.innerHTML = `
+        <input type="text" class="equipment-name" id="equip-${index}-name" placeholder="" value="${item.name.replace(/"/g, '&quot;')}">
+        <input type="number" class="equipment-enc" id="equip-${index}-enc" placeholder="" step="0.1" value="${item.enc}">
+      `;
+      container.appendChild(row);
+      
+      // Re-attach event listeners
+      const nameInput = row.querySelector('.equipment-name');
+      const encInput = row.querySelector('.equipment-enc');
+      
+      nameInput.dataset.previousValue = item.name.toLowerCase();
+      
+      nameInput.addEventListener('focus', () => {
+        nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+      });
+      
+      nameInput.addEventListener('blur', () => {
+        if (nameInput.value.trim()) {
+          nameInput.value = this.toTitleCase(nameInput.value.trim());
+        }
+        this.updateContainerButtons();
+        this.scheduleAutoSave();
+      });
+      
+      nameInput.addEventListener('input', () => {
+        this.updateTotalEnc();
+        this.scheduleAutoSave();
+      });
+      
+      encInput.addEventListener('input', () => {
+        this.updateTotalEnc();
+        this.scheduleAutoSave();
+      });
+    });
+    
+    this.updateTotalEnc();
+    this.updateContainerButtons();
     this.scheduleAutoSave();
   },
 

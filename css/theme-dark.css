@@ -709,6 +709,14 @@
   border-top-color: #444;
 }
 
+[data-theme="dark"] .equipment-widget-item {
+  border-bottom-color: #333;
+}
+
+[data-theme="dark"] .equipment-widget-item .equip-enc {
+  color: #999;
+}
+
 /* Characteristic increase modal in dark mode */
 [data-theme="dark"] .char-option {
   background: #2a2a2a;

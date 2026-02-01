@@ -5197,6 +5197,10 @@ select:focus {
   display: none;
 }
 
+.abilities-widget-list.collapsed .ability-group-label.hidden-ability {
+  display: none;
+}
+
 .ability-widget-item {
   padding: 4px 0;
   font-size: 0.85rem;
@@ -5220,6 +5224,38 @@ select:focus {
 .ability-group-label:first-child {
   margin-top: 0;
   border-top: none;
+}
+
+/* Equipment widget */
+.equipment-widget-list {
+  max-height: none;
+}
+
+.equipment-widget-list.collapsed .hidden-equipment {
+  display: none;
+}
+
+.equipment-widget-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #eee;
+}
+
+.equipment-widget-item:last-child {
+  border-bottom: none;
+}
+
+.equipment-widget-item .equip-name {
+  flex: 1;
+}
+
+.equipment-widget-item .equip-enc {
+  width: 40px;
+  text-align: right;
+  color: #666;
+  font-size: 0.8rem;
 }
 
 .widget-expand-btn {
