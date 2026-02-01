@@ -10656,7 +10656,8 @@ const App = {
     }
     
     // Professional skills - check each one (uses prof-skill-X-name and prof-skill-X-current)
-    for (let i = 0; i < 19; i++) {
+    // PROFESSIONAL_SKILL_SLOTS is 22, loop 0-21
+    for (let i = 0; i < 22; i++) {
       const skillNameEl = document.getElementById(`prof-skill-${i}-name`);
       const skillPctEl = document.getElementById(`prof-skill-${i}-current`);
       
@@ -10697,7 +10698,7 @@ const App = {
     
     // Beliefs (Alignments, Passions, Oaths) - POW or INT or CHA
     if (charUpper === 'POW' || charUpper === 'INT') {
-      // Alignments and Passions use POW+INT (1-indexed)
+      // Alignments use POW+INT (1-indexed, 2 slots)
       for (let i = 1; i <= 2; i++) {
         const alignPct = document.getElementById(`alignment-${i}-current`);
         if (alignPct && alignPct.value) {
@@ -10705,7 +10706,8 @@ const App = {
           alignPct.dispatchEvent(new Event('input', { bubbles: true }));
         }
       }
-      for (let i = 1; i <= 6; i++) {
+      // Passions use POW+INT (1-indexed, 4 slots)
+      for (let i = 1; i <= 4; i++) {
         const passionPct = document.getElementById(`passion-${i}-current`);
         if (passionPct && passionPct.value) {
           passionPct.value = (parseInt(passionPct.value, 10) || 0) + 1;
@@ -10714,7 +10716,7 @@ const App = {
       }
     }
     if (charUpper === 'POW' || charUpper === 'CHA') {
-      // Oaths use POW+CHA (1-indexed)
+      // Oaths use POW+CHA (1-indexed, 4 slots)
       for (let i = 1; i <= 4; i++) {
         const oathPct = document.getElementById(`oath-${i}-current`);
         if (oathPct && oathPct.value) {
@@ -10732,8 +10734,8 @@ const App = {
         nativePct.value = (parseInt(nativePct.value, 10) || 0) + 1;
         nativePct.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      // Additional languages (start at 2)
-      for (let i = 2; i <= 5; i++) {
+      // Additional languages (2-7)
+      for (let i = 2; i <= 7; i++) {
         const langPct = document.getElementById(`language-${i}-current`);
         if (langPct && langPct.value) {
           langPct.value = (parseInt(langPct.value, 10) || 0) + 1;
