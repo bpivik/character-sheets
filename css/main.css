@@ -2888,18 +2888,80 @@ select:focus {
 }
 
 /* Special Abilities & Notes */
-.special-abilities-section {
-  background: rgba(255,255,255,0.2);
-  padding: 0.5rem;
-  border: 1px solid var(--border-light);
+/* Abilities Sections Container - holds Class and Species abilities side by side */
+.abilities-sections-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
   width: 100%;
 }
 
-.special-abilities-section.full-width {
+.class-abilities-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.class-abilities-section.full-width {
   grid-column: 1 / -1;
 }
 
-/* Special Abilities - bottom layout with scroll */
+.species-abilities-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.species-abilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.species-ability-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.species-ability-input {
+  flex: 1;
+  padding: 0.35rem 0.3rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  min-height: 1.8rem;
+  box-sizing: border-box;
+  color: var(--text-color);
+}
+
+.species-ability-input:read-only {
+  background: rgba(255,255,255,0.5);
+  cursor: default;
+}
+
+.species-ability-info-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-color);
+  background: white;
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.species-ability-info-btn:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Class Abilities - bottom layout with scroll */
 .abilities-columns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

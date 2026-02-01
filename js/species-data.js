@@ -54,7 +54,7 @@ const SpeciesData = {
   
   human: {
     movement: 20,
-    abilities: [],
+    abilities: ["Gifted", "Lucky"],
     characteristics: { STR: [3, 18], CON: [3, 18], SIZ: [8, 18], DEX: [3, 18], INT: [8, 18], POW: [3, 18], CHA: [3, 18] }
   },
   

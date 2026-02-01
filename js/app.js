@@ -109,6 +109,50 @@ const App = {
           app.recalculateAll();
         }
       }
+    },
+    'lucky': {
+      description: '+1 Luck Point',
+      apply: function(app) {
+        const origField = document.getElementById('luck-original');
+        const currField = document.getElementById('luck-current');
+        if (origField) {
+          const origVal = parseInt(origField.value, 10) || 0;
+          origField.value = origVal + 1;
+        }
+        if (currField) {
+          const currVal = parseInt(currField.value, 10) || 0;
+          currField.value = currVal + 1;
+        }
+      },
+      remove: function(app) {
+        const origField = document.getElementById('luck-original');
+        const currField = document.getElementById('luck-current');
+        if (origField) {
+          const origVal = parseInt(origField.value, 10) || 0;
+          origField.value = origVal - 1;
+        }
+        if (currField) {
+          const currVal = parseInt(currField.value, 10) || 0;
+          currField.value = currVal - 1;
+        }
+      }
+    },
+    'gifted': {
+      description: '+1 Experience Roll',
+      apply: function(app) {
+        const expField = document.getElementById('exp-rolls');
+        if (expField) {
+          const currVal = parseInt(expField.value, 10) || 0;
+          expField.value = currVal + 1;
+        }
+      },
+      remove: function(app) {
+        const expField = document.getElementById('exp-rolls');
+        if (expField) {
+          const currVal = parseInt(expField.value, 10) || 0;
+          expField.value = Math.max(0, currVal - 1);
+        }
+      }
     }
   },
 
@@ -152,6 +196,9 @@ const App = {
     
     // Populate form with loaded data
     this.populateForm();
+    
+    // Populate species abilities section based on current species
+    this.initSpeciesAbilities();
     
     // Sync magic skill values after form is populated
     this.syncMagicSkillValues();
@@ -409,80 +456,105 @@ const App = {
       }
     }
     
-    // Remove previous species abilities (if species changed)
+    // Remove previous species ability effects
     if (prevData && prevData.abilities && prevData.abilities.length > 0) {
-      this.removeSpeciesAbilities(prevData.abilities);
+      prevData.abilities.forEach(ability => {
+        this.removeAbilityEffect(ability);
+      });
     }
     
-    // Add new species abilities
-    if (newData && newData.abilities && newData.abilities.length > 0) {
-      this.populateSpeciesAbilities(newData.abilities);
-    }
+    // Populate the Species Abilities section (replaces old content)
+    this.populateSpeciesAbilitiesSection(newData ? newData.abilities : []);
     
-    this.updateAllAbilityTooltips();
     this.scheduleAutoSave();
   },
   
   /**
-   * Populate species abilities (only if not already present with fuzzy matching)
+   * Populate the dedicated Species Abilities section
    */
-  populateSpeciesAbilities(abilities) {
-    if (!abilities || abilities.length === 0) return;
+  populateSpeciesAbilitiesSection(abilities) {
+    const container = document.getElementById('species-abilities-list');
+    if (!container) return;
     
-    const existingAbilities = this.getAllSpecialAbilities();
+    // Clear existing content
+    container.innerHTML = '';
     
-    abilities.forEach(ability => {
-      // Check if ability already exists (with fuzzy matching for notes)
-      const alreadyExists = existingAbilities.some(existing => 
-        this.abilityMatchesFuzzy(existing, ability)
-      );
+    // If no abilities, show a placeholder
+    if (!abilities || abilities.length === 0) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'species-ability-placeholder';
+      placeholder.textContent = 'No species abilities';
+      placeholder.style.cssText = 'padding: 0.5rem; color: #999; font-style: italic;';
+      container.appendChild(placeholder);
+      return;
+    }
+    
+    // Create rows for each ability
+    abilities.forEach((ability, index) => {
+      const row = document.createElement('div');
+      row.className = 'species-ability-row';
       
-      if (!alreadyExists) {
-        this.addSpecialAbility(ability, 'species');
-      }
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'species-ability-input';
+      input.id = `species-ability-${index}`;
+      input.value = this.toTitleCase(ability);
+      input.readOnly = true;
+      input.dataset.abilityName = ability;
+      
+      const infoBtn = document.createElement('button');
+      infoBtn.type = 'button';
+      infoBtn.className = 'species-ability-info-btn';
+      infoBtn.textContent = 'i';
+      infoBtn.title = 'View ability details';
+      infoBtn.addEventListener('click', () => {
+        this.showAbilityDetail(ability);
+      });
+      
+      row.appendChild(input);
+      row.appendChild(infoBtn);
+      container.appendChild(row);
+      
+      // Apply ability effect
+      this.applyAbilityEffect(ability);
     });
   },
   
   /**
-   * Remove species abilities (only if they match exactly or with fuzzy matching)
+   * Get all species abilities currently displayed
    */
-  removeSpeciesAbilities(abilities) {
-    if (!abilities || abilities.length === 0) return;
+  getSpeciesAbilities() {
+    const abilities = [];
+    const container = document.getElementById('species-abilities-list');
+    if (!container) return abilities;
     
-    // 3 columns x 20 rows
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (!input || !input.value.trim()) continue;
-        
-        const currentAbility = input.value.trim();
-        
-        // Check if this ability matches any species ability (with fuzzy matching)
-        const isSpeciesAbility = abilities.some(baseAbility => 
-          this.abilityMatchesFuzzy(currentAbility, baseAbility)
-        );
-        
-        // Only remove if it's a species ability and marked as species-granted
-        if (isSpeciesAbility && input.dataset.classAbility === 'species') {
-          // Remove ability effect before clearing
-          this.removeAbilityEffect(currentAbility);
-          
-          input.value = '';
-          input.title = 'Enter a Special Ability name';
-          input.classList.remove('duplicate-warning');
-          input.dataset.previousValue = '';
-          delete input.dataset.classAbility;
-          
-          // Hide the info button
-          const wrapper = input.closest('.ability-input-wrapper');
-          if (wrapper) {
-            const infoBtn = wrapper.querySelector('.ability-info-btn');
-            if (infoBtn) {
-              infoBtn.style.display = 'none';
-            }
-          }
-        }
+    const inputs = container.querySelectorAll('.species-ability-input');
+    inputs.forEach(input => {
+      if (input.value.trim()) {
+        abilities.push(input.value.trim());
       }
+    });
+    return abilities;
+  },
+  
+  /**
+   * Initialize species abilities section on page load
+   */
+  initSpeciesAbilities() {
+    const speciesInput = document.getElementById('species');
+    const species = speciesInput?.value?.trim().toLowerCase() || '';
+    
+    if (!species || !window.SpeciesData) {
+      // Show placeholder for no species
+      this.populateSpeciesAbilitiesSection([]);
+      return;
+    }
+    
+    const speciesData = window.SpeciesData.getSpecies(species);
+    if (speciesData && speciesData.abilities) {
+      this.populateSpeciesAbilitiesSection(speciesData.abilities);
+    } else {
+      this.populateSpeciesAbilitiesSection([]);
     }
   },
   
@@ -2484,7 +2556,7 @@ const App = {
    * Restore ability effects on page load
    */
   restoreAbilityEffects() {
-    // Check all abilities on the sheet and apply their effects
+    // Check all class abilities on the sheet and apply their effects
     for (let col = 1; col <= 3; col++) {
       for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`ability-${col}-${i}`);
@@ -2499,6 +2571,18 @@ const App = {
         }
       }
     }
+    
+    // Also check species abilities (already applied in initSpeciesAbilities, but ensure coverage)
+    const speciesAbilities = this.getSpeciesAbilities();
+    speciesAbilities.forEach(ability => {
+      const baseName = ability.split('(')[0].trim().toLowerCase();
+      const effect = this.ABILITY_EFFECTS[baseName];
+      if (effect && !this.activeAbilityEffects[baseName]) {
+        this.activeAbilityEffects[baseName] = { active: true };
+        effect.apply(this);
+        console.log(`Restored species ability effect: ${baseName}`);
+      }
+    });
   },
 
   /**
@@ -3883,7 +3967,7 @@ const App = {
     // Clear active tracking (base values were just recalculated)
     this.activeAbilityEffects = {};
     
-    // Check all abilities on the sheet and apply their effects
+    // Check all class abilities on the sheet and apply their effects
     for (let col = 1; col <= 3; col++) {
       for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`ability-${col}-${i}`);
@@ -3897,6 +3981,17 @@ const App = {
         }
       }
     }
+    
+    // Also check species abilities
+    const speciesAbilities = this.getSpeciesAbilities();
+    speciesAbilities.forEach(ability => {
+      const baseName = ability.split('(')[0].trim().toLowerCase();
+      const effect = this.ABILITY_EFFECTS[baseName];
+      if (effect && !this.activeAbilityEffects[baseName]) {
+        this.activeAbilityEffects[baseName] = { active: true };
+        effect.apply(this);
+      }
+    });
   },
 
   /**
