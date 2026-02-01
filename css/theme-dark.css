@@ -736,7 +736,9 @@
 }
 
 [data-theme="dark"] .ability-description-text,
-[data-theme="dark"] .ability-detail-description {
+[data-theme="dark"] .ability-detail-description,
+[data-theme="dark"] .ability-intro,
+[data-theme="dark"] .ability-bullets li {
   color: var(--text-primary);
 }
 

@@ -70,6 +70,9 @@ const App = {
     // Auto-add magic skills to professional skills based on class
     this.autoAddMagicSkillsToProfessional();
     
+    // Sync Professional Skills values to Magic page (must happen after populateForm and autoAdd)
+    this.syncProfessionalSkillsToMagicPage();
+    
     // Restore last viewed page (after magic visibility so we don't restore hidden pages)
     this.restoreCurrentPage();
     
@@ -142,6 +145,11 @@ const App = {
         // Update weapon damages when switching to Combat page
         if (targetPage === 'combat' && window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
+        }
+        
+        // Sync magic skill values when switching to Magic pages
+        if (targetPage === 'magic1' || targetPage === 'magic2') {
+          this.syncProfessionalSkillsToMagicPage();
         }
         
         // Refresh summary widgets when switching to Summary page
@@ -853,19 +861,16 @@ const App = {
       });
     }
     
-    // Alphabetize spells buttons (on both magic pages)
-    const alphabetizeBtn = document.getElementById('btn-alphabetize-spells');
-    if (alphabetizeBtn) {
-      alphabetizeBtn.addEventListener('click', () => {
-        this.alphabetizeAllSpells();
-      });
-    }
-    const alphabetizeBtnP2 = document.getElementById('btn-alphabetize-spells-p2');
-    if (alphabetizeBtnP2) {
-      alphabetizeBtnP2.addEventListener('click', () => {
-        this.alphabetizeAllSpells();
-      });
-    }
+    // Alphabetize spells buttons (individual for each rank)
+    const spellRanks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    spellRanks.forEach(rankKey => {
+      const btn = document.getElementById(`btn-alphabetize-${rankKey}`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          this.alphabetizeSpellsInRank(rankKey);
+        });
+      }
+    });
     
     // Unlock originals button (for Attributes only)
     const unlockOriginalsBtn = document.getElementById('unlock-originals-btn');
@@ -2411,8 +2416,8 @@ const App = {
     // Get base name for title (capitalize properly)
     const displayName = this.toTitleCase(abilityName);
     
-    // Format the description with HTML
-    let formattedContent = `<p class="ability-description-text">${description}</p>`;
+    // Format the description with HTML - convert bullet points to list
+    let formattedContent = this.formatAbilityDescription(description);
     
     if (source) {
       formattedContent += `<p class="ability-source"><strong>Source:</strong> ${source}</p>`;
@@ -2429,6 +2434,35 @@ const App = {
     
     // Show overlay
     overlay.classList.add('active');
+  },
+  
+  /**
+   * Format ability description - convert bullet points to HTML list
+   */
+  formatAbilityDescription(description) {
+    // Check if description contains bullet points
+    if (description.includes('\n•')) {
+      // Split into intro and bullets
+      const parts = description.split('\n•');
+      const intro = parts[0].trim();
+      const bullets = parts.slice(1).map(b => b.trim()).filter(b => b);
+      
+      let html = '';
+      if (intro) {
+        html += `<p class="ability-intro">${intro}</p>`;
+      }
+      if (bullets.length > 0) {
+        html += '<ul class="ability-bullets">';
+        bullets.forEach(bullet => {
+          html += `<li>${bullet}</li>`;
+        });
+        html += '</ul>';
+      }
+      return html;
+    }
+    
+    // No bullets - just return as paragraph
+    return `<p class="ability-description-text">${description}</p>`;
   },
 
   /**
@@ -5239,6 +5273,42 @@ const App = {
         input.value = syncTarget.value;
       }
     });
+    
+    // Also sync from Professional Skills to Magic page
+    this.syncProfessionalSkillsToMagicPage();
+  },
+  
+  /**
+   * Sync magic skill values from Professional Skills to Magic page
+   * Called on load to ensure Magic page reflects Professional Skills values
+   */
+  syncProfessionalSkillsToMagicPage() {
+    // Iterate through all professional skill slots
+    for (let i = 0; i < 22; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      const currentInput = document.getElementById(`prof-skill-${i}-current`);
+      
+      if (!nameInput || !currentInput) continue;
+      
+      const skillName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+      if (!skillName) continue;
+      
+      // Check if this is a magic skill
+      const config = this.MAGIC_SKILL_CONFIG[skillName];
+      if (!config) continue;
+      
+      // Sync to magic page if professional skill has a value
+      // Don't check class relevance - if the skill exists in Prof Skills, sync it
+      const profValue = currentInput.value;
+      if (profValue !== '' && profValue !== null && profValue !== undefined) {
+        const magicInput = document.getElementById(config.magicId);
+        if (magicInput) {
+          magicInput.value = profValue;
+          // Dispatch events so any listeners update
+          magicInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
   },
   
   /**
@@ -6592,6 +6662,11 @@ const App = {
       try {
         localStorage.setItem('mythras-current-page', pageId);
       } catch (e) {}
+      
+      // If navigating to magic pages, sync professional skill values
+      if (pageId === 'page-magic1' || pageId === 'page-magic2') {
+        this.syncProfessionalSkillsToMagicPage();
+      }
     }
   },
 
@@ -11234,6 +11309,9 @@ const App = {
       this.addAbilityToSheet(name);
     });
     
+    // Check for special actions based on abilities being unlocked
+    this.handleUnlockedAbilitySpecialActions(newAbilities);
+    
     // Deduct EXP rolls
     const expRollsInput = document.getElementById('exp-rolls');
     if (expRollsInput) {
@@ -11249,6 +11327,31 @@ const App = {
     
     // Auto-save
     this.scheduleAutoSave();
+  },
+  
+  /**
+   * Handle special actions when specific abilities are unlocked
+   */
+  handleUnlockedAbilitySpecialActions(abilities) {
+    const normalizedAbilities = abilities.map(a => a.toLowerCase().trim());
+    
+    // Check for Druid Rank 1 abilities - add Druids' Cant
+    const druidRank1 = ['divine spellcasting', 'identify plants and animals', 'identify pure water'];
+    const hasDruidAbility = normalizedAbilities.some(a => druidRank1.includes(a));
+    const isDruid = this.getCurrentClasses().includes('druid');
+    
+    if (hasDruidAbility && isDruid) {
+      this.addLanguageIfNotExists("Druids' Cant");
+    }
+    
+    // Check for Rogue Rank 1 abilities - add Thieves' Cant
+    const rogueRank1 = ['climb walls', 'hide in shadows', 'sneak attack', 'subterfuge'];
+    const hasRogueAbility = normalizedAbilities.some(a => rogueRank1.includes(a));
+    const isRogue = this.getCurrentClasses().includes('rogue');
+    
+    if (hasRogueAbility && isRogue) {
+      this.addLanguageIfNotExists("Thieves' Cant");
+    }
   },
 
   /**

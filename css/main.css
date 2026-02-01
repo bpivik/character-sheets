@@ -3110,6 +3110,27 @@ select:focus {
   border: 1px solid var(--border-light);
 }
 
+.spell-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-gold);
+}
+
+.spell-header-row .spell-rank-header {
+  margin: 0;
+  padding: 0;
+  border: none;
+  text-align: left;
+}
+
+.spell-header-row .btn-alphabetize {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.7rem;
+}
+
 .spell-rank-header {
   font-family: var(--font-header);
   font-size: 0.95rem;
@@ -3980,12 +4001,37 @@ select:focus {
   margin: 0;
 }
 
+.ability-intro {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  margin: 0 0 0.75rem 0;
+  font-weight: 500;
+}
+
+.ability-bullets {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  list-style-type: disc;
+}
+
+.ability-bullets li {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  margin-bottom: 0.4rem;
+  padding-left: 0.25rem;
+}
+
+.ability-bullets li:last-child {
+  margin-bottom: 0;
+}
+
 .ability-description-text {
   font-size: 1.05rem;
   line-height: 1.7;
   color: var(--text-body);
   margin: 0 0 1rem 0;
-  white-space: pre-line;
 }
 
 .ability-source {
