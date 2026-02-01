@@ -2175,7 +2175,7 @@ const App = {
       // If we removed any, update the display on the sheet
       if (removed.length > 0) {
         // Notify user about removed characteristic increases
-        const removedList = removed.map(inc => `Rank ${inc.rank}: ${inc.char}`).join(', ');
+        const removedList = removed.map(inc => `Rank ${inc.rank}: ${inc.char.toUpperCase()}`).join(', ');
         console.log(`Removed Characteristic Increases due to rank decrease: ${removedList}`);
         
         // Update or remove the Characteristic Increase ability on sheet
@@ -10090,7 +10090,7 @@ const App = {
       if (ability.name === 'Characteristic Increase') {
         if (charIncreasesAtThisRank.length > 0) {
           // Already took it at this rank
-          const charTaken = charIncreasesAtThisRank[0].char;
+          const charTaken = charIncreasesAtThisRank[0].char.toUpperCase();
           acquired.push({ ...ability, acquired: true, acquiredNote: `+1 ${charTaken}` });
         } else {
           // Available to take at this rank
@@ -10582,7 +10582,7 @@ const App = {
       
       // Show success message
       const allNames = [...allAbilities];
-      allNames.push(`Characteristic Increase (+1 ${charName})`);
+      allNames.push(`Characteristic Increase (+1 ${charName.toUpperCase()})`);
       
       alert(`Unlocked ${allNames.length} ability${allNames.length > 1 ? 'ies' : ''}:\n\n• ${allNames.join('\n• ')}\n\nSpent ${pending.totalCost} EXP Rolls.\n\nAbilities added to Special Abilities on Combat page.`);
       
@@ -10752,7 +10752,7 @@ const App = {
     const increases = this.character.characteristicIncreases || [];
     if (increases.length === 0) return 'Characteristic Increase';
     
-    const parts = increases.map(inc => `Rank ${inc.rank}: ${inc.char}`);
+    const parts = increases.map(inc => `Rank ${inc.rank}: ${inc.char.toUpperCase()}`);
     return `Characteristic Increase (${parts.join(', ')})`;
   },
 
