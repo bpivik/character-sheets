@@ -3423,34 +3423,76 @@ const App = {
    * Sort special abilities alphabetically
    */
   sortSpecialAbilities() {
-    // Collect all abilities from 3 columns
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    // Collect all abilities
+    const inputs = Array.from(container.querySelectorAll('.class-ability-input'));
     const abilities = [];
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
-          abilities.push(input.value.trim());
-        }
+    
+    inputs.forEach(input => {
+      if (input.value.trim()) {
+        abilities.push({
+          value: input.value.trim(),
+          classAbility: input.dataset.classAbility || ''
+        });
       }
-    }
+    });
     
     // Sort alphabetically
-    abilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    abilities.sort((a, b) => a.value.toLowerCase().localeCompare(b.value.toLowerCase()));
     
-    // Redistribute across columns
-    let index = 0;
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input) {
-          input.value = abilities[index] || '';
-          index++;
+    // Calculate items per column for column-major ordering
+    // We want: col1 gets first N items, col2 gets next N, col3 gets rest
+    const totalItems = abilities.length;
+    const numCols = 3;
+    const itemsPerCol = Math.ceil(totalItems / numCols);
+    
+    // Split into columns
+    const columns = [
+      abilities.slice(0, itemsPerCol),
+      abilities.slice(itemsPerCol, itemsPerCol * 2),
+      abilities.slice(itemsPerCol * 2)
+    ];
+    
+    // CSS grid fills row-by-row, so we need to interleave columns
+    // Row 0: col1[0], col2[0], col3[0]
+    // Row 1: col1[1], col2[1], col3[1]
+    // etc.
+    const interleaved = [];
+    for (let row = 0; row < itemsPerCol; row++) {
+      for (let col = 0; col < numCols; col++) {
+        if (columns[col] && columns[col][row]) {
+          interleaved.push(columns[col][row]);
+        } else {
+          interleaved.push({ value: '', classAbility: '' });
         }
       }
     }
+    
+    // Assign back to inputs
+    inputs.forEach((input, index) => {
+      const item = interleaved[index] || { value: '', classAbility: '' };
+      input.value = item.value;
+      if (item.classAbility) {
+        input.dataset.classAbility = item.classAbility;
+      } else {
+        delete input.dataset.classAbility;
+      }
+      input.dataset.previousValue = item.value;
+      
+      // Update info button visibility
+      const infoBtn = input.parentElement?.querySelector('.class-ability-info-btn');
+      if (infoBtn) {
+        infoBtn.style.display = item.value ? '' : 'none';
+      }
+    });
     
     // Update tooltips after sorting
     this.updateAllAbilityTooltips();
+    
+    // Compact empty rows
+    this.compactClassAbilityRows();
     
     this.scheduleAutoSave();
   },
@@ -10172,6 +10214,18 @@ const App = {
     if (equipBtn) {
       equipBtn.addEventListener('click', () => this.alphabetizeEquipment());
     }
+    
+    // Melee Weapons
+    const meleeBtn = document.getElementById('btn-alphabetize-melee');
+    if (meleeBtn) {
+      meleeBtn.addEventListener('click', () => this.alphabetizeMeleeWeapons());
+    }
+    
+    // Ranged Weapons
+    const rangedBtn = document.getElementById('btn-alphabetize-ranged');
+    if (rangedBtn) {
+      rangedBtn.addEventListener('click', () => this.alphabetizeRangedWeapons());
+    }
   },
 
   /**
@@ -10418,6 +10472,142 @@ const App = {
     
     this.updateTotalEnc();
     this.updateContainerButtons();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Alphabetize melee weapons
+   */
+  alphabetizeMeleeWeapons() {
+    const tbody = document.getElementById('melee-weapons-body');
+    if (!tbody) return;
+    
+    // Gather all weapons with data
+    const weapons = [];
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.weapon-name');
+      if (nameInput && nameInput.value.trim()) {
+        // Collect all field values
+        const fields = Array.from(row.querySelectorAll('input')).map(input => ({
+          value: input.value,
+          baseDamage: input.dataset.baseDamage || '',
+          weaponName: input.dataset.weaponName || '',
+          userModified: input.dataset.userModified || ''
+        }));
+        weapons.push({
+          name: nameInput.value.trim(),
+          fields: fields,
+          userModified: nameInput.dataset.userModified || ''
+        });
+      }
+    });
+    
+    // Sort alphabetically by weapon name
+    weapons.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Reassign to rows
+    let weaponIndex = 0;
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      if (weaponIndex < weapons.length) {
+        const weapon = weapons[weaponIndex];
+        inputs.forEach((input, i) => {
+          if (weapon.fields[i]) {
+            input.value = weapon.fields[i].value;
+            if (weapon.fields[i].baseDamage) {
+              input.dataset.baseDamage = weapon.fields[i].baseDamage;
+            }
+            if (weapon.fields[i].weaponName) {
+              input.dataset.weaponName = weapon.fields[i].weaponName;
+            }
+          }
+        });
+        // Preserve userModified on name input
+        const nameInput = row.querySelector('.weapon-name');
+        if (nameInput && weapon.userModified) {
+          nameInput.dataset.userModified = weapon.userModified;
+        }
+        weaponIndex++;
+      } else {
+        // Clear remaining rows
+        inputs.forEach(input => {
+          input.value = '';
+          delete input.dataset.baseDamage;
+          delete input.dataset.weaponName;
+          delete input.dataset.userModified;
+        });
+      }
+    });
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Alphabetize ranged weapons
+   */
+  alphabetizeRangedWeapons() {
+    const tbody = document.getElementById('ranged-weapons-body');
+    if (!tbody) return;
+    
+    // Gather all weapons with data
+    const weapons = [];
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.weapon-name');
+      if (nameInput && nameInput.value.trim()) {
+        // Collect all field values
+        const fields = Array.from(row.querySelectorAll('input')).map(input => ({
+          value: input.value,
+          baseDamage: input.dataset.baseDamage || '',
+          weaponName: input.dataset.weaponName || '',
+          userModified: input.dataset.userModified || ''
+        }));
+        weapons.push({
+          name: nameInput.value.trim(),
+          fields: fields,
+          userModified: nameInput.dataset.userModified || ''
+        });
+      }
+    });
+    
+    // Sort alphabetically by weapon name
+    weapons.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Reassign to rows
+    let weaponIndex = 0;
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      if (weaponIndex < weapons.length) {
+        const weapon = weapons[weaponIndex];
+        inputs.forEach((input, i) => {
+          if (weapon.fields[i]) {
+            input.value = weapon.fields[i].value;
+            if (weapon.fields[i].baseDamage) {
+              input.dataset.baseDamage = weapon.fields[i].baseDamage;
+            }
+            if (weapon.fields[i].weaponName) {
+              input.dataset.weaponName = weapon.fields[i].weaponName;
+            }
+          }
+        });
+        // Preserve userModified on name input
+        const nameInput = row.querySelector('.weapon-name');
+        if (nameInput && weapon.userModified) {
+          nameInput.dataset.userModified = weapon.userModified;
+        }
+        weaponIndex++;
+      } else {
+        // Clear remaining rows
+        inputs.forEach(input => {
+          input.value = '';
+          delete input.dataset.baseDamage;
+          delete input.dataset.weaponName;
+          delete input.dataset.userModified;
+        });
+      }
+    });
+    
     this.scheduleAutoSave();
   },
 
