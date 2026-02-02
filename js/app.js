@@ -168,6 +168,17 @@ const App = {
           expField.value = Math.max(0, currVal - 1);
         }
       }
+    },
+    'resilient': {
+      description: 'Hit Points calculated using STR+CON+SIZ instead of CON+SIZ',
+      apply: function(app) {
+        // Recalculate all to update hit locations with STR included
+        app.recalculateAll();
+      },
+      remove: function(app) {
+        // Recalculate all to update hit locations without STR
+        app.recalculateAll();
+      }
     }
   },
 
@@ -4214,18 +4225,39 @@ const App = {
     }
     
     // Special Abilities (dynamic list format)
+    // If all class fields are empty, clear all class abilities
+    const currentClasses = this.getCurrentClasses();
     this.character.combat.specialAbilities = [];
-    const abilityContainer = document.getElementById('class-abilities-list');
-    if (abilityContainer) {
-      const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
-      abilityInputs.forEach(input => {
-        if (input.value.trim()) {
-          this.character.combat.specialAbilities.push({
-            name: input.value.trim(),
-            source: input.dataset.classAbility || null
-          });
-        }
-      });
+    
+    if (currentClasses.length > 0) {
+      // Only save abilities if at least one class is set
+      const abilityContainer = document.getElementById('class-abilities-list');
+      if (abilityContainer) {
+        const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
+        abilityInputs.forEach(input => {
+          if (input.value.trim()) {
+            this.character.combat.specialAbilities.push({
+              name: input.value.trim(),
+              source: input.dataset.classAbility || null
+            });
+          }
+        });
+      }
+    } else {
+      // No classes set - clear the abilities from the UI as well
+      const abilityContainer = document.getElementById('class-abilities-list');
+      if (abilityContainer) {
+        // Remove ability effects before clearing
+        const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
+        abilityInputs.forEach(input => {
+          if (input.value.trim()) {
+            this.removeAbilityEffect(input.value.trim());
+          }
+        });
+        abilityContainer.innerHTML = '';
+      }
+      // Also clear acquired abilities tracking
+      this.character.acquiredAbilities = [];
     }
     
     // Flying Speed
@@ -4307,7 +4339,10 @@ const App = {
     const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
-    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
+    // Check if Resilient ability is active (affects HP calculation)
+    const hasResilient = this.hasAbility('resilient');
+    
+    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
     
     // Always update original attribute values (they are auto-calculated and readonly)
     const apOrig = document.getElementById('action-points-original');
@@ -6432,6 +6467,17 @@ const App = {
       });
     }
     return abilities;
+  },
+  
+  /**
+   * Check if a specific ability is in the Class Abilities list
+   * @param {string} abilityName - Name of the ability to check for
+   * @returns {boolean} - True if the ability is present
+   */
+  hasAbility(abilityName) {
+    const normalizedTarget = abilityName.toLowerCase().trim();
+    const abilities = this.getAllSpecialAbilities();
+    return abilities.some(a => a.toLowerCase().trim() === normalizedTarget);
   },
   
   /**
