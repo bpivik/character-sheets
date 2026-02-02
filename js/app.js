@@ -360,29 +360,21 @@ const App = {
   },
   
   /**
-   * Compact class abilities section (but keep one empty row for input)
+   * Compact class abilities section - remove all empty rows
    */
   compactClassAbilities() {
     const container = document.getElementById('class-abilities-list');
     if (!container) return;
     
     const rows = Array.from(container.querySelectorAll('.class-ability-row'));
-    const emptyRows = rows.filter(row => {
+    
+    // Remove all empty rows
+    rows.forEach(row => {
       const input = row.querySelector('.class-ability-input');
-      return input && !input.value.trim();
-    });
-    
-    // Remove all but one empty row
-    if (emptyRows.length > 1) {
-      for (let i = 0; i < emptyRows.length - 1; i++) {
-        emptyRows[i].remove();
+      if (input && !input.value.trim()) {
+        row.remove();
       }
-    }
-    
-    // If no empty rows, add one for input
-    if (emptyRows.length === 0) {
-      this.addClassAbilityRow();
-    }
+    });
     
     this.reindexClassAbilityRows();
   },
@@ -2647,8 +2639,8 @@ const App = {
     // Setup add/remove buttons
     this.setupClassAbilityButtons();
     
-    // Add one empty row for input (will be populated by populateForm if saved data exists)
-    this.addClassAbilityRow();
+    // Rows will be populated by populateForm if saved data exists
+    // User can click + to add new abilities
   },
   
   /**
@@ -2762,37 +2754,21 @@ const App = {
   },
   
   /**
-   * Clean up empty class ability rows (except keep at least one for input)
+   * Clean up empty class ability rows (remove all empty rows)
    */
   cleanupEmptyClassAbilityRows() {
     const container = document.getElementById('class-abilities-list');
     if (!container) return;
     
     const rows = Array.from(container.children);
-    const emptyRows = rows.filter(row => {
-      const input = row.querySelector('.class-ability-input');
-      return input && !input.value.trim();
-    });
     
-    // Remove all but one empty row (keep one for new input)
-    // If there are no empty rows, we'll add one after
-    if (emptyRows.length > 1) {
-      // Keep only the last empty row, remove the rest
-      for (let i = 0; i < emptyRows.length - 1; i++) {
-        emptyRows[i].remove();
+    // Remove all empty rows
+    rows.forEach(row => {
+      const input = row.querySelector('.class-ability-input');
+      if (input && !input.value.trim()) {
+        row.remove();
       }
-    }
-    
-    // If no empty rows remain, add one for input
-    const remainingRows = Array.from(container.children);
-    const hasEmptyRow = remainingRows.some(row => {
-      const input = row.querySelector('.class-ability-input');
-      return input && !input.value.trim();
     });
-    
-    if (!hasEmptyRow) {
-      this.addClassAbilityRow();
-    }
     
     this.reindexClassAbilityRows();
   },
@@ -3434,9 +3410,6 @@ const App = {
         
         console.log('addAbilityToSheet: filled existing empty slot with:', abilityName);
         
-        // Add a new empty row for future input
-        this.addClassAbilityRow();
-        
         this.scheduleAutoSave();
         return true;
       }
@@ -3446,14 +3419,7 @@ const App = {
     console.log('addAbilityToSheet: creating new row for:', abilityName);
     const newInput = this.addClassAbilityRow(abilityName);
     
-    if (newInput) {
-      // Also add an empty row for future input
-      this.addClassAbilityRow();
-      return true;
-    }
-    
-    console.warn('addAbilityToSheet: could not add ability:', abilityName);
-    return false;
+    return !!newInput;
   },
 
   /**
@@ -13148,6 +13114,9 @@ const App = {
         this.addAbilityToSheet(name);
       }
     });
+    
+    // Clean up any empty rows after adding abilities
+    this.compactClassAbilities();
     
     // Check for special actions based on abilities being unlocked
     this.handleUnlockedAbilitySpecialActions(newAbilities);
