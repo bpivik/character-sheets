@@ -28,6 +28,7 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal + 4;
         }
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const origField = document.getElementById('initiative-original');
@@ -40,6 +41,7 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal - 4;
         }
+        app.refreshSummaryWidgets();
       }
     },
     'artful dodger': {
@@ -55,6 +57,7 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal + 10;
         }
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const baseField = document.getElementById('evade-base');
@@ -67,6 +70,7 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal - 10;
         }
+        app.refreshSummaryWidgets();
       }
     },
     'weapon precision': {
@@ -105,6 +109,7 @@ const App = {
         if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
         }
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         // Hide the WP Damage Mod row
@@ -121,6 +126,7 @@ const App = {
         if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
         }
+        app.refreshSummaryWidgets();
       }
     },
     'lucky': {
@@ -137,6 +143,7 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal + 1;
         }
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const origField = document.getElementById('luck-original');
@@ -149,6 +156,7 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal - 1;
         }
+        app.refreshSummaryWidgets();
       }
     },
     'gifted': {
@@ -160,6 +168,7 @@ const App = {
           const currVal = parseInt(expField.value, 10) || 0;
           expField.value = currVal + 1;
         }
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const expField = document.getElementById('exp-rolls');
@@ -167,6 +176,7 @@ const App = {
           const currVal = parseInt(expField.value, 10) || 0;
           expField.value = Math.max(0, currVal - 1);
         }
+        app.refreshSummaryWidgets();
       }
     },
     'resilient': {
@@ -174,10 +184,12 @@ const App = {
       apply: function(app) {
         // Recalculate all to update hit locations with STR included
         app.recalculateAll();
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         // Recalculate all to update hit locations without STR
         app.recalculateAll();
+        app.refreshSummaryWidgets();
       }
     },
     'berserk rage': {
@@ -185,6 +197,8 @@ const App = {
       apply: function(app) {
         // Show the Berserk Rage section
         app.showBerserkRageSection();
+        // Refresh summary widgets to show rage widget
+        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         // End rage if active, then hide section
@@ -192,6 +206,8 @@ const App = {
           app.endBerserkRage(false); // Don't apply fatigue if ability is being removed
         }
         app.hideBerserkRageSection();
+        // Refresh summary widgets to hide rage widget
+        app.refreshSummaryWidgets();
       }
     }
   },
@@ -4525,6 +4541,11 @@ const App = {
     // Re-apply ability effects (Agile, Artful Dodger, Weapon Precision)
     // These modify calculated values and need to be reapplied after base recalculation
     this.reapplyAbilityEffects();
+    
+    // Update Berserk Rage display if active (uses and rounds depend on CON)
+    if (this.hasAbility('berserk rage')) {
+      this.updateBerserkRageDisplay();
+    }
   },
   
   /**
@@ -7709,6 +7730,21 @@ const App = {
       messages.push(`<br><strong>Fatigue:</strong> Already ${this.formatFatigueState(currentState)}`);
     }
     
+    // Reset Berserk Rage uses if character has the ability
+    if (this.hasAbility('berserk rage')) {
+      const con = parseInt(this.character.attributes.CON, 10) || 10;
+      const maxUses = Math.ceil(con / 4);
+      const previousUses = this.rageUsesRemaining || 0;
+      this.rageUsesRemaining = maxUses;
+      this.character.rageUsesRemaining = maxUses;
+      this.updateBerserkRageDisplay();
+      if (previousUses < maxUses) {
+        messages.push(`<br><strong>Berserk Rage uses restored:</strong> ${previousUses} → ${maxUses}`);
+      } else {
+        messages.push(`<br><strong>Berserk Rage uses:</strong> Already at maximum (${maxUses})`);
+      }
+    }
+    
     // Show the Long Rest result modal
     this.showLongRestResult(messages.join('<br>'));
   },
@@ -7759,6 +7795,7 @@ const App = {
     // Refresh summary widgets
     this.refreshSummaryWidget('fatigue');
     this.refreshSummaryWidget('attributes');
+    this.refreshSummaryWidget('berserk-rage');
   },
 
   /**
@@ -14363,6 +14400,9 @@ const App = {
     // Strikethrough Artful Dodger if present
     this.setArtfulDodgerStrikethrough(true);
     
+    // Refresh summary widgets to show rage effects
+    this.refreshSummaryWidgets();
+    
     this.scheduleAutoSave();
   },
   
@@ -14500,6 +14540,9 @@ const App = {
     if (btnText) btnText.textContent = "I'm RAGING!";
     
     this.updateBerserkRageDisplay();
+    
+    // Refresh summary widgets to reflect end of rage
+    this.refreshSummaryWidgets();
     
     // Apply one level of fatigue
     if (applyFatigue) {
