@@ -100,6 +100,11 @@ const App = {
           app.activeAbilityEffects['weapon precision'].strDexDamage = dmgStrDex;
           app.activeAbilityEffects['weapon precision'].strSizDamage = dmgStrSiz;
         }
+        
+        // Update all weapon damage displays to use WP mod for eligible weapons
+        if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+          window.WeaponData.updateAllWeaponDamage();
+        }
       },
       remove: function(app) {
         // Hide the WP Damage Mod row
@@ -111,6 +116,11 @@ const App = {
         const wpCurrField = document.getElementById('wp-damage-mod-current');
         if (wpOrigField) wpOrigField.value = '';
         if (wpCurrField) wpCurrField.value = '';
+        
+        // Update all weapon damage displays to use standard damage mod
+        if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+          window.WeaponData.updateAllWeaponDamage();
+        }
       }
     },
     'lucky': {

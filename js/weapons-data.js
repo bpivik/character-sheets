@@ -298,10 +298,89 @@ function getDamageMod() {
 }
 
 /**
- * Compose damage with character's damage modifier
+ * Get Weapon Precision damage modifier (STR+DEX based)
+ * Returns empty string if Weapon Precision is not active or no benefit
  */
-function composeDamage(baseDamage) {
-  const mod = getDamageMod();
+function getWPDamageMod() {
+  const wpCurrent = document.getElementById('wp-damage-mod-current');
+  const wpOriginal = document.getElementById('wp-damage-mod-original');
+  const wpRow = document.getElementById('wp-damage-row');
+  
+  // Check if WP is active (row is visible)
+  if (!wpRow || wpRow.style.display === 'none') return '';
+  
+  let t = '';
+  if (wpCurrent && wpCurrent.value.trim()) {
+    t = wpCurrent.value.trim();
+  } else if (wpOriginal && wpOriginal.value.trim()) {
+    t = wpOriginal.value.trim();
+  }
+  
+  if (!t) return '';
+  
+  // Collapse spaces
+  t = t.replace(/\s+/g, '');
+  
+  // Treat common "no-op" values as zero
+  if (t === '+0' || t === '0' || t === '+0d0' || t === '±0' || t === '--' || t === '–') return '';
+  
+  // If no explicit sign, assume "+"
+  if (!/^[+\-]/.test(t)) t = '+' + t;
+  
+  return t;
+}
+
+/**
+ * List of weapons eligible for Weapon Precision
+ * Includes variations and aliases
+ */
+const WP_ELIGIBLE_WEAPONS = [
+  'club', 'clubs',
+  'dagger', 'daggers', 'throwing dagger',
+  'garrote', 'garrotes', 'garotte',
+  'knife', 'knives', 'throwing knife', 'stone knife',
+  'shortsword', 'short sword', 'shortswords', 'short swords',
+  'main gauche', 'main-gauche', 'maingauche',
+  'rapier', 'rapiers',
+  'unarmed', 'unarmed strike', 'unarmed attack', 'fist', 'kick',
+  'dart', 'darts',
+  'sling', 'slings',
+  'short bow', 'shortbow', 'short bows', 'shortbows',
+  'javelin', 'javelins'
+];
+
+/**
+ * Check if a weapon is eligible for Weapon Precision
+ * @param {string} weaponName - The weapon name to check
+ * @returns {boolean} - True if eligible
+ */
+function isWPEligibleWeapon(weaponName) {
+  if (!weaponName) return false;
+  const normalizedName = weaponName.trim().toLowerCase();
+  return WP_ELIGIBLE_WEAPONS.some(w => normalizedName.includes(w) || w.includes(normalizedName));
+}
+
+/**
+ * Compose damage with character's damage modifier
+ * @param {string} baseDamage - The weapon's base damage (e.g., "1d4+1")
+ * @param {string} weaponName - Optional weapon name for Weapon Precision check
+ */
+function composeDamage(baseDamage, weaponName = null) {
+  // Determine which damage modifier to use
+  let mod = '';
+  
+  if (weaponName && isWPEligibleWeapon(weaponName)) {
+    // For WP-eligible weapons, use WP damage mod if active and better
+    const wpMod = getWPDamageMod();
+    const stdMod = getDamageMod();
+    
+    // Use WP mod if available, otherwise fall back to standard
+    mod = wpMod || stdMod;
+  } else {
+    // Standard weapons always use standard damage mod
+    mod = getDamageMod();
+  }
+  
   if (!mod) return baseDamage;
   if (baseDamage.endsWith(mod)) return baseDamage;
   return baseDamage + mod;
@@ -344,7 +423,7 @@ function autofillMeleeWeapon(index, weaponName) {
   const traitsInput = document.getElementById(`melee-${index}-traits`);
   
   const baseDamage = data[1];
-  const composedDamage = composeDamage(baseDamage);
+  const composedDamage = composeDamage(baseDamage, weaponName);
   const aphpValue = `${data[4]}/${data[5]}`;
   
   // Fill fields (only if empty)
@@ -352,6 +431,7 @@ function autofillMeleeWeapon(index, weaponName) {
   if (damageInput && !damageInput.value.trim()) {
     damageInput.value = composedDamage;
     damageInput.dataset.baseDamage = baseDamage; // Store base damage for recalculation
+    damageInput.dataset.weaponName = weaponName; // Store weapon name for WP check
   }
   if (sizeInput && !sizeInput.value.trim()) sizeInput.value = data[2];
   if (effectsInput && !effectsInput.value.trim()) effectsInput.value = data[3];
@@ -696,7 +776,7 @@ function autofillRangedWeapon(index, weaponName) {
   // For ranged weapons, only add damage mod if D.M. = "Y"
   let finalDamage = baseDamage;
   if (data[2] === 'Y') {
-    finalDamage = composeDamage(baseDamage);
+    finalDamage = composeDamage(baseDamage, weaponName);
   }
   
   const aphpValue = `${data[7]}/${data[8]}`;
@@ -706,6 +786,7 @@ function autofillRangedWeapon(index, weaponName) {
   if (damageInput && !damageInput.value.trim()) {
     damageInput.value = finalDamage;
     damageInput.dataset.baseDamage = baseDamage; // Store base damage for recalculation
+    damageInput.dataset.weaponName = weaponName; // Store weapon name for WP check
   }
   if (dmInput && !dmInput.value.trim()) dmInput.value = data[2];
   if (rangeInput && !rangeInput.value.trim()) rangeInput.value = data[3];
@@ -742,34 +823,43 @@ function clearRangedWeaponFields(index) {
  * Update all weapon damage displays based on current damage modifier
  * Called when damage modifier changes on Character page
  * Skips rows that have been user-modified
+ * Considers Weapon Precision for eligible weapons
  */
 function updateAllWeaponDamage() {
   // Update melee weapons (always add damage modifier)
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 20; i++) { // Support up to 20 rows with dynamic addition
     const nameInput = document.getElementById(`melee-${i}-name`);
     const damageInput = document.getElementById(`melee-${i}-damage`);
     
+    if (!nameInput) break; // No more rows
+    
     // Skip if user has modified this row
-    if (nameInput && nameInput.dataset.userModified === 'true') continue;
+    if (nameInput.dataset.userModified === 'true') continue;
     
     if (damageInput && damageInput.dataset.baseDamage) {
-      damageInput.value = composeDamage(damageInput.dataset.baseDamage);
+      // Use stored weapon name or current name input
+      const weaponName = damageInput.dataset.weaponName || nameInput.value;
+      damageInput.value = composeDamage(damageInput.dataset.baseDamage, weaponName);
     }
   }
   
   // Update ranged weapons (only if D.M. = Y)
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 20; i++) { // Support up to 20 rows with dynamic addition
     const nameInput = document.getElementById(`ranged-${i}-name`);
     const damageInput = document.getElementById(`ranged-${i}-damage`);
     const dmInput = document.getElementById(`ranged-${i}-dm`);
     
+    if (!nameInput) break; // No more rows
+    
     // Skip if user has modified this row
-    if (nameInput && nameInput.dataset.userModified === 'true') continue;
+    if (nameInput.dataset.userModified === 'true') continue;
     
     if (damageInput && damageInput.dataset.baseDamage) {
       const useDamageMod = dmInput && dmInput.value.toUpperCase() === 'Y';
       if (useDamageMod) {
-        damageInput.value = composeDamage(damageInput.dataset.baseDamage);
+        // Use stored weapon name or current name input
+        const weaponName = damageInput.dataset.weaponName || nameInput.value;
+        damageInput.value = composeDamage(damageInput.dataset.baseDamage, weaponName);
       } else {
         damageInput.value = damageInput.dataset.baseDamage;
       }
@@ -791,5 +881,7 @@ window.WeaponData = {
   composeDamage,
   getClassWeapons,
   combineClassWeapons,
-  updateAllWeaponDamage
+  updateAllWeaponDamage,
+  isWPEligibleWeapon,
+  WP_ELIGIBLE_WEAPONS
 };
