@@ -3389,11 +3389,19 @@ const App = {
    */
   addAbilityToSheet(abilityName) {
     const container = document.getElementById('class-abilities-list');
-    if (!container) return false;
+    if (!container) {
+      console.warn('addAbilityToSheet: container not found');
+      return false;
+    }
+    
+    if (!abilityName || !abilityName.trim()) {
+      console.warn('addAbilityToSheet: empty ability name');
+      return false;
+    }
     
     // Normalize apostrophes for comparison
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
-    const normalizedName = normalizeApostrophes(abilityName.toLowerCase());
+    const normalizedName = normalizeApostrophes(abilityName.toLowerCase().trim());
     
     // Check if ability already exists
     const existingInputs = container.querySelectorAll('.class-ability-input');
@@ -3401,48 +3409,50 @@ const App = {
       if (input.value.trim()) {
         const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
         if (normalizedExisting === normalizedName) {
-          // Already exists
-          return true;
+          console.log('addAbilityToSheet: ability already exists:', abilityName);
+          return true; // Already exists, that's fine
         }
       }
     }
     
-    // Find first empty slot or add a new row
-    let emptyInput = null;
+    // Find first empty slot
     for (const input of existingInputs) {
       if (!input.value.trim()) {
-        emptyInput = input;
-        break;
+        // Found empty slot - fill it
+        input.value = this.toTitleCase(abilityName);
+        input.dataset.previousValue = input.value;
+        this.updateAbilityTooltip(input);
+        
+        // Show the info button
+        const infoBtn = input.parentElement?.querySelector('.class-ability-info-btn');
+        if (infoBtn) {
+          infoBtn.style.display = '';
+        }
+        
+        // Apply ability effect if applicable
+        this.applyAbilityEffect(abilityName);
+        
+        console.log('addAbilityToSheet: filled existing empty slot with:', abilityName);
+        
+        // Add a new empty row for future input
+        this.addClassAbilityRow();
+        
+        this.scheduleAutoSave();
+        return true;
       }
     }
     
-    // If no empty slot, add a new row
-    if (!emptyInput) {
-      emptyInput = this.addClassAbilityRow();
-    }
+    // No empty slot found - create new row with the ability
+    console.log('addAbilityToSheet: creating new row for:', abilityName);
+    const newInput = this.addClassAbilityRow(abilityName);
     
-    if (emptyInput) {
-      emptyInput.value = this.toTitleCase(abilityName);
-      emptyInput.dataset.previousValue = emptyInput.value; // Track for removal
-      this.updateAbilityTooltip(emptyInput);
-      
-      // Show the info button
-      const infoBtn = emptyInput.parentElement?.querySelector('.class-ability-info-btn');
-      if (infoBtn) {
-        infoBtn.style.display = '';
-      }
-      
-      // Apply ability effect if applicable
-      this.applyAbilityEffect(abilityName);
-      
-      // Ensure there's still an empty row for new input
-      this.cleanupEmptyClassAbilityRows();
-      
+    if (newInput) {
+      // Also add an empty row for future input
+      this.addClassAbilityRow();
       return true;
     }
     
-    // No empty slots found
-    console.warn(`Could not add ability: ${abilityName}`);
+    console.warn('addAbilityToSheet: could not add ability:', abilityName);
     return false;
   },
 
