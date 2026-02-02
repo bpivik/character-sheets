@@ -3358,29 +3358,25 @@ const App = {
    * Update all ability tooltips and info buttons (called on load)
    */
   updateAllAbilityTooltips() {
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input) {
-          const hasValue = input.value.trim();
-          
-          // Set previousValue for tracking (used when abilities are deleted)
-          input.dataset.previousValue = hasValue || '';
-          
-          // Update tooltip (removes hover, we use click popup instead)
-          this.updateAbilityTooltip(input);
-          
-          // Show/hide info button
-          const wrapper = input.closest('.ability-input-wrapper');
-          if (wrapper) {
-            const infoBtn = wrapper.querySelector('.ability-info-btn');
-            if (infoBtn) {
-              infoBtn.style.display = hasValue ? '' : 'none';
-            }
-          }
-        }
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    const inputs = container.querySelectorAll('.class-ability-input');
+    inputs.forEach(input => {
+      const hasValue = input.value.trim();
+      
+      // Set previousValue for tracking (used when abilities are deleted)
+      input.dataset.previousValue = hasValue || '';
+      
+      // Update tooltip (removes hover, we use click popup instead)
+      this.updateAbilityTooltip(input);
+      
+      // Show/hide info button
+      const infoBtn = input.parentElement?.querySelector('.class-ability-info-btn');
+      if (infoBtn) {
+        infoBtn.style.display = hasValue ? '' : 'none';
       }
-    }
+    });
     
     // Setup click handlers for popups
     this.setupAbilityInputClickHandlers();
@@ -3392,52 +3388,61 @@ const App = {
    * @returns {boolean} - True if successfully added
    */
   addAbilityToSheet(abilityName) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return false;
+    
     // Normalize apostrophes for comparison
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const normalizedName = normalizeApostrophes(abilityName.toLowerCase());
     
     // Check if ability already exists
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
-          const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
-          if (normalizedExisting === normalizedName) {
-            // Already exists
-            return true;
-          }
-        }
-      }
-    }
-    
-    // Find first empty slot
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && !input.value.trim()) {
-          input.value = this.toTitleCase(abilityName);
-          input.dataset.previousValue = input.value; // Track for removal
-          this.updateAbilityTooltip(input);
-          
-          // Show the info button
-          const wrapper = input.closest('.ability-input-wrapper');
-          if (wrapper) {
-            const infoBtn = wrapper.querySelector('.ability-info-btn');
-            if (infoBtn) {
-              infoBtn.style.display = '';
-            }
-          }
-          
-          // Apply ability effect if applicable
-          this.applyAbilityEffect(abilityName);
-          
+    const existingInputs = container.querySelectorAll('.class-ability-input');
+    for (const input of existingInputs) {
+      if (input.value.trim()) {
+        const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
+        if (normalizedExisting === normalizedName) {
+          // Already exists
           return true;
         }
       }
     }
     
+    // Find first empty slot or add a new row
+    let emptyInput = null;
+    for (const input of existingInputs) {
+      if (!input.value.trim()) {
+        emptyInput = input;
+        break;
+      }
+    }
+    
+    // If no empty slot, add a new row
+    if (!emptyInput) {
+      emptyInput = this.addClassAbilityRow();
+    }
+    
+    if (emptyInput) {
+      emptyInput.value = this.toTitleCase(abilityName);
+      emptyInput.dataset.previousValue = emptyInput.value; // Track for removal
+      this.updateAbilityTooltip(emptyInput);
+      
+      // Show the info button
+      const infoBtn = emptyInput.parentElement?.querySelector('.class-ability-info-btn');
+      if (infoBtn) {
+        infoBtn.style.display = '';
+      }
+      
+      // Apply ability effect if applicable
+      this.applyAbilityEffect(abilityName);
+      
+      // Ensure there's still an empty row for new input
+      this.cleanupEmptyClassAbilityRows();
+      
+      return true;
+    }
+    
     // No empty slots found
-    console.warn(`No empty ability slots available for: ${abilityName}`);
+    console.warn(`Could not add ability: ${abilityName}`);
     return false;
   },
 
@@ -6054,6 +6059,9 @@ const App = {
    * Remove abilities granted by a class (both auto-granted and purchased ranked abilities)
    */
   removeClassAbilities(className) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
     // Get auto-granted class abilities
     const classAbilities = window.ClassAbilities ? 
       (window.ClassAbilities.getAllAbilitiesForClass(className) || []) : [];
@@ -6072,32 +6080,34 @@ const App = {
     // Track abilities that were actually removed
     const removedAbilities = [];
     
-    // Check each ability slot (3 columns x 20 rows)
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (!input || !input.value.trim()) continue;
+    // Check each ability input in the dynamic list
+    const inputs = container.querySelectorAll('.class-ability-input');
+    inputs.forEach(input => {
+      if (!input.value.trim()) return;
+      
+      const ability = input.value.toLowerCase().trim();
+      // Also check without parenthetical suffixes (e.g., "Language (Thieves' Cant)" -> "language (thieves' cant)")
+      const abilityBase = ability;
+      
+      // Check if this ability belongs to the removed class
+      if (normalizedClassAbilities.some(ca => abilityBase.startsWith(ca.toLowerCase()) || ca.toLowerCase() === abilityBase)) {
+        // Check if another class also grants this ability
+        const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className) || 
+                                  this.rankedAbilityGrantedByOtherClass(ability, className);
         
-        const ability = input.value.toLowerCase().trim();
-        // Also check without parenthetical suffixes (e.g., "Language (Thieves' Cant)" -> "language (thieves' cant)")
-        const abilityBase = ability;
-        
-        // Check if this ability belongs to the removed class
-        if (normalizedClassAbilities.some(ca => abilityBase.startsWith(ca.toLowerCase()) || ca.toLowerCase() === abilityBase)) {
-          // Check if another class also grants this ability
-          const otherClassesGrant = this.abilityGrantedByOtherClass(ability, className) || 
-                                    this.rankedAbilityGrantedByOtherClass(ability, className);
+        if (!otherClassesGrant) {
+          removedAbilities.push(input.value.trim()); // Store original case
+          input.value = '';
+          input.title = 'Enter a Special Ability name';
+          input.classList.remove('duplicate-warning');
+          delete input.dataset.classAbility;
           
-          if (!otherClassesGrant) {
-            removedAbilities.push(input.value.trim()); // Store original case
-            input.value = '';
-            input.title = 'Enter a Special Ability name';
-            input.classList.remove('duplicate-warning');
-            delete input.dataset.classAbility;
-          }
+          // Hide info button
+          const infoBtn = input.parentElement?.querySelector('.class-ability-info-btn');
+          if (infoBtn) infoBtn.style.display = 'none';
         }
       }
-    }
+    });
     
     // Also remove from acquiredAbilities tracking
     if (this.character.acquiredAbilities && removedAbilities.length > 0) {
@@ -6390,13 +6400,14 @@ const App = {
     
     // Get all abilities currently on the sheet
     const sheetAbilities = new Set();
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
+    const container = document.getElementById('class-abilities-list');
+    if (container) {
+      const inputs = container.querySelectorAll('.class-ability-input');
+      inputs.forEach(input => {
+        if (input.value.trim()) {
           sheetAbilities.add(input.value.trim().toLowerCase());
         }
-      }
+      });
     }
     
     // Get all languages on the sheet (for Language abilities)
@@ -12460,13 +12471,14 @@ const App = {
     const abilities = new Set(this.character.acquiredAbilities || []);
     
     // Also include abilities already on the sheet (manually added or from auto-grant)
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.trim()) {
+    const container = document.getElementById('class-abilities-list');
+    if (container) {
+      const inputs = container.querySelectorAll('.class-ability-input');
+      inputs.forEach(input => {
+        if (input.value.trim()) {
           abilities.add(input.value.trim());
         }
-      }
+      });
     }
     
     // Also check Languages section for Language abilities (e.g., Druids' Cant, Thieves' Cant)
@@ -12476,11 +12488,15 @@ const App = {
       abilities.add(`Language (${nativeName})`);
     }
     // Check additional languages
-    for (let i = 2; i <= 7; i++) {
-      const langName = document.getElementById(`language-${i}-name`)?.value?.trim();
-      if (langName) {
-        abilities.add(`Language (${langName})`);
-      }
+    const langContainer = document.getElementById('language-container');
+    if (langContainer) {
+      const langRows = langContainer.querySelectorAll('.language-row:not(.native)');
+      langRows.forEach(row => {
+        const langName = row.querySelector('.language-name')?.value?.trim();
+        if (langName) {
+          abilities.add(`Language (${langName})`);
+        }
+      });
     }
     
     return abilities;
@@ -13066,16 +13082,17 @@ const App = {
    * Update or add the Characteristic Increase ability on the sheet
    */
   updateCharacteristicIncreaseOnSheet(displayName) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
     // Look for existing Characteristic Increase entry
-    for (let col = 1; col <= 3; col++) {
-      for (let i = 0; i < 20; i++) {
-        const input = document.getElementById(`ability-${col}-${i}`);
-        if (input && input.value.toLowerCase().startsWith('characteristic increase')) {
-          // Update existing entry
-          input.value = displayName;
-          this.updateAbilityTooltip(input);
-          return;
-        }
+    const inputs = container.querySelectorAll('.class-ability-input');
+    for (const input of inputs) {
+      if (input.value.toLowerCase().startsWith('characteristic increase')) {
+        // Update existing entry
+        input.value = displayName;
+        this.updateAbilityTooltip(input);
+        return;
       }
     }
     
