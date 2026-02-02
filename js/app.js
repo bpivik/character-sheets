@@ -360,20 +360,29 @@ const App = {
   },
   
   /**
-   * Compact class abilities section
+   * Compact class abilities section (but keep one empty row for input)
    */
   compactClassAbilities() {
     const container = document.getElementById('class-abilities-list');
     if (!container) return;
     
     const rows = Array.from(container.querySelectorAll('.class-ability-row'));
-    
-    rows.forEach(row => {
+    const emptyRows = rows.filter(row => {
       const input = row.querySelector('.class-ability-input');
-      if (input && !input.value.trim()) {
-        row.remove();
-      }
+      return input && !input.value.trim();
     });
+    
+    // Remove all but one empty row
+    if (emptyRows.length > 1) {
+      for (let i = 0; i < emptyRows.length - 1; i++) {
+        emptyRows[i].remove();
+      }
+    }
+    
+    // If no empty rows, add one for input
+    if (emptyRows.length === 0) {
+      this.addClassAbilityRow();
+    }
     
     this.reindexClassAbilityRows();
   },
@@ -2638,7 +2647,8 @@ const App = {
     // Setup add/remove buttons
     this.setupClassAbilityButtons();
     
-    // Initial abilities will be populated by populateForm
+    // Add one empty row for input (will be populated by populateForm if saved data exists)
+    this.addClassAbilityRow();
   },
   
   /**
@@ -2759,18 +2769,30 @@ const App = {
     if (!container) return;
     
     const rows = Array.from(container.children);
-    const filledRows = rows.filter(row => {
+    const emptyRows = rows.filter(row => {
       const input = row.querySelector('.class-ability-input');
-      return input && input.value.trim();
+      return input && !input.value.trim();
     });
     
-    // Keep only filled rows
-    rows.forEach(row => {
-      const input = row.querySelector('.class-ability-input');
-      if (input && !input.value.trim()) {
-        row.remove();
+    // Remove all but one empty row (keep one for new input)
+    // If there are no empty rows, we'll add one after
+    if (emptyRows.length > 1) {
+      // Keep only the last empty row, remove the rest
+      for (let i = 0; i < emptyRows.length - 1; i++) {
+        emptyRows[i].remove();
       }
+    }
+    
+    // If no empty rows remain, add one for input
+    const remainingRows = Array.from(container.children);
+    const hasEmptyRow = remainingRows.some(row => {
+      const input = row.querySelector('.class-ability-input');
+      return input && !input.value.trim();
     });
+    
+    if (!hasEmptyRow) {
+      this.addClassAbilityRow();
+    }
     
     this.reindexClassAbilityRows();
   },
@@ -3491,8 +3513,8 @@ const App = {
     // Update tooltips after sorting
     this.updateAllAbilityTooltips();
     
-    // Compact empty rows
-    this.compactClassAbilityRows();
+    // Ensure there's an empty row for new input
+    this.cleanupEmptyClassAbilityRows();
     
     this.scheduleAutoSave();
   },
