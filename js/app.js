@@ -6664,15 +6664,29 @@ const App = {
    */
   getAllSpecialAbilities() {
     const abilities = [];
-    const container = document.getElementById('class-abilities-list');
-    if (container) {
-      const inputs = container.querySelectorAll('.class-ability-input');
+    
+    // Get class abilities
+    const classContainer = document.getElementById('class-abilities-list');
+    if (classContainer) {
+      const inputs = classContainer.querySelectorAll('.class-ability-input');
       inputs.forEach(input => {
         if (input.value.trim()) {
           abilities.push(input.value.trim());
         }
       });
     }
+    
+    // Get species abilities
+    const speciesContainer = document.getElementById('species-abilities-list');
+    if (speciesContainer) {
+      const inputs = speciesContainer.querySelectorAll('.species-ability-input');
+      inputs.forEach(input => {
+        if (input.value.trim()) {
+          abilities.push(input.value.trim());
+        }
+      });
+    }
+    
     return abilities;
   },
   
