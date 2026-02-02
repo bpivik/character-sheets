@@ -3,10 +3,6 @@
    Main Application Controller
    ============================================ */
 
-// Slot constants
-const PROFESSIONAL_SKILL_SLOTS = 22; // Professional skill row slots
-const EQUIPMENT_SLOTS = 20; // Equipment row slots
-
 const App = {
   // Current character data
   character: null,
@@ -176,34 +172,15 @@ const App = {
     'resilient': {
       description: 'Hit Points calculated using STR+CON+SIZ instead of CON+SIZ',
       apply: function(app) {
-        // Just mark as active - HP recalculation happens in recalculateAll via hasAbility check
-        // Don't call recalculateAll here to avoid loops
+        // Recalculate all to update hit locations with STR included
+        app.recalculateAll();
       },
       remove: function(app) {
-        // Just mark as inactive - HP recalculation happens in recalculateAll via hasAbility check
-        // Don't call recalculateAll here to avoid loops
-      }
-    },
-    'berserk rage': {
-      description: 'Enter a berserker rage for increased combat effectiveness',
-      apply: function(app) {
-        // Show the Berserk Rage section
-        app.showBerserkRageSection();
-      },
-      remove: function(app) {
-        // End rage if active, then hide section
-        if (app.isRaging) {
-          app.endBerserkRage(false); // Don't apply fatigue if ability is being removed
-        }
-        app.hideBerserkRageSection();
+        // Recalculate all to update hit locations without STR
+        app.recalculateAll();
       }
     }
   },
-  
-  // Berserk Rage state
-  isRaging: false,
-  rageUsesRemaining: null, // null until initialized
-  preRageValues: null, // Store values before rage to restore later
 
   /**
    * Initialize the application
@@ -312,9 +289,6 @@ const App = {
     
     // Restore characteristic increase display name if applicable
     this.restoreCharacteristicIncreaseDisplay();
-    
-    // Restore Berserk Rage state if applicable
-    this.restoreBerserkRageState();
     
     // Compact dynamic sections to only show filled rows
     this.compactDynamicSections();
@@ -704,9 +678,6 @@ const App = {
       });
     }
     
-    // Clear saved species abilities since species has changed
-    this.character.speciesAbilities = [];
-    
     // Populate the Species Abilities section (replaces old content)
     // Pass true to apply persistent effects since this is a user-initiated species change
     this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
@@ -765,167 +736,53 @@ const App = {
     // Clear existing content
     container.innerHTML = '';
     
-    // If no abilities, just leave empty (user can add with + button)
+    // If no abilities, show a placeholder
     if (!abilities || abilities.length === 0) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'species-ability-placeholder';
+      placeholder.textContent = 'No species abilities';
+      placeholder.style.cssText = 'padding: 0.5rem; color: #999; font-style: italic;';
+      container.appendChild(placeholder);
       return;
     }
     
     // Create rows for each ability
     abilities.forEach((ability, index) => {
-      this.addSpeciesAbilityRow(ability, applyPersistentEffects);
-    });
-  },
-  
-  /**
-   * Add a species ability row
-   */
-  addSpeciesAbilityRow(abilityName = '', applyPersistentEffects = false) {
-    const container = document.getElementById('species-abilities-list');
-    if (!container) return null;
-    
-    const index = container.children.length;
-    
-    const row = document.createElement('div');
-    row.className = 'species-ability-row';
-    row.dataset.index = index;
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'species-ability-input';
-    input.id = `species-ability-${index}`;
-    input.value = abilityName ? this.toTitleCase(abilityName) : '';
-    input.dataset.previousValue = input.value;
-    input.placeholder = '';
-    
-    const infoBtn = document.createElement('button');
-    infoBtn.type = 'button';
-    infoBtn.className = 'species-ability-info-btn';
-    infoBtn.textContent = 'i';
-    infoBtn.title = 'View ability details';
-    infoBtn.style.display = abilityName ? '' : 'none';
-    
-    // Handle ability changes
-    input.addEventListener('blur', () => {
-      this.handleSpeciesAbilityChange(input);
-      this.cleanupEmptySpeciesAbilityRows();
-    });
-    
-    input.addEventListener('input', () => {
-      infoBtn.style.display = input.value.trim() ? '' : 'none';
-      this.scheduleAutoSave();
-    });
-    
-    // Info button click handler
-    infoBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const name = input.value.trim();
-      if (name) {
-        this.showAbilityDetail(name);
-      }
-    });
-    
-    row.appendChild(input);
-    row.appendChild(infoBtn);
-    container.appendChild(row);
-    
-    // Apply ability effect if applicable
-    if (abilityName) {
-      const baseName = abilityName.split('(')[0].trim().toLowerCase();
+      const row = document.createElement('div');
+      row.className = 'species-ability-row';
+      
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'species-ability-input';
+      input.id = `species-ability-${index}`;
+      input.value = this.toTitleCase(ability);
+      input.readOnly = true;
+      input.dataset.abilityName = ability;
+      
+      const infoBtn = document.createElement('button');
+      infoBtn.type = 'button';
+      infoBtn.className = 'species-ability-info-btn';
+      infoBtn.textContent = 'i';
+      infoBtn.title = 'View ability details';
+      infoBtn.addEventListener('click', () => {
+        this.showAbilityDetail(ability);
+      });
+      
+      row.appendChild(input);
+      row.appendChild(infoBtn);
+      container.appendChild(row);
+      
+      // Apply ability effect (skip persistent if not requested)
+      const baseName = ability.split('(')[0].trim().toLowerCase();
       const effect = this.ABILITY_EFFECTS[baseName];
       if (effect && effect.persistent && !applyPersistentEffects) {
         // Skip persistent effects during init - saved values already include them
         // Just mark as active
         this.activeAbilityEffects[baseName] = { active: true };
       } else {
-        this.applyAbilityEffect(abilityName);
-      }
-    }
-    
-    return input;
-  },
-  
-  /**
-   * Handle species ability change
-   */
-  handleSpeciesAbilityChange(input) {
-    const value = input.value.trim();
-    const previousValue = input.dataset.previousValue || '';
-    
-    // Remove old ability effect if changed
-    if (previousValue && previousValue !== value) {
-      this.removeAbilityEffect(previousValue);
-    }
-    
-    if (!value) {
-      input.dataset.previousValue = '';
-      return;
-    }
-    
-    // Convert to title case
-    input.value = this.toTitleCase(value);
-    input.dataset.previousValue = input.value;
-    
-    // Apply new ability effect
-    this.applyAbilityEffect(input.value);
-    
-    // Update tooltip
-    this.updateAbilityTooltip(input);
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Clean up empty species ability rows
-   */
-  cleanupEmptySpeciesAbilityRows() {
-    const container = document.getElementById('species-abilities-list');
-    if (!container) return;
-    
-    const rows = Array.from(container.querySelectorAll('.species-ability-row'));
-    
-    // Remove all empty rows
-    rows.forEach(row => {
-      const input = row.querySelector('.species-ability-input');
-      if (input && !input.value.trim()) {
-        row.remove();
+        this.applyAbilityEffect(ability);
       }
     });
-    
-    // Reindex remaining rows
-    const remainingRows = container.querySelectorAll('.species-ability-row');
-    remainingRows.forEach((row, i) => {
-      row.dataset.index = i;
-      const input = row.querySelector('.species-ability-input');
-      if (input) {
-        input.id = `species-ability-${i}`;
-      }
-    });
-  },
-  
-  /**
-   * Remove last species ability row
-   */
-  removeLastSpeciesAbilityRow() {
-    const container = document.getElementById('species-abilities-list');
-    if (!container || container.children.length === 0) return;
-    
-    const rows = Array.from(container.querySelectorAll('.species-ability-row'));
-    const lastRow = rows[rows.length - 1];
-    const input = lastRow?.querySelector('.species-ability-input');
-    
-    if (input && input.value.trim()) {
-      const confirmed = confirm(`Remove "${input.value.trim()}"?\n\nThis will delete this ability.`);
-      if (!confirmed) return;
-      
-      // Remove ability effect
-      this.removeAbilityEffect(input.value);
-    }
-    
-    if (lastRow) {
-      lastRow.remove();
-      this.scheduleAutoSave();
-    }
   },
   
   /**
@@ -952,14 +809,8 @@ const App = {
     const speciesInput = document.getElementById('species');
     const species = speciesInput?.value?.trim().toLowerCase() || '';
     
-    // If we have saved species abilities, use those
-    if (this.character.speciesAbilities && this.character.speciesAbilities.length > 0) {
-      this.populateSpeciesAbilitiesSection(this.character.speciesAbilities);
-      return;
-    }
-    
     if (!species || !window.SpeciesData) {
-      // No species set and no saved abilities
+      // Show placeholder for no species
       this.populateSpeciesAbilitiesSection([]);
       return;
     }
@@ -1650,24 +1501,71 @@ const App = {
       const currentInput = row.querySelector('.prof-skill-current');
       const prereqKeys = row.querySelector('.prereq-keys');
       
-      nameInput.addEventListener('blur', () => {
-        if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
-          prereqKeys.dataset.skillName = nameInput.value;
+      // Track previous name for deletion detection
+      nameInput.dataset.previousName = '';
+      
+      // Store previous name on focus (before editing)
+      nameInput.addEventListener('focus', (e) => {
+        e.target.dataset.previousName = e.target.value.trim();
+      });
+      
+      // Convert to title case on blur and handle name changes
+      nameInput.addEventListener('blur', (e) => {
+        const newName = e.target.value.trim();
+        const previousName = e.target.dataset.previousName || '';
+        
+        if (newName) {
+          // Check for duplicate magic skill
+          if (this.checkForDuplicateMagicSkill(newName, i)) {
+            alert(`${this.toTitleCase(newName)} already exists in Professional Skills. Please remove the duplicate.`);
+          }
+          
+          e.target.value = this.toTitleCase(newName);
+          prereqKeys.dataset.skillName = e.target.value;
           this.updatePrereqKeys();
           this.scheduleAutoSave();
+        } else if (previousName) {
+          // Name was cleared - handle deletion
+          this.handleProfSkillDeletion(i, previousName);
         }
+        
+        e.target.dataset.previousName = e.target.value.trim();
       });
       
-      nameInput.addEventListener('input', () => {
-        this.autoFillProfessionalSkillFormula(nameInput, baseInput);
+      // Auto-fill formula when skill name is entered
+      nameInput.addEventListener('input', (e) => {
+        this.autoFillProfessionalSkillFormula(e.target, baseInput);
+        this.updateProfessionalSkillData(i);
+        this.updateProfSkillEncIndicator(i);
+        // Update prereq keys data attribute
+        prereqKeys.dataset.skillName = e.target.value.trim();
+        this.updatePrereqKeys();
+        this.scheduleAutoSave();
       });
       
-      baseInput.addEventListener('blur', () => {
+      // Also recalculate base value when formula changes
+      baseInput.addEventListener('input', () => {
         this.calculateProfessionalSkillBase(i);
+        this.updateProfessionalSkillData(i);
+        this.updateProfSkillEncIndicator(i);
+        this.scheduleAutoSave();
       });
       
-      currentInput.addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', (e) => {
+        // If there's an active penalty and user is editing, update the original value
+        if (e.target.classList.contains('enc-penalized-value')) {
+          const newOriginal = e.target.value;
+          e.target.dataset.originalValue = newOriginal;
+          // Re-apply penalty display after a short delay
+          setTimeout(() => this.updateTotalEnc(), 10);
+        } else if (e.target.dataset.originalValue !== undefined) {
+          e.target.dataset.originalValue = e.target.value;
+        }
+        this.updateProfessionalSkillData(i);
+        // Sync to magic page if this is a magic skill
+        this.syncProfSkillToMagic(i);
+        this.scheduleAutoSave();
+      });
     }
   },
 
@@ -3888,14 +3786,29 @@ const App = {
         const currentInput = document.getElementById(`prof-skill-${i}-current`);
         const prereqKeys = document.getElementById(`prof-skill-${i}-prereq`);
         if (nameInput && skill.name) nameInput.value = this.toTitleCase(skill.name);
-        if (baseInput && skill.base) baseInput.value = skill.base;
+        if (baseInput) {
+          // If base formula was saved, use it; otherwise try to auto-fill from skill name
+          if (skill.base) {
+            baseInput.value = skill.base;
+          } else if (skill.name) {
+            // Try to auto-fill the formula from skill definitions
+            const skillNameLower = skill.name.replace(/\s*\(.*?\)/g, '').trim().toLowerCase();
+            if (SKILL_DEFINITIONS.professional && SKILL_DEFINITIONS.professional[skillNameLower]) {
+              baseInput.value = SKILL_DEFINITIONS.professional[skillNameLower].formula;
+            }
+          }
+        }
         if (currentInput && skill.current) {
           currentInput.value = skill.current;
+          // Store as original value for ENC penalty system
           currentInput.dataset.originalValue = skill.current;
         }
+        // Update prereq-keys data attribute
         if (prereqKeys && skill.name) prereqKeys.dataset.skillName = this.toTitleCase(skill.name);
+        // Update ENC indicator visibility
         this.updateProfSkillEncIndicator(i);
       });
+      // Recalculate base values after loading
       this.recalculateProfessionalSkillBases();
     }
     
@@ -4228,6 +4141,7 @@ const App = {
         this.character.professionalSkills.push({
           name: nameInput.value,
           base: baseInput.value,
+          // Save original (pre-penalty) value if available
           current: currentInput.dataset.originalValue || currentInput.value
         });
       }
@@ -4277,10 +4191,12 @@ const App = {
       fields.forEach(field => {
         const input = document.getElementById(`melee-${i}-${field}`);
         weapon[field] = input?.value || '';
+        // Save baseDamage data attribute for damage field
         if (field === 'damage' && input?.dataset?.baseDamage) {
           weapon.baseDamage = input.dataset.baseDamage;
         }
       });
+      // Save userModified flag
       if (nameInput?.dataset?.userModified === 'true') {
         weapon.userModified = true;
       }
@@ -4296,10 +4212,12 @@ const App = {
       fields.forEach(field => {
         const input = document.getElementById(`ranged-${i}-${field}`);
         weapon[field] = input?.value || '';
+        // Save baseDamage data attribute for damage field
         if (field === 'damage' && input?.dataset?.baseDamage) {
           weapon.baseDamage = input.dataset.baseDamage;
         }
       });
+      // Save userModified flag
       if (nameInput?.dataset?.userModified === 'true') {
         weapon.userModified = true;
       }
@@ -4346,27 +4264,6 @@ const App = {
     const flyingInput = document.getElementById('flying-speed');
     if (flyingInput) {
       this.character.combat.flyingSpeed = flyingInput.value;
-    }
-    
-    // Species Abilities (editable)
-    this.character.speciesAbilities = [];
-    const speciesAbilitiesContainer = document.getElementById('species-abilities-list');
-    if (speciesAbilitiesContainer) {
-      const abilityInputs = speciesAbilitiesContainer.querySelectorAll('.species-ability-input');
-      abilityInputs.forEach(input => {
-        if (input.value.trim()) {
-          this.character.speciesAbilities.push(input.value.trim());
-        }
-      });
-    }
-    
-    // Berserk Rage state
-    this.character.isRaging = this.isRaging || false;
-    this.character.rageUsesRemaining = this.rageUsesRemaining;
-    this.character.preRageValues = this.preRageValues;
-    const rageRoundsInput = document.getElementById('rage-rounds-used');
-    if (rageRoundsInput) {
-      this.character.rageRoundsUsed = parseInt(rageRoundsInput.value, 10) || 0;
     }
     
     // Magic Skills
@@ -4597,11 +4494,6 @@ const App = {
     // Re-apply ability effects (Agile, Artful Dodger, Weapon Precision)
     // These modify calculated values and need to be reapplied after base recalculation
     this.reapplyAbilityEffects();
-    
-    // Update Berserk Rage display if active (uses and rounds depend on CON)
-    if (this.hasAbility('berserk rage')) {
-      this.updateBerserkRageDisplay();
-    }
   },
   
   /**
@@ -6565,29 +6457,15 @@ const App = {
    */
   getAllSpecialAbilities() {
     const abilities = [];
-    
-    // Get class abilities
-    const classContainer = document.getElementById('class-abilities-list');
-    if (classContainer) {
-      const inputs = classContainer.querySelectorAll('.class-ability-input');
+    const container = document.getElementById('class-abilities-list');
+    if (container) {
+      const inputs = container.querySelectorAll('.class-ability-input');
       inputs.forEach(input => {
         if (input.value.trim()) {
           abilities.push(input.value.trim());
         }
       });
     }
-    
-    // Get species abilities
-    const speciesContainer = document.getElementById('species-abilities-list');
-    if (speciesContainer) {
-      const inputs = speciesContainer.querySelectorAll('.species-ability-input');
-      inputs.forEach(input => {
-        if (input.value.trim()) {
-          abilities.push(input.value.trim());
-        }
-      });
-    }
-    
     return abilities;
   },
   
@@ -7800,21 +7678,6 @@ const App = {
       messages.push(`<br><strong>Fatigue:</strong> Already ${this.formatFatigueState(currentState)}`);
     }
     
-    // Reset Berserk Rage uses if character has the ability
-    if (this.hasAbility('berserk rage')) {
-      const con = parseInt(this.character.attributes.CON, 10) || 10;
-      const maxUses = Math.ceil(con / 4);
-      const previousUses = this.rageUsesRemaining || 0;
-      this.rageUsesRemaining = maxUses;
-      this.character.rageUsesRemaining = maxUses;
-      this.updateBerserkRageDisplay();
-      if (previousUses < maxUses) {
-        messages.push(`<br><strong>Berserk Rage uses restored:</strong> ${previousUses} → ${maxUses}`);
-      } else {
-        messages.push(`<br><strong>Berserk Rage uses:</strong> Already at maximum (${maxUses})`);
-      }
-    }
-    
     // Show the Long Rest result modal
     this.showLongRestResult(messages.join('<br>'));
   },
@@ -7865,7 +7728,6 @@ const App = {
     // Refresh summary widgets
     this.refreshSummaryWidget('fatigue');
     this.refreshSummaryWidget('attributes');
-    this.refreshSummaryWidget('berserk-rage');
   },
 
   /**
@@ -9589,51 +9451,6 @@ const App = {
         
         return html;
       }
-    },
-    'berserk-rage': {
-      name: 'Berserk Rage',
-      icon: '🔥',
-      dynamic: true,
-      isAvailable: () => {
-        return App.hasAbility('berserk rage');
-      },
-      render: () => {
-        const con = parseInt(App.character.attributes?.CON, 10) || 10;
-        const maxUses = Math.ceil(con / 4);
-        const maxRounds = con;
-        const usesRemaining = App.rageUsesRemaining ?? maxUses;
-        const isRaging = App.isRaging || false;
-        
-        let html = '<h4>🔥 Berserk Rage 🔥</h4>';
-        html += '<div class="rage-widget-content">';
-        
-        html += `<div class="stat-row"><span class="stat-label">Uses/Day:</span><span class="stat-value-bold">${usesRemaining} / ${maxUses}</span></div>`;
-        html += `<div class="stat-row"><span class="stat-label">Rounds/Rage:</span><span class="stat-value">${maxRounds}</span></div>`;
-        
-        if (isRaging) {
-          html += '<div class="rage-widget-active">⚔️ CURRENTLY RAGING! ⚔️</div>';
-          const roundsUsed = document.getElementById('rage-rounds-used')?.value || '0';
-          html += `<div class="stat-row"><span class="stat-label">Rounds Used:</span><span class="stat-value">${roundsUsed} / ${maxRounds}</span></div>`;
-          html += '<div class="rage-widget-effects">';
-          html += '<div class="rage-effect-item boost">Damage Mod +1 step</div>';
-          html += '<div class="rage-effect-item boost">Endurance +20%</div>';
-          html += '<div class="rage-effect-item boost">Willpower +20%</div>';
-          html += '<div class="rage-effect-item boost">Brawn +40%</div>';
-          html += '<div class="rage-effect-item penalty">Evade -2%</div>';
-          html += '</div>';
-          html += '<button type="button" class="btn btn-small btn-end-rage-widget" style="width:100%;margin-top:8px;background:#8b0000;color:white;">End Rage</button>';
-        } else {
-          if (usesRemaining > 0) {
-            html += '<button type="button" class="btn btn-rage-widget" style="width:100%;margin-top:8px;">⚔️ I\'m RAGING! ⚔️</button>';
-          } else {
-            html += '<div class="rage-widget-exhausted">No rage uses remaining</div>';
-            html += '<button type="button" class="btn btn-small btn-reset-rage-widget" style="width:100%;margin-top:8px;">Reset Uses</button>';
-          }
-        }
-        
-        html += '</div>';
-        return html;
-      }
     }
   },
   
@@ -9976,33 +9793,6 @@ const App = {
       if (expBtn) {
         e.stopPropagation();
         this.openExpModal();
-        return;
-      }
-      
-      // Handle Berserk Rage button in widget
-      const rageBtn = e.target.closest('.btn-rage-widget');
-      if (rageBtn) {
-        e.stopPropagation();
-        this.startBerserkRage();
-        this.refreshSummaryWidgets();
-        return;
-      }
-      
-      // Handle End Rage button in widget
-      const endRageBtn = e.target.closest('.btn-end-rage-widget');
-      if (endRageBtn) {
-        e.stopPropagation();
-        this.endBerserkRage(true);
-        this.refreshSummaryWidgets();
-        return;
-      }
-      
-      // Handle Reset Rage button in widget
-      const resetRageBtn = e.target.closest('.btn-reset-rage-widget');
-      if (resetRageBtn) {
-        e.stopPropagation();
-        this.resetRageUses();
-        this.refreshSummaryWidgets();
         return;
       }
     });
@@ -10524,10 +10314,6 @@ const App = {
     // Ranged Weapons
     document.getElementById('btn-add-ranged')?.addEventListener('click', () => this.addRangedWeaponRow());
     document.getElementById('btn-remove-ranged')?.addEventListener('click', () => this.removeLastRow('ranged-weapons-body', 'tr', '.weapon-name'));
-    
-    // Species Abilities
-    document.getElementById('btn-add-species-ability')?.addEventListener('click', () => this.addSpeciesAbilityRow());
-    document.getElementById('btn-remove-species-ability')?.addEventListener('click', () => this.removeLastSpeciesAbilityRow());
   },
   
   /**
@@ -11047,49 +10833,36 @@ const App = {
     `;
     container.appendChild(row);
     
-    // Add event listeners
-    this.setupProfessionalSkillRowListeners(row, newIndex);
-    
-    // Scroll to show new row
-    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    row.querySelector('.prof-skill-name').focus();
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Setup event listeners for a professional skill row
-   */
-  setupProfessionalSkillRowListeners(row, index) {
+    // Add event listeners (same as generateProfessionalSkills)
     const nameInput = row.querySelector('.prof-skill-name');
     const baseInput = row.querySelector('.prof-skill-base');
     const currentInput = row.querySelector('.prof-skill-current');
     const prereqKeys = row.querySelector('.prereq-keys');
     
-    if (nameInput) {
-      nameInput.addEventListener('blur', () => {
-        if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
-          if (prereqKeys) prereqKeys.dataset.skillName = nameInput.value;
-          this.updatePrereqKeys();
-          this.scheduleAutoSave();
-        }
-      });
-      
-      nameInput.addEventListener('input', () => {
-        this.autoFillProfessionalSkillFormula(nameInput, baseInput);
-      });
-    }
+    nameInput.addEventListener('blur', () => {
+      if (nameInput.value.trim()) {
+        nameInput.value = this.toTitleCase(nameInput.value.trim());
+        prereqKeys.dataset.skillName = nameInput.value;
+        this.updatePrereqKeys();
+        this.scheduleAutoSave();
+      }
+    });
     
-    if (baseInput) {
-      baseInput.addEventListener('blur', () => {
-        this.calculateProfessionalSkillBase(index);
-      });
-    }
+    nameInput.addEventListener('input', () => {
+      this.autoFillProfessionalSkillBase(newIndex);
+    });
     
-    if (currentInput) {
-      currentInput.addEventListener('input', () => this.scheduleAutoSave());
-    }
+    baseInput.addEventListener('blur', () => {
+      this.calculateProfessionalSkillBase(newIndex);
+    });
+    
+    currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    
+    // Scroll to show new row
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    nameInput.focus();
+    
+    this.scheduleAutoSave();
   },
 
   /**
@@ -14380,408 +14153,6 @@ const App = {
         }, 100);
       }
     }, 100);
-  },
-
-  // ============================================
-  // BERSERK RAGE SYSTEM
-  // ============================================
-  
-  /**
-   * Show the Berserk Rage section and initialize values
-   */
-  showBerserkRageSection() {
-    const section = document.getElementById('berserk-rage-section');
-    if (!section) return;
-    
-    section.style.display = '';
-    this.updateBerserkRageDisplay();
-    this.setupBerserkRageListeners();
-  },
-  
-  /**
-   * Hide the Berserk Rage section
-   */
-  hideBerserkRageSection() {
-    const section = document.getElementById('berserk-rage-section');
-    if (section) {
-      section.style.display = 'none';
-    }
-  },
-  
-  /**
-   * Update Berserk Rage display values based on CON
-   */
-  updateBerserkRageDisplay() {
-    const con = parseInt(this.character.attributes.CON, 10) || 10;
-    const maxUses = Math.ceil(con / 4);
-    const maxRounds = con;
-    
-    // Initialize uses remaining if not set
-    if (this.rageUsesRemaining === undefined || this.rageUsesRemaining === null) {
-      this.rageUsesRemaining = this.character.rageUsesRemaining ?? maxUses;
-    }
-    
-    document.getElementById('rage-uses-available').textContent = this.rageUsesRemaining;
-    document.getElementById('rage-uses-max').textContent = maxUses;
-    document.getElementById('rage-rounds-max').textContent = maxRounds;
-    document.getElementById('rage-rounds-total').textContent = maxRounds;
-    
-    // Update button state
-    const rageBtn = document.getElementById('btn-rage-toggle');
-    if (rageBtn) {
-      rageBtn.disabled = this.rageUsesRemaining <= 0 && !this.isRaging;
-    }
-  },
-  
-  /**
-   * Setup Berserk Rage button listeners
-   */
-  setupBerserkRageListeners() {
-    const rageBtn = document.getElementById('btn-rage-toggle');
-    const endRageBtn = document.getElementById('btn-end-rage');
-    const resetBtn = document.getElementById('btn-reset-rage');
-    
-    if (rageBtn && !rageBtn.dataset.listenerAdded) {
-      rageBtn.addEventListener('click', () => {
-        if (!this.isRaging) {
-          this.startBerserkRage();
-        }
-      });
-      rageBtn.dataset.listenerAdded = 'true';
-    }
-    
-    if (endRageBtn && !endRageBtn.dataset.listenerAdded) {
-      endRageBtn.addEventListener('click', () => {
-        this.endBerserkRage(true);
-      });
-      endRageBtn.dataset.listenerAdded = 'true';
-    }
-    
-    if (resetBtn && !resetBtn.dataset.listenerAdded) {
-      resetBtn.addEventListener('click', () => {
-        this.resetRageUses();
-      });
-      resetBtn.dataset.listenerAdded = 'true';
-    }
-  },
-  
-  /**
-   * Start Berserk Rage
-   */
-  startBerserkRage() {
-    if (this.isRaging || this.rageUsesRemaining <= 0) return;
-    
-    this.isRaging = true;
-    this.rageUsesRemaining--;
-    
-    // Store pre-rage values
-    this.preRageValues = {
-      damageMod: document.getElementById('damage-mod-current')?.value || '+0',
-      damageModOrig: document.getElementById('damage-mod-original')?.value || '+0',
-      endurance: document.getElementById('endurance-current')?.value || '0',
-      willpower: document.getElementById('willpower-current')?.value || '0',
-      brawn: document.getElementById('brawn-current')?.value || '0',
-      evade: document.getElementById('evade-current')?.value || '0'
-    };
-    
-    // Apply rage bonuses
-    this.applyRageBonuses();
-    
-    // Update UI
-    const rageBtn = document.getElementById('btn-rage-toggle');
-    const tracker = document.getElementById('rage-tracker');
-    const btnText = document.getElementById('rage-btn-text');
-    
-    if (rageBtn) {
-      rageBtn.classList.add('raging');
-      rageBtn.disabled = true;
-    }
-    if (tracker) tracker.style.display = '';
-    if (btnText) btnText.textContent = '🔥 RAGING! 🔥';
-    
-    document.getElementById('rage-rounds-used').value = 0;
-    this.updateBerserkRageDisplay();
-    
-    // Strikethrough Artful Dodger if present
-    this.setArtfulDodgerStrikethrough(true);
-    
-    // Refresh summary widgets to show rage effects
-    this.refreshSummaryWidgets();
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Apply Berserk Rage bonuses
-   */
-  applyRageBonuses() {
-    // Damage Mod +1 step
-    const dmgCurrField = document.getElementById('damage-mod-current');
-    const dmgOrigField = document.getElementById('damage-mod-original');
-    if (dmgCurrField) {
-      const nextMod = this.getNextDamageModStep(dmgCurrField.value);
-      dmgCurrField.value = nextMod;
-    }
-    if (dmgOrigField) {
-      const nextMod = this.getNextDamageModStep(dmgOrigField.value);
-      dmgOrigField.value = nextMod;
-    }
-    
-    // Endurance +20%
-    const enduranceField = document.getElementById('endurance-current');
-    if (enduranceField) {
-      const curr = parseInt(enduranceField.value, 10) || 0;
-      enduranceField.value = curr + 20;
-      enduranceField.classList.add('rage-boosted');
-    }
-    
-    // Willpower +20%
-    const willpowerField = document.getElementById('willpower-current');
-    if (willpowerField) {
-      const curr = parseInt(willpowerField.value, 10) || 0;
-      willpowerField.value = curr + 20;
-      willpowerField.classList.add('rage-boosted');
-    }
-    
-    // Brawn +40%
-    const brawnField = document.getElementById('brawn-current');
-    if (brawnField) {
-      const curr = parseInt(brawnField.value, 10) || 0;
-      brawnField.value = curr + 40;
-      brawnField.classList.add('rage-boosted');
-    }
-    
-    // Evade -2%
-    const evadeField = document.getElementById('evade-current');
-    if (evadeField) {
-      const curr = parseInt(evadeField.value, 10) || 0;
-      evadeField.value = Math.max(0, curr - 2);
-      evadeField.classList.add('rage-penalized');
-    }
-    
-    // Update weapon damage displays
-    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-      window.WeaponData.updateAllWeaponDamage();
-    }
-  },
-  
-  /**
-   * Remove Berserk Rage bonuses
-   */
-  removeRageBonuses() {
-    if (!this.preRageValues) return;
-    
-    // Restore Damage Mod
-    const dmgCurrField = document.getElementById('damage-mod-current');
-    const dmgOrigField = document.getElementById('damage-mod-original');
-    if (dmgCurrField) {
-      dmgCurrField.value = this.preRageValues.damageMod;
-    }
-    if (dmgOrigField) {
-      dmgOrigField.value = this.preRageValues.damageModOrig;
-    }
-    
-    // Restore Endurance
-    const enduranceField = document.getElementById('endurance-current');
-    if (enduranceField) {
-      enduranceField.value = this.preRageValues.endurance;
-      enduranceField.classList.remove('rage-boosted');
-    }
-    
-    // Restore Willpower
-    const willpowerField = document.getElementById('willpower-current');
-    if (willpowerField) {
-      willpowerField.value = this.preRageValues.willpower;
-      willpowerField.classList.remove('rage-boosted');
-    }
-    
-    // Restore Brawn
-    const brawnField = document.getElementById('brawn-current');
-    if (brawnField) {
-      brawnField.value = this.preRageValues.brawn;
-      brawnField.classList.remove('rage-boosted');
-    }
-    
-    // Restore Evade
-    const evadeField = document.getElementById('evade-current');
-    if (evadeField) {
-      evadeField.value = this.preRageValues.evade;
-      evadeField.classList.remove('rage-penalized');
-    }
-    
-    // Update weapon damage displays
-    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-      window.WeaponData.updateAllWeaponDamage();
-    }
-    
-    this.preRageValues = null;
-  },
-  
-  /**
-   * End Berserk Rage
-   * @param {boolean} applyFatigue - Whether to apply fatigue penalty
-   */
-  endBerserkRage(applyFatigue = true) {
-    if (!this.isRaging) return;
-    
-    this.isRaging = false;
-    
-    // Remove rage bonuses
-    this.removeRageBonuses();
-    
-    // Remove Artful Dodger strikethrough
-    this.setArtfulDodgerStrikethrough(false);
-    
-    // Update UI
-    const rageBtn = document.getElementById('btn-rage-toggle');
-    const tracker = document.getElementById('rage-tracker');
-    const btnText = document.getElementById('rage-btn-text');
-    
-    if (rageBtn) {
-      rageBtn.classList.remove('raging');
-      rageBtn.disabled = this.rageUsesRemaining <= 0;
-    }
-    if (tracker) tracker.style.display = 'none';
-    if (btnText) btnText.textContent = "I'm RAGING!";
-    
-    this.updateBerserkRageDisplay();
-    
-    // Refresh summary widgets to reflect end of rage
-    this.refreshSummaryWidgets();
-    
-    // Apply one level of fatigue
-    if (applyFatigue) {
-      this.increaseFatigueByOne();
-    }
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Increase fatigue by one level
-   */
-  increaseFatigueByOne() {
-    const fatigueOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
-    const currentState = this.character.fatigueState || 'fresh';
-    const currentIndex = fatigueOrder.indexOf(currentState);
-    
-    if (currentIndex < fatigueOrder.length - 1) {
-      const newState = fatigueOrder[currentIndex + 1];
-      this.setFatigueState(newState, true);
-      
-      // Show notification
-      alert(`Rage ended! Fatigue increased from ${this.toTitleCase(currentState)} to ${this.toTitleCase(newState)}.`);
-    }
-  },
-  
-  /**
-   * Set strikethrough on Artful Dodger ability if present
-   */
-  setArtfulDodgerStrikethrough(strikethrough) {
-    const container = document.getElementById('class-abilities-list');
-    if (!container) return;
-    
-    const inputs = container.querySelectorAll('.class-ability-input');
-    inputs.forEach(input => {
-      if (input.value.toLowerCase().trim() === 'artful dodger') {
-        if (strikethrough) {
-          input.classList.add('rage-disabled');
-        } else {
-          input.classList.remove('rage-disabled');
-        }
-      }
-    });
-  },
-  
-  /**
-   * Get the next step up in damage modifier progression
-   */
-  getNextDamageModStep(currentMod) {
-    const progression = [
-      '-1d8', '-1d6', '-1d4', '-1d2', '+0',
-      '+1d2', '+1d4', '+1d6', '+1d8', '+1d10', '+1d12',
-      '+2d6', '+1d8+1d6', '+2d8', '+1d10+1d8', '+2d10',
-      '+2d10+1d2', '+2d10+1d4', '+2d10+1d6', '+2d10+1d8', '+2d10+1d10'
-    ];
-    
-    const normalized = currentMod.replace(/\s/g, '');
-    const currentIndex = progression.findIndex(m => m === normalized);
-    
-    if (currentIndex === -1) {
-      // Not found, try to find closest match
-      if (normalized === '0' || normalized === '') return '+1d2';
-      return currentMod; // Return unchanged if unknown
-    }
-    
-    if (currentIndex < progression.length - 1) {
-      return progression[currentIndex + 1];
-    }
-    
-    return currentMod; // Already at max
-  },
-  
-  /**
-   * Reset rage uses (call on long rest or new day)
-   */
-  resetRageUses() {
-    const con = parseInt(this.character.attributes.CON, 10) || 10;
-    this.rageUsesRemaining = Math.ceil(con / 4);
-    this.character.rageUsesRemaining = this.rageUsesRemaining;
-    this.updateBerserkRageDisplay();
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Restore Berserk Rage state on page load
-   */
-  restoreBerserkRageState() {
-    // Check if character has Berserk Rage ability
-    if (this.hasAbility('berserk rage')) {
-      this.showBerserkRageSection();
-      
-      // Restore uses remaining
-      if (this.character.rageUsesRemaining !== undefined) {
-        this.rageUsesRemaining = this.character.rageUsesRemaining;
-      } else {
-        const con = parseInt(this.character.attributes.CON, 10) || 10;
-        this.rageUsesRemaining = Math.ceil(con / 4);
-      }
-      
-      // Restore raging state if was raging
-      if (this.character.isRaging && this.character.preRageValues) {
-        this.isRaging = false; // Set false so startBerserkRage works
-        this.rageUsesRemaining++; // Will be decremented by startBerserkRage
-        this.preRageValues = this.character.preRageValues;
-        
-        // Manually set rage state without re-storing pre-values
-        this.isRaging = true;
-        this.rageUsesRemaining--;
-        
-        // Apply rage bonuses (they should already be applied from saved values)
-        // Just update UI
-        const rageBtn = document.getElementById('btn-rage-toggle');
-        const tracker = document.getElementById('rage-tracker');
-        const btnText = document.getElementById('rage-btn-text');
-        
-        if (rageBtn) {
-          rageBtn.classList.add('raging');
-          rageBtn.disabled = true;
-        }
-        if (tracker) tracker.style.display = '';
-        if (btnText) btnText.textContent = '🔥 RAGING! 🔥';
-        
-        // Restore rounds used
-        const roundsInput = document.getElementById('rage-rounds-used');
-        if (roundsInput && this.character.rageRoundsUsed !== undefined) {
-          roundsInput.value = this.character.rageRoundsUsed;
-        }
-        
-        // Re-apply strikethrough
-        this.setArtfulDodgerStrikethrough(true);
-      }
-      
-      this.updateBerserkRageDisplay();
-    }
   }
 };
 

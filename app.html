@@ -735,6 +735,18 @@
                 <span class="language-base" id="language-5-base">0</span>
                 <input type="number" class="language-input" id="language-5-current" placeholder="">
               </div>
+              <div class="language-row">
+                <input type="text" class="language-name" id="language-6-name" placeholder="">
+                <span class="language-formula">INT+CHA</span>
+                <span class="language-base" id="language-6-base">0</span>
+                <input type="number" class="language-input" id="language-6-current" placeholder="">
+              </div>
+              <div class="language-row">
+                <input type="text" class="language-name" id="language-7-name" placeholder="">
+                <span class="language-formula">INT+CHA</span>
+                <span class="language-base" id="language-7-base">0</span>
+                <input type="number" class="language-input" id="language-7-current" placeholder="">
+              </div>
               </div>
             </section>
           </div>
@@ -1131,60 +1143,10 @@
             </div>
           </section>
 
-          <!-- Berserk Rage Section (only visible if character has Berserk Rage ability) -->
-          <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
-            <div class="section-header-row">
-              <h3 class="section-header">Berserk Rage</h3>
-              <div class="header-buttons">
-                <button type="button" class="btn btn-small" id="btn-reset-rage" title="Reset rage uses to maximum">Reset</button>
-              </div>
-            </div>
-            <div class="berserk-rage-content">
-              <div class="rage-info-row">
-                <span class="rage-label">Uses Per Day:</span>
-                <span class="rage-value" id="rage-uses-available">0</span>
-                <span class="rage-label">/ Max:</span>
-                <span class="rage-value" id="rage-uses-max">0</span>
-                <span class="rage-label">(CON/4)</span>
-              </div>
-              <div class="rage-info-row">
-                <span class="rage-label">Rounds per Rage:</span>
-                <span class="rage-value" id="rage-rounds-max">0</span>
-                <span class="rage-label">(CON)</span>
-              </div>
-              <div class="rage-button-row">
-                <button type="button" class="btn btn-rage" id="btn-rage-toggle">
-                  <span class="rage-icon">⚔️</span>
-                  <span class="rage-text" id="rage-btn-text">I'm RAGING!</span>
-                </button>
-              </div>
-              <div class="rage-tracker" id="rage-tracker" style="display: none;">
-                <div class="rage-active-label">🔥 RAGE ACTIVE 🔥</div>
-                <div class="rage-rounds-row">
-                  <span class="rage-label">Rounds Used:</span>
-                  <input type="number" class="rage-rounds-input" id="rage-rounds-used" value="0" min="0">
-                  <span class="rage-label">/ <span id="rage-rounds-total">0</span></span>
-                </div>
-                <div class="rage-effects-summary">
-                  <div class="rage-effect">Damage Mod: +1 step</div>
-                  <div class="rage-effect">Endurance: +20%</div>
-                  <div class="rage-effect">Willpower: +20%</div>
-                  <div class="rage-effect">Brawn: +40%</div>
-                  <div class="rage-effect">Evade: -2%</div>
-                </div>
-                <button type="button" class="btn btn-end-rage" id="btn-end-rage">End Rage (1 Fatigue Level)</button>
-              </div>
-            </div>
-          </section>
-
           <!-- Species Abilities Section -->
           <section class="species-abilities-section">
             <div class="section-header-row">
               <h3 class="section-header">Species Abilities</h3>
-              <div class="header-buttons">
-                <button type="button" class="btn btn-small btn-add-row" id="btn-add-species-ability" title="Add species ability">+</button>
-                <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-species-ability" title="Remove last species ability">−</button>
-              </div>
             </div>
             <div class="species-abilities-list" id="species-abilities-list">
               <!-- Dynamically populated based on species -->
