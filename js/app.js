@@ -28,7 +28,6 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal + 4;
         }
-        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const origField = document.getElementById('initiative-original');
@@ -41,7 +40,6 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal - 4;
         }
-        app.refreshSummaryWidgets();
       }
     },
     'artful dodger': {
@@ -57,7 +55,6 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal + 10;
         }
-        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const baseField = document.getElementById('evade-base');
@@ -70,7 +67,6 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal - 10;
         }
-        app.refreshSummaryWidgets();
       }
     },
     'weapon precision': {
@@ -109,7 +105,6 @@ const App = {
         if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
         }
-        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         // Hide the WP Damage Mod row
@@ -126,7 +121,6 @@ const App = {
         if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
         }
-        app.refreshSummaryWidgets();
       }
     },
     'lucky': {
@@ -143,7 +137,6 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal + 1;
         }
-        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const origField = document.getElementById('luck-original');
@@ -156,7 +149,6 @@ const App = {
           const currVal = parseInt(currField.value, 10) || 0;
           currField.value = currVal - 1;
         }
-        app.refreshSummaryWidgets();
       }
     },
     'gifted': {
@@ -168,7 +160,6 @@ const App = {
           const currVal = parseInt(expField.value, 10) || 0;
           expField.value = currVal + 1;
         }
-        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         const expField = document.getElementById('exp-rolls');
@@ -176,20 +167,17 @@ const App = {
           const currVal = parseInt(expField.value, 10) || 0;
           expField.value = Math.max(0, currVal - 1);
         }
-        app.refreshSummaryWidgets();
       }
     },
     'resilient': {
       description: 'Hit Points calculated using STR+CON+SIZ instead of CON+SIZ',
       apply: function(app) {
-        // Recalculate all to update hit locations with STR included
-        app.recalculateAll();
-        app.refreshSummaryWidgets();
+        // Just mark as active - HP recalculation happens in recalculateAll via hasAbility check
+        // Don't call recalculateAll here to avoid loops
       },
       remove: function(app) {
-        // Recalculate all to update hit locations without STR
-        app.recalculateAll();
-        app.refreshSummaryWidgets();
+        // Just mark as inactive - HP recalculation happens in recalculateAll via hasAbility check
+        // Don't call recalculateAll here to avoid loops
       }
     },
     'berserk rage': {
@@ -197,8 +185,6 @@ const App = {
       apply: function(app) {
         // Show the Berserk Rage section
         app.showBerserkRageSection();
-        // Refresh summary widgets to show rage widget
-        app.refreshSummaryWidgets();
       },
       remove: function(app) {
         // End rage if active, then hide section
@@ -206,8 +192,6 @@ const App = {
           app.endBerserkRage(false); // Don't apply fatigue if ability is being removed
         }
         app.hideBerserkRageSection();
-        // Refresh summary widgets to hide rage widget
-        app.refreshSummaryWidgets();
       }
     }
   },
