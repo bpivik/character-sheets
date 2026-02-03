@@ -4070,12 +4070,12 @@ const App = {
     // This is called before save/export to ensure all data is captured
     // Most data is already saved via event listeners, but this catches anything missed
     
-    // Equipment
+    // Equipment - only save rows with a name
     this.character.equipment = [];
     for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
       const nameInput = document.getElementById(`equip-${i}-name`);
       const encInput = document.getElementById(`equip-${i}-enc`);
-      if (nameInput && encInput) {
+      if (nameInput && encInput && nameInput.value.trim()) {
         this.character.equipment.push({
           name: nameInput.value,
           enc: encInput.value
@@ -4104,7 +4104,7 @@ const App = {
       }
     }
     
-    // Passions (dynamic rows with custom formulas)
+    // Passions (dynamic rows with custom formulas) - only save rows with a name
     this.character.passions = [];
     const passionsContainer = document.getElementById('passions-container');
     if (passionsContainer) {
@@ -4113,15 +4113,17 @@ const App = {
         const nameInput = row.querySelector('.belief-name');
         const formulaInput = row.querySelector('.belief-formula-input');
         const currentInput = row.querySelector('.belief-input');
-        this.character.passions.push({
-          name: nameInput?.value || '',
-          formula: formulaInput?.value || 'POW+INT+50',
-          current: currentInput?.value || ''
-        });
+        if (nameInput?.value?.trim()) {
+          this.character.passions.push({
+            name: nameInput.value,
+            formula: formulaInput?.value || 'POW+INT+50',
+            current: currentInput?.value || ''
+          });
+        }
       });
     }
     
-    // Oaths (dynamic rows)
+    // Oaths (dynamic rows) - only save rows with a name
     this.character.oaths = [];
     const oathsContainer = document.getElementById('oaths-container');
     if (oathsContainer) {
@@ -4129,43 +4131,51 @@ const App = {
       oathRows.forEach((row, i) => {
         const nameInput = row.querySelector('.belief-name');
         const currentInput = row.querySelector('.belief-input');
-        this.character.oaths.push({
-          name: nameInput?.value || '',
-          current: currentInput?.value || ''
-        });
+        if (nameInput?.value?.trim()) {
+          this.character.oaths.push({
+            name: nameInput.value,
+            current: currentInput?.value || ''
+          });
+        }
       });
     }
     
-    // Languages
+    // Languages - native tongue always saved, others only if they have a name
+    this.character.languages = [];
     const nativeName = document.getElementById('native-tongue-name');
     const nativeCurrent = document.getElementById('native-tongue-current');
     if (nativeName && nativeCurrent) {
-      this.character.languages[0] = {
+      this.character.languages.push({
         name: nativeName.value,
         current: nativeCurrent.value,
         isNative: true
-      };
+      });
     }
     
-    for (let i = 2; i <= 5; i++) {
-      const nameInput = document.getElementById(`language-${i}-name`);
-      const currentInput = document.getElementById(`language-${i}-current`);
-      if (nameInput && currentInput) {
-        this.character.languages[i-1] = {
-          name: nameInput.value,
-          current: currentInput.value,
-          isNative: false
-        };
-      }
+    // Additional languages - use querySelectorAll to find all non-native language rows
+    const languageContainer = document.getElementById('language-container');
+    if (languageContainer) {
+      const languageRows = languageContainer.querySelectorAll('.language-row:not(.native)');
+      languageRows.forEach(row => {
+        const nameInput = row.querySelector('.language-name');
+        const currentInput = row.querySelector('.language-input');
+        if (nameInput?.value?.trim()) {
+          this.character.languages.push({
+            name: nameInput.value,
+            current: currentInput?.value || '',
+            isNative: false
+          });
+        }
+      });
     }
     
-    // Professional Skills
+    // Professional Skills - only save rows with a name
     this.character.professionalSkills = [];
     for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const baseInput = document.getElementById(`prof-skill-${i}-base`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
-      if (nameInput && baseInput && currentInput) {
+      if (nameInput && baseInput && currentInput && nameInput.value.trim()) {
         this.character.professionalSkills.push({
           name: nameInput.value,
           base: baseInput.value,
@@ -4210,46 +4220,50 @@ const App = {
       });
     }
     
-    // Melee Weapons
+    // Melee Weapons - only save rows with a name
     this.character.combat.meleeWeapons = [];
     for (let i = 0; i < 6; i++) {
-      const weapon = {};
-      const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
       const nameInput = document.getElementById(`melee-${i}-name`);
-      fields.forEach(field => {
-        const input = document.getElementById(`melee-${i}-${field}`);
-        weapon[field] = input?.value || '';
-        // Save baseDamage data attribute for damage field
-        if (field === 'damage' && input?.dataset?.baseDamage) {
-          weapon.baseDamage = input.dataset.baseDamage;
+      if (nameInput?.value?.trim()) {
+        const weapon = {};
+        const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
+        fields.forEach(field => {
+          const input = document.getElementById(`melee-${i}-${field}`);
+          weapon[field] = input?.value || '';
+          // Save baseDamage data attribute for damage field
+          if (field === 'damage' && input?.dataset?.baseDamage) {
+            weapon.baseDamage = input.dataset.baseDamage;
+          }
+        });
+        // Save userModified flag
+        if (nameInput?.dataset?.userModified === 'true') {
+          weapon.userModified = true;
         }
-      });
-      // Save userModified flag
-      if (nameInput?.dataset?.userModified === 'true') {
-        weapon.userModified = true;
+        this.character.combat.meleeWeapons.push(weapon);
       }
-      this.character.combat.meleeWeapons.push(weapon);
     }
     
-    // Ranged Weapons
+    // Ranged Weapons - only save rows with a name
     this.character.combat.rangedWeapons = [];
     for (let i = 0; i < 5; i++) {
-      const weapon = {};
-      const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
       const nameInput = document.getElementById(`ranged-${i}-name`);
-      fields.forEach(field => {
-        const input = document.getElementById(`ranged-${i}-${field}`);
-        weapon[field] = input?.value || '';
-        // Save baseDamage data attribute for damage field
-        if (field === 'damage' && input?.dataset?.baseDamage) {
-          weapon.baseDamage = input.dataset.baseDamage;
+      if (nameInput?.value?.trim()) {
+        const weapon = {};
+        const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+        fields.forEach(field => {
+          const input = document.getElementById(`ranged-${i}-${field}`);
+          weapon[field] = input?.value || '';
+          // Save baseDamage data attribute for damage field
+          if (field === 'damage' && input?.dataset?.baseDamage) {
+            weapon.baseDamage = input.dataset.baseDamage;
+          }
+        });
+        // Save userModified flag
+        if (nameInput?.dataset?.userModified === 'true') {
+          weapon.userModified = true;
         }
-      });
-      // Save userModified flag
-      if (nameInput?.dataset?.userModified === 'true') {
-        weapon.userModified = true;
+        this.character.combat.rangedWeapons.push(weapon);
       }
-      this.character.combat.rangedWeapons.push(weapon);
     }
     
     // Special Abilities (dynamic list format)
