@@ -837,15 +837,22 @@ function updateAllWeaponDamage() {
     
     if (!nameInput) break; // No more rows
     
+    console.log(`  Melee ${i}: name="${nameInput.value}", userModified=${nameInput.dataset.userModified}, baseDamage=${damageInput?.dataset?.baseDamage}`);
+    
     // Skip if user has modified this row
-    if (nameInput.dataset.userModified === 'true') continue;
+    if (nameInput.dataset.userModified === 'true') {
+      console.log(`    SKIPPED: userModified`);
+      continue;
+    }
     
     if (damageInput && damageInput.dataset.baseDamage) {
       // Use stored weapon name or current name input
       const weaponName = damageInput.dataset.weaponName || nameInput.value;
       const newDamage = composeDamage(damageInput.dataset.baseDamage, weaponName);
-      console.log(`  Melee ${i} (${weaponName}): base="${damageInput.dataset.baseDamage}" -> "${newDamage}"`);
+      console.log(`    Updating: base="${damageInput.dataset.baseDamage}" -> "${newDamage}"`);
       damageInput.value = newDamage;
+    } else if (damageInput && nameInput.value.trim()) {
+      console.log(`    NO baseDamage - trying to extract from current value: "${damageInput.value}"`);
     }
   }
   
