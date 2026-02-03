@@ -4651,10 +4651,12 @@ const App = {
     // 3. Saved character data (this.character.combat.specialAbilities)
     const resilientInDOM = this.hasAbilityOnSheet('resilient');
     const resilientInEffects = !!this.activeAbilityEffects['resilient'];
-    const resilientInSaved = this.character.combat?.specialAbilities?.some(a => {
+    const savedAbilities = this.character.combat?.specialAbilities || [];
+    console.log('recalculateAll: specialAbilities =', JSON.stringify(savedAbilities.map(a => typeof a === 'object' ? a.name : a)));
+    const resilientInSaved = savedAbilities.some(a => {
       const name = (typeof a === 'object' ? a.name : a) || '';
       return name.toLowerCase().trim() === 'resilient';
-    }) || false;
+    });
     const hasResilient = resilientInDOM || resilientInEffects || resilientInSaved;
     console.log('recalculateAll: hasResilient =', hasResilient, '(DOM:', resilientInDOM, ', activeEffects:', resilientInEffects, ', saved:', resilientInSaved, '), STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
     
@@ -6092,12 +6094,21 @@ const App = {
     if (!window.ClassAbilities) return;
     
     // Check if ALL class fields are empty - if so, clear all class abilities
+    // Check both DOM and saved character data (DOM may not be populated yet during init)
     const primaryClass = document.getElementById('class-primary')?.value?.trim() || '';
     const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
     const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim() || '';
     
-    if (!primaryClass && !secondaryClass && !tertiaryClass) {
-      // All class fields are empty - clear all class abilities
+    // Also check saved character data
+    const savedPrimary = this.character.info?.classPrimary || '';
+    const savedSecondary = this.character.info?.classSecondary || '';
+    const savedTertiary = this.character.info?.classTertiary || '';
+    
+    const hasClassInDOM = primaryClass || secondaryClass || tertiaryClass;
+    const hasClassInSaved = savedPrimary || savedSecondary || savedTertiary;
+    
+    if (!hasClassInDOM && !hasClassInSaved) {
+      // All class fields are empty in both DOM and saved data - clear all class abilities
       const container = document.getElementById('class-abilities-list');
       if (container) {
         container.innerHTML = '';
@@ -6107,6 +6118,12 @@ const App = {
         this.character.combat.specialAbilities = [];
       }
       this.scheduleAutoSave();
+      return;
+    }
+    
+    // If DOM is empty but saved data has classes, don't process further
+    // (abilities will be loaded when populateForm runs)
+    if (!hasClassInDOM && hasClassInSaved) {
       return;
     }
     
