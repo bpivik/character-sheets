@@ -3825,29 +3825,61 @@ const App = {
       });
     }
     
-    // Passions
-    if (this.character.passions) {
-      this.character.passions.forEach((item, i) => {
-        const nameInput = document.getElementById(`passion-${i+1}-name`);
-        const formulaInput = document.getElementById(`passion-${i+1}-formula`);
-        const currentInput = document.getElementById(`passion-${i+1}-current`);
-        if (nameInput && item.name) nameInput.value = item.name;
-        if (formulaInput && item.formula) formulaInput.value = item.formula;
-        if (currentInput && item.current) currentInput.value = item.current;
-      });
+    // Passions - dynamically create rows for saved passions
+    if (this.character.passions && this.character.passions.length > 0) {
+      const container = document.getElementById('passions-container');
+      if (container) {
+        this.character.passions.forEach((item, i) => {
+          if (item.name) { // Only create row if it has a name
+            const row = document.createElement('div');
+            row.className = 'belief-row';
+            row.dataset.index = i + 1;
+            row.innerHTML = `
+              <input type="text" class="belief-name" id="passion-${i+1}-name" placeholder="">
+              <input type="text" class="belief-formula-input" id="passion-${i+1}-formula" value="${item.formula || 'POW+INT+50'}" placeholder="e.g. POW+INT+50">
+              <span class="belief-base" id="passion-${i+1}-base">0</span>
+              <input type="number" class="belief-input" id="passion-${i+1}-current" placeholder="">
+            `;
+            container.appendChild(row);
+            
+            // Set values
+            const nameInput = row.querySelector('.belief-name');
+            const currentInput = row.querySelector('.belief-input');
+            if (nameInput) nameInput.value = item.name;
+            if (currentInput && item.current) currentInput.value = item.current;
+          }
+        });
+      }
     }
     
-    // Oaths
-    if (this.character.oaths) {
-      this.character.oaths.forEach((item, i) => {
-        const nameInput = document.getElementById(`oath-${i+1}-name`);
-        const currentInput = document.getElementById(`oath-${i+1}-current`);
-        if (nameInput && item.name) nameInput.value = item.name;
-        if (currentInput && item.current) currentInput.value = item.current;
-      });
+    // Oaths - dynamically create rows for saved oaths
+    if (this.character.oaths && this.character.oaths.length > 0) {
+      const container = document.getElementById('oaths-container');
+      if (container) {
+        this.character.oaths.forEach((item, i) => {
+          if (item.name) { // Only create row if it has a name
+            const row = document.createElement('div');
+            row.className = 'belief-row';
+            row.dataset.index = i + 1;
+            row.innerHTML = `
+              <input type="text" class="belief-name" id="oath-${i+1}-name" placeholder="">
+              <span class="belief-formula">POW+CHA+50</span>
+              <span class="belief-base" id="oath-${i+1}-base">0</span>
+              <input type="number" class="belief-input" id="oath-${i+1}-current" placeholder="">
+            `;
+            container.appendChild(row);
+            
+            // Set values
+            const nameInput = row.querySelector('.belief-name');
+            const currentInput = row.querySelector('.belief-input');
+            if (nameInput) nameInput.value = item.name;
+            if (currentInput && item.current) currentInput.value = item.current;
+          }
+        });
+      }
     }
     
-    // Languages
+    // Languages - dynamically create rows for saved languages
     if (this.character.languages) {
       // Native tongue
       if (this.character.languages[0]) {
@@ -3856,13 +3888,29 @@ const App = {
         if (nativeName && this.character.languages[0].name) nativeName.value = this.character.languages[0].name;
         if (nativeCurrent && this.character.languages[0].current) nativeCurrent.value = this.character.languages[0].current;
       }
-      // Additional languages
-      for (let i = 1; i < this.character.languages.length; i++) {
-        const item = this.character.languages[i];
-        const nameInput = document.getElementById(`language-${i+1}-name`);
-        const currentInput = document.getElementById(`language-${i+1}-current`);
-        if (nameInput && item.name) nameInput.value = item.name;
-        if (currentInput && item.current) currentInput.value = item.current;
+      // Additional languages - create rows dynamically
+      const container = document.getElementById('language-container');
+      if (container) {
+        for (let i = 1; i < this.character.languages.length; i++) {
+          const item = this.character.languages[i];
+          if (item && item.name) { // Only create row if has a name
+            const newIndex = i + 1;
+            const row = document.createElement('div');
+            row.className = 'language-row';
+            row.innerHTML = `
+              <input type="text" class="language-name" id="language-${newIndex}-name" placeholder="">
+              <span class="language-formula">INT+CHA</span>
+              <span class="language-base" id="language-${newIndex}-base">0</span>
+              <input type="number" class="language-input" id="language-${newIndex}-current" placeholder="">
+            `;
+            container.appendChild(row);
+            
+            const nameInput = row.querySelector('.language-name');
+            const currentInput = row.querySelector('.language-input');
+            if (nameInput) nameInput.value = item.name;
+            if (currentInput && item.current) currentInput.value = item.current;
+          }
+        }
       }
     }
     
@@ -4842,6 +4890,7 @@ const App = {
    * Enable or disable secondary/tertiary class and rank fields
    */
   setMulticlassFieldsEnabled(enabled) {
+    console.log('setMulticlassFieldsEnabled:', enabled);
     const fields = [
       'class-secondary', 'class-tertiary',
       'rank-secondary', 'rank-tertiary'
@@ -6993,12 +7042,17 @@ const App = {
    * Update multiclass field states on load (without showing warnings)
    */
   updateMulticlassFieldStates() {
-    if (!window.ClassRankData) return;
+    if (!window.ClassRankData) {
+      console.log('updateMulticlassFieldStates: ClassRankData not loaded');
+      return;
+    }
     
     const primary = document.getElementById('class-primary')?.value?.trim() || '';
+    console.log('updateMulticlassFieldStates: primary class =', primary);
     
     if (primary) {
       const canMulti = window.ClassRankData.canClassMulticlass(primary);
+      console.log('updateMulticlassFieldStates: canMulti =', canMulti);
       this.setMulticlassFieldsEnabled(canMulti);
     } else {
       this.setMulticlassFieldsEnabled(true);
@@ -7167,6 +7221,7 @@ const App = {
       
       if (!currentValue || isStandardTitle) {
         rankNameField.value = title;
+        this.character.info.rankName = title;  // Also update character data
       }
     }
   },
