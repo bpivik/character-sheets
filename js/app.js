@@ -8829,7 +8829,7 @@ const App = {
         let html = '<h4>Standard Skills</h4><div class="skill-list">';
         skills.forEach(s => {
           const dimmed = s.val < 50 ? ' color:#999;' : '';
-          html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-value-bold" style="${dimmed}">${s.val}%</span></div>`;
+          html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-roll" style="${dimmed}">${s.val}% <button class="d100-btn" data-skill="${s.name}" data-target="${s.val}" title="Roll a d100!"><img src="images/d10.svg" alt="d10" class="d10-icon"></button></span></div>`;
         });
         html += '</div>';
         return html;
@@ -8858,7 +8858,7 @@ const App = {
           html += '<div class="skill-item"><span style="color:#999;">No professional skills</span></div>';
         } else {
           skills.forEach(s => {
-            html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-value-bold">${s.val}%</span></div>`;
+            html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-roll">${s.val}% <button class="d100-btn" data-skill="${s.name}" data-target="${s.val}" title="Roll a d100!"><img src="images/d10.svg" alt="d10" class="d10-icon"></button></span></div>`;
           });
         }
         html += '</div>';
