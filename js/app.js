@@ -8801,48 +8801,32 @@ const App = {
       }
     },
     'key-skills': {
-      name: 'Key Standard Skills',
+      name: 'Standard Skills',
       icon: '🎯',
       render: () => {
-        // Always include these skills
-        const alwaysShow = ['athletics', 'brawn', 'endurance', 'evade', 'insight', 'perception', 'stealth', 'willpower'];
-        const alwaysShowNames = {
-          'athletics': 'Athletics', 'brawn': 'Brawn', 'endurance': 'Endurance', 
-          'evade': 'Evade', 'insight': 'Insight', 'perception': 'Perception', 
-          'stealth': 'Stealth', 'willpower': 'Willpower'
-        };
+        // All standard skills with their DOM IDs
+        const allStandardSkills = [
+          ['athletics', 'Athletics'], ['boating', 'Boating'], ['brawn', 'Brawn'],
+          ['conceal', 'Conceal'], ['customs', 'Customs'], ['dance', 'Dance'],
+          ['deceit', 'Deceit'], ['drive', 'Drive'], ['endurance', 'Endurance'],
+          ['evade', 'Evade'], ['first-aid', 'First Aid'], ['influence', 'Influence'],
+          ['insight', 'Insight'], ['locale', 'Locale'], ['perception', 'Perception'],
+          ['ride', 'Ride'], ['sing', 'Sing'], ['stealth', 'Stealth'],
+          ['swim', 'Swim'], ['willpower', 'Willpower']
+        ];
         
         const skills = [];
-        const addedSkills = new Set();
         
-        // Add the always-show skills
-        alwaysShow.forEach(id => {
+        // Add all standard skills
+        allStandardSkills.forEach(([id, name]) => {
           const val = parseInt(document.getElementById(`${id}-current`)?.value, 10) || 0;
-          skills.push({ name: alwaysShowNames[id], val, required: true });
-          addedSkills.add(id);
-        });
-        
-        // Add other standard skills above 50%
-        const otherStandard = [
-          ['boating', 'Boating'], ['conceal', 'Conceal'], ['customs', 'Customs'],
-          ['dance', 'Dance'], ['deceit', 'Deceit'], ['drive', 'Drive'],
-          ['first-aid', 'First Aid'], ['influence', 'Influence'], ['locale', 'Locale'],
-          ['ride', 'Ride'], ['sing', 'Sing'], ['swim', 'Swim']
-        ];
-        otherStandard.forEach(([id, name]) => {
-          if (!addedSkills.has(id)) {
-            const val = parseInt(document.getElementById(`${id}-current`)?.value, 10) || 0;
-            if (val >= 50) {
-              skills.push({ name, val, required: false });
-              addedSkills.add(id);
-            }
-          }
+          skills.push({ name, val });
         });
         
         // Sort alphabetically by name
         skills.sort((a, b) => a.name.localeCompare(b.name));
         
-        let html = '<h4>Key Standard Skills</h4><div class="skill-list">';
+        let html = '<h4>Standard Skills</h4><div class="skill-list">';
         skills.forEach(s => {
           const dimmed = s.val < 50 ? ' color:#999;' : '';
           html += `<div class="skill-item"><span class="skill-name-bold">${s.name}</span><span class="skill-value-bold" style="${dimmed}">${s.val}%</span></div>`;
