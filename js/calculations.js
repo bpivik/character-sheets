@@ -179,13 +179,21 @@ const Calculator = {
   /**
    * Calculate HP for a specific hit location
    * HP = base from table + rank bonus
+   * @param {number} CON - Constitution value
+   * @param {number} SIZ - Size value
+   * @param {string} locationName - Name of the hit location
+   * @param {number} combinedRank - Combined class rank
+   * @param {number} STR - Strength value (optional, used for Resilient trait)
    */
-  calculateLocationHP(CON, SIZ, locationName, combinedRank) {
-    const conPlusSiz = (parseInt(CON) || 0) + (parseInt(SIZ) || 0);
+  calculateLocationHP(CON, SIZ, locationName, combinedRank, STR = 0) {
+    // If STR is provided (Resilient trait), use STR+CON+SIZ, otherwise use CON+SIZ
+    const hpBase = STR > 0 
+      ? (parseInt(STR) || 0) + (parseInt(CON) || 0) + (parseInt(SIZ) || 0)
+      : (parseInt(CON) || 0) + (parseInt(SIZ) || 0);
     const locationType = this.getLocationType(locationName);
     
     // Get base HP from table
-    let hp = this.getBaseLocationHP(locationType, conPlusSiz);
+    let hp = this.getBaseLocationHP(locationType, hpBase);
     
     // Add rank bonus
     const rank = Math.min(Math.max(0, combinedRank), 5);
@@ -196,12 +204,17 @@ const Calculator = {
 
   /**
    * Calculate all hit location HPs
+   * @param {number} CON - Constitution value
+   * @param {number} SIZ - Size value
+   * @param {string} sheetType - Type of character sheet (human/syrin)
+   * @param {number} combinedRank - Combined class rank
+   * @param {number} STR - Strength value (optional, used for Resilient trait)
    */
-  calculateAllHitLocations(CON, SIZ, sheetType, combinedRank) {
+  calculateAllHitLocations(CON, SIZ, sheetType, combinedRank, STR = 0) {
     const locations = HIT_LOCATIONS[sheetType] || HIT_LOCATIONS.human;
     return locations.map(loc => ({
       ...loc,
-      hp: this.calculateLocationHP(CON, SIZ, loc.location, combinedRank)
+      hp: this.calculateLocationHP(CON, SIZ, loc.location, combinedRank, STR)
     }));
   },
 
@@ -371,8 +384,16 @@ const Calculator = {
 
   /**
    * Recalculate everything based on current attributes
+   * @param {object} attrs - Character attributes
+   * @param {string} sheetType - Type of character sheet
+   * @param {number} combinedRank - Combined class rank
+   * @param {boolean} isHuman - Whether character is human
+   * @param {boolean} hasResilient - Whether character has Resilient trait (HP uses STR+CON+SIZ)
    */
-  recalculateAll(attrs, sheetType, combinedRank, isHuman) {
+  recalculateAll(attrs, sheetType, combinedRank, isHuman, hasResilient = false) {
+    // For Resilient trait, pass STR to hit location calculation
+    const strForHP = hasResilient ? attrs.STR : 0;
+    
     return {
       derived: this.calculateAllDerived(attrs, combinedRank || 0, isHuman || false),
       skills: this.calculateAllStandardSkills(attrs),
@@ -380,7 +401,7 @@ const Calculator = {
       languages: this.calculateLanguageBases(attrs),
       magic: this.calculateMagicSkillBases(attrs),
       combat: this.calculateCombatSkillBase(attrs),
-      hitLocations: this.calculateAllHitLocations(attrs.CON, attrs.SIZ, sheetType, combinedRank || 0)
+      hitLocations: this.calculateAllHitLocations(attrs.CON, attrs.SIZ, sheetType, combinedRank || 0, strForHP)
     };
   }
 };

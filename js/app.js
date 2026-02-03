@@ -168,6 +168,19 @@ const App = {
           expField.value = Math.max(0, currVal - 1);
         }
       }
+    },
+    'resilient': {
+      description: 'Hit Points calculated with STR+CON+SIZ instead of CON+SIZ',
+      apply: function(app) {
+        // Mark Resilient as active and trigger HP recalculation
+        app.activeAbilityEffects['resilient'] = { active: true };
+        app.recalculateAll();
+      },
+      remove: function(app) {
+        // Remove Resilient flag and trigger HP recalculation
+        delete app.activeAbilityEffects['resilient'];
+        app.recalculateAll();
+      }
     }
   },
 
@@ -4345,7 +4358,10 @@ const App = {
     const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
-    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
+    // Check if character has Resilient trait (HP uses STR+CON+SIZ)
+    const hasResilient = this.hasAbilityOnSheet('resilient');
+    
+    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
     
     // Always update original attribute values (they are auto-calculated and readonly)
     const apOrig = document.getElementById('action-points-original');
