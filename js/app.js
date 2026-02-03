@@ -8266,6 +8266,7 @@ const App = {
   setupBerserkRageListeners() {
     const rageBtn = document.getElementById('btn-rage-toggle');
     const endRageBtn = document.getElementById('btn-end-rage');
+    const resetBtn = document.getElementById('btn-reset-rage-uses');
     
     if (rageBtn && !rageBtn.dataset.listenerAdded) {
       rageBtn.addEventListener('click', () => {
@@ -8281,6 +8282,13 @@ const App = {
         this.endBerserkRage(true);
       });
       endRageBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.resetRageUses();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
     }
   },
   
