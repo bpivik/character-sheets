@@ -707,6 +707,7 @@ const App = {
     const barbarianSpecies = ['abyssar', 'dwarf', 'gnome'];
     if (barbarianSpecies.includes(species)) {
       cultureField.value = 'Barbarian';
+      this.character.info.culture = 'Barbarian';
       return;
     }
     
@@ -714,12 +715,14 @@ const App = {
     const civilizedSpecies = ['elf', 'halfling', 'khelmar', 'syrin'];
     if (civilizedSpecies.includes(species)) {
       cultureField.value = 'Civilized';
+      this.character.info.culture = 'Civilized';
       return;
     }
     
     // Vulpan is Nomad
     if (species === 'vulpan') {
       cultureField.value = 'Nomad';
+      this.character.info.culture = 'Nomad';
       return;
     }
   },
