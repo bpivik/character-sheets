@@ -831,32 +831,25 @@ function updateAllWeaponDamage() {
   console.log('  Current damage mod:', dmgMod);
   
   // Update melee weapons (always add damage modifier)
+  // Note: We update ALL weapons that have baseDamage, even userModified ones
+  // The userModified flag only prevents auto-fill when weapon name changes
   for (let i = 0; i < 20; i++) { // Support up to 20 rows with dynamic addition
     const nameInput = document.getElementById(`melee-${i}-name`);
     const damageInput = document.getElementById(`melee-${i}-damage`);
     
     if (!nameInput) break; // No more rows
     
-    console.log(`  Melee ${i}: name="${nameInput.value}", userModified=${nameInput.dataset.userModified}, baseDamage=${damageInput?.dataset?.baseDamage}`);
-    
-    // Skip if user has modified this row
-    if (nameInput.dataset.userModified === 'true') {
-      console.log(`    SKIPPED: userModified`);
-      continue;
-    }
-    
     if (damageInput && damageInput.dataset.baseDamage) {
       // Use stored weapon name or current name input
       const weaponName = damageInput.dataset.weaponName || nameInput.value;
       const newDamage = composeDamage(damageInput.dataset.baseDamage, weaponName);
-      console.log(`    Updating: base="${damageInput.dataset.baseDamage}" -> "${newDamage}"`);
+      console.log(`  Melee ${i} (${weaponName}): base="${damageInput.dataset.baseDamage}" -> "${newDamage}"`);
       damageInput.value = newDamage;
-    } else if (damageInput && nameInput.value.trim()) {
-      console.log(`    NO baseDamage - trying to extract from current value: "${damageInput.value}"`);
     }
   }
   
   // Update ranged weapons (only if D.M. = Y)
+  // Note: We update ALL weapons that have baseDamage, even userModified ones
   for (let i = 0; i < 20; i++) { // Support up to 20 rows with dynamic addition
     const nameInput = document.getElementById(`ranged-${i}-name`);
     const damageInput = document.getElementById(`ranged-${i}-damage`);
@@ -864,15 +857,14 @@ function updateAllWeaponDamage() {
     
     if (!nameInput) break; // No more rows
     
-    // Skip if user has modified this row
-    if (nameInput.dataset.userModified === 'true') continue;
-    
     if (damageInput && damageInput.dataset.baseDamage) {
       const useDamageMod = dmInput && dmInput.value.toUpperCase() === 'Y';
       if (useDamageMod) {
         // Use stored weapon name or current name input
         const weaponName = damageInput.dataset.weaponName || nameInput.value;
-        damageInput.value = composeDamage(damageInput.dataset.baseDamage, weaponName);
+        const newDamage = composeDamage(damageInput.dataset.baseDamage, weaponName);
+        console.log(`  Ranged ${i} (${weaponName}): base="${damageInput.dataset.baseDamage}" -> "${newDamage}"`);
+        damageInput.value = newDamage;
       } else {
         damageInput.value = damageInput.dataset.baseDamage;
       }
