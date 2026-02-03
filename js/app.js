@@ -168,17 +168,6 @@ const App = {
           expField.value = Math.max(0, currVal - 1);
         }
       }
-    },
-    'resilient': {
-      description: 'Hit Points calculated using STR+CON+SIZ instead of CON+SIZ',
-      apply: function(app) {
-        // Recalculate all to update hit locations with STR included
-        app.recalculateAll();
-      },
-      remove: function(app) {
-        // Recalculate all to update hit locations without STR
-        app.recalculateAll();
-      }
     }
   },
 
@@ -707,7 +696,6 @@ const App = {
     const barbarianSpecies = ['abyssar', 'dwarf', 'gnome'];
     if (barbarianSpecies.includes(species)) {
       cultureField.value = 'Barbarian';
-      this.character.info.culture = 'Barbarian';
       return;
     }
     
@@ -715,14 +703,12 @@ const App = {
     const civilizedSpecies = ['elf', 'halfling', 'khelmar', 'syrin'];
     if (civilizedSpecies.includes(species)) {
       cultureField.value = 'Civilized';
-      this.character.info.culture = 'Civilized';
       return;
     }
     
     // Vulpan is Nomad
     if (species === 'vulpan') {
       cultureField.value = 'Nomad';
-      this.character.info.culture = 'Nomad';
       return;
     }
   },
@@ -3825,61 +3811,29 @@ const App = {
       });
     }
     
-    // Passions - dynamically create rows for saved passions
-    if (this.character.passions && this.character.passions.length > 0) {
-      const container = document.getElementById('passions-container');
-      if (container) {
-        this.character.passions.forEach((item, i) => {
-          if (item.name) { // Only create row if it has a name
-            const row = document.createElement('div');
-            row.className = 'belief-row';
-            row.dataset.index = i + 1;
-            row.innerHTML = `
-              <input type="text" class="belief-name" id="passion-${i+1}-name" placeholder="">
-              <input type="text" class="belief-formula-input" id="passion-${i+1}-formula" value="${item.formula || 'POW+INT+50'}" placeholder="e.g. POW+INT+50">
-              <span class="belief-base" id="passion-${i+1}-base">0</span>
-              <input type="number" class="belief-input" id="passion-${i+1}-current" placeholder="">
-            `;
-            container.appendChild(row);
-            
-            // Set values
-            const nameInput = row.querySelector('.belief-name');
-            const currentInput = row.querySelector('.belief-input');
-            if (nameInput) nameInput.value = item.name;
-            if (currentInput && item.current) currentInput.value = item.current;
-          }
-        });
-      }
+    // Passions
+    if (this.character.passions) {
+      this.character.passions.forEach((item, i) => {
+        const nameInput = document.getElementById(`passion-${i+1}-name`);
+        const formulaInput = document.getElementById(`passion-${i+1}-formula`);
+        const currentInput = document.getElementById(`passion-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (formulaInput && item.formula) formulaInput.value = item.formula;
+        if (currentInput && item.current) currentInput.value = item.current;
+      });
     }
     
-    // Oaths - dynamically create rows for saved oaths
-    if (this.character.oaths && this.character.oaths.length > 0) {
-      const container = document.getElementById('oaths-container');
-      if (container) {
-        this.character.oaths.forEach((item, i) => {
-          if (item.name) { // Only create row if it has a name
-            const row = document.createElement('div');
-            row.className = 'belief-row';
-            row.dataset.index = i + 1;
-            row.innerHTML = `
-              <input type="text" class="belief-name" id="oath-${i+1}-name" placeholder="">
-              <span class="belief-formula">POW+CHA+50</span>
-              <span class="belief-base" id="oath-${i+1}-base">0</span>
-              <input type="number" class="belief-input" id="oath-${i+1}-current" placeholder="">
-            `;
-            container.appendChild(row);
-            
-            // Set values
-            const nameInput = row.querySelector('.belief-name');
-            const currentInput = row.querySelector('.belief-input');
-            if (nameInput) nameInput.value = item.name;
-            if (currentInput && item.current) currentInput.value = item.current;
-          }
-        });
-      }
+    // Oaths
+    if (this.character.oaths) {
+      this.character.oaths.forEach((item, i) => {
+        const nameInput = document.getElementById(`oath-${i+1}-name`);
+        const currentInput = document.getElementById(`oath-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (currentInput && item.current) currentInput.value = item.current;
+      });
     }
     
-    // Languages - dynamically create rows for saved languages
+    // Languages
     if (this.character.languages) {
       // Native tongue
       if (this.character.languages[0]) {
@@ -3888,29 +3842,13 @@ const App = {
         if (nativeName && this.character.languages[0].name) nativeName.value = this.character.languages[0].name;
         if (nativeCurrent && this.character.languages[0].current) nativeCurrent.value = this.character.languages[0].current;
       }
-      // Additional languages - create rows dynamically
-      const container = document.getElementById('language-container');
-      if (container) {
-        for (let i = 1; i < this.character.languages.length; i++) {
-          const item = this.character.languages[i];
-          if (item && item.name) { // Only create row if has a name
-            const newIndex = i + 1;
-            const row = document.createElement('div');
-            row.className = 'language-row';
-            row.innerHTML = `
-              <input type="text" class="language-name" id="language-${newIndex}-name" placeholder="">
-              <span class="language-formula">INT+CHA</span>
-              <span class="language-base" id="language-${newIndex}-base">0</span>
-              <input type="number" class="language-input" id="language-${newIndex}-current" placeholder="">
-            `;
-            container.appendChild(row);
-            
-            const nameInput = row.querySelector('.language-name');
-            const currentInput = row.querySelector('.language-input');
-            if (nameInput) nameInput.value = item.name;
-            if (currentInput && item.current) currentInput.value = item.current;
-          }
-        }
+      // Additional languages
+      for (let i = 1; i < this.character.languages.length; i++) {
+        const item = this.character.languages[i];
+        const nameInput = document.getElementById(`language-${i+1}-name`);
+        const currentInput = document.getElementById(`language-${i+1}-current`);
+        if (nameInput && item.name) nameInput.value = item.name;
+        if (currentInput && item.current) currentInput.value = item.current;
       }
     }
     
@@ -4093,43 +4031,12 @@ const App = {
     // This is called before save/export to ensure all data is captured
     // Most data is already saved via event listeners, but this catches anything missed
     
-    // Info fields - explicitly collect to ensure they're saved
-    const infoMapping = {
-      'character-name': 'characterName',
-      'species': 'species',
-      'culture': 'culture',
-      'class-primary': 'classPrimary',
-      'class-secondary': 'classSecondary',
-      'class-tertiary': 'classTertiary',
-      'rank-name': 'rankName',
-      'gender': 'gender',
-      'age': 'age',
-      'handedness': 'handedness',
-      'height': 'height',
-      'weight': 'weight',
-      'hair': 'hair',
-      'eyes': 'eyes',
-      'rank-primary': 'rankPrimary',
-      'rank-secondary': 'rankSecondary',
-      'rank-tertiary': 'rankTertiary',
-      'tenacity-current': 'tenacityCurrent',
-      'tenacity-max': 'tenacityMax',
-      'exp-rolls': 'expRolls'
-    };
-    
-    for (const [fieldId, key] of Object.entries(infoMapping)) {
-      const field = document.getElementById(fieldId);
-      if (field) {
-        this.character.info[key] = field.value;
-      }
-    }
-    
-    // Equipment - only save rows with names
+    // Equipment
     this.character.equipment = [];
     for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
       const nameInput = document.getElementById(`equip-${i}-name`);
       const encInput = document.getElementById(`equip-${i}-enc`);
-      if (nameInput && encInput && nameInput.value.trim()) {
+      if (nameInput && encInput) {
         this.character.equipment.push({
           name: nameInput.value,
           enc: encInput.value
@@ -4158,7 +4065,7 @@ const App = {
       }
     }
     
-    // Passions (dynamic rows with custom formulas) - only save rows with names
+    // Passions (dynamic rows with custom formulas)
     this.character.passions = [];
     const passionsContainer = document.getElementById('passions-container');
     if (passionsContainer) {
@@ -4167,17 +4074,15 @@ const App = {
         const nameInput = row.querySelector('.belief-name');
         const formulaInput = row.querySelector('.belief-formula-input');
         const currentInput = row.querySelector('.belief-input');
-        if (nameInput?.value?.trim()) {
-          this.character.passions.push({
-            name: nameInput.value,
-            formula: formulaInput?.value || 'POW+INT+50',
-            current: currentInput?.value || ''
-          });
-        }
+        this.character.passions.push({
+          name: nameInput?.value || '',
+          formula: formulaInput?.value || 'POW+INT+50',
+          current: currentInput?.value || ''
+        });
       });
     }
     
-    // Oaths (dynamic rows) - only save rows with names
+    // Oaths (dynamic rows)
     this.character.oaths = [];
     const oathsContainer = document.getElementById('oaths-container');
     if (oathsContainer) {
@@ -4185,51 +4090,43 @@ const App = {
       oathRows.forEach((row, i) => {
         const nameInput = row.querySelector('.belief-name');
         const currentInput = row.querySelector('.belief-input');
-        if (nameInput?.value?.trim()) {
-          this.character.oaths.push({
-            name: nameInput.value,
-            current: currentInput?.value || ''
-          });
-        }
+        this.character.oaths.push({
+          name: nameInput?.value || '',
+          current: currentInput?.value || ''
+        });
       });
     }
     
-    // Languages - only save those with names
-    this.character.languages = [];
+    // Languages
     const nativeName = document.getElementById('native-tongue-name');
     const nativeCurrent = document.getElementById('native-tongue-current');
     if (nativeName && nativeCurrent) {
-      this.character.languages.push({
+      this.character.languages[0] = {
         name: nativeName.value,
         current: nativeCurrent.value,
         isNative: true
-      });
+      };
     }
     
-    // Query all additional language rows (not native)
-    const languageContainer = document.getElementById('language-container');
-    if (languageContainer) {
-      const additionalRows = languageContainer.querySelectorAll('.language-row:not(.native)');
-      additionalRows.forEach(row => {
-        const nameInput = row.querySelector('.language-name');
-        const currentInput = row.querySelector('.language-input');
-        if (nameInput?.value?.trim()) {
-          this.character.languages.push({
-            name: nameInput.value,
-            current: currentInput?.value || '',
-            isNative: false
-          });
-        }
-      });
+    for (let i = 2; i <= 5; i++) {
+      const nameInput = document.getElementById(`language-${i}-name`);
+      const currentInput = document.getElementById(`language-${i}-current`);
+      if (nameInput && currentInput) {
+        this.character.languages[i-1] = {
+          name: nameInput.value,
+          current: currentInput.value,
+          isNative: false
+        };
+      }
     }
     
-    // Professional Skills - only save rows with names
+    // Professional Skills
     this.character.professionalSkills = [];
     for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const baseInput = document.getElementById(`prof-skill-${i}-base`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
-      if (nameInput && baseInput && currentInput && nameInput.value.trim()) {
+      if (nameInput && baseInput && currentInput) {
         this.character.professionalSkills.push({
           name: nameInput.value,
           base: baseInput.value,
@@ -4274,86 +4171,61 @@ const App = {
       });
     }
     
-    // Melee Weapons - only save rows with names
+    // Melee Weapons
     this.character.combat.meleeWeapons = [];
     for (let i = 0; i < 6; i++) {
+      const weapon = {};
+      const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
       const nameInput = document.getElementById(`melee-${i}-name`);
-      if (nameInput?.value?.trim()) {
-        const weapon = {};
-        const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
-        fields.forEach(field => {
-          const input = document.getElementById(`melee-${i}-${field}`);
-          weapon[field] = input?.value || '';
-          // Save baseDamage data attribute for damage field
-          if (field === 'damage' && input?.dataset?.baseDamage) {
-            weapon.baseDamage = input.dataset.baseDamage;
-          }
-        });
-        // Save userModified flag
-        if (nameInput?.dataset?.userModified === 'true') {
-          weapon.userModified = true;
+      fields.forEach(field => {
+        const input = document.getElementById(`melee-${i}-${field}`);
+        weapon[field] = input?.value || '';
+        // Save baseDamage data attribute for damage field
+        if (field === 'damage' && input?.dataset?.baseDamage) {
+          weapon.baseDamage = input.dataset.baseDamage;
         }
-        this.character.combat.meleeWeapons.push(weapon);
+      });
+      // Save userModified flag
+      if (nameInput?.dataset?.userModified === 'true') {
+        weapon.userModified = true;
       }
+      this.character.combat.meleeWeapons.push(weapon);
     }
     
-    // Ranged Weapons - only save rows with names
+    // Ranged Weapons
     this.character.combat.rangedWeapons = [];
     for (let i = 0; i < 5; i++) {
+      const weapon = {};
+      const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
       const nameInput = document.getElementById(`ranged-${i}-name`);
-      if (nameInput?.value?.trim()) {
-        const weapon = {};
-        const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
-        fields.forEach(field => {
-          const input = document.getElementById(`ranged-${i}-${field}`);
-          weapon[field] = input?.value || '';
-          // Save baseDamage data attribute for damage field
-          if (field === 'damage' && input?.dataset?.baseDamage) {
-            weapon.baseDamage = input.dataset.baseDamage;
-          }
-        });
-        // Save userModified flag
-        if (nameInput?.dataset?.userModified === 'true') {
-          weapon.userModified = true;
+      fields.forEach(field => {
+        const input = document.getElementById(`ranged-${i}-${field}`);
+        weapon[field] = input?.value || '';
+        // Save baseDamage data attribute for damage field
+        if (field === 'damage' && input?.dataset?.baseDamage) {
+          weapon.baseDamage = input.dataset.baseDamage;
         }
-        this.character.combat.rangedWeapons.push(weapon);
+      });
+      // Save userModified flag
+      if (nameInput?.dataset?.userModified === 'true') {
+        weapon.userModified = true;
       }
+      this.character.combat.rangedWeapons.push(weapon);
     }
     
     // Special Abilities (dynamic list format)
-    // If all class fields are empty, clear all class abilities
-    const currentClasses = this.getCurrentClasses();
     this.character.combat.specialAbilities = [];
-    
-    if (currentClasses.length > 0) {
-      // Only save abilities if at least one class is set
-      const abilityContainer = document.getElementById('class-abilities-list');
-      if (abilityContainer) {
-        const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
-        abilityInputs.forEach(input => {
-          if (input.value.trim()) {
-            this.character.combat.specialAbilities.push({
-              name: input.value.trim(),
-              source: input.dataset.classAbility || null
-            });
-          }
-        });
-      }
-    } else {
-      // No classes set - clear the abilities from the UI as well
-      const abilityContainer = document.getElementById('class-abilities-list');
-      if (abilityContainer) {
-        // Remove ability effects before clearing
-        const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
-        abilityInputs.forEach(input => {
-          if (input.value.trim()) {
-            this.removeAbilityEffect(input.value.trim());
-          }
-        });
-        abilityContainer.innerHTML = '';
-      }
-      // Also clear acquired abilities tracking
-      this.character.acquiredAbilities = [];
+    const abilityContainer = document.getElementById('class-abilities-list');
+    if (abilityContainer) {
+      const abilityInputs = abilityContainer.querySelectorAll('.class-ability-input');
+      abilityInputs.forEach(input => {
+        if (input.value.trim()) {
+          this.character.combat.specialAbilities.push({
+            name: input.value.trim(),
+            source: input.dataset.classAbility || null
+          });
+        }
+      });
     }
     
     // Flying Speed
@@ -4435,10 +4307,7 @@ const App = {
     const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
     const isHuman = species === 'human';
     
-    // Check if Resilient ability is active (affects HP calculation)
-    const hasResilient = this.hasAbility('resilient');
-    
-    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
+    const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman);
     
     // Always update original attribute values (they are auto-calculated and readonly)
     const apOrig = document.getElementById('action-points-original');
@@ -4890,7 +4759,6 @@ const App = {
    * Enable or disable secondary/tertiary class and rank fields
    */
   setMulticlassFieldsEnabled(enabled) {
-    console.log('setMulticlassFieldsEnabled:', enabled);
     const fields = [
       'class-secondary', 'class-tertiary',
       'rank-secondary', 'rank-tertiary'
@@ -6567,17 +6435,6 @@ const App = {
   },
   
   /**
-   * Check if a specific ability is in the Class Abilities list
-   * @param {string} abilityName - Name of the ability to check for
-   * @returns {boolean} - True if the ability is present
-   */
-  hasAbility(abilityName) {
-    const normalizedTarget = abilityName.toLowerCase().trim();
-    const abilities = this.getAllSpecialAbilities();
-    return abilities.some(a => a.toLowerCase().trim() === normalizedTarget);
-  },
-  
-  /**
    * Remove Language abilities from Class Abilities section
    */
   removeLanguageAbilitiesFromSheet(languageAbilities) {
@@ -7042,17 +6899,12 @@ const App = {
    * Update multiclass field states on load (without showing warnings)
    */
   updateMulticlassFieldStates() {
-    if (!window.ClassRankData) {
-      console.log('updateMulticlassFieldStates: ClassRankData not loaded');
-      return;
-    }
+    if (!window.ClassRankData) return;
     
     const primary = document.getElementById('class-primary')?.value?.trim() || '';
-    console.log('updateMulticlassFieldStates: primary class =', primary);
     
     if (primary) {
       const canMulti = window.ClassRankData.canClassMulticlass(primary);
-      console.log('updateMulticlassFieldStates: canMulti =', canMulti);
       this.setMulticlassFieldsEnabled(canMulti);
     } else {
       this.setMulticlassFieldsEnabled(true);
@@ -7221,7 +7073,6 @@ const App = {
       
       if (!currentValue || isStandardTitle) {
         rankNameField.value = title;
-        this.character.info.rankName = title;  // Also update character data
       }
     }
   },
