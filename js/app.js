@@ -623,7 +623,7 @@ const App = {
   /**
    * Update sheet type based on species field
    */
-  updateSheetTypeFromSpecies(previousSpecies = null) {
+  updateSheetTypeFromSpecies(previousSpecies = null, isBlurEvent = false) {
     const speciesInput = document.getElementById('species');
     const species = speciesInput?.value?.trim() || '';
     const speciesLower = species.toLowerCase();
@@ -653,7 +653,7 @@ const App = {
     }
     
     // Handle species-specific features
-    this.updateSpeciesFeatures(species, previousSpecies);
+    this.updateSpeciesFeatures(species, previousSpecies, isBlurEvent);
     
     this.recalculateAll();
   },
@@ -661,8 +661,7 @@ const App = {
   /**
    * Update species-specific features (movement, flying, abilities)
    */
-  updateSpeciesFeatures(newSpecies, previousSpecies = null) {
-    console.log('updateSpeciesFeatures called with newSpecies:', newSpecies, 'previousSpecies:', previousSpecies);
+  updateSpeciesFeatures(newSpecies, previousSpecies = null, isBlurEvent = false) {
     if (!window.SpeciesData) return;
     
     const newSpeciesLower = newSpecies?.toLowerCase().trim() || '';
@@ -670,7 +669,6 @@ const App = {
     
     // Determine if species actually changed (not just init)
     const speciesActuallyChanged = previousSpecies !== null && prevSpeciesLower !== newSpeciesLower;
-    console.log('speciesActuallyChanged:', speciesActuallyChanged, '(prev:', prevSpeciesLower, ', new:', newSpeciesLower, ')');
     
     // Get species data
     const newData = window.SpeciesData.getSpecies(newSpeciesLower);
@@ -706,7 +704,6 @@ const App = {
     
     // Only reset species abilities if species actually changed (not during init)
     if (speciesActuallyChanged) {
-      console.log('Species actually changed from', prevSpeciesLower, 'to', newSpeciesLower);
       // Clear saved species abilities since species changed - use new species defaults
       this.character.speciesAbilities = [];
       
@@ -715,19 +712,16 @@ const App = {
       this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
       
       // Check if new species has Spell-Like Abilities and prompt for selection
-      if (newData && newData.abilities) {
-        console.log('New species abilities:', newData.abilities);
+      // Only prompt on blur event (not every keystroke)
+      if (isBlurEvent && newData && newData.abilities) {
         const hasSpellLike = newData.abilities.some(a => 
           a.toLowerCase().includes('spell-like abilities')
         );
-        console.log('Has Spell-Like Abilities:', hasSpellLike);
         if (hasSpellLike) {
           // Delay to let the UI update first
           setTimeout(() => this.promptSpellLikeAbilitySelection(), 100);
         }
       }
-    } else {
-      console.log('Species did NOT actually change. previousSpecies:', previousSpecies, 'newSpecies:', newSpecies);
     }
     
     this.scheduleAutoSave();
@@ -1016,15 +1010,13 @@ const App = {
       // Store initial value for change detection
       speciesField.dataset.previousValue = speciesField.value || '';
       
-      const handleSpeciesChange = () => {
+      const handleSpeciesChange = (isBlurEvent = false) => {
         const previousSpecies = speciesField.dataset.previousValue || '';
         const currentSpecies = speciesField.value || '';
-        console.log('handleSpeciesChange: previous:', previousSpecies, 'current:', currentSpecies);
         
         // Only update species features if actually changed
         if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
-          console.log('Species changed! Calling updateSheetTypeFromSpecies');
-          this.updateSheetTypeFromSpecies(previousSpecies);
+          this.updateSheetTypeFromSpecies(previousSpecies, isBlurEvent);
           speciesField.dataset.previousValue = currentSpecies;
         }
         
@@ -1032,8 +1024,8 @@ const App = {
         this.updateMagicVisibility();
         this.scheduleAutoSave();
       };
-      speciesField.addEventListener('input', handleSpeciesChange);
-      speciesField.addEventListener('change', handleSpeciesChange);
+      speciesField.addEventListener('input', () => handleSpeciesChange(false));
+      speciesField.addEventListener('change', () => handleSpeciesChange(true));
     }
     
     infoFields.forEach(fieldId => {
@@ -9077,9 +9069,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Prompt user to select their Spell-Like Ability
    */
   promptSpellLikeAbilitySelection() {
-    console.log('promptSpellLikeAbilitySelection called');
     const choices = this.getSpellLikeAbilityChoices();
-    console.log('Spell choices:', choices);
     
     // Create modal overlay
     const overlay = document.createElement('div');
@@ -9250,6 +9240,38 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     html += `<div class="spell-text">${spellData.description.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</div>`;
     
     descEl.innerHTML = html;
+    
+    // Setup toggle if not already done
+    this.setupSpellLikeToggle();
+  },
+
+  /**
+   * Setup the spell-like abilities collapse/expand toggle
+   */
+  setupSpellLikeToggle() {
+    const toggleBtn = document.getElementById('spell-like-toggle');
+    const content = document.getElementById('spell-like-content');
+    
+    if (!toggleBtn || !content) return;
+    
+    // Only add listener once
+    if (toggleBtn.dataset.listenerAdded) return;
+    toggleBtn.dataset.listenerAdded = 'true';
+    
+    // Restore collapsed state from character data
+    if (this.character.spellLikeCollapsed) {
+      toggleBtn.classList.add('collapsed');
+      content.classList.add('collapsed');
+    }
+    
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = toggleBtn.classList.toggle('collapsed');
+      content.classList.toggle('collapsed');
+      
+      // Save state
+      this.character.spellLikeCollapsed = isCollapsed;
+      this.scheduleAutoSave();
+    });
   },
 
   /**

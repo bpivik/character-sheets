@@ -1273,14 +1273,59 @@ select:focus {
   border-radius: 8px;
 }
 
+.spell-like-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .spell-like-section .section-header {
   color: #b6b;
   text-shadow: 0 0 10px rgba(187, 102, 187, 0.5);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0;
 }
 
-.spell-like-content {
-  padding: 0.5rem;
+.btn-collapse-toggle {
+  background: transparent;
+  border: 1px solid #8b4a8b;
+  color: #b6b;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-collapse-toggle:hover {
+  background: rgba(139, 74, 139, 0.3);
+  border-color: #a86aa8;
+}
+
+.btn-collapse-toggle .collapse-icon {
+  transition: transform 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.btn-collapse-toggle.collapsed .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+.spell-like-content.collapsible {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  max-height: 1000px;
+  opacity: 1;
+  padding-top: 0.75rem;
+}
+
+.spell-like-content.collapsible.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .spell-like-description {

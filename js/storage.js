@@ -93,6 +93,9 @@ const StorageManager = {
       // Species abilities (user-editable)
       speciesAbilities: [],
       
+      // Spell-Like Abilities section collapsed state
+      spellLikeCollapsed: false,
+      
       // Standard Skills (current values - base is calculated)
       standardSkills: {},
       
