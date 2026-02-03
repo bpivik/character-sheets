@@ -227,6 +227,9 @@ const App = {
     // Populate form with loaded data
     this.populateForm();
     
+    // Ensure Unarmed is always present as a melee weapon
+    this.ensureUnarmedWeapon();
+    
     // Populate species abilities section based on current species
     this.initSpeciesAbilities();
     
@@ -293,6 +296,9 @@ const App = {
     
     // Compact dynamic sections to only show filled rows
     this.compactDynamicSections();
+    
+    // Ensure Unarmed is always present in melee weapons
+    this.ensureUnarmedWeapon();
     
     // Check if Berserk Rage section should be visible
     this.checkBerserkRageVisibility();
@@ -2780,6 +2786,35 @@ const App = {
     });
     
     this.scheduleAutoSave();
+  },
+  
+  /**
+   * Ensure Unarmed is always present as a melee weapon
+   */
+  ensureUnarmedWeapon() {
+    const meleeBody = document.getElementById('melee-weapons-body');
+    if (!meleeBody) return;
+    
+    // Check if Unarmed already exists
+    const rows = meleeBody.querySelectorAll('tr');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.weapon-name');
+      if (nameInput && nameInput.value.toLowerCase().trim() === 'unarmed') {
+        return; // Already exists, don't add
+      }
+    }
+    
+    // Add Unarmed as first melee weapon
+    this.addMeleeWeaponRow();
+    const newRowIndex = meleeBody.querySelectorAll('tr').length - 1;
+    const nameInput = document.getElementById(`melee-${newRowIndex}-name`);
+    if (nameInput) {
+      nameInput.value = 'Unarmed';
+      // Trigger autofill
+      if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
+        window.WeaponData.autofillMeleeWeapon(newRowIndex, 'Unarmed');
+      }
+    }
   },
   
   /**
