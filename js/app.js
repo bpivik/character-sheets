@@ -3171,6 +3171,9 @@ const App = {
     
     // Mark as active and apply
     this.activeAbilityEffects[baseName] = { active: true };
+    if (baseName === 'resilient') {
+      console.log('applyAbilityEffect: setting activeAbilityEffects[resilient] = { active: true }');
+    }
     effect.apply(this);
     console.log(`Applied ability effect: ${baseName} (${effect.description})`);
   },
@@ -3208,19 +3211,25 @@ const App = {
    */
   hasAbilityOnSheet(baseName) {
     const normalizedBase = baseName.toLowerCase().trim();
+    const debugResilient = normalizedBase === 'resilient';
     
     // Check class abilities
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
       const inputs = classContainer.querySelectorAll('.class-ability-input');
+      if (debugResilient) console.log(`hasAbilityOnSheet('resilient'): found ${inputs.length} class ability inputs`);
       for (const input of inputs) {
         if (input.value.trim()) {
           const abilityBase = input.value.split('(')[0].trim().toLowerCase();
+          if (debugResilient) console.log(`  checking: "${input.value}" -> base: "${abilityBase}"`);
           if (abilityBase === normalizedBase) {
+            if (debugResilient) console.log(`  FOUND resilient!`);
             return true;
           }
         }
       }
+    } else {
+      if (debugResilient) console.log(`hasAbilityOnSheet('resilient'): class-abilities-list not found!`);
     }
     
     // Check species abilities
@@ -4636,8 +4645,11 @@ const App = {
     const isHuman = species === 'human';
     
     // Check if character has Resilient trait (HP uses STR+CON+SIZ)
-    const hasResilient = this.hasAbilityOnSheet('resilient');
-    console.log('recalculateAll: hasResilient =', hasResilient, ', STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
+    // Check both the DOM and activeAbilityEffects (persistent effects may be tracked there before DOM is ready)
+    const resilientInDOM = this.hasAbilityOnSheet('resilient');
+    const resilientInEffects = !!this.activeAbilityEffects['resilient'];
+    const hasResilient = resilientInDOM || resilientInEffects;
+    console.log('recalculateAll: hasResilient =', hasResilient, '(DOM:', resilientInDOM, ', activeEffects:', resilientInEffects, '), STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
     
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
     
@@ -4801,15 +4813,18 @@ const App = {
   reapplyAbilityEffects() {
     // Remember which persistent effects were already active (don't clear them)
     const persistentEffects = {};
+    console.log('reapplyAbilityEffects: current activeAbilityEffects =', Object.keys(this.activeAbilityEffects));
     for (const [baseName, data] of Object.entries(this.activeAbilityEffects)) {
       const effect = this.ABILITY_EFFECTS[baseName];
       if (effect && effect.persistent) {
         persistentEffects[baseName] = data;
+        console.log(`  preserving persistent effect: ${baseName}`);
       }
     }
     
     // Clear non-persistent active tracking (base values were just recalculated)
     this.activeAbilityEffects = { ...persistentEffects };
+    console.log('reapplyAbilityEffects: after clear, activeAbilityEffects =', Object.keys(this.activeAbilityEffects));
     
     // Check all class abilities on the sheet and apply their effects
     const classContainer = document.getElementById('class-abilities-list');
