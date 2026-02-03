@@ -90,6 +90,9 @@ const StorageManager = {
       // Current fatigue state
       fatigueState: 'fresh',
       
+      // Species abilities (user-editable)
+      speciesAbilities: [],
+      
       // Standard Skills (current values - base is calculated)
       standardSkills: {},
       

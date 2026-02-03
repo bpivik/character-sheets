@@ -667,6 +667,9 @@ const App = {
       });
     }
     
+    // Clear saved species abilities since species changed - use new species defaults
+    this.character.speciesAbilities = [];
+    
     // Populate the Species Abilities section (replaces old content)
     // Pass true to apply persistent effects since this is a user-initiated species change
     this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
@@ -745,8 +748,21 @@ const App = {
       input.className = 'species-ability-input';
       input.id = `species-ability-${index}`;
       input.value = this.toTitleCase(ability);
-      input.readOnly = true;
       input.dataset.abilityName = ability;
+      
+      // Add event listeners for editing
+      input.addEventListener('blur', (e) => {
+        const newValue = e.target.value.trim();
+        if (newValue) {
+          e.target.value = this.toTitleCase(newValue);
+          e.target.dataset.abilityName = newValue;
+        }
+        this.scheduleAutoSave();
+      });
+      
+      input.addEventListener('input', () => {
+        this.scheduleAutoSave();
+      });
       
       const infoBtn = document.createElement('button');
       infoBtn.type = 'button';
@@ -797,6 +813,12 @@ const App = {
   initSpeciesAbilities() {
     const speciesInput = document.getElementById('species');
     const species = speciesInput?.value?.trim().toLowerCase() || '';
+    
+    // Check if there are saved species abilities first
+    if (this.character.speciesAbilities && this.character.speciesAbilities.length > 0) {
+      this.populateSpeciesAbilitiesSection(this.character.speciesAbilities);
+      return;
+    }
     
     if (!species || !window.SpeciesData) {
       // Show placeholder for no species
@@ -4286,6 +4308,18 @@ const App = {
     const generalNotes = document.getElementById('general-notes');
     if (generalNotes) {
       this.character.notes = generalNotes.value;
+    }
+    
+    // Species Abilities
+    this.character.speciesAbilities = [];
+    const speciesContainer = document.getElementById('species-abilities-list');
+    if (speciesContainer) {
+      const speciesInputs = speciesContainer.querySelectorAll('.species-ability-input');
+      speciesInputs.forEach(input => {
+        if (input.value.trim()) {
+          this.character.speciesAbilities.push(input.value.trim());
+        }
+      });
     }
   },
 
