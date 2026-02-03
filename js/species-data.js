@@ -6,7 +6,7 @@
 const SpeciesData = {
   abyssar: {
     movement: 20,
-    abilities: ["Darkvision", "Devilish Appearance", "Magic Resistance", "Spell-Like Abilities"],
+    abilities: ["Darkvision", "Devilish Appearance", "Magic Resistance (Abyssari)", "Spell-Like Abilities"],
     characteristics: { STR: [3, 18], CON: [6, 16], SIZ: [3, 18], DEX: [3, 18], INT: [8, 18], POW: [3, 18], CHA: [3, 18] }
   },
   
@@ -30,7 +30,7 @@ const SpeciesData = {
   
   gnome: {
     movement: 15,
-    abilities: ["Darkvision", "Magic Resistance", "Poison Resistance", "Tunnel Sense"],
+    abilities: ["Darkvision", "Magic Resistance (Gnome)", "Poison Resistance", "Tunnel Sense"],
     characteristics: { STR: [3, 13], CON: [8, 18], SIZ: [7, 9], DEX: [5, 20], INT: [10, 20], POW: [3, 18], CHA: [3, 18] }
   },
   
