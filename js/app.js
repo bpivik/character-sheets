@@ -8516,7 +8516,7 @@ const App = {
     }
     
     // Update summary page
-    this.updateSummaryPage();
+    this.refreshSummaryWidgets();
   },
   
   /**
@@ -8569,7 +8569,7 @@ const App = {
     }
     
     // Update summary page
-    this.updateSummaryPage();
+    this.refreshSummaryWidgets();
     
     this.character.preRageValues = null;
   },
@@ -8836,7 +8836,7 @@ const App = {
     }
     
     // Update summary page
-    this.updateSummaryPage();
+    this.refreshSummaryWidgets();
   },
   
   /**
@@ -8895,7 +8895,7 @@ const App = {
     }
     
     // Update summary page
-    this.updateSummaryPage();
+    this.refreshSummaryWidgets();
     
     this.character.preForcefulValues = null;
   },
