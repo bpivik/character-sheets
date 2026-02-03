@@ -8204,16 +8204,44 @@ const App = {
    * Check if character has Berserk Rage ability and show/hide section
    */
   checkBerserkRageVisibility() {
-    const hasBerserkRage = this.hasAbility('Berserk Rage');
     const section = document.getElementById('berserk-rage-section');
+    if (!section) {
+      console.log('Berserk Rage: Section element not found');
+      return;
+    }
     
-    if (section) {
-      if (hasBerserkRage) {
-        section.style.display = '';
-        this.initBerserkRage();
-      } else {
-        section.style.display = 'none';
+    // Check all class ability inputs
+    const classAbilities = document.getElementById('class-abilities-list');
+    let hasBerserkRage = false;
+    
+    if (classAbilities) {
+      const inputs = classAbilities.querySelectorAll('.class-ability-input');
+      console.log('Berserk Rage: Found', inputs.length, 'class ability inputs');
+      
+      for (const input of inputs) {
+        const val = input.value.toLowerCase().trim();
+        console.log('Berserk Rage: Checking ability:', input.value);
+        if (val === 'berserk rage') {
+          hasBerserkRage = true;
+          break;
+        }
       }
+    }
+    
+    // Also check acquiredAbilities
+    if (!hasBerserkRage && this.character.acquiredAbilities) {
+      hasBerserkRage = this.character.acquiredAbilities.some(a => 
+        a.toLowerCase().trim() === 'berserk rage'
+      );
+    }
+    
+    console.log('Berserk Rage: Has ability =', hasBerserkRage);
+    
+    if (hasBerserkRage) {
+      section.style.display = '';
+      this.initBerserkRage();
+    } else {
+      section.style.display = 'none';
     }
   },
   
