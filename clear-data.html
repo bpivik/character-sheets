@@ -6,125 +6,106 @@
   <title>Clear Character Data</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 50px auto;
+      font-family: 'Crimson Text', Georgia, serif;
+      background: #f4e4c1;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
       padding: 20px;
-      background: #1a1a2e;
-      color: #eee;
+      box-sizing: border-box;
     }
-    h1 { color: #c9a227; }
-    .btn {
-      background: #8b0000;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 18px;
-      cursor: pointer;
-      border-radius: 5px;
-      margin: 10px 5px;
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      max-width: 500px;
+      text-align: center;
     }
-    .btn:hover { background: #a00000; }
-    .btn-success { background: #2e7d32; }
-    .btn-success:hover { background: #388e3c; }
-    .info {
-      background: #2a2a4a;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
+    h1 {
+      font-family: 'Cinzel', serif;
+      color: #8b4513;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #666;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
     }
     .warning {
-      background: #4a2a2a;
-      border-left: 4px solid #8b0000;
-      padding: 15px;
-      margin: 20px 0;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
     }
-    #status {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 5px;
+    .warning strong {
+      color: #856404;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    .success {
+      color: #28a745;
+      font-weight: bold;
       display: none;
-    }
-    .status-success { background: #1b4332; display: block !important; }
-    .status-error { background: #4a2a2a; display: block !important; }
-    pre {
-      background: #111;
-      padding: 10px;
-      overflow: auto;
-      max-height: 200px;
-      font-size: 12px;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>🗑️ Clear Character Data</h1>
-  
-  <div class="warning">
-    <strong>⚠️ Warning:</strong> This will permanently delete your saved character data. Make sure you've exported your character first if you want to keep it!
+  <div class="container">
+    <h1>Clear Character Data</h1>
+    <div class="warning">
+      <strong>⚠️ Warning:</strong> This will permanently delete your saved character data from this browser. This action cannot be undone.
+    </div>
+    <p>Use this if you want to start fresh with a new character, or if you're experiencing issues with saved data.</p>
+    <button class="btn-danger" onclick="clearData()">Clear All Data</button>
+    <button class="btn-secondary" onclick="goBack()">Cancel</button>
+    <p class="success" id="success-message">✓ All character data has been cleared!</p>
   </div>
-  
-  <div class="info">
-    <h3>Current Storage Keys:</h3>
-    <pre id="current-keys">Loading...</pre>
-  </div>
-  
-  <button class="btn" onclick="clearAllData()">🗑️ Clear ALL Character Data</button>
-  <button class="btn btn-success" onclick="window.location.href='app.html'">↩️ Go to Character Sheet</button>
-  
-  <div id="status"></div>
-  
+
   <script>
-    // Show current storage keys
-    function showCurrentKeys() {
-      const keysDiv = document.getElementById('current-keys');
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('mythras')) {
-          const value = localStorage.getItem(key);
-          const size = new Blob([value]).size;
-          keys.push(`${key} (${(size/1024).toFixed(1)} KB)`);
-        }
-      }
-      if (keys.length === 0) {
-        keysDiv.textContent = 'No Mythras data found in localStorage';
-      } else {
-        keysDiv.textContent = keys.join('\n');
+    function clearData() {
+      if (confirm('Are you sure you want to delete all saved character data? This cannot be undone.')) {
+        // Clear character data
+        localStorage.removeItem('mythras_cf_character');
+        
+        // Show success message
+        document.getElementById('success-message').style.display = 'block';
+        
+        // Redirect to app after 2 seconds
+        setTimeout(() => {
+          window.location.href = 'app.html';
+        }, 2000);
       }
     }
     
-    function clearAllData() {
-      const statusDiv = document.getElementById('status');
-      
-      try {
-        // Find and remove all mythras-related keys
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('mythras')) {
-            keysToRemove.push(key);
-          }
-        }
-        
-        keysToRemove.forEach(key => {
-          localStorage.removeItem(key);
-          console.log('Removed:', key);
-        });
-        
-        statusDiv.className = 'status-success';
-        statusDiv.innerHTML = `<strong>✅ Success!</strong><br>Cleared ${keysToRemove.length} storage key(s).<br><br>You can now <a href="app.html" style="color:#90EE90;">go to the character sheet</a> to start fresh.`;
-        
-        // Refresh the keys display
-        showCurrentKeys();
-        
-      } catch (e) {
-        statusDiv.className = 'status-error';
-        statusDiv.innerHTML = `<strong>❌ Error:</strong> ${e.message}`;
-      }
+    function goBack() {
+      window.location.href = 'app.html';
     }
-    
-    // Show keys on load
-    showCurrentKeys();
   </script>
 </body>
 </html>
