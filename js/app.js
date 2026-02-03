@@ -5737,18 +5737,37 @@ const App = {
   updateClassAbilities(previousClasses = null) {
     if (!window.ClassAbilities) return;
     
+    // Check if ALL class fields are empty - if so, clear all class abilities
+    const primaryClass = document.getElementById('class-primary')?.value?.trim() || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value?.trim() || '';
+    const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim() || '';
+    
+    if (!primaryClass && !secondaryClass && !tertiaryClass) {
+      // All class fields are empty - clear all class abilities
+      const container = document.getElementById('class-abilities-list');
+      if (container) {
+        container.innerHTML = '';
+      }
+      // Also clear from character data
+      if (this.character.combat) {
+        this.character.combat.specialAbilities = [];
+      }
+      this.scheduleAutoSave();
+      return;
+    }
+    
     // Get current classes and ranks
     const currentClasses = [
       {
-        name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+        name: primaryClass.toLowerCase(),
         rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0
       },
       {
-        name: document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+        name: secondaryClass.toLowerCase(),
         rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0
       },
       {
-        name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '',
+        name: tertiaryClass.toLowerCase(),
         rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
       }
     ].filter(c => c.name && c.rank > 0);
