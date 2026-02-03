@@ -208,6 +208,9 @@ const App = {
     this.setupButtons();
     
     // Generate dynamic content
+    this.generatePassions();
+    this.generateOaths();
+    this.generateLanguages();
     this.generateProfessionalSkills();
     this.generateEquipmentRows();
     this.setupContainerModal();
@@ -1498,6 +1501,154 @@ const App = {
   },
 
   /**
+   * Generate passion rows dynamically - only for saved passions
+   */
+  generatePassions() {
+    const container = document.getElementById('passions-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const savedPassions = this.character.passions || [];
+    
+    for (let i = 0; i < savedPassions.length; i++) {
+      const row = document.createElement('div');
+      row.className = 'belief-row';
+      row.dataset.index = i + 1;
+      row.innerHTML = `
+        <input type="text" class="belief-name" id="passion-${i+1}-name" placeholder="">
+        <input type="text" class="belief-formula-input" id="passion-${i+1}-formula" value="POW+INT+50" placeholder="e.g. POW+INT+50">
+        <span class="belief-base" id="passion-${i+1}-base">0</span>
+        <input type="number" class="belief-input" id="passion-${i+1}-current" placeholder="">
+      `;
+      container.appendChild(row);
+      
+      // Add event listeners
+      const nameInput = row.querySelector('.belief-name');
+      const formulaInput = row.querySelector('.belief-formula-input');
+      const currentInput = row.querySelector('.belief-input');
+      
+      nameInput.addEventListener('blur', (e) => {
+        if (e.target.value.trim()) {
+          e.target.value = this.toTitleCase(e.target.value.trim());
+        }
+        this.scheduleAutoSave();
+      });
+      
+      nameInput.addEventListener('input', () => this.scheduleAutoSave());
+      formulaInput.addEventListener('input', () => {
+        this.recalculateBeliefBases();
+        this.scheduleAutoSave();
+      });
+      currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    }
+  },
+
+  /**
+   * Generate oath rows dynamically - only for saved oaths
+   */
+  generateOaths() {
+    const container = document.getElementById('oaths-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const savedOaths = this.character.oaths || [];
+    
+    for (let i = 0; i < savedOaths.length; i++) {
+      const row = document.createElement('div');
+      row.className = 'belief-row';
+      row.dataset.index = i + 1;
+      row.innerHTML = `
+        <input type="text" class="belief-name" id="oath-${i+1}-name" placeholder="">
+        <span class="belief-formula">POW+CHA+50</span>
+        <span class="belief-base" id="oath-${i+1}-base">0</span>
+        <input type="number" class="belief-input" id="oath-${i+1}-current" placeholder="">
+      `;
+      container.appendChild(row);
+      
+      // Add event listeners
+      const nameInput = row.querySelector('.belief-name');
+      const currentInput = row.querySelector('.belief-input');
+      
+      nameInput.addEventListener('blur', (e) => {
+        if (e.target.value.trim()) {
+          e.target.value = this.toTitleCase(e.target.value.trim());
+        }
+        this.scheduleAutoSave();
+      });
+      
+      nameInput.addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    }
+  },
+
+  /**
+   * Generate language rows dynamically - native tongue always shown, others only for saved
+   */
+  generateLanguages() {
+    const container = document.getElementById('language-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Always create native tongue row
+    const nativeRow = document.createElement('div');
+    nativeRow.className = 'language-row native';
+    nativeRow.innerHTML = `
+      <label class="language-label">Native Tongue:</label>
+      <input type="text" class="language-name" id="native-tongue-name" placeholder="">
+      <span class="language-formula">INT+CHA+40</span>
+      <span class="language-base" id="native-tongue-base">0</span>
+      <input type="number" class="language-input" id="native-tongue-current" placeholder="">
+    `;
+    container.appendChild(nativeRow);
+    
+    // Add event listeners for native tongue
+    const nativeNameInput = nativeRow.querySelector('.language-name');
+    const nativeCurrentInput = nativeRow.querySelector('.language-input');
+    
+    nativeNameInput.addEventListener('blur', (e) => {
+      if (e.target.value.trim()) {
+        e.target.value = this.toTitleCase(e.target.value.trim());
+      }
+      this.scheduleAutoSave();
+    });
+    nativeNameInput.addEventListener('input', () => this.scheduleAutoSave());
+    nativeCurrentInput.addEventListener('input', () => this.scheduleAutoSave());
+    
+    // Create additional language rows for saved languages (skip index 0 which is native)
+    const savedLanguages = this.character.languages || [];
+    
+    for (let i = 1; i < savedLanguages.length; i++) {
+      const rowIndex = i + 1; // language-2-name, language-3-name, etc.
+      
+      const row = document.createElement('div');
+      row.className = 'language-row';
+      row.innerHTML = `
+        <input type="text" class="language-name" id="language-${rowIndex}-name" placeholder="">
+        <span class="language-formula">INT+CHA</span>
+        <span class="language-base" id="language-${rowIndex}-base">0</span>
+        <input type="number" class="language-input" id="language-${rowIndex}-current" placeholder="">
+      `;
+      container.appendChild(row);
+      
+      // Add event listeners
+      const nameInput = row.querySelector('.language-name');
+      const currentInput = row.querySelector('.language-input');
+      
+      nameInput.addEventListener('blur', (e) => {
+        if (e.target.value.trim()) {
+          e.target.value = this.toTitleCase(e.target.value.trim());
+        }
+        this.scheduleAutoSave();
+      });
+      nameInput.addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    }
+  },
+
+  /**
    * Generate professional skill rows
    */
   generateProfessionalSkills() {
@@ -1506,7 +1657,11 @@ const App = {
     
     container.innerHTML = '';
     
-    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+    // Only create rows for saved professional skills (no fixed slots)
+    const savedSkills = this.character.professionalSkills || [];
+    const numRows = savedSkills.length; // No extra empty rows
+    
+    for (let i = 0; i < numRows; i++) {
       const row = document.createElement('div');
       row.className = 'professional-skill-row';
       row.innerHTML = `
@@ -1770,7 +1925,7 @@ const App = {
   },
 
   /**
-   * Generate equipment rows
+   * Generate equipment rows - only for saved equipment
    */
   generateEquipmentRows() {
     const container = document.getElementById('equipment-container');
@@ -1778,7 +1933,10 @@ const App = {
     
     container.innerHTML = '';
     
-    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
+    const savedEquipment = this.character.equipment || [];
+    const numRows = savedEquipment.length;
+    
+    for (let i = 0; i < numRows; i++) {
       const row = document.createElement('div');
       row.className = 'equipment-row';
       row.innerHTML = `
@@ -2471,11 +2629,14 @@ const App = {
    * Generate weapon table rows
    */
   generateWeaponRows() {
-    // Melee weapons
+    // Melee weapons - only create rows for saved weapons
     const meleeBody = document.getElementById('melee-weapons-body');
     if (meleeBody) {
       meleeBody.innerHTML = '';
-      for (let i = 0; i < 6; i++) {
+      const savedMelee = (this.character.combat && this.character.combat.meleeWeapons) || [];
+      const numMelee = savedMelee.length;
+      
+      for (let i = 0; i < numMelee; i++) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="text" id="melee-${i}-name" class="weapon-name" placeholder=""></td>
@@ -2518,11 +2679,14 @@ const App = {
       }
     }
     
-    // Ranged weapons
+    // Ranged weapons - only create rows for saved weapons
     const rangedBody = document.getElementById('ranged-weapons-body');
     if (rangedBody) {
       rangedBody.innerHTML = '';
-      for (let i = 0; i < 5; i++) {
+      const savedRanged = (this.character.combat && this.character.combat.rangedWeapons) || [];
+      const numRanged = savedRanged.length;
+      
+      for (let i = 0; i < numRanged; i++) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="text" id="ranged-${i}-name" class="weapon-name" placeholder=""></td>
@@ -4070,17 +4234,21 @@ const App = {
     // This is called before save/export to ensure all data is captured
     // Most data is already saved via event listeners, but this catches anything missed
     
-    // Equipment - only save rows with a name
+    // Equipment - collect from actual rows
     this.character.equipment = [];
-    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
-      const nameInput = document.getElementById(`equip-${i}-name`);
-      const encInput = document.getElementById(`equip-${i}-enc`);
-      if (nameInput && encInput && nameInput.value.trim()) {
-        this.character.equipment.push({
-          name: nameInput.value,
-          enc: encInput.value
-        });
-      }
+    const equipmentContainer = document.getElementById('equipment-container');
+    if (equipmentContainer) {
+      const equipmentRows = equipmentContainer.querySelectorAll('.equipment-row');
+      equipmentRows.forEach((row, i) => {
+        const nameInput = document.getElementById(`equip-${i}-name`);
+        const encInput = document.getElementById(`equip-${i}-enc`);
+        if (nameInput && encInput && nameInput.value.trim()) {
+          this.character.equipment.push({
+            name: nameInput.value,
+            enc: encInput.value
+          });
+        }
+      });
     }
     
     // Money
@@ -4169,20 +4337,24 @@ const App = {
       });
     }
     
-    // Professional Skills - only save rows with a name
+    // Professional Skills - collect from actual rows
     this.character.professionalSkills = [];
-    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
-      const nameInput = document.getElementById(`prof-skill-${i}-name`);
-      const baseInput = document.getElementById(`prof-skill-${i}-base`);
-      const currentInput = document.getElementById(`prof-skill-${i}-current`);
-      if (nameInput && baseInput && currentInput && nameInput.value.trim()) {
-        this.character.professionalSkills.push({
-          name: nameInput.value,
-          base: baseInput.value,
-          // Save original (pre-penalty) value if available
-          current: currentInput.dataset.originalValue || currentInput.value
-        });
-      }
+    const profSkillsContainer = document.getElementById('professional-skills-container');
+    if (profSkillsContainer) {
+      const profSkillRows = profSkillsContainer.querySelectorAll('.professional-skill-row');
+      profSkillRows.forEach((row, i) => {
+        const nameInput = document.getElementById(`prof-skill-${i}-name`);
+        const baseInput = document.getElementById(`prof-skill-${i}-base`);
+        const currentInput = document.getElementById(`prof-skill-${i}-current`);
+        if (nameInput && baseInput && currentInput && nameInput.value.trim()) {
+          this.character.professionalSkills.push({
+            name: nameInput.value,
+            base: baseInput.value,
+            // Save original (pre-penalty) value if available
+            current: currentInput.dataset.originalValue || currentInput.value
+          });
+        }
+      });
     }
     
     // Combat Skills
@@ -4220,50 +4392,58 @@ const App = {
       });
     }
     
-    // Melee Weapons - only save rows with a name
+    // Melee Weapons - collect from actual rows
     this.character.combat.meleeWeapons = [];
-    for (let i = 0; i < 6; i++) {
-      const nameInput = document.getElementById(`melee-${i}-name`);
-      if (nameInput?.value?.trim()) {
-        const weapon = {};
-        const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
-        fields.forEach(field => {
-          const input = document.getElementById(`melee-${i}-${field}`);
-          weapon[field] = input?.value || '';
-          // Save baseDamage data attribute for damage field
-          if (field === 'damage' && input?.dataset?.baseDamage) {
-            weapon.baseDamage = input.dataset.baseDamage;
+    const meleeBody = document.getElementById('melee-weapons-body');
+    if (meleeBody) {
+      const meleeRows = meleeBody.querySelectorAll('tr');
+      meleeRows.forEach((row, i) => {
+        const nameInput = document.getElementById(`melee-${i}-name`);
+        if (nameInput?.value?.trim()) {
+          const weapon = {};
+          const fields = ['name', 'hands', 'damage', 'size', 'effects', 'aphp', 'traits'];
+          fields.forEach(field => {
+            const input = document.getElementById(`melee-${i}-${field}`);
+            weapon[field] = input?.value || '';
+            // Save baseDamage data attribute for damage field
+            if (field === 'damage' && input?.dataset?.baseDamage) {
+              weapon.baseDamage = input.dataset.baseDamage;
+            }
+          });
+          // Save userModified flag
+          if (nameInput?.dataset?.userModified === 'true') {
+            weapon.userModified = true;
           }
-        });
-        // Save userModified flag
-        if (nameInput?.dataset?.userModified === 'true') {
-          weapon.userModified = true;
+          this.character.combat.meleeWeapons.push(weapon);
         }
-        this.character.combat.meleeWeapons.push(weapon);
-      }
+      });
     }
     
-    // Ranged Weapons - only save rows with a name
+    // Ranged Weapons - collect from actual rows
     this.character.combat.rangedWeapons = [];
-    for (let i = 0; i < 5; i++) {
-      const nameInput = document.getElementById(`ranged-${i}-name`);
-      if (nameInput?.value?.trim()) {
-        const weapon = {};
-        const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
-        fields.forEach(field => {
-          const input = document.getElementById(`ranged-${i}-${field}`);
-          weapon[field] = input?.value || '';
-          // Save baseDamage data attribute for damage field
-          if (field === 'damage' && input?.dataset?.baseDamage) {
-            weapon.baseDamage = input.dataset.baseDamage;
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (rangedBody) {
+      const rangedRows = rangedBody.querySelectorAll('tr');
+      rangedRows.forEach((row, i) => {
+        const nameInput = document.getElementById(`ranged-${i}-name`);
+        if (nameInput?.value?.trim()) {
+          const weapon = {};
+          const fields = ['name', 'hands', 'damage', 'dm', 'range', 'load', 'effects', 'impl', 'aphp', 'traits'];
+          fields.forEach(field => {
+            const input = document.getElementById(`ranged-${i}-${field}`);
+            weapon[field] = input?.value || '';
+            // Save baseDamage data attribute for damage field
+            if (field === 'damage' && input?.dataset?.baseDamage) {
+              weapon.baseDamage = input.dataset.baseDamage;
+            }
+          });
+          // Save userModified flag
+          if (nameInput?.dataset?.userModified === 'true') {
+            weapon.userModified = true;
           }
-        });
-        // Save userModified flag
-        if (nameInput?.dataset?.userModified === 'true') {
-          weapon.userModified = true;
+          this.character.combat.rangedWeapons.push(weapon);
         }
-        this.character.combat.rangedWeapons.push(weapon);
-      }
+      });
     }
     
     // Special Abilities (dynamic list format)
