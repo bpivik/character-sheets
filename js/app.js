@@ -1511,6 +1511,10 @@ const App = {
           
           e.target.value = this.toTitleCase(newName);
           prereqKeys.dataset.skillName = e.target.value;
+          
+          // Auto-fill formula on blur (in case input event didn't catch it)
+          this.autoFillProfessionalSkillFormula(e.target, baseInput);
+          
           this.updatePrereqKeys();
           this.scheduleAutoSave();
         } else if (previousName) {
@@ -10812,24 +10816,48 @@ const App = {
     const currentInput = row.querySelector('.prof-skill-current');
     const prereqKeys = row.querySelector('.prereq-keys');
     
+    // Track previous name for deletion detection
+    nameInput.dataset.previousName = '';
+    
     nameInput.addEventListener('blur', () => {
       if (nameInput.value.trim()) {
         nameInput.value = this.toTitleCase(nameInput.value.trim());
         prereqKeys.dataset.skillName = nameInput.value;
+        // Auto-fill formula on blur
+        this.autoFillProfessionalSkillFormula(nameInput, baseInput);
         this.updatePrereqKeys();
         this.scheduleAutoSave();
       }
     });
     
     nameInput.addEventListener('input', () => {
-      this.autoFillProfessionalSkillBase(newIndex);
+      this.autoFillProfessionalSkillFormula(nameInput, baseInput);
+      this.updateProfessionalSkillData(newIndex);
+      this.updateProfSkillEncIndicator(newIndex);
+      prereqKeys.dataset.skillName = nameInput.value.trim();
+      this.updatePrereqKeys();
+      this.scheduleAutoSave();
     });
     
-    baseInput.addEventListener('blur', () => {
+    baseInput.addEventListener('input', () => {
       this.calculateProfessionalSkillBase(newIndex);
+      this.updateProfessionalSkillData(newIndex);
+      this.updateProfSkillEncIndicator(newIndex);
+      this.scheduleAutoSave();
     });
     
-    currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    currentInput.addEventListener('input', (e) => {
+      if (e.target.classList.contains('enc-penalized-value')) {
+        const newOriginal = e.target.value;
+        e.target.dataset.originalValue = newOriginal;
+        setTimeout(() => this.updateTotalEnc(), 10);
+      } else if (e.target.dataset.originalValue !== undefined) {
+        e.target.dataset.originalValue = e.target.value;
+      }
+      this.updateProfessionalSkillData(newIndex);
+      this.syncProfSkillToMagic(newIndex);
+      this.scheduleAutoSave();
+    });
     
     // Scroll to show new row
     row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
