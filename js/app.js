@@ -8466,12 +8466,15 @@ const App = {
     // Damage Mod +1 step
     const dmgCurrField = document.getElementById('damage-mod-current');
     const dmgOrigField = document.getElementById('damage-mod-original');
+    console.log('applyRageBonuses: dmgCurrField =', dmgCurrField?.value, ', dmgOrigField =', dmgOrigField?.value);
     if (dmgCurrField) {
       const nextMod = this.getNextDamageModStep(dmgCurrField.value);
+      console.log('  dmgCurr: "' + dmgCurrField.value + '" -> "' + nextMod + '"');
       dmgCurrField.value = nextMod;
     }
     if (dmgOrigField) {
       const nextMod = this.getNextDamageModStep(dmgOrigField.value);
+      console.log('  dmgOrig: "' + dmgOrigField.value + '" -> "' + nextMod + '"');
       dmgOrigField.value = nextMod;
     }
     
@@ -8506,6 +8509,14 @@ const App = {
       evadeField.value = Math.max(0, curr - 20);
       evadeField.classList.add('rage-penalized');
     }
+    
+    // Update weapon damage displays to reflect new Damage Modifier
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    
+    // Update summary page
+    this.updateSummaryPage();
   },
   
   /**
@@ -8551,6 +8562,14 @@ const App = {
       evadeField.value = this.character.preRageValues.evade;
       evadeField.classList.remove('rage-penalized');
     }
+    
+    // Update weapon damage displays to reflect restored Damage Modifier
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    
+    // Update summary page
+    this.updateSummaryPage();
     
     this.character.preRageValues = null;
   },
@@ -8671,17 +8690,21 @@ const App = {
     
     const normalized = currentMod.replace(/\s/g, '');
     const currentIndex = progression.findIndex(m => m === normalized);
+    console.log('getNextDamageModStep: input="' + currentMod + '", normalized="' + normalized + '", index=' + currentIndex);
     
     if (currentIndex === -1) {
       // Not found, try to find closest match
       if (normalized === '0' || normalized === '') return '+1d2';
+      console.log('  NOT FOUND in progression, returning unchanged');
       return currentMod; // Return unchanged if unknown
     }
     
     if (currentIndex < progression.length - 1) {
+      console.log('  Found, returning next: ' + progression[currentIndex + 1]);
       return progression[currentIndex + 1];
     }
     
+    console.log('  Already at max');
     return currentMod; // Already at max
   },
   
@@ -8806,6 +8829,14 @@ const App = {
       dmgOrigField.value = newMod;
       dmgOrigField.classList.add('forceful-boosted');
     }
+    
+    // Update weapon damage displays to reflect new Damage Modifier
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    
+    // Update summary page
+    this.updateSummaryPage();
   },
   
   /**
@@ -8857,6 +8888,14 @@ const App = {
       dmgOrigField.value = this.character.preForcefulValues.damageModOrig;
       dmgOrigField.classList.remove('forceful-boosted');
     }
+    
+    // Update weapon damage displays to reflect restored Damage Modifier
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    
+    // Update summary page
+    this.updateSummaryPage();
     
     this.character.preForcefulValues = null;
   },

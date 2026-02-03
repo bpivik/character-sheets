@@ -826,6 +826,10 @@ function clearRangedWeaponFields(index) {
  * Considers Weapon Precision for eligible weapons
  */
 function updateAllWeaponDamage() {
+  console.log('updateAllWeaponDamage called');
+  const dmgMod = getDamageMod();
+  console.log('  Current damage mod:', dmgMod);
+  
   // Update melee weapons (always add damage modifier)
   for (let i = 0; i < 20; i++) { // Support up to 20 rows with dynamic addition
     const nameInput = document.getElementById(`melee-${i}-name`);
@@ -839,7 +843,9 @@ function updateAllWeaponDamage() {
     if (damageInput && damageInput.dataset.baseDamage) {
       // Use stored weapon name or current name input
       const weaponName = damageInput.dataset.weaponName || nameInput.value;
-      damageInput.value = composeDamage(damageInput.dataset.baseDamage, weaponName);
+      const newDamage = composeDamage(damageInput.dataset.baseDamage, weaponName);
+      console.log(`  Melee ${i} (${weaponName}): base="${damageInput.dataset.baseDamage}" -> "${newDamage}"`);
+      damageInput.value = newDamage;
     }
   }
   
