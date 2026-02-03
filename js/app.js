@@ -8983,7 +8983,7 @@ const App = {
     'Affect Normal Fires': {
       name: 'Affect Normal Fires',
       resist: null,
-      description: `This spell allows the caster to control non-magical fires within range. The caster can increase or decrease the size, intensity, and brightness of flames, or reshape them as desired. The spell cannot create fire from nothing, nor can it extinguish fires completely—only reduce them to embers. Magical fires are unaffected.`
+      description: `The caster may command small fires to reduce in Size to that of a candle flame or grow as large as a bonfire (3' diameter maximum). This spell alters all fires within the Area of Effect. Reducing the Size of the fire will reduce fuel consumption to half normal, while increasing the fire doubles the rate of consumption. The light given off is appropriate to that of the flames' new Size, as is any damage from the flames.`
     },
     'Charm Being': {
       name: 'Charm Being',

@@ -1040,107 +1040,113 @@
 
         <!-- Abilities Sections Container -->
         <div class="abilities-sections-container">
-          <!-- Class Abilities Section (formerly Special Abilities) -->
-          <section class="class-abilities-section">
-            <div class="section-header-row">
-              <h3 class="section-header">Class Abilities</h3>
-              <div class="header-buttons">
-                <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
-                <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
-                <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
+          <!-- Left Column: Class Abilities and Species Abilities -->
+          <div class="abilities-left-column">
+            <!-- Class Abilities Section (formerly Special Abilities) -->
+            <section class="class-abilities-section">
+              <div class="section-header-row">
+                <h3 class="section-header">Class Abilities</h3>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
+                </div>
               </div>
-            </div>
-            <div class="class-abilities-list" id="class-abilities-list">
-              <!-- Dynamically populated -->
-            </div>
-          </section>
+              <div class="class-abilities-list" id="class-abilities-list">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
 
-          <!-- Berserk Rage Section (only visible if character has Berserk Rage ability) -->
-          <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
-            <div class="section-header-row">
-              <h3 class="section-header">Berserk Rage</h3>
-            </div>
-            <div class="berserk-rage-content">
-              <div class="rage-info-row">
-                <span class="rage-label">Uses Available Daily:</span>
-                <span class="rage-value" id="rage-uses-available">0</span>
-                <span class="rage-label">/ Max:</span>
-                <span class="rage-value" id="rage-uses-max">0</span>
-                <span class="rage-label">(CON/4)</span>
-                <button type="button" class="btn btn-small btn-reset-rage" id="btn-reset-rage-uses" title="Reset uses to maximum">↺</button>
+            <!-- Species Abilities Section -->
+            <section class="species-abilities-section">
+              <div class="section-header-row">
+                <h3 class="section-header">Species Abilities</h3>
               </div>
-              <div class="rage-info-row">
-                <span class="rage-label">Rounds per Rage:</span>
-                <span class="rage-value" id="rage-rounds-max">0</span>
-                <span class="rage-label">(CON)</span>
+              <div class="species-abilities-list" id="species-abilities-list">
+                <!-- Dynamically populated based on species -->
               </div>
-              <div class="rage-button-row">
-                <button type="button" class="btn btn-rage" id="btn-rage-toggle">
-                  <span class="rage-icon">⚔️</span>
-                  <span class="rage-text" id="rage-btn-text">I'm RAGING!</span>
+            </section>
+          </div>
+
+          <!-- Right Column: Berserk Rage, Spell-Like Abilities, Forceful Strike -->
+          <div class="abilities-right-column">
+            <!-- Berserk Rage Section (only visible if character has Berserk Rage ability) -->
+            <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
+              <div class="section-header-row">
+                <h3 class="section-header">Berserk Rage</h3>
+              </div>
+              <div class="berserk-rage-content">
+                <div class="rage-info-row">
+                  <span class="rage-label">Uses Available Daily:</span>
+                  <span class="rage-value" id="rage-uses-available">0</span>
+                  <span class="rage-label">/ Max:</span>
+                  <span class="rage-value" id="rage-uses-max">0</span>
+                  <span class="rage-label">(CON/4)</span>
+                  <button type="button" class="btn btn-small btn-reset-rage" id="btn-reset-rage-uses" title="Reset uses to maximum">↺</button>
+                </div>
+                <div class="rage-info-row">
+                  <span class="rage-label">Rounds per Rage:</span>
+                  <span class="rage-value" id="rage-rounds-max">0</span>
+                  <span class="rage-label">(CON)</span>
+                </div>
+                <div class="rage-button-row">
+                  <button type="button" class="btn btn-rage" id="btn-rage-toggle">
+                    <span class="rage-icon">⚔️</span>
+                    <span class="rage-text" id="rage-btn-text">I'm RAGING!</span>
+                  </button>
+                </div>
+                <div class="rage-tracker" id="rage-tracker" style="display: none;">
+                  <div class="rage-active-label">🔥 RAGE ACTIVE 🔥</div>
+                  <div class="rage-rounds-row">
+                    <span class="rage-label">Rounds Used:</span>
+                    <input type="number" class="rage-rounds-input" id="rage-rounds-used" value="0" min="0">
+                    <span class="rage-label">/ <span id="rage-rounds-total">0</span></span>
+                  </div>
+                  <div class="rage-effects-summary">
+                    <div class="rage-effect">Damage Mod: +1 step</div>
+                    <div class="rage-effect">Endurance: +20%</div>
+                    <div class="rage-effect">Willpower: +20%</div>
+                    <div class="rage-effect">Brawn: +40%</div>
+                    <div class="rage-effect rage-penalty">Evade: -20%</div>
+                  </div>
+                  <button type="button" class="btn btn-end-rage" id="btn-end-rage">End Rage (1 Fatigue Level)</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Spell-Like Abilities Section (only visible if character has Spell-Like Abilities) -->
+            <section class="spell-like-section" id="spell-like-section" style="display: none;">
+              <div class="section-header-row spell-like-header">
+                <h3 class="section-header" id="spell-like-title">Spell</h3>
+                <button type="button" class="btn-collapse-toggle" id="spell-like-toggle" title="Expand/Collapse">
+                  <span class="collapse-icon">▼</span>
                 </button>
               </div>
-              <div class="rage-tracker" id="rage-tracker" style="display: none;">
-                <div class="rage-active-label">🔥 RAGE ACTIVE 🔥</div>
-                <div class="rage-rounds-row">
-                  <span class="rage-label">Rounds Used:</span>
-                  <input type="number" class="rage-rounds-input" id="rage-rounds-used" value="0" min="0">
-                  <span class="rage-label">/ <span id="rage-rounds-total">0</span></span>
+              <div class="spell-like-content collapsible" id="spell-like-content">
+                <div class="spell-like-description" id="spell-like-description">
+                  <!-- Spell description will be populated dynamically -->
                 </div>
-                <div class="rage-effects-summary">
-                  <div class="rage-effect">Damage Mod: +1 step</div>
-                  <div class="rage-effect">Endurance: +20%</div>
-                  <div class="rage-effect">Willpower: +20%</div>
-                  <div class="rage-effect">Brawn: +40%</div>
-                  <div class="rage-effect rage-penalty">Evade: -20%</div>
+              </div>
+            </section>
+
+            <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
+            <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
+              <div class="section-header-row">
+                <h3 class="section-header">Forceful Strike</h3>
+              </div>
+              <div class="forceful-strike-content">
+                <div class="forceful-strike-info">
+                  <span class="forceful-label">Combat Skill -20% | Damage Mod +2 steps</span>
                 </div>
-                <button type="button" class="btn btn-end-rage" id="btn-end-rage">End Rage (1 Fatigue Level)</button>
+                <div class="forceful-strike-toggle">
+                  <button type="button" class="btn btn-forceful" id="btn-forceful-toggle">
+                    <span class="forceful-icon">💪</span>
+                    <span class="forceful-text" id="forceful-btn-text">Activate Forceful Strike</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          </section>
-
-          <!-- Spell-Like Abilities Section (only visible if character has Spell-Like Abilities) -->
-          <section class="spell-like-section" id="spell-like-section" style="display: none;">
-            <div class="section-header-row spell-like-header">
-              <h3 class="section-header" id="spell-like-title">Spell</h3>
-              <button type="button" class="btn-collapse-toggle" id="spell-like-toggle" title="Expand/Collapse">
-                <span class="collapse-icon">▼</span>
-              </button>
-            </div>
-            <div class="spell-like-content collapsible" id="spell-like-content">
-              <div class="spell-like-description" id="spell-like-description">
-                <!-- Spell description will be populated dynamically -->
-              </div>
-            </div>
-          </section>
-
-          <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
-          <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
-            <div class="section-header-row">
-              <h3 class="section-header">Forceful Strike</h3>
-            </div>
-            <div class="forceful-strike-content">
-              <div class="forceful-strike-info">
-                <span class="forceful-label">Combat Skill -20% | Damage Mod +2 steps</span>
-              </div>
-              <div class="forceful-strike-toggle">
-                <button type="button" class="btn btn-forceful" id="btn-forceful-toggle">
-                  <span class="forceful-icon">💪</span>
-                  <span class="forceful-text" id="forceful-btn-text">Activate Forceful Strike</span>
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <!-- Species Abilities Section -->
-          <section class="species-abilities-section">
-            <div class="section-header-row">
-              <h3 class="section-header">Species Abilities</h3>
-            </div>
-            <div class="species-abilities-list" id="species-abilities-list">
-              <!-- Dynamically populated based on species -->
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </div>
     </section>
