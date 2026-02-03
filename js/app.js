@@ -286,9 +286,7 @@ const App = {
     this.setupFatigueListeners();
     
     // Initial calculations
-    console.log('init: About to call recalculateAll');
     this.recalculateAll();
-    console.log('init: recalculateAll complete, hitLocations =', JSON.stringify(this.character.combat?.hitLocations?.map(l => l.hp)));
     
     // Restore ability effects (Agile, Artful Dodger, etc.) after calculations
     this.restoreAbilityEffects();
@@ -308,8 +306,10 @@ const App = {
     // Check if Forceful Strike section should be visible
     this.checkForcefulStrikeVisibility();
     
+    // Check if Spell-Like Abilities section should be visible
+    this.checkSpellLikeAbilitiesVisibility();
+    
     // Save calculated values (like Resilient HP) after initialization
-    console.log('init: About to call scheduleAutoSave, hitLocations =', JSON.stringify(this.character.combat?.hitLocations?.map(l => l.hp)));
     this.scheduleAutoSave();
     
     console.log('Initialization complete!');
@@ -662,10 +662,15 @@ const App = {
    * Update species-specific features (movement, flying, abilities)
    */
   updateSpeciesFeatures(newSpecies, previousSpecies = null) {
+    console.log('updateSpeciesFeatures called with newSpecies:', newSpecies, 'previousSpecies:', previousSpecies);
     if (!window.SpeciesData) return;
     
     const newSpeciesLower = newSpecies?.toLowerCase().trim() || '';
     const prevSpeciesLower = previousSpecies?.toLowerCase().trim() || '';
+    
+    // Determine if species actually changed (not just init)
+    const speciesActuallyChanged = previousSpecies !== null && prevSpeciesLower !== newSpeciesLower;
+    console.log('speciesActuallyChanged:', speciesActuallyChanged, '(prev:', prevSpeciesLower, ', new:', newSpeciesLower, ')');
     
     // Get species data
     const newData = window.SpeciesData.getSpecies(newSpeciesLower);
@@ -688,21 +693,42 @@ const App = {
     }
     
     // Auto-set culture based on species (only when species changes)
-    this.autoSetCultureForSpecies(newSpeciesLower);
+    if (speciesActuallyChanged) {
+      this.autoSetCultureForSpecies(newSpeciesLower);
+    }
     
-    // Remove previous species ability effects
-    if (prevData && prevData.abilities && prevData.abilities.length > 0) {
+    // Remove previous species ability effects (only if species actually changed)
+    if (speciesActuallyChanged && prevData && prevData.abilities && prevData.abilities.length > 0) {
       prevData.abilities.forEach(ability => {
         this.removeAbilityEffect(ability);
       });
     }
     
-    // Clear saved species abilities since species changed - use new species defaults
-    this.character.speciesAbilities = [];
-    
-    // Populate the Species Abilities section (replaces old content)
-    // Pass true to apply persistent effects since this is a user-initiated species change
-    this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
+    // Only reset species abilities if species actually changed (not during init)
+    if (speciesActuallyChanged) {
+      console.log('Species actually changed from', prevSpeciesLower, 'to', newSpeciesLower);
+      // Clear saved species abilities since species changed - use new species defaults
+      this.character.speciesAbilities = [];
+      
+      // Populate the Species Abilities section (replaces old content)
+      // Pass true to apply persistent effects since this is a user-initiated species change
+      this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
+      
+      // Check if new species has Spell-Like Abilities and prompt for selection
+      if (newData && newData.abilities) {
+        console.log('New species abilities:', newData.abilities);
+        const hasSpellLike = newData.abilities.some(a => 
+          a.toLowerCase().includes('spell-like abilities')
+        );
+        console.log('Has Spell-Like Abilities:', hasSpellLike);
+        if (hasSpellLike) {
+          // Delay to let the UI update first
+          setTimeout(() => this.promptSpellLikeAbilitySelection(), 100);
+        }
+      }
+    } else {
+      console.log('Species did NOT actually change. previousSpecies:', previousSpecies, 'newSpecies:', newSpecies);
+    }
     
     this.scheduleAutoSave();
   },
@@ -788,6 +814,8 @@ const App = {
           e.target.dataset.abilityName = newValue;
         }
         this.scheduleAutoSave();
+        // Update spell-like section if this ability was edited
+        this.checkSpellLikeAbilitiesVisibility();
       });
       
       input.addEventListener('input', () => {
@@ -991,9 +1019,11 @@ const App = {
       const handleSpeciesChange = () => {
         const previousSpecies = speciesField.dataset.previousValue || '';
         const currentSpecies = speciesField.value || '';
+        console.log('handleSpeciesChange: previous:', previousSpecies, 'current:', currentSpecies);
         
         // Only update species features if actually changed
         if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
+          console.log('Species changed! Calling updateSheetTypeFromSpecies');
           this.updateSheetTypeFromSpecies(previousSpecies);
           speciesField.dataset.previousValue = currentSpecies;
         }
@@ -2592,12 +2622,9 @@ const App = {
       this.character.combat.hitLocations = [];
     }
     
-    console.log('updateHitLocationHPs called with:', hitLocations.map(l => l.hp));
-    
     hitLocations.forEach((loc, i) => {
       const hpInput = document.getElementById(`loc-${i}-hp`);
       if (hpInput) {
-        console.log(`  Location ${i}: DOM value ${hpInput.value} -> ${loc.hp}`);
         hpInput.value = loc.hp;
       }
       
@@ -2605,9 +2632,7 @@ const App = {
       if (!this.character.combat.hitLocations[i]) {
         this.character.combat.hitLocations[i] = { armor: '', ap: '', hp: '', current: '' };
       }
-      const oldHp = this.character.combat.hitLocations[i].hp;
       this.character.combat.hitLocations[i].hp = loc.hp.toString();
-      console.log(`  Location ${i}: character.combat.hitLocations[${i}].hp = ${oldHp} -> ${loc.hp}`);
     });
   },
 
@@ -3171,11 +3196,7 @@ const App = {
     
     // Mark as active and apply
     this.activeAbilityEffects[baseName] = { active: true };
-    if (baseName === 'resilient') {
-      console.log('applyAbilityEffect: setting activeAbilityEffects[resilient] = { active: true }');
-    }
     effect.apply(this);
-    console.log(`Applied ability effect: ${baseName} (${effect.description})`);
   },
 
   /**
@@ -3211,25 +3232,19 @@ const App = {
    */
   hasAbilityOnSheet(baseName) {
     const normalizedBase = baseName.toLowerCase().trim();
-    const debugResilient = normalizedBase === 'resilient';
     
     // Check class abilities
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
       const inputs = classContainer.querySelectorAll('.class-ability-input');
-      if (debugResilient) console.log(`hasAbilityOnSheet('resilient'): found ${inputs.length} class ability inputs`);
       for (const input of inputs) {
         if (input.value.trim()) {
           const abilityBase = input.value.split('(')[0].trim().toLowerCase();
-          if (debugResilient) console.log(`  checking: "${input.value}" -> base: "${abilityBase}"`);
           if (abilityBase === normalizedBase) {
-            if (debugResilient) console.log(`  FOUND resilient!`);
             return true;
           }
         }
       }
-    } else {
-      if (debugResilient) console.log(`hasAbilityOnSheet('resilient'): class-abilities-list not found!`);
     }
     
     // Check species abilities
@@ -4652,13 +4667,11 @@ const App = {
     const resilientInDOM = this.hasAbilityOnSheet('resilient');
     const resilientInEffects = !!this.activeAbilityEffects['resilient'];
     const savedAbilities = this.character.combat?.specialAbilities || [];
-    console.log('recalculateAll: specialAbilities =', JSON.stringify(savedAbilities.map(a => typeof a === 'object' ? a.name : a)));
     const resilientInSaved = savedAbilities.some(a => {
       const name = (typeof a === 'object' ? a.name : a) || '';
       return name.toLowerCase().trim() === 'resilient';
     });
     const hasResilient = resilientInDOM || resilientInEffects || resilientInSaved;
-    console.log('recalculateAll: hasResilient =', hasResilient, '(DOM:', resilientInDOM, ', activeEffects:', resilientInEffects, ', saved:', resilientInSaved, '), STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
     
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
     
@@ -4822,18 +4835,15 @@ const App = {
   reapplyAbilityEffects() {
     // Remember which persistent effects were already active (don't clear them)
     const persistentEffects = {};
-    console.log('reapplyAbilityEffects: current activeAbilityEffects =', Object.keys(this.activeAbilityEffects));
     for (const [baseName, data] of Object.entries(this.activeAbilityEffects)) {
       const effect = this.ABILITY_EFFECTS[baseName];
       if (effect && effect.persistent) {
         persistentEffects[baseName] = data;
-        console.log(`  preserving persistent effect: ${baseName}`);
       }
     }
     
     // Clear non-persistent active tracking (base values were just recalculated)
     this.activeAbilityEffects = { ...persistentEffects };
-    console.log('reapplyAbilityEffects: after clear, activeAbilityEffects =', Object.keys(this.activeAbilityEffects));
     
     // Check all class abilities on the sheet and apply their effects
     const classContainer = document.getElementById('class-abilities-list');
@@ -8466,15 +8476,12 @@ const App = {
     // Damage Mod +1 step
     const dmgCurrField = document.getElementById('damage-mod-current');
     const dmgOrigField = document.getElementById('damage-mod-original');
-    console.log('applyRageBonuses: dmgCurrField =', dmgCurrField?.value, ', dmgOrigField =', dmgOrigField?.value);
     if (dmgCurrField) {
       const nextMod = this.getNextDamageModStep(dmgCurrField.value);
-      console.log('  dmgCurr: "' + dmgCurrField.value + '" -> "' + nextMod + '"');
       dmgCurrField.value = nextMod;
     }
     if (dmgOrigField) {
       const nextMod = this.getNextDamageModStep(dmgOrigField.value);
-      console.log('  dmgOrig: "' + dmgOrigField.value + '" -> "' + nextMod + '"');
       dmgOrigField.value = nextMod;
     }
     
@@ -8690,21 +8697,17 @@ const App = {
     
     const normalized = currentMod.replace(/\s/g, '');
     const currentIndex = progression.findIndex(m => m === normalized);
-    console.log('getNextDamageModStep: input="' + currentMod + '", normalized="' + normalized + '", index=' + currentIndex);
     
     if (currentIndex === -1) {
       // Not found, try to find closest match
       if (normalized === '0' || normalized === '') return '+1d2';
-      console.log('  NOT FOUND in progression, returning unchanged');
       return currentMod; // Return unchanged if unknown
     }
     
     if (currentIndex < progression.length - 1) {
-      console.log('  Found, returning next: ' + progression[currentIndex + 1]);
       return progression[currentIndex + 1];
     }
     
-    console.log('  Already at max');
     return currentMod; // Already at max
   },
   
@@ -8975,6 +8978,278 @@ const App = {
     ].filter(c => c);
     
     return classes.some(c => MAGIC_CLASSES.includes(c));
+  },
+
+  // ============================================
+  // SPELL-LIKE ABILITIES SYSTEM
+  // ============================================
+  
+  /**
+   * Spell data for Spell-Like Abilities (Abyssar species)
+   */
+  SPELL_LIKE_ABILITIES_DATA: {
+    'Affect Normal Fires': {
+      name: 'Affect Normal Fires',
+      resist: null,
+      description: `This spell allows the caster to control non-magical fires within range. The caster can increase or decrease the size, intensity, and brightness of flames, or reshape them as desired. The spell cannot create fire from nothing, nor can it extinguish fires completely—only reduce them to embers. Magical fires are unaffected.`
+    },
+    'Charm Being': {
+      name: 'Charm Being',
+      resist: 'Willpower',
+      description: `When this spell is cast, one sapient humanoid target will cease all hostilities against the mage and the mage's allies, and instead offer to help and protect them, upon failing a roll to resist. Note that helping/protecting can have an unintended or even negative effect for the caster, as the subject acts based on what it feels is the best course of action to protect/help. Regarding commands, a target will never obey suicidal or obviously harmful actions, but might be convinced that something very dangerous is worth doing.
+
+See the Master Spellbook for more information.`
+    },
+    'Detect Magic': {
+      name: 'Detect Magic',
+      resist: null,
+      description: `When successfully cast, the mage sees a glowing blue aura surrounding any magic item or spell effect within a 10' wide and 60' long path.`
+    },
+    'Fear (by Touch)': {
+      name: 'Fear (by Touch)',
+      resist: 'Willpower',
+      description: `Cause Fear requires physical contact in combat. A Failed Willpower Resistance Roll causes the victim to flee in terror at a Sprint for 1d4 Rounds, moving away from the caster. Cause Fear can be countered by Remove Fear, and vice versa.`
+    },
+    'Know Passions': {
+      name: 'Know Passions',
+      resist: 'Willpower',
+      description: `This spell allows the caster to discern the Passions and Alignment of one creature. The target may make a Willpower Resistance Roll to negate the effect. On a Failed roll, the caster immediately learns the target's Alignment (Good, Neutral, or Evil). Each additional Round of Concentration reveals one more random Passion or defining trait.
+
+The strength of any revealed Passion is determined by the Games Master using the following scale:
+
+<table>
+<tr><th>Percentage</th><th>Strength</th></tr>
+<tr><td>01-29%</td><td>Weak</td></tr>
+<tr><td>30-69%</td><td>Average</td></tr>
+<tr><td>70-99%</td><td>Strong</td></tr>
+<tr><td>100%+</td><td>Very Strong</td></tr>
+</table>`
+    },
+    'Produce Flame': {
+      name: 'Produce Flame',
+      resist: 'Evade',
+      description: `When cast, a bright flame appears in the caster's palm, equal in brightness to a torch. It does not harm the caster but produces heat and can ignite combustible materials such as cloth, paper, oil, and wood. At any point during the Duration, the caster may hurl the flame up to 40 feet. On impact, it bursts, igniting flammable materials within a 5-foot diameter. If the Duration continues, a new flame forms in the caster's hand. The caster may also end the Duration at will. Any fires started by the spell continue to burn naturally.
+
+Throwing the flame requires a Successful Throw (Athletics) skill roll, and the attack may be Evaded. If the attack misses, it lands in a random direction.
+
+Damage depends on the target's SIZ:
+<ul>
+<li>SIZ ≤ 20: 1d6 damage to 1d3+1 random Hit Locations.</li>
+<li>SIZ 21–40: 1d6 damage to 1d2+1 contiguous Hit Locations.</li>
+<li>SIZ > 40: 1d6 damage to a single Hit Location.</li>
+</ul>
+
+A successful Resistance roll halves the damage. Armor Points count as half, but magical armor applies its full Magic Bonus.
+
+The flame may ignite flammable materials.`
+    },
+    'Pyrotechnics': {
+      name: 'Pyrotechnics',
+      resist: null,
+      description: `When cast in the presence of an existing flame, this spell allows the caster to create one of two effects:
+
+<ul>
+<li><strong>Cloud of Choking Smoke:</strong> Thick, black smoke billows from the source, lasting 1 minute per point of Intensity. The smoke fills a radius equal to 100 times that of the original flame source. Example: A campfire with a 3-foot radius produces a 300-foot-radius smoke cloud. Natural vision, including Darkvision, is reduced to 2 feet. Creatures within the cloud are subject to Asphyxiation. The smoke rises freely unless confined and may be visible from far away.</li>
+<li><strong>Blinding Fireworks:</strong> Colorful fireworks explode overhead, blinding those within 120 feet who fail an Evade roll. Affected creatures are blinded for 1d4+1 Rounds. The effect covers a radius equal to 10 times the original flame's radius.</li>
+</ul>
+
+The spell typically consumes the original fire source. Larger flames may be partially extinguished; magical fires are unaffected.
+
+Flame-based entities (e.g., fire elementals) take 2d6 x Intensity damage and must pass a Willpower Resistance Roll or flee the caster for 2d4 minutes. Elemental Protection offers no defense. Pyrotechnics has no effect underwater.`
+    },
+    'Suggestion': {
+      name: 'Suggestion',
+      resist: 'Willpower',
+      description: `This spell allows the caster to influence the actions of a single individual for up to 1 hour, provided the target Fails a Resistance Roll. The caster must speak a language the target understands, and the suggestion must be phrased as a sentence or two proposing a course of action desirable to the caster.
+
+The target will not follow any suggestion that would lead to obvious harm. However, indirect or misleading suggestions – such as describing a stagnant pool of poison as a crystal-clear spring to a thirsty target – may succeed. The suggestion must be clearly stated at the time of casting. If the course of action seems especially reasonable, the Games Master may rule that the Resistance Roll is one Difficulty Grade harder.`
+    }
+  },
+
+  /**
+   * Get available spell-like ability choices
+   */
+  getSpellLikeAbilityChoices() {
+    return Object.keys(this.SPELL_LIKE_ABILITIES_DATA);
+  },
+
+  /**
+   * Prompt user to select their Spell-Like Ability
+   */
+  promptSpellLikeAbilitySelection() {
+    console.log('promptSpellLikeAbilitySelection called');
+    const choices = this.getSpellLikeAbilityChoices();
+    console.log('Spell choices:', choices);
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay spell-like-modal-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    `;
+    
+    const modal = document.createElement('div');
+    modal.className = 'spell-like-modal';
+    modal.style.cssText = `
+      background: linear-gradient(135deg, #1a1a2a 0%, #2d203d 100%);
+      border: 2px solid #8b4a8b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(139, 74, 139, 0.5);
+    `;
+    
+    modal.innerHTML = `
+      <h3 style="color: #d8a8d8; margin: 0 0 1rem 0; text-align: center; text-shadow: 0 0 10px rgba(187, 102, 187, 0.5);">
+        Choose Your Spell-Like Ability
+      </h3>
+      <p style="color: #aaa; margin-bottom: 1rem; text-align: center; font-size: 0.9rem;">
+        As an Abyssar, you have an innate magical ability. Choose wisely!
+      </p>
+      <div class="spell-choices" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        ${choices.map(spell => `
+          <button type="button" class="spell-choice-btn" data-spell="${spell}" style="
+            background: linear-gradient(135deg, #2a2a3a 0%, #3d2d4d 100%);
+            border: 1px solid #6b4a6b;
+            color: #ddd;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+          ">${spell}</button>
+        `).join('')}
+      </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Add hover effects and click handlers
+    const buttons = modal.querySelectorAll('.spell-choice-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = 'linear-gradient(135deg, #3a3a4a 0%, #4d3d5d 100%)';
+        btn.style.borderColor = '#8b6a8b';
+        btn.style.transform = 'translateX(5px)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d2d4d 100%)';
+        btn.style.borderColor = '#6b4a6b';
+        btn.style.transform = 'translateX(0)';
+      });
+      btn.addEventListener('click', () => {
+        const selectedSpell = btn.dataset.spell;
+        this.setSpellLikeAbility(selectedSpell);
+        document.body.removeChild(overlay);
+      });
+    });
+    
+    // Close on overlay click (outside modal)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        // Don't close - force selection
+      }
+    });
+  },
+
+  /**
+   * Set the selected Spell-Like Ability
+   */
+  setSpellLikeAbility(spellName) {
+    // Find the Spell-Like Abilities input in species abilities
+    const container = document.getElementById('species-abilities-list');
+    if (!container) return;
+    
+    const inputs = container.querySelectorAll('.species-ability-input');
+    for (const input of inputs) {
+      const baseName = input.value.split('(')[0].trim().toLowerCase();
+      if (baseName === 'spell-like abilities') {
+        // Update the input value with the selected spell
+        input.value = `Spell-Like Abilities (${spellName})`;
+        input.dataset.abilityName = `Spell-Like Abilities (${spellName})`;
+        break;
+      }
+    }
+    
+    // Update the spell info section
+    this.updateSpellLikeSection(spellName);
+    
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Check if character has Spell-Like Abilities and show/hide section
+   */
+  checkSpellLikeAbilitiesVisibility() {
+    const section = document.getElementById('spell-like-section');
+    if (!section) return;
+    
+    // Check species abilities for Spell-Like Abilities
+    const container = document.getElementById('species-abilities-list');
+    if (!container) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    let spellName = null;
+    const inputs = container.querySelectorAll('.species-ability-input');
+    for (const input of inputs) {
+      const value = input.value.trim();
+      if (value.toLowerCase().startsWith('spell-like abilities')) {
+        // Extract spell name from parentheses if present
+        const match = value.match(/\(([^)]+)\)/);
+        if (match) {
+          spellName = match[1];
+        }
+        break;
+      }
+    }
+    
+    if (spellName && this.SPELL_LIKE_ABILITIES_DATA[spellName]) {
+      section.style.display = '';
+      this.updateSpellLikeSection(spellName);
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  /**
+   * Update the Spell-Like Abilities info section
+   */
+  updateSpellLikeSection(spellName) {
+    const section = document.getElementById('spell-like-section');
+    const titleEl = document.getElementById('spell-like-title');
+    const descEl = document.getElementById('spell-like-description');
+    
+    if (!section || !titleEl || !descEl) return;
+    
+    const spellData = this.SPELL_LIKE_ABILITIES_DATA[spellName];
+    if (!spellData) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    section.style.display = '';
+    titleEl.textContent = spellData.name;
+    
+    let html = `<span class="spell-name">${spellData.name}</span>`;
+    if (spellData.resist) {
+      html += `<span class="spell-resist">Resist: ${spellData.resist}</span>`;
+    }
+    html += `<div class="spell-text">${spellData.description.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</div>`;
+    
+    descEl.innerHTML = html;
   },
 
   /**

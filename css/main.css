@@ -1262,6 +1262,79 @@ select:focus {
   border-color: #4a4 !important;
 }
 
+/* ============================================
+   SPELL-LIKE ABILITIES SECTION
+   ============================================ */
+.spell-like-section {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #1a1a2a 0%, #2d203d 100%);
+  border: 2px solid #8b4a8b;
+  border-radius: 8px;
+}
+
+.spell-like-section .section-header {
+  color: #b6b;
+  text-shadow: 0 0 10px rgba(187, 102, 187, 0.5);
+  margin-bottom: 0.75rem;
+}
+
+.spell-like-content {
+  padding: 0.5rem;
+}
+
+.spell-like-description {
+  color: #ddd;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.spell-like-description .spell-name {
+  color: #d8a8d8;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.spell-like-description .spell-resist {
+  color: #a8a;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.spell-like-description p {
+  margin: 0.5rem 0;
+}
+
+.spell-like-description ul {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  padding: 0;
+}
+
+.spell-like-description li {
+  margin: 0.25rem 0;
+}
+
+.spell-like-description table {
+  margin: 0.5rem 0;
+  border-collapse: collapse;
+  width: auto;
+}
+
+.spell-like-description th,
+.spell-like-description td {
+  border: 1px solid #666;
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+}
+
+.spell-like-description th {
+  background: rgba(100, 50, 100, 0.3);
+  color: #d8a8d8;
+}
+
 /* Scrollable containers */
 .scrollable-skills-container {
   max-height: 400px;
