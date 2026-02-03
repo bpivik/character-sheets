@@ -297,6 +297,9 @@ const App = {
     // Check if Berserk Rage section should be visible
     this.checkBerserkRageVisibility();
     
+    // Check if Forceful Strike section should be visible
+    this.checkForcefulStrikeVisibility();
+    
     console.log('Initialization complete!');
   },
   
@@ -3617,6 +3620,11 @@ const App = {
           this.checkBerserkRageVisibility();
         }
         
+        // Check if Forceful Strike section should now be visible
+        if (normalizedName === 'forceful strike') {
+          this.checkForcefulStrikeVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -3629,6 +3637,11 @@ const App = {
     // Check if Berserk Rage section should now be visible
     if (normalizedName === 'berserk rage') {
       this.checkBerserkRageVisibility();
+    }
+    
+    // Check if Forceful Strike section should now be visible
+    if (normalizedName === 'forceful strike') {
+      this.checkForcefulStrikeVisibility();
     }
     
     return !!newInput;
@@ -7925,6 +7938,12 @@ const App = {
       messages.push(`<br><strong>Fatigue:</strong> Already ${this.formatFatigueState(currentState)}`);
     }
     
+    // Deactivate Forceful Strike if active
+    if (this.character.isForcefulStrikeActive) {
+      this.deactivateForcefulStrike();
+      messages.push(`<br><strong>Forceful Strike:</strong> Deactivated`);
+    }
+    
     // Show the Long Rest result modal
     this.showLongRestResult(messages.join('<br>'));
   },
@@ -8042,6 +8061,11 @@ const App = {
     const stateOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
     const currentState = this.character.fatigueState || 'fresh';
     const currentIndex = stateOrder.indexOf(currentState);
+    
+    // Deactivate Forceful Strike if active (any rest action turns it off)
+    if (this.character.isForcefulStrikeActive) {
+      this.deactivateForcefulStrike();
+    }
     
     // Index boundaries for fatigue levels
     const WINDED_INDEX = 1;
@@ -8571,6 +8595,196 @@ const App = {
     this.character.rageUsesRemaining = Math.ceil(con / 4);
     this.updateBerserkRageDisplay();
     this.scheduleAutoSave();
+  },
+  
+  // ============================================
+  // FORCEFUL STRIKE SYSTEM
+  // ============================================
+  
+  /**
+   * Check if character has Forceful Strike ability and show/hide section
+   */
+  checkForcefulStrikeVisibility() {
+    const section = document.getElementById('forceful-strike-section');
+    if (!section) return;
+    
+    // Check if character has Forceful Strike ability
+    const hasForcefulStrike = this.hasAbility('Forceful Strike');
+    
+    if (hasForcefulStrike) {
+      section.style.display = '';
+      this.initForcefulStrike();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Initialize Forceful Strike system
+   */
+  initForcefulStrike() {
+    this.setupForcefulStrikeListeners();
+    
+    // Restore state if it was active
+    if (this.character.isForcefulStrikeActive) {
+      this.restoreForcefulStrikeState();
+    }
+  },
+  
+  /**
+   * Setup Forceful Strike button listeners
+   */
+  setupForcefulStrikeListeners() {
+    const toggleBtn = document.getElementById('btn-forceful-toggle');
+    
+    if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
+      toggleBtn.addEventListener('click', () => {
+        if (this.character.isForcefulStrikeActive) {
+          this.deactivateForcefulStrike();
+        } else {
+          this.activateForcefulStrike();
+        }
+      });
+      toggleBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Activate Forceful Strike
+   */
+  activateForcefulStrike() {
+    if (this.character.isForcefulStrikeActive) return;
+    
+    this.character.isForcefulStrikeActive = true;
+    
+    // Store pre-activation values
+    this.character.preForcefulValues = {
+      combatSkill: document.getElementById('combat-skill-current')?.value || '0',
+      damageMod: document.getElementById('damage-mod-current')?.value || '+0',
+      damageModOrig: document.getElementById('damage-mod-original')?.value || '+0'
+    };
+    
+    // Apply Forceful Strike effects
+    this.applyForcefulStrikeEffects();
+    
+    // Update UI
+    const toggleBtn = document.getElementById('btn-forceful-toggle');
+    const btnText = document.getElementById('forceful-btn-text');
+    
+    if (toggleBtn) {
+      toggleBtn.classList.add('active');
+    }
+    if (btnText) {
+      btnText.textContent = '⚡ Forceful Strike Active ⚡';
+    }
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Apply Forceful Strike effects
+   */
+  applyForcefulStrikeEffects() {
+    // Combat Skill -20%
+    const combatField = document.getElementById('combat-skill-current');
+    if (combatField) {
+      const curr = parseInt(combatField.value, 10) || 0;
+      combatField.value = curr - 20;
+      combatField.classList.add('forceful-penalized');
+    }
+    
+    // Damage Mod +2 steps
+    const dmgCurrField = document.getElementById('damage-mod-current');
+    const dmgOrigField = document.getElementById('damage-mod-original');
+    if (dmgCurrField) {
+      let newMod = this.getNextDamageModStep(dmgCurrField.value);
+      newMod = this.getNextDamageModStep(newMod); // +2 steps
+      dmgCurrField.value = newMod;
+      dmgCurrField.classList.add('forceful-boosted');
+    }
+    if (dmgOrigField) {
+      let newMod = this.getNextDamageModStep(dmgOrigField.value);
+      newMod = this.getNextDamageModStep(newMod); // +2 steps
+      dmgOrigField.value = newMod;
+      dmgOrigField.classList.add('forceful-boosted');
+    }
+  },
+  
+  /**
+   * Deactivate Forceful Strike
+   */
+  deactivateForcefulStrike() {
+    if (!this.character.isForcefulStrikeActive) return;
+    
+    this.character.isForcefulStrikeActive = false;
+    
+    // Remove Forceful Strike effects
+    this.removeForcefulStrikeEffects();
+    
+    // Update UI
+    const toggleBtn = document.getElementById('btn-forceful-toggle');
+    const btnText = document.getElementById('forceful-btn-text');
+    
+    if (toggleBtn) {
+      toggleBtn.classList.remove('active');
+    }
+    if (btnText) {
+      btnText.textContent = 'Activate Forceful Strike';
+    }
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Remove Forceful Strike effects
+   */
+  removeForcefulStrikeEffects() {
+    if (!this.character.preForcefulValues) return;
+    
+    // Restore Combat Skill
+    const combatField = document.getElementById('combat-skill-current');
+    if (combatField) {
+      combatField.value = this.character.preForcefulValues.combatSkill;
+      combatField.classList.remove('forceful-penalized');
+    }
+    
+    // Restore Damage Mod
+    const dmgCurrField = document.getElementById('damage-mod-current');
+    const dmgOrigField = document.getElementById('damage-mod-original');
+    if (dmgCurrField) {
+      dmgCurrField.value = this.character.preForcefulValues.damageMod;
+      dmgCurrField.classList.remove('forceful-boosted');
+    }
+    if (dmgOrigField) {
+      dmgOrigField.value = this.character.preForcefulValues.damageModOrig;
+      dmgOrigField.classList.remove('forceful-boosted');
+    }
+    
+    this.character.preForcefulValues = null;
+  },
+  
+  /**
+   * Restore Forceful Strike visual state after page load
+   */
+  restoreForcefulStrikeState() {
+    const toggleBtn = document.getElementById('btn-forceful-toggle');
+    const btnText = document.getElementById('forceful-btn-text');
+    
+    if (toggleBtn) {
+      toggleBtn.classList.add('active');
+    }
+    if (btnText) {
+      btnText.textContent = '⚡ Forceful Strike Active ⚡';
+    }
+    
+    // Re-apply visual indicators
+    const combatField = document.getElementById('combat-skill-current');
+    const dmgCurrField = document.getElementById('damage-mod-current');
+    const dmgOrigField = document.getElementById('damage-mod-original');
+    
+    if (combatField) combatField.classList.add('forceful-penalized');
+    if (dmgCurrField) dmgCurrField.classList.add('forceful-boosted');
+    if (dmgOrigField) dmgOrigField.classList.add('forceful-boosted');
   },
   
   /**
