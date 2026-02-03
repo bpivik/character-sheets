@@ -4645,11 +4645,18 @@ const App = {
     const isHuman = species === 'human';
     
     // Check if character has Resilient trait (HP uses STR+CON+SIZ)
-    // Check both the DOM and activeAbilityEffects (persistent effects may be tracked there before DOM is ready)
+    // Check multiple sources since DOM may not be populated yet during init:
+    // 1. DOM (class abilities list)
+    // 2. activeAbilityEffects (persistent effects tracking)
+    // 3. Saved character data (this.character.combat.specialAbilities)
     const resilientInDOM = this.hasAbilityOnSheet('resilient');
     const resilientInEffects = !!this.activeAbilityEffects['resilient'];
-    const hasResilient = resilientInDOM || resilientInEffects;
-    console.log('recalculateAll: hasResilient =', hasResilient, '(DOM:', resilientInDOM, ', activeEffects:', resilientInEffects, '), STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
+    const resilientInSaved = this.character.combat?.specialAbilities?.some(a => {
+      const name = (typeof a === 'object' ? a.name : a) || '';
+      return name.toLowerCase().trim() === 'resilient';
+    }) || false;
+    const hasResilient = resilientInDOM || resilientInEffects || resilientInSaved;
+    console.log('recalculateAll: hasResilient =', hasResilient, '(DOM:', resilientInDOM, ', activeEffects:', resilientInEffects, ', saved:', resilientInSaved, '), STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
     
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
     
