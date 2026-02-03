@@ -286,7 +286,9 @@ const App = {
     this.setupFatigueListeners();
     
     // Initial calculations
+    console.log('init: About to call recalculateAll');
     this.recalculateAll();
+    console.log('init: recalculateAll complete, hitLocations =', JSON.stringify(this.character.combat?.hitLocations?.map(l => l.hp)));
     
     // Restore ability effects (Agile, Artful Dodger, etc.) after calculations
     this.restoreAbilityEffects();
@@ -305,6 +307,10 @@ const App = {
     
     // Check if Forceful Strike section should be visible
     this.checkForcefulStrikeVisibility();
+    
+    // Save calculated values (like Resilient HP) after initialization
+    console.log('init: About to call scheduleAutoSave, hitLocations =', JSON.stringify(this.character.combat?.hitLocations?.map(l => l.hp)));
+    this.scheduleAutoSave();
     
     console.log('Initialization complete!');
   },
@@ -2580,11 +2586,28 @@ const App = {
   updateHitLocationHPs(hitLocations) {
     if (!hitLocations) return;
     
+    // Ensure character.combat.hitLocations exists
+    if (!this.character.combat) this.character.combat = {};
+    if (!this.character.combat.hitLocations) {
+      this.character.combat.hitLocations = [];
+    }
+    
+    console.log('updateHitLocationHPs called with:', hitLocations.map(l => l.hp));
+    
     hitLocations.forEach((loc, i) => {
       const hpInput = document.getElementById(`loc-${i}-hp`);
       if (hpInput) {
+        console.log(`  Location ${i}: DOM value ${hpInput.value} -> ${loc.hp}`);
         hpInput.value = loc.hp;
       }
+      
+      // Also update the character object so autosave picks up the change
+      if (!this.character.combat.hitLocations[i]) {
+        this.character.combat.hitLocations[i] = { armor: '', ap: '', hp: '', current: '' };
+      }
+      const oldHp = this.character.combat.hitLocations[i].hp;
+      this.character.combat.hitLocations[i].hp = loc.hp.toString();
+      console.log(`  Location ${i}: character.combat.hitLocations[${i}].hp = ${oldHp} -> ${loc.hp}`);
     });
   },
 
@@ -4614,6 +4637,7 @@ const App = {
     
     // Check if character has Resilient trait (HP uses STR+CON+SIZ)
     const hasResilient = this.hasAbilityOnSheet('resilient');
+    console.log('recalculateAll: hasResilient =', hasResilient, ', STR =', attrs.STR, ', CON =', attrs.CON, ', SIZ =', attrs.SIZ);
     
     const results = Calculator.recalculateAll(attrs, this.sheetType, combinedRank, isHuman, hasResilient);
     
@@ -4734,8 +4758,8 @@ const App = {
     // Update professional skill base values
     this.recalculateProfessionalSkillBases();
     
-    // Note: Hit location HP values are user-editable and saved/loaded from storage
-    // They are not auto-calculated from attributes
+    // Note: Hit location HP Original values are auto-calculated based on CON+SIZ (or STR+CON+SIZ with Resilient)
+    // Current HP values are user-editable and saved/loaded from storage
     
     // Update combat quick reference
     this.updateCombatQuickRef();
