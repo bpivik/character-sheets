@@ -171,15 +171,14 @@ const App = {
     },
     'resilient': {
       description: 'Hit Points calculated with STR+CON+SIZ instead of CON+SIZ',
+      persistent: true, // Only apply once when gained - HP calculation checks for this
       apply: function(app) {
-        // Mark Resilient as active and trigger HP recalculation
-        app.activeAbilityEffects['resilient'] = { active: true };
-        app.recalculateAll();
+        // Mark Resilient as active - HP calculation in recalculateAll will use STR+CON+SIZ
+        // Don't call recalculateAll here - it will be called after ability is applied
       },
       remove: function(app) {
-        // Remove Resilient flag and trigger HP recalculation
-        delete app.activeAbilityEffects['resilient'];
-        app.recalculateAll();
+        // Remove Resilient flag - HP calculation will use standard CON+SIZ
+        // recalculateAll will be called after ability is removed
       }
     }
   },
@@ -8205,37 +8204,10 @@ const App = {
    */
   checkBerserkRageVisibility() {
     const section = document.getElementById('berserk-rage-section');
-    if (!section) {
-      console.log('Berserk Rage: Section element not found');
-      return;
-    }
+    if (!section) return;
     
-    // Check all class ability inputs
-    const classAbilities = document.getElementById('class-abilities-list');
-    let hasBerserkRage = false;
-    
-    if (classAbilities) {
-      const inputs = classAbilities.querySelectorAll('.class-ability-input');
-      console.log('Berserk Rage: Found', inputs.length, 'class ability inputs');
-      
-      for (const input of inputs) {
-        const val = input.value.toLowerCase().trim();
-        console.log('Berserk Rage: Checking ability:', input.value);
-        if (val === 'berserk rage') {
-          hasBerserkRage = true;
-          break;
-        }
-      }
-    }
-    
-    // Also check acquiredAbilities
-    if (!hasBerserkRage && this.character.acquiredAbilities) {
-      hasBerserkRage = this.character.acquiredAbilities.some(a => 
-        a.toLowerCase().trim() === 'berserk rage'
-      );
-    }
-    
-    console.log('Berserk Rage: Has ability =', hasBerserkRage);
+    // Check if character has Berserk Rage ability
+    const hasBerserkRage = this.hasAbility('Berserk Rage');
     
     if (hasBerserkRage) {
       section.style.display = '';
