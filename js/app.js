@@ -1224,7 +1224,15 @@ const App = {
           if (e.target.dataset.originalValue !== undefined) {
             e.target.dataset.originalValue = e.target.value;
           }
-          this.character.standardSkills[skillKey] = e.target.value;
+          
+          // Special handling for Evade when Artful Dodger is active
+          // Save the BASE value (without the +10 bonus)
+          if (skillKey === 'evade' && this.character.artfulDodgerActive) {
+            const displayedValue = parseInt(e.target.value, 10) || 0;
+            this.character.standardSkills[skillKey] = Math.max(0, displayedValue - 10).toString();
+          } else {
+            this.character.standardSkills[skillKey] = e.target.value;
+          }
         }
         
         this.updateCombatQuickRef();
@@ -4324,6 +4332,10 @@ const App = {
    * Restore ability effects on page load
    */
   restoreAbilityEffects() {
+    // Reset Artful Dodger active state so it gets applied fresh
+    // (The saved Evade value is the BASE value without the bonus)
+    this.character.artfulDodgerActive = false;
+    
     // Check all class abilities on the sheet and apply their effects
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
@@ -9760,6 +9772,9 @@ const App = {
     const currField = document.getElementById('evade-current');
     if (!currField) return;
     
+    // Set active flag BEFORE changing value so save handler knows to subtract 10
+    this.character.artfulDodgerActive = true;
+    
     // Store the base value without bonus if not already stored
     if (!this.character.evadeWithoutArtfulDodger) {
       this.character.evadeWithoutArtfulDodger = currField.value;
@@ -9772,7 +9787,6 @@ const App = {
     currField.classList.add('artful-dodger-bonus');
     currField.title = '+10 due to Artful Dodger';
     
-    this.character.artfulDodgerActive = true;
     this.scheduleAutoSave();
   },
   
@@ -9783,7 +9797,12 @@ const App = {
     const currField = document.getElementById('evade-current');
     if (!currField) return;
     
-    if (this.character.artfulDodgerActive) {
+    const wasActive = this.character.artfulDodgerActive;
+    
+    // Set active flag to FALSE BEFORE changing value so save handler saves raw value
+    this.character.artfulDodgerActive = false;
+    
+    if (wasActive) {
       const currVal = parseInt(currField.value, 10) || 0;
       currField.value = Math.max(0, currVal - 10);
       
@@ -9795,7 +9814,6 @@ const App = {
     currField.classList.remove('artful-dodger-bonus');
     currField.title = '';
     
-    this.character.artfulDodgerActive = false;
     this.scheduleAutoSave();
   },
   
