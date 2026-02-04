@@ -10189,6 +10189,13 @@ const App = {
       window.WeaponData.updateAllWeaponDamage();
     }
     
+    // Style all weapon damage fields green
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      field.classList.add('forceful-boosted');
+      field.title = 'Increased damage modifier with Forceful Strike';
+    });
+    
     // Update summary page
     this.refreshSummaryWidgets();
   },
@@ -10250,6 +10257,13 @@ const App = {
       window.WeaponData.updateAllWeaponDamage();
     }
     
+    // Remove styling from all weapon damage fields
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      field.classList.remove('forceful-boosted');
+      field.title = '';
+    });
+    
     // Update summary page
     this.refreshSummaryWidgets();
     
@@ -10284,6 +10298,13 @@ const App = {
       dmgCurrField.title = 'Forceful Strike: +2 steps';
     }
     if (dmgOrigField) dmgOrigField.classList.add('forceful-boosted');
+    
+    // Style all weapon damage fields green
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      field.classList.add('forceful-boosted');
+      field.title = 'Increased damage modifier with Forceful Strike';
+    });
   },
   
   /**
