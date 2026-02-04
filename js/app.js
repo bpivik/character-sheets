@@ -1476,6 +1476,19 @@ const App = {
         }
       });
     }
+    
+    // Event delegation for weapon damage dice buttons on Combat page
+    document.addEventListener('click', (e) => {
+      const diceBtn = e.target.closest('.weapon-dice-btn');
+      if (diceBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const damageInput = diceBtn.parentElement?.querySelector('.weapon-damage');
+        if (damageInput && damageInput.value) {
+          this.rollDamage(damageInput.value);
+        }
+      }
+    });
   },
   
   /**
