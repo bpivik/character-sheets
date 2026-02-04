@@ -1208,6 +1208,13 @@ select:focus {
   border-color: #a44 !important;
 }
 
+/* Artful Dodger bonus styling */
+.artful-dodger-bonus {
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
+}
+
 /* ============================================
    FORCEFUL STRIKE SECTION
    ============================================ */
