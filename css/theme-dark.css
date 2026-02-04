@@ -779,6 +779,23 @@
   color: var(--text-secondary);
 }
 
+[data-theme="dark"] .ability-callout {
+  background: rgba(70, 130, 180, 0.18);
+  border-left-color: #5a9fcf;
+}
+
+[data-theme="dark"] .ability-nav-btn {
+  background: #4a8ab5;
+}
+
+[data-theme="dark"] .ability-nav-btn:hover {
+  background: #5a9fcf;
+}
+
+[data-theme="dark"] .short-rest-divider {
+  border-top-color: #444;
+}
+
 /* Species Abilities Section - Dark Mode */
 [data-theme="dark"] .species-abilities-section {
   background: rgba(0,0,0,0.3);

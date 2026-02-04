@@ -9257,6 +9257,13 @@ const App = {
           }
         }
       });
+      
+      // Show/hide Second Wind option based on ability
+      const hasSecondWind = this.hasAbility('Second Wind');
+      const secondWindOption = document.getElementById('second-wind-option');
+      const secondWindDivider = document.getElementById('second-wind-divider');
+      if (secondWindOption) secondWindOption.style.display = hasSecondWind ? '' : 'none';
+      if (secondWindDivider) secondWindDivider.style.display = hasSecondWind ? '' : 'none';
     }
   },
 
@@ -9409,6 +9416,24 @@ const App = {
         
         messages.push('You waste 15 minutes doing nothing useful.');
         this.showShortRestResult('success', messages.join('<br>'));
+        break;
+      }
+
+      case 'second-wind': {
+        let messages = [];
+        
+        if (currentIndex === 0) {
+          messages.push('Already at Fresh — no fatigue to recover.');
+          this.showShortRestResult('info', messages.join('<br>'));
+        } else {
+          // Remove up to 3 levels of fatigue
+          const levelsToRemove = Math.min(3, currentIndex);
+          const newIndex = currentIndex - levelsToRemove;
+          this.setFatigueState(stateOrder[newIndex], true);
+          messages.push(`<strong>Second Wind!</strong> After a 1 hour rest, you recover ${levelsToRemove} level${levelsToRemove > 1 ? 's' : ''} of Fatigue.`);
+          messages.push(`${this.formatFatigueState(currentState)} → ${this.formatFatigueState(stateOrder[newIndex])}`);
+          this.showShortRestResult('success', messages.join('<br>'));
+        }
         break;
       }
     }
