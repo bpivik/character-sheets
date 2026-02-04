@@ -2898,11 +2898,24 @@ const App = {
           /
           <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
         </td>
+        <td><span class="wound-status" id="loc-${i}-status" data-status="none">—</span></td>
       `;
       tbody.appendChild(tr);
       
+      // Add wound status update listener
+      const currentInput = tr.querySelector('.hp-current');
+      const maxInput = tr.querySelector('.hp-max-input');
+      const statusSpan = tr.querySelector('.wound-status');
+      
+      if (currentInput && statusSpan) {
+        currentInput.addEventListener('input', () => {
+          this.updateWoundStatus(i);
+          this.scheduleAutoSave();
+        });
+      }
+      
       // Add event listeners (only for editable inputs)
-      tr.querySelectorAll('input:not([readonly])').forEach(input => {
+      tr.querySelectorAll('input:not([readonly]):not(.hp-current)').forEach(input => {
         input.addEventListener('input', () => this.scheduleAutoSave());
       });
       
@@ -2969,6 +2982,9 @@ const App = {
       }
       this.character.combat.hitLocations[i].hp = loc.hp.toString();
     });
+    
+    // Update wound statuses since max HP may have changed
+    this.updateAllWoundStatuses();
   },
 
   /**
@@ -3001,6 +3017,9 @@ const App = {
       }
     });
     
+    // Update all wound statuses
+    this.updateAllWoundStatuses();
+    
     // Close modal
     this.closeHealModal();
     
@@ -3019,6 +3038,61 @@ const App = {
     if (modal) {
       modal.classList.add('hidden');
     }
+  },
+
+  /**
+   * Update wound status for a specific hit location
+   */
+  updateWoundStatus(locationIndex) {
+    const maxInput = document.getElementById(`loc-${locationIndex}-hp`);
+    const currentInput = document.getElementById(`loc-${locationIndex}-current`);
+    const statusSpan = document.getElementById(`loc-${locationIndex}-status`);
+    
+    if (!maxInput || !currentInput || !statusSpan) return;
+    
+    const maxHP = parseInt(maxInput.value, 10) || 0;
+    const currentHP = parseInt(currentInput.value, 10);
+    
+    // If current is empty or NaN, show no status
+    if (isNaN(currentHP) || currentInput.value === '') {
+      statusSpan.textContent = '—';
+      statusSpan.dataset.status = 'none';
+      statusSpan.className = 'wound-status';
+      return;
+    }
+    
+    let status, statusClass;
+    
+    if (currentHP >= maxHP) {
+      status = 'No Damage';
+      statusClass = 'wound-none';
+    } else if (currentHP > 0) {
+      status = 'Minor Wound';
+      statusClass = 'wound-minor';
+    } else if (currentHP > -maxHP) {
+      status = 'Serious Wound';
+      statusClass = 'wound-serious';
+    } else {
+      status = 'Major Wound';
+      statusClass = 'wound-major';
+    }
+    
+    statusSpan.textContent = status;
+    statusSpan.dataset.status = statusClass;
+    statusSpan.className = `wound-status ${statusClass}`;
+  },
+
+  /**
+   * Update all wound statuses
+   */
+  updateAllWoundStatuses() {
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+      this.updateWoundStatus(i);
+    });
   },
 
   /**
@@ -3064,6 +3138,9 @@ const App = {
       if (hpInput && loc.hp !== undefined && loc.hp !== '') hpInput.value = loc.hp;
       if (currentInput && loc.current) currentInput.value = loc.current;
     });
+    
+    // Update wound statuses after loading
+    this.updateAllWoundStatuses();
   },
 
   /**

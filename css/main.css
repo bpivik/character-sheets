@@ -2541,6 +2541,59 @@ select:focus {
   display: inline-block;
 }
 
+/* Wound Status Column */
+.hit-location-table th:nth-child(6),
+.hit-location-table td:nth-child(6) {
+  width: 100px;
+  text-align: center;
+}
+
+.wound-status {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.wound-status.wound-none {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  box-shadow: 0 1px 3px rgba(46, 125, 50, 0.2);
+}
+
+.wound-status.wound-minor {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  color: #f57f17;
+  border: 1px solid #ffd54f;
+  box-shadow: 0 1px 3px rgba(245, 127, 23, 0.2);
+}
+
+.wound-status.wound-serious {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  box-shadow: 0 1px 3px rgba(198, 40, 40, 0.2);
+}
+
+.wound-status.wound-major {
+  background: linear-gradient(135deg, #4a0000 0%, #7b0000 100%);
+  color: #fff;
+  border: 1px solid #b71c1c;
+  box-shadow: 0 1px 4px rgba(183, 28, 28, 0.4);
+  animation: major-wound-pulse 2s infinite;
+}
+
+@keyframes major-wound-pulse {
+  0%, 100% { box-shadow: 0 1px 4px rgba(183, 28, 28, 0.4); }
+  50% { box-shadow: 0 2px 8px rgba(183, 28, 28, 0.7), 0 0 12px rgba(183, 28, 28, 0.3); }
+}
+
 /* Hit Locations section header */
 .hit-locations .section-header-row {
   display: flex;

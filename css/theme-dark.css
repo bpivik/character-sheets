@@ -821,3 +821,28 @@
   filter: invert(1) brightness(1.5);
   opacity: 1;
 }
+
+/* Wound Status - Dark Mode */
+[data-theme="dark"] .wound-status.wound-none {
+  background: linear-gradient(135deg, #1b3d1b 0%, #2a5a2a 100%);
+  color: #81c784;
+  border-color: #4caf50;
+}
+
+[data-theme="dark"] .wound-status.wound-minor {
+  background: linear-gradient(135deg, #3d3012 0%, #5a481a 100%);
+  color: #ffd54f;
+  border-color: #ff8f00;
+}
+
+[data-theme="dark"] .wound-status.wound-serious {
+  background: linear-gradient(135deg, #3d1212 0%, #5a1a1a 100%);
+  color: #ef9a9a;
+  border-color: #f44336;
+}
+
+[data-theme="dark"] .wound-status.wound-major {
+  background: linear-gradient(135deg, #2a0000 0%, #4a0000 100%);
+  color: #ffcdd2;
+  border-color: #b71c1c;
+}
