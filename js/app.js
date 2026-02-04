@@ -1590,6 +1590,34 @@ const App = {
         }
       }
     });
+    
+    // Add to Combat Skill rows (Combat/Abilities page)
+    document.querySelectorAll('.combat-skill-row').forEach(row => {
+      if (row.querySelector('.d100-btn')) return;
+      
+      // Get skill name - could be input or span (for Unarmed)
+      const nameInput = row.querySelector('.combat-skill-name');
+      const skillName = nameInput?.tagName === 'INPUT' ? nameInput.value : nameInput?.textContent;
+      const valueInput = row.querySelector('.combat-skill-percent');
+      const encIndicator = row.querySelector('.enc-indicator');
+      
+      if (valueInput) {
+        const btn = createDiceButton(
+          () => {
+            const currentName = nameInput?.tagName === 'INPUT' ? nameInput.value : nameInput?.textContent;
+            return currentName || 'Combat Skill';
+          },
+          () => parseInt(valueInput.value) || 0
+        );
+        
+        // Insert after percent input, before enc-indicator
+        if (encIndicator) {
+          row.insertBefore(btn, encIndicator);
+        } else {
+          valueInput.after(btn);
+        }
+      }
+    });
   },
   
   /**

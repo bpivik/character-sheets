@@ -2453,20 +2453,22 @@ select:focus {
   margin-bottom: 1rem;
 }
 
-.combat-skill-header {
+.combat-skills-section > .combat-skill-header {
   display: grid;
-  grid-template-columns: 42px 200px 55px 12px 1fr 65px;
+  grid-template-columns: 42px 200px 55px 24px 12px 1fr 65px;
   gap: 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-header);
   padding: 0.25rem 0.3rem;
   background: rgba(0,0,0,0.08);
   border: 1px solid var(--border-light);
 }
 
-.combat-skill-row {
+.combat-skills-section > .combat-skill-row {
   display: grid;
-  grid-template-columns: 42px 200px 55px 12px 1fr 65px;
+  grid-template-columns: 42px 200px 55px 24px 12px 1fr 65px;
   gap: 0.4rem;
   padding: 0.2rem 0.3rem;
   border: 1px solid var(--border-light);
@@ -2474,11 +2476,22 @@ select:focus {
   font-size: 0.82rem;
 }
 
-.combat-skill-row .enc-indicator {
+.combat-skills-section .combat-skill-row .d100-btn {
+  padding: 0;
+  margin: 0;
   align-self: center;
 }
 
-.combat-skill-row .prereq-keys {
+.combat-skills-section .combat-skill-row .d10-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.combat-skills-section .combat-skill-row .enc-indicator {
+  align-self: center;
+}
+
+.combat-skills-section .combat-skill-row .prereq-keys {
   display: flex;
   gap: 2px;
   align-items: center;
@@ -2498,7 +2511,7 @@ select:focus {
   border-color: var(--input-focus);
 }
 
-.combat-skill-row.unarmed .combat-skill-name {
+.combat-skills-section .combat-skill-row.unarmed .combat-skill-name {
   background: transparent;
   border: none;
   font-weight: 500;
@@ -2533,7 +2546,7 @@ select:focus {
   border-color: var(--input-focus);
 }
 
-.combat-skill-row.unarmed .combat-weapons-known {
+.combat-skills-section .combat-skill-row.unarmed .combat-weapons-known {
   background: transparent;
   border: none;
 }
