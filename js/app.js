@@ -16,7 +16,7 @@ const App = {
   // Ability effects configuration - abilities that modify stats/skills
   ABILITY_EFFECTS: {
     'agile': {
-      description: '+4 Initiative (when Unburdened, light armor, 60%+ Evade/Acrobatics)',
+      description: '+4 Initiative (when Unburdened, light armor, 50%+ Evade/Acrobatics)',
       apply: function(app) {
         // Don't apply bonus directly - it's managed by checkAgileBonus based on conditions
         // Just mark that the ability is present and trigger a check
@@ -9867,7 +9867,7 @@ const App = {
    * Check if Agile bonus should be applied based on conditions:
    * 1. Must be Unburdened (ENC < STR×2)
    * 2. Must be wearing light armor or less
-   * 3. Must have 60%+ in Evade or Acrobatics
+   * 3. Must have 50%+ in Evade or Acrobatics
    */
   checkAgileBonus() {
     // Check if character has Agile ability
@@ -9933,7 +9933,7 @@ const App = {
   },
   
   /**
-   * Check if character has 60%+ in Evade or Acrobatics for Agile
+   * Check if character has 50%+ in Evade or Acrobatics for Agile
    */
   checkAgileSkillRequirement() {
     // Check Evade
@@ -9943,7 +9943,7 @@ const App = {
     if (this.character.artfulDodgerActive) {
       evadeVal = this.getEvadeWithoutArtfulDodger();
     }
-    if (evadeVal >= 60) return true;
+    if (evadeVal >= 50) return true;
     
     // Check Acrobatics (professional skill)
     for (let i = 0; i < 22; i++) {
@@ -9953,7 +9953,7 @@ const App = {
         const skillName = (nameField.value || '').toLowerCase().trim();
         if (skillName === 'acrobatics') {
           const skillVal = parseInt(currentField.value, 10) || 0;
-          if (skillVal >= 60) return true;
+          if (skillVal >= 50) return true;
         }
       }
     }

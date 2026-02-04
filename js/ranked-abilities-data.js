@@ -165,6 +165,52 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  berserker: [
+    // Rank 1
+    { 
+      name: "Agile", 
+      rank: 1, 
+      prereqs: "Evade 50% OR Acrobatics 50%",
+      summary: "+4 Initiative (Unburdened, Light armor max)"
+    },
+    { 
+      name: "Forceful Strike", 
+      rank: 1, 
+      prereqs: "Brawn 50% OR Mysticism 50%; Combat Style 50%",
+      summary: "-1 grade to attack, +2 grades to Damage Modifier"
+    },
+    { 
+      name: "Just a Scratch", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: Heal one hit location by Healing Rate (not Major Wounds)"
+    },
+    { 
+      name: "Second Wind", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: After 1hr rest, recover up to 3 Fatigue levels"
+    },
+    { 
+      name: "Skirmishing", 
+      rank: 1, 
+      prereqs: "Athletics 50%; Combat Style 50%",
+      summary: "Ranged attacks while running (capped by Athletics)"
+    },
+    { 
+      name: "Sweeping Strike", 
+      rank: 1, 
+      prereqs: "Forceful Strike; Combat Style 60%",
+      summary: "Free attack on nearby foe when you drop an opponent (1/round)"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+  ],
+  
   // More classes to be added...
 };
 
