@@ -981,3 +981,12 @@
 [data-theme="dark"] .finish-game-summary .exp-new {
   color: #e1bee7;
 }
+
+/* Beliefs widget - Dark Mode */
+[data-theme="dark"] .widget-content .beliefs-section strong {
+  color: #aaa;
+}
+
+[data-theme="dark"] .widget-content .beliefs-section .skill-item {
+  border-bottom-color: #3a3a3a;
+}

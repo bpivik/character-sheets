@@ -6436,6 +6436,36 @@ select:focus {
   border-bottom: none;
 }
 
+/* Beliefs widget sections */
+.widget-content .beliefs-section {
+  margin-bottom: 0.75rem;
+}
+
+.widget-content .beliefs-section:last-child {
+  margin-bottom: 0;
+}
+
+.widget-content .beliefs-section strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.widget-content .beliefs-section .skill-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px dotted #eee;
+  font-size: 0.95rem;
+}
+
+.widget-content .beliefs-section .skill-item:last-child {
+  border-bottom: none;
+}
+
 /* Bold styles for skill names and values */
 .widget-content .skill-name-bold {
   font-weight: 700;

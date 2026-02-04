@@ -11427,6 +11427,82 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         return html;
       }
     },
+    'beliefs': {
+      name: 'Beliefs',
+      icon: '⚖️',
+      render: () => {
+        let html = '<h4>Beliefs</h4>';
+        
+        // Alignment
+        const alignmentContainer = document.getElementById('alignment-container');
+        if (alignmentContainer) {
+          const alignmentRows = alignmentContainer.querySelectorAll('.belief-row');
+          if (alignmentRows.length > 0) {
+            html += '<div class="beliefs-section"><strong>Alignment</strong>';
+            alignmentRows.forEach((row, idx) => {
+              const index = row.dataset.index || (idx + 1);
+              const name = document.getElementById(`alignment-${index}-name`)?.value || '';
+              const current = document.getElementById(`alignment-${index}-current`)?.value || '-';
+              if (name.trim()) {
+                html += `<div class="skill-item"><span>${name}</span><span>${current}%</span></div>`;
+              }
+            });
+            html += '</div>';
+          }
+        }
+        
+        // Passions
+        const passionsContainer = document.getElementById('passions-container');
+        if (passionsContainer) {
+          const passionRows = passionsContainer.querySelectorAll('.belief-row');
+          const passionEntries = [];
+          passionRows.forEach((row, idx) => {
+            const index = row.dataset.index || (idx + 1);
+            const name = document.getElementById(`passion-${index}-name`)?.value || '';
+            const current = document.getElementById(`passion-${index}-current`)?.value || '-';
+            if (name.trim()) {
+              passionEntries.push({ name, current });
+            }
+          });
+          if (passionEntries.length > 0) {
+            html += '<div class="beliefs-section"><strong>Passions</strong>';
+            passionEntries.forEach(p => {
+              html += `<div class="skill-item"><span>${p.name}</span><span>${p.current}%</span></div>`;
+            });
+            html += '</div>';
+          }
+        }
+        
+        // Oaths
+        const oathsContainer = document.getElementById('oaths-container');
+        if (oathsContainer) {
+          const oathRows = oathsContainer.querySelectorAll('.belief-row');
+          const oathEntries = [];
+          oathRows.forEach((row, idx) => {
+            const index = row.dataset.index || (idx + 1);
+            const name = document.getElementById(`oath-${index}-name`)?.value || '';
+            const current = document.getElementById(`oath-${index}-current`)?.value || '-';
+            if (name.trim()) {
+              oathEntries.push({ name, current });
+            }
+          });
+          if (oathEntries.length > 0) {
+            html += '<div class="beliefs-section"><strong>Oaths</strong>';
+            oathEntries.forEach(o => {
+              html += `<div class="skill-item"><span>${o.name}</span><span>${o.current}%</span></div>`;
+            });
+            html += '</div>';
+          }
+        }
+        
+        // If nothing to show
+        if (html === '<h4>Beliefs</h4>') {
+          html += '<div class="skill-item"><span>No beliefs defined</span></div>';
+        }
+        
+        return html;
+      }
+    },
     'movement': {
       name: 'Movement',
       icon: '🏃',
@@ -12010,6 +12086,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       // Skip dynamic widgets that aren't available
       if (widget.dynamic && widget.isAvailable && !widget.isAvailable()) return;
       
+      // Skip widgets that have hasContent check and return false (e.g., magic-skills when no magic class)
+      if (widget.hasContent && !widget.hasContent()) return;
+      
       const item = document.createElement('div');
       item.className = 'widget-item';
       item.draggable = true;
@@ -12039,7 +12118,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     canvas.innerHTML = '';
     
     widgetIds.forEach(id => {
-      if (this.summaryWidgets[id]) {
+      const widget = this.summaryWidgets[id];
+      if (widget) {
+        // Skip widgets that have hasContent check and return false
+        if (widget.hasContent && !widget.hasContent()) return;
         this.addWidgetToCanvas(id, false);
       }
     });
