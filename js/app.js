@@ -10725,17 +10725,20 @@ const App = {
    */
   getInjuredLocations() {
     const locations = [];
-    const hitLocRows = document.querySelectorAll('.hit-location-row');
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return locations;
     
-    hitLocRows.forEach((row, index) => {
-      const nameEl = row.querySelector('.loc-name');
+    const rows = tbody.querySelectorAll('tr');
+    
+    rows.forEach((row, index) => {
+      const cells = row.querySelectorAll('td');
       const currentInput = row.querySelector('.hp-current');
-      const maxEl = row.querySelector('.hp-max');
+      const maxInput = row.querySelector('.hp-max-input');
       
-      if (nameEl && currentInput && maxEl) {
-        const name = nameEl.textContent.trim();
+      if (cells.length >= 2 && currentInput && maxInput) {
+        const name = cells[1].textContent.trim(); // Location name is in 2nd cell
         const currentHP = parseInt(currentInput.value, 10) || 0;
-        const maxHP = parseInt(maxEl.textContent, 10) || 0;
+        const maxHP = parseInt(maxInput.value, 10) || 0;
         
         // Only include if injured (current < max) and not a Major Wound (current >= -maxHP)
         // Major Wound is when damage equals or exceeds the location's max HP
@@ -10760,25 +10763,32 @@ const App = {
     const healingRate = parseInt(document.getElementById('healing-rate-current')?.value, 10) || 
                         parseInt(document.getElementById('healing-rate-original')?.value, 10) || 1;
     
-    const hitLocRows = document.querySelectorAll('.hit-location-row');
-    const row = hitLocRows[locIndex];
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) {
+      alert('Error: Could not find hit locations.');
+      return;
+    }
+    
+    const rows = tbody.querySelectorAll('tr');
+    const row = rows[locIndex];
     
     if (!row) {
       alert('Error: Could not find hit location.');
       return;
     }
     
-    const nameEl = row.querySelector('.loc-name');
+    const cells = row.querySelectorAll('td');
     const currentInput = row.querySelector('.hp-current');
-    const maxEl = row.querySelector('.hp-max');
+    const maxInput = row.querySelector('.hp-max-input');
     
-    if (!currentInput || !maxEl) {
+    if (!currentInput || !maxInput) {
       alert('Error: Could not find HP fields.');
       return;
     }
     
+    const locName = cells.length >= 2 ? cells[1].textContent.trim() : 'Location';
     const currentHP = parseInt(currentInput.value, 10) || 0;
-    const maxHP = parseInt(maxEl.textContent, 10) || 0;
+    const maxHP = parseInt(maxInput.value, 10) || 0;
     const newHP = Math.min(maxHP, currentHP + healingRate);
     
     // Apply healing
@@ -10794,7 +10804,6 @@ const App = {
     this.closeJustAScratchLocationModal();
     
     // Show confirmation
-    const locName = nameEl?.textContent.trim() || 'Location';
     alert(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP}).`);
     
     this.scheduleAutoSave();
