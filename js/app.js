@@ -8657,29 +8657,33 @@ const App = {
    * Update total encumbrance
    */
   updateTotalEnc() {
-    if (!this.character.encAutomation) {
-      return;
-    }
-    
     let total = 0;
     
-    // Equipment ENC
-    for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
-      const encInput = document.getElementById(`equip-${i}-enc`);
-      if (encInput && encInput.value) {
-        total += parseFloat(encInput.value) || 0;
+    // Only auto-calculate total if automation is enabled
+    if (this.character.encAutomation) {
+      // Equipment ENC
+      for (let i = 0; i < EQUIPMENT_SLOTS; i++) {
+        const encInput = document.getElementById(`equip-${i}-enc`);
+        if (encInput && encInput.value) {
+          total += parseFloat(encInput.value) || 0;
+        }
       }
+      
+      // Money ENC (every 100 coins = 1 Thing)
+      const moneyEnc = this.updateMoneyEnc();
+      total += moneyEnc;
+      
+      const totalDisplay = document.getElementById('total-enc');
+      if (totalDisplay) {
+        totalDisplay.textContent = total.toFixed(1);
+      }
+    } else {
+      // Automation is off - read the manually entered total
+      const totalDisplay = document.getElementById('total-enc');
+      total = parseFloat(totalDisplay?.textContent) || 0;
     }
     
-    // Money ENC (every 100 coins = 1 Thing)
-    const moneyEnc = this.updateMoneyEnc();
-    total += moneyEnc;
-    
-    const totalDisplay = document.getElementById('total-enc');
-    if (totalDisplay) {
-      totalDisplay.textContent = total.toFixed(1);
-    }
-    
+    // Always calculate and display ENC status (needed for abilities like Artful Dodger, Agile)
     const STR = parseInt(this.character.attributes.STR) || 0;
     const status = Calculator.getEncStatus(total, STR);
     
