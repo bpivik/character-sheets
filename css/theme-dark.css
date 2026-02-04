@@ -997,3 +997,21 @@
   border-color: #3a9b3a !important;
   color: #5fcf5f !important;
 }
+
+/* Agile bonus - Dark Mode */
+[data-theme="dark"] .agile-bonus {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+/* Just a Scratch Modal - Dark Mode */
+[data-theme="dark"] .btn-location {
+  background: linear-gradient(135deg, #3a4a4a 0%, #4a5a5a 100%);
+  border-color: #5a8a8a;
+}
+
+[data-theme="dark"] .btn-location:hover {
+  background: linear-gradient(135deg, #4a5a5a 0%, #5a6a6a 100%);
+  border-color: #7cc;
+}

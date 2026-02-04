@@ -16,30 +16,17 @@ const App = {
   // Ability effects configuration - abilities that modify stats/skills
   ABILITY_EFFECTS: {
     'agile': {
-      description: '+4 Initiative',
+      description: '+4 Initiative (when Unburdened, light armor, 60%+ Evade/Acrobatics)',
       apply: function(app) {
-        const origField = document.getElementById('initiative-original');
-        const currField = document.getElementById('initiative-current');
-        if (origField) {
-          const origVal = parseInt(origField.value, 10) || 0;
-          origField.value = origVal + 4;
-        }
-        if (currField) {
-          const currVal = parseInt(currField.value, 10) || 0;
-          currField.value = currVal + 4;
-        }
+        // Don't apply bonus directly - it's managed by checkAgileBonus based on conditions
+        // Just mark that the ability is present and trigger a check
+        app.character.hasAgile = true;
+        app.checkAgileBonus();
       },
       remove: function(app) {
-        const origField = document.getElementById('initiative-original');
-        const currField = document.getElementById('initiative-current');
-        if (origField) {
-          const origVal = parseInt(origField.value, 10) || 0;
-          origField.value = origVal - 4;
-        }
-        if (currField) {
-          const currVal = parseInt(currField.value, 10) || 0;
-          currField.value = currVal - 4;
-        }
+        // Remove the bonus if it was active
+        app.character.hasAgile = false;
+        app.removeAgileBonus();
       }
     },
     'artful dodger': {
@@ -303,12 +290,19 @@ const App = {
     // Check if Spell-Like Abilities section should be visible
     this.checkSpellLikeAbilitiesVisibility();
     
+    // Check if Just a Scratch section should be visible
+    this.checkJustAScratchVisibility();
+    
     // Final Artful Dodger check - ensure bonus is applied after all initialization is complete
     // This handles edge cases where ENC status wasn't populated during restoreAbilityEffects
     setTimeout(() => {
       if (this.hasAbility('Artful Dodger')) {
         this.character.hasArtfulDodger = true;
         this.checkArtfulDodgerBonus();
+      }
+      if (this.hasAbility('Agile')) {
+        this.character.hasAgile = true;
+        this.checkAgileBonus();
       }
     }, 50);
     
@@ -1184,7 +1178,14 @@ const App = {
             }
           }
           
-          this.character.derived[key] = e.target.dataset.originalValue || e.target.value;
+          // Special handling for Initiative when Agile is active
+          // Save the BASE value (without the +4 bonus)
+          if (fieldId === 'initiative-current' && this.character.agileActive) {
+            const displayedValue = parseInt(e.target.value, 10) || 0;
+            this.character.derived[key] = Math.max(0, displayedValue - 4).toString();
+          } else {
+            this.character.derived[key] = e.target.dataset.originalValue || e.target.value;
+          }
           this.scheduleAutoSave();
           
           // Update weapon damages when damage modifier changes
@@ -3158,6 +3159,9 @@ const App = {
           }
           
           armorInput.dataset.previousArmor = currentArmor;
+          
+          // Check Agile bonus (depends on armor type)
+          this.checkAgileBonus();
         });
         
         // Track when user manually edits AP
@@ -4345,6 +4349,10 @@ const App = {
     // (The saved Evade value is the BASE value without the bonus)
     this.character.artfulDodgerActive = false;
     
+    // Reset Agile active state so it gets applied fresh
+    // (The saved Initiative value is the BASE value without the bonus)
+    this.character.agileActive = false;
+    
     // Check all class abilities on the sheet and apply their effects
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
@@ -4729,6 +4737,11 @@ const App = {
           this.checkBruteStrengthVisibility();
         }
         
+        // Check if Just a Scratch section should now be visible
+        if (normalizedName === 'just a scratch') {
+          this.checkJustAScratchVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -4751,6 +4764,11 @@ const App = {
     // Check if Brute Strength section should now be visible
     if (normalizedName === 'brute strength') {
       this.checkBruteStrengthVisibility();
+    }
+    
+    // Check if Just a Scratch section should now be visible
+    if (normalizedName === 'just a scratch') {
+      this.checkJustAScratchVisibility();
     }
     
     return !!newInput;
@@ -8684,6 +8702,9 @@ const App = {
     
     // Check Artful Dodger bonus (depends on encumbrance status)
     this.checkArtfulDodgerBonus();
+    
+    // Check Agile bonus (depends on encumbrance status)
+    this.checkAgileBonus();
   },
   
   /**
@@ -9838,6 +9859,179 @@ const App = {
     return parseInt(currField.value, 10) || 0;
   },
   
+  // ============================================
+  // AGILE ABILITY SYSTEM
+  // ============================================
+  
+  /**
+   * Check if Agile bonus should be applied based on conditions:
+   * 1. Must be Unburdened (ENC < STR×2)
+   * 2. Must be wearing light armor or less
+   * 3. Must have 60%+ in Evade or Acrobatics
+   */
+  checkAgileBonus() {
+    // Check if character has Agile ability
+    const hasAbility = this.character.hasAgile || this.hasAbility('Agile');
+    if (!hasAbility) {
+      if (this.character.agileActive) {
+        this.removeAgileBonus();
+      }
+      return;
+    }
+    
+    // Check all three conditions
+    const isUnburdened = this.checkAgileUnburdened();
+    const hasLightArmor = this.checkAgileLightArmor();
+    const hasSkillReq = this.checkAgileSkillRequirement();
+    
+    const meetsAllConditions = isUnburdened && hasLightArmor && hasSkillReq;
+    
+    if (meetsAllConditions && !this.character.agileActive) {
+      this.applyAgileBonus();
+    } else if (!meetsAllConditions && this.character.agileActive) {
+      this.removeAgileBonus();
+    } else if (meetsAllConditions && this.character.agileActive) {
+      // Bonus is already active - ensure visual styling
+      const currField = document.getElementById('initiative-current');
+      if (currField && !currField.classList.contains('agile-bonus')) {
+        currField.classList.add('agile-bonus');
+        currField.title = '+4 due to Agile';
+      }
+    }
+  },
+  
+  /**
+   * Check if character is Unburdened for Agile
+   */
+  checkAgileUnburdened() {
+    const statusEl = document.getElementById('enc-status');
+    const statusName = statusEl?.textContent?.trim() || 'Unburdened';
+    return (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
+  },
+  
+  /**
+   * Check if character is wearing light armor or less for Agile
+   * Light armor types: None, Furs/Hides, Soft Leather, Hard Leather, Linen, Padded, Ring
+   * NOT light: Scale, Chain, Brigandine, Plate, etc.
+   */
+  checkAgileLightArmor() {
+    const lightArmorTypes = [
+      '', 'none', 'furs', 'hides', 'furs/hides', 'soft leather', 'hard leather', 
+      'leather', 'linen', 'padded', 'ring', 'ringmail', 'ring mail'
+    ];
+    
+    // Check all hit location armor fields
+    const armorFields = document.querySelectorAll('[id$="-armor"]');
+    for (const field of armorFields) {
+      const armorName = (field.value || '').toLowerCase().trim();
+      if (armorName && !lightArmorTypes.some(type => armorName.includes(type))) {
+        // Found non-light armor
+        return false;
+      }
+    }
+    return true;
+  },
+  
+  /**
+   * Check if character has 60%+ in Evade or Acrobatics for Agile
+   */
+  checkAgileSkillRequirement() {
+    // Check Evade
+    const evadeField = document.getElementById('evade-current');
+    let evadeVal = parseInt(evadeField?.value, 10) || 0;
+    // If Artful Dodger is active, use base value
+    if (this.character.artfulDodgerActive) {
+      evadeVal = this.getEvadeWithoutArtfulDodger();
+    }
+    if (evadeVal >= 60) return true;
+    
+    // Check Acrobatics (professional skill)
+    for (let i = 0; i < 22; i++) {
+      const nameField = document.getElementById(`prof-skill-${i}-name`);
+      const currentField = document.getElementById(`prof-skill-${i}-current`);
+      if (nameField && currentField) {
+        const skillName = (nameField.value || '').toLowerCase().trim();
+        if (skillName === 'acrobatics') {
+          const skillVal = parseInt(currentField.value, 10) || 0;
+          if (skillVal >= 60) return true;
+        }
+      }
+    }
+    
+    return false;
+  },
+  
+  /**
+   * Apply Agile +4 bonus to Initiative
+   */
+  applyAgileBonus() {
+    const origField = document.getElementById('initiative-original');
+    const currField = document.getElementById('initiative-current');
+    
+    // Set active flag BEFORE changing value
+    this.character.agileActive = true;
+    
+    if (origField) {
+      const origVal = parseInt(origField.value, 10) || 0;
+      origField.value = origVal + 4;
+    }
+    if (currField) {
+      const currVal = parseInt(currField.value, 10) || 0;
+      currField.value = currVal + 4;
+      
+      // Add visual styling
+      currField.classList.add('agile-bonus');
+      currField.title = '+4 due to Agile';
+    }
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Remove Agile +4 bonus from Initiative
+   */
+  removeAgileBonus() {
+    const origField = document.getElementById('initiative-original');
+    const currField = document.getElementById('initiative-current');
+    
+    const wasActive = this.character.agileActive;
+    
+    // Set active flag to FALSE BEFORE changing value
+    this.character.agileActive = false;
+    
+    if (wasActive) {
+      if (origField) {
+        const origVal = parseInt(origField.value, 10) || 0;
+        origField.value = Math.max(0, origVal - 4);
+      }
+      if (currField) {
+        const currVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, currVal - 4);
+      }
+    }
+    
+    // Remove visual styling
+    if (currField) {
+      currField.classList.remove('agile-bonus');
+      currField.title = '';
+    }
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Get Initiative value without Agile bonus (for EXP improvement)
+   */
+  getInitiativeWithoutAgile() {
+    const currField = document.getElementById('initiative-current');
+    if (!currField) return 0;
+    
+    if (this.character.agileActive) {
+      return Math.max(0, (parseInt(currField.value, 10) || 0) - 4);
+    }
+    return parseInt(currField.value, 10) || 0;
+  },
+  
   /**
    * Get the next step up in damage modifier progression
    */
@@ -10263,6 +10457,312 @@ const App = {
     // Re-apply visual indicator
     const brawnInput = document.getElementById('brawn-current');
     if (brawnInput) brawnInput.classList.add('brute-boosted');
+  },
+
+  // ============================================
+  // JUST A SCRATCH ABILITY SYSTEM
+  // ============================================
+  
+  /**
+   * Check if character has Just a Scratch ability and show/hide section
+   */
+  checkJustAScratchVisibility() {
+    const section = document.getElementById('just-a-scratch-section');
+    if (!section) return;
+    
+    // Check if character has Just a Scratch ability
+    const hasJustAScratch = this.hasAbility('Just a Scratch');
+    
+    if (hasJustAScratch) {
+      section.style.display = '';
+      this.initJustAScratch();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Initialize Just a Scratch system
+   */
+  initJustAScratch() {
+    // Initialize uses if not set
+    if (this.character.scratchUsesRemaining === undefined) {
+      this.character.scratchUsesRemaining = 1;
+    }
+    
+    this.setupJustAScratchListeners();
+    this.updateJustAScratchDisplay();
+  },
+  
+  /**
+   * Setup Just a Scratch button listeners
+   */
+  setupJustAScratchListeners() {
+    const useBtn = document.getElementById('btn-scratch-use');
+    const resetBtn = document.getElementById('btn-reset-scratch-uses');
+    
+    if (useBtn && !useBtn.dataset.listenerAdded) {
+      useBtn.addEventListener('click', () => {
+        this.openJustAScratchModal();
+      });
+      useBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.resetJustAScratchUses();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Update Just a Scratch display
+   */
+  updateJustAScratchDisplay() {
+    const usesEl = document.getElementById('scratch-uses-available');
+    const useBtn = document.getElementById('btn-scratch-use');
+    
+    if (usesEl) {
+      usesEl.textContent = this.character.scratchUsesRemaining || 0;
+    }
+    
+    if (useBtn) {
+      useBtn.disabled = (this.character.scratchUsesRemaining || 0) <= 0;
+    }
+  },
+  
+  /**
+   * Reset Just a Scratch uses (called on long rest)
+   */
+  resetJustAScratchUses() {
+    this.character.scratchUsesRemaining = 1;
+    this.updateJustAScratchDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Open Just a Scratch explanation modal
+   */
+  openJustAScratchModal() {
+    if ((this.character.scratchUsesRemaining || 0) <= 0) {
+      alert('No uses of Just a Scratch remaining today.');
+      return;
+    }
+    
+    // Get healing rate
+    const healingRate = parseInt(document.getElementById('healing-rate-current')?.value, 10) || 
+                        parseInt(document.getElementById('healing-rate-original')?.value, 10) || 1;
+    
+    let modal = document.getElementById('just-a-scratch-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'just-a-scratch-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content">
+        <div class="modal-header">
+          <h3>🩹 Just a Scratch</h3>
+          <button class="modal-close" id="scratch-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="scratch-description">
+            Once per day, after taking a break to check your wounds, you may regain 
+            Hit Points in one Hit Location equal to <strong>${healingRate}</strong> (your Healing Rate).
+          </p>
+          <p class="scratch-note">This ability does not affect Major Wounds.</p>
+          <div class="scratch-action">
+            <button type="button" class="btn btn-primary" id="btn-scratch-continue">Choose Hit Location</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-scratch-cancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    // Setup listeners
+    document.getElementById('scratch-modal-close').addEventListener('click', () => this.closeJustAScratchModal());
+    document.getElementById('btn-scratch-cancel').addEventListener('click', () => this.closeJustAScratchModal());
+    document.getElementById('btn-scratch-continue').addEventListener('click', () => {
+      this.closeJustAScratchModal();
+      this.openJustAScratchLocationModal();
+    });
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) this.closeJustAScratchModal();
+    });
+    
+    modal.classList.remove('hidden');
+  },
+  
+  /**
+   * Close Just a Scratch explanation modal
+   */
+  closeJustAScratchModal() {
+    const modal = document.getElementById('just-a-scratch-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+  
+  /**
+   * Open Just a Scratch location selection modal
+   */
+  openJustAScratchLocationModal() {
+    // Get injured hit locations (current HP < max HP, but not Major Wounds)
+    const injuredLocations = this.getInjuredLocations();
+    
+    if (injuredLocations.length === 0) {
+      alert('No injured hit locations to heal (excluding Major Wounds).');
+      return;
+    }
+    
+    const healingRate = parseInt(document.getElementById('healing-rate-current')?.value, 10) || 
+                        parseInt(document.getElementById('healing-rate-original')?.value, 10) || 1;
+    
+    let modal = document.getElementById('scratch-location-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'scratch-location-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    const locationsHtml = injuredLocations.map(loc => `
+      <div class="scratch-location-option">
+        <button type="button" class="btn btn-location" data-loc-index="${loc.index}">
+          <span class="loc-name">${loc.name}</span>
+          <span class="loc-hp">${loc.currentHP}/${loc.maxHP} HP</span>
+          <span class="loc-heal">→ ${Math.min(loc.maxHP, loc.currentHP + healingRate)}/${loc.maxHP} HP</span>
+        </button>
+      </div>
+    `).join('');
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-location-modal-content">
+        <div class="modal-header">
+          <h3>🩹 Choose Hit Location to Heal</h3>
+          <button class="modal-close" id="scratch-loc-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Select a hit location to heal by <strong>${healingRate}</strong> HP:</p>
+          <div class="scratch-locations-list">
+            ${locationsHtml}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-scratch-loc-cancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    // Setup listeners
+    document.getElementById('scratch-loc-modal-close').addEventListener('click', () => this.closeJustAScratchLocationModal());
+    document.getElementById('btn-scratch-loc-cancel').addEventListener('click', () => this.closeJustAScratchLocationModal());
+    
+    // Location buttons
+    modal.querySelectorAll('.btn-location').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const locIndex = parseInt(btn.dataset.locIndex, 10);
+        this.applyJustAScratch(locIndex);
+      });
+    });
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) this.closeJustAScratchLocationModal();
+    });
+    
+    modal.classList.remove('hidden');
+  },
+  
+  /**
+   * Close Just a Scratch location modal
+   */
+  closeJustAScratchLocationModal() {
+    const modal = document.getElementById('scratch-location-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+  
+  /**
+   * Get list of injured hit locations (current < max, not Major Wounds)
+   */
+  getInjuredLocations() {
+    const locations = [];
+    const hitLocRows = document.querySelectorAll('.hit-location-row');
+    
+    hitLocRows.forEach((row, index) => {
+      const nameEl = row.querySelector('.loc-name');
+      const currentInput = row.querySelector('.hp-current');
+      const maxEl = row.querySelector('.hp-max');
+      
+      if (nameEl && currentInput && maxEl) {
+        const name = nameEl.textContent.trim();
+        const currentHP = parseInt(currentInput.value, 10) || 0;
+        const maxHP = parseInt(maxEl.textContent, 10) || 0;
+        
+        // Only include if injured (current < max) and not a Major Wound (current >= -maxHP)
+        // Major Wound is when damage equals or exceeds the location's max HP
+        if (currentHP < maxHP && currentHP > -maxHP) {
+          locations.push({
+            index: index,
+            name: name,
+            currentHP: currentHP,
+            maxHP: maxHP
+          });
+        }
+      }
+    });
+    
+    return locations;
+  },
+  
+  /**
+   * Apply Just a Scratch healing to a specific hit location
+   */
+  applyJustAScratch(locIndex) {
+    const healingRate = parseInt(document.getElementById('healing-rate-current')?.value, 10) || 
+                        parseInt(document.getElementById('healing-rate-original')?.value, 10) || 1;
+    
+    const hitLocRows = document.querySelectorAll('.hit-location-row');
+    const row = hitLocRows[locIndex];
+    
+    if (!row) {
+      alert('Error: Could not find hit location.');
+      return;
+    }
+    
+    const nameEl = row.querySelector('.loc-name');
+    const currentInput = row.querySelector('.hp-current');
+    const maxEl = row.querySelector('.hp-max');
+    
+    if (!currentInput || !maxEl) {
+      alert('Error: Could not find HP fields.');
+      return;
+    }
+    
+    const currentHP = parseInt(currentInput.value, 10) || 0;
+    const maxHP = parseInt(maxEl.textContent, 10) || 0;
+    const newHP = Math.min(maxHP, currentHP + healingRate);
+    
+    // Apply healing
+    currentInput.value = newHP;
+    currentInput.dispatchEvent(new Event('input', { bubbles: true }));
+    currentInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Deduct use
+    this.character.scratchUsesRemaining = Math.max(0, (this.character.scratchUsesRemaining || 1) - 1);
+    this.updateJustAScratchDisplay();
+    
+    // Close modal
+    this.closeJustAScratchLocationModal();
+    
+    // Show confirmation
+    const locName = nameEl?.textContent.trim() || 'Location';
+    alert(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP}).`);
+    
+    this.scheduleAutoSave();
   },
 
   /**

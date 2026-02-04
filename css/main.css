@@ -1215,6 +1215,13 @@ select:focus {
   color: #1a6b1a !important;
 }
 
+/* Agile bonus styling */
+.agile-bonus {
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
+}
+
 /* ============================================
    FORCEFUL STRIKE SECTION
    ============================================ */
@@ -1378,6 +1385,171 @@ select:focus {
 .brute-boosted {
   background-color: rgba(150, 50, 0, 0.15) !important;
   border-color: #a64 !important;
+}
+
+/* ============================================
+   JUST A SCRATCH SECTION
+   ============================================ */
+.just-a-scratch-section {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #1a2a2a 0%, #204040 100%);
+  border: 2px solid #4a8b8b;
+  border-radius: 8px;
+}
+
+.just-a-scratch-section .section-header {
+  color: #6bb;
+  text-shadow: 0 0 10px rgba(102, 187, 187, 0.5);
+}
+
+.just-a-scratch-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.scratch-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.scratch-label {
+  color: #9cc;
+  font-size: 0.9rem;
+}
+
+.scratch-value {
+  color: #6ff;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.scratch-button-row {
+  margin: 0.5rem 0;
+}
+
+.btn-scratch {
+  background: linear-gradient(135deg, #2d4a4a 0%, #3d6a6a 50%, #2d4a4a 100%);
+  color: white;
+  border: 2px solid #6bb;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(45, 74, 74, 0.4);
+}
+
+.btn-scratch:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3d5a5a 0%, #4d7a7a 50%, #3d5a5a 100%);
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(102, 187, 187, 0.5);
+}
+
+.btn-scratch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.scratch-icon {
+  font-size: 1.2rem;
+}
+
+.btn-reset-scratch {
+  background: #2d4a4a;
+  color: #6bb;
+  border: 1px solid #4a8b8b;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-reset-scratch:hover {
+  background: #3d5a5a;
+}
+
+/* Just a Scratch Modal Styles */
+.scratch-modal-content {
+  max-width: 500px;
+}
+
+.scratch-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.scratch-note {
+  color: #c66;
+  font-style: italic;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.scratch-action {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+/* Just a Scratch Location Modal */
+.scratch-location-modal-content {
+  max-width: 450px;
+}
+
+.scratch-locations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.scratch-location-option {
+  width: 100%;
+}
+
+.btn-location {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #2a3a3a 0%, #3a4a4a 100%);
+  border: 1px solid #5a8a8a;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-location:hover {
+  background: linear-gradient(135deg, #3a4a4a 0%, #4a5a5a 100%);
+  border-color: #6bb;
+  transform: translateX(5px);
+}
+
+.btn-location .loc-name {
+  font-weight: bold;
+  color: #9cc;
+}
+
+.btn-location .loc-hp {
+  color: #f88;
+}
+
+.btn-location .loc-heal {
+  color: #8f8;
 }
 
 /* ============================================
