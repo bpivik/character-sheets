@@ -303,6 +303,16 @@ const App = {
     // Check if Spell-Like Abilities section should be visible
     this.checkSpellLikeAbilitiesVisibility();
     
+    // Final Artful Dodger check - ensure bonus is applied after all initialization is complete
+    // This handles edge cases where ENC status wasn't populated during restoreAbilityEffects
+    setTimeout(() => {
+      if (this.hasAbility('Artful Dodger')) {
+        console.log('Init complete: Final Artful Dodger check');
+        this.character.hasArtfulDodger = true;
+        this.checkArtfulDodgerBonus();
+      }
+    }, 50);
+    
     // Save calculated values (like Resilient HP) after initialization
     this.scheduleAutoSave();
     
@@ -4334,6 +4344,7 @@ const App = {
   restoreAbilityEffects() {
     // Reset Artful Dodger active state so it gets applied fresh
     // (The saved Evade value is the BASE value without the bonus)
+    console.log('restoreAbilityEffects: Resetting artfulDodgerActive to false');
     this.character.artfulDodgerActive = false;
     
     // Check all class abilities on the sheet and apply their effects
@@ -4346,6 +4357,7 @@ const App = {
           const effect = this.ABILITY_EFFECTS[baseName];
           if (effect && !this.activeAbilityEffects[baseName]) {
             this.activeAbilityEffects[baseName] = { active: true };
+            console.log(`restoreAbilityEffects: Applying ability "${baseName}"`);
             effect.apply(this);
             console.log(`Restored ability effect: ${baseName}`);
           }
@@ -9742,12 +9754,13 @@ const App = {
       return;
     }
     
-    // Check encumbrance status
-    const STR = parseInt(this.character.attributes?.STR) || 10;
-    const totalEnc = parseFloat(document.getElementById('total-enc')?.textContent) || 0;
-    const status = Calculator.getEncStatus(totalEnc, STR);
+    // Read encumbrance status directly from the displayed element
+    // Default to Unburdened if element doesn't exist or is empty
+    const statusEl = document.getElementById('enc-status');
+    const statusName = statusEl?.textContent?.trim() || 'Unburdened';
+    const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
     
-    const isUnburdened = (status.name === 'Unburdened' || status.name === 'Extremely Unburdened');
+    console.log(`Artful Dodger check: enc-status="${statusName}", isUnburdened=${isUnburdened}, artfulDodgerActive=${this.character.artfulDodgerActive}`);
     
     if (isUnburdened && !this.character.artfulDodgerActive) {
       // Apply the bonus
@@ -9766,11 +9779,30 @@ const App = {
   },
   
   /**
+   * Calculate money encumbrance (without updating DOM)
+   */
+  calculateMoneyEnc() {
+    const pp = parseInt(document.getElementById('money-platinum')?.value) || 0;
+    const gp = parseInt(document.getElementById('money-gold')?.value) || 0;
+    const ep = parseInt(document.getElementById('money-electrum')?.value) || 0;
+    const sp = parseInt(document.getElementById('money-silver')?.value) || 0;
+    const cp = parseInt(document.getElementById('money-copper')?.value) || 0;
+    const totalCoins = pp + gp + ep + sp + cp;
+    return Math.floor(totalCoins / 100);
+  },
+  
+  /**
    * Apply Artful Dodger +10 bonus to Evade current
    */
   applyArtfulDodgerBonus() {
     const currField = document.getElementById('evade-current');
-    if (!currField) return;
+    if (!currField) {
+      console.log('Artful Dodger: evade-current field not found');
+      return;
+    }
+    
+    const currVal = parseInt(currField.value, 10) || 0;
+    console.log(`Artful Dodger: Applying bonus. Current value=${currVal}, will become ${currVal + 10}`);
     
     // Set active flag BEFORE changing value so save handler knows to subtract 10
     this.character.artfulDodgerActive = true;
@@ -9780,12 +9812,13 @@ const App = {
       this.character.evadeWithoutArtfulDodger = currField.value;
     }
     
-    const currVal = parseInt(currField.value, 10) || 0;
     currField.value = currVal + 10;
     
     // Add visual styling
     currField.classList.add('artful-dodger-bonus');
     currField.title = '+10 due to Artful Dodger';
+    
+    console.log(`Artful Dodger: Applied. New value=${currField.value}, active=${this.character.artfulDodgerActive}`);
     
     this.scheduleAutoSave();
   },
