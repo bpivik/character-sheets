@@ -1146,11 +1146,33 @@ const App = {
       'tenacity-current'
     ];
     
+    // Fields that have original/max values they shouldn't exceed
+    const fieldsWithMax = {
+      'action-points-current': 'action-points-original',
+      'luck-current': 'luck-original',
+      'magic-points-current': 'magic-points-original',
+      'tenacity-current': 'tenacity-max'
+    };
+    
     derivedFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
+        // Enforce max value on input
         field.addEventListener('input', (e) => {
           const key = this.camelCase(fieldId);
+          
+          // Check if this field has a max and enforce it
+          const maxFieldId = fieldsWithMax[fieldId];
+          if (maxFieldId) {
+            const maxField = document.getElementById(maxFieldId);
+            if (maxField) {
+              const maxVal = parseInt(maxField.value, 10);
+              const currentVal = parseInt(e.target.value, 10);
+              if (!isNaN(maxVal) && !isNaN(currentVal) && currentVal > maxVal) {
+                e.target.value = maxVal;
+              }
+            }
+          }
           
           // Handle combined ENC + Fatigue penalty for initiative and action points
           if ((fieldId === 'initiative-current' || fieldId === 'action-points-current') &&
@@ -1173,6 +1195,22 @@ const App = {
           if (fieldId === 'damage-mod-current') {
             if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
               window.WeaponData.updateAllWeaponDamage();
+            }
+          }
+        });
+        
+        // Also enforce on blur (in case user types quickly)
+        field.addEventListener('blur', (e) => {
+          const maxFieldId = fieldsWithMax[fieldId];
+          if (maxFieldId) {
+            const maxField = document.getElementById(maxFieldId);
+            if (maxField) {
+              const maxVal = parseInt(maxField.value, 10);
+              const currentVal = parseInt(e.target.value, 10);
+              if (!isNaN(maxVal) && !isNaN(currentVal) && currentVal > maxVal) {
+                e.target.value = maxVal;
+                this.scheduleAutoSave();
+              }
             }
           }
         });
