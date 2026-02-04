@@ -2944,9 +2944,11 @@ const App = {
           <input type="number" class="hp-max-input derived-readonly" id="loc-${i}-hp" placeholder="" readonly>
           <span class="hp-separator">/</span>
           <div class="hp-current-wrapper">
-            <button type="button" class="hp-btn hp-down" data-loc="${i}" title="Decrease HP">▼</button>
             <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
-            <button type="button" class="hp-btn hp-up" data-loc="${i}" title="Increase HP">▲</button>
+            <div class="hp-btn-stack">
+              <button type="button" class="hp-btn hp-up" data-loc="${i}" title="Increase HP">▲</button>
+              <button type="button" class="hp-btn hp-down" data-loc="${i}" title="Decrease HP">▼</button>
+            </div>
           </div>
         </td>
         <td><span class="wound-status clickable" id="loc-${i}-status" data-status="none" data-location="${loc.location}">—</span></td>
@@ -3174,15 +3176,14 @@ const App = {
       statusClass = 'wound-major';
     }
     
-    // Check if wound status worsened to Serious or Major - apply fatigue
+    // Check if wound status worsened to Major - apply fatigue (Incapacitated)
+    // Note: Serious Wound does NOT affect fatigue - only Major Wound does
     if (applyFatigue && statusClass !== previousStatus) {
       if (statusClass === 'wound-major' && previousStatus !== 'wound-major') {
         // Major Wound - set to Incapacitated (if not already worse)
         this.applyWoundFatigue('incapacitated', 'Major Wound');
-      } else if (statusClass === 'wound-serious' && previousStatus !== 'wound-serious' && previousStatus !== 'wound-major') {
-        // Serious Wound - set to Debilitated (if not already worse)
-        this.applyWoundFatigue('debilitated', 'Serious Wound');
       }
+      // Going from Major to Serious does not change fatigue - they stay Incapacitated
     }
     
     statusSpan.textContent = status;
@@ -3239,8 +3240,10 @@ const App = {
     const healingRate = document.getElementById('healing-rate')?.value || '3';
     const combatRounds = parseInt(healingRate, 10) * 2;
     
-    // Get Endurance skill value
-    const enduranceValue = document.getElementById('endurance-current')?.value || '0';
+    // Get Endurance skill value - use ORIGINAL value before fatigue penalties
+    // This is important because Major Wound sets Incapacitated, but the roll should be against the standard %
+    const enduranceInput = document.getElementById('endurance-current');
+    const enduranceValue = enduranceInput?.dataset.originalValue || enduranceInput?.value || '0';
     
     let content = '';
     let headerClass = '';
