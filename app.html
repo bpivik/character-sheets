@@ -1175,49 +1175,103 @@
 
           <!-- Right Column: Berserk Rage, Spell-Like Abilities, Forceful Strike -->
           <div class="abilities-right-column">
-            <!-- Berserk Rage Section (only visible if character has Berserk Rage ability) -->
-            <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
-              <div class="section-header-row">
-                <h3 class="section-header">Berserk Rage</h3>
-              </div>
-              <div class="berserk-rage-content">
-                <div class="rage-info-row">
-                  <span class="rage-label">Uses Available Daily:</span>
-                  <span class="rage-value" id="rage-uses-available">0</span>
-                  <span class="rage-label">/ Max:</span>
-                  <span class="rage-value" id="rage-uses-max">0</span>
-                  <span class="rage-label">(CON/4)</span>
-                  <button type="button" class="btn btn-small btn-reset-rage" id="btn-reset-rage-uses" title="Reset uses to maximum">↺</button>
+            <!-- Grid of ability cards -->
+            <div class="ability-cards-grid">
+              <!-- Berserk Rage Section (only visible if character has Berserk Rage ability) -->
+              <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">⚔️ Berserk Rage</h3>
                 </div>
-                <div class="rage-info-row">
-                  <span class="rage-label">Rounds per Rage:</span>
-                  <span class="rage-value" id="rage-rounds-max">0</span>
-                  <span class="rage-label">(CON)</span>
-                </div>
-                <div class="rage-button-row">
-                  <button type="button" class="btn btn-rage" id="btn-rage-toggle">
-                    <span class="rage-icon">⚔️</span>
-                    <span class="rage-text" id="rage-btn-text">I'm RAGING!</span>
-                  </button>
-                </div>
-                <div class="rage-tracker" id="rage-tracker" style="display: none;">
-                  <div class="rage-active-label">🔥 RAGE ACTIVE 🔥</div>
-                  <div class="rage-rounds-row">
-                    <span class="rage-label">Rounds Used:</span>
-                    <input type="number" class="rage-rounds-input" id="rage-rounds-used" value="0" min="0">
-                    <span class="rage-label">/ <span id="rage-rounds-total">0</span></span>
+                <div class="berserk-rage-content">
+                  <div class="rage-info-row">
+                    <span class="rage-value" id="rage-uses-available">0</span>
+                    <span class="rage-label">/</span>
+                    <span class="rage-value" id="rage-uses-max">0</span>
+                    <span class="rage-label">uses •</span>
+                    <span class="rage-value" id="rage-rounds-max">0</span>
+                    <span class="rage-label">rds</span>
+                    <button type="button" class="btn btn-small btn-reset-rage" id="btn-reset-rage-uses" title="Reset uses to maximum">↺</button>
                   </div>
-                  <div class="rage-effects-summary">
-                    <div class="rage-effect">Damage Mod: +1 step</div>
-                    <div class="rage-effect">Endurance: +20%</div>
-                    <div class="rage-effect">Willpower: +20%</div>
-                    <div class="rage-effect">Brawn: +40%</div>
-                    <div class="rage-effect rage-penalty">Evade: -20%</div>
+                  <div class="rage-button-row">
+                    <button type="button" class="btn btn-rage" id="btn-rage-toggle">
+                      <span class="rage-text" id="rage-btn-text">Rage!</span>
+                    </button>
                   </div>
-                  <button type="button" class="btn btn-end-rage" id="btn-end-rage">End Rage (1 Fatigue Level)</button>
+                  <div class="rage-tracker" id="rage-tracker" style="display: none;">
+                    <div class="rage-active-label">🔥 RAGE ACTIVE 🔥</div>
+                    <div class="rage-rounds-row">
+                      <span class="rage-label">Rounds Used:</span>
+                      <input type="number" class="rage-rounds-input" id="rage-rounds-used" value="0" min="0">
+                      <span class="rage-label">/ <span id="rage-rounds-total">0</span></span>
+                    </div>
+                    <div class="rage-effects-summary">
+                      <div class="rage-effect">Damage Mod: +1 step</div>
+                      <div class="rage-effect">Endurance: +20%</div>
+                      <div class="rage-effect">Willpower: +20%</div>
+                      <div class="rage-effect">Brawn: +40%</div>
+                      <div class="rage-effect rage-penalty">Evade: -20%</div>
+                    </div>
+                    <button type="button" class="btn btn-end-rage" id="btn-end-rage">End Rage (1 Fatigue Level)</button>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+              
+              <!-- Brute Strength Section (only visible if character has Brute Strength ability) -->
+              <section class="brute-strength-section" id="brute-strength-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">💪 Brute Strength</h3>
+                </div>
+                <div class="brute-strength-content">
+                  <div class="brute-strength-info">
+                    <span class="brute-label">+20% Brawn • Fatigue</span>
+                  </div>
+                  <div class="brute-strength-toggle">
+                    <button type="button" class="btn btn-brute" id="btn-brute-toggle">
+                      <span class="brute-text" id="brute-btn-text">Use</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+              
+              <!-- Just a Scratch Section (only visible if character has Just a Scratch ability) -->
+              <section class="just-a-scratch-section" id="just-a-scratch-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🩹 Just a Scratch</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-value" id="scratch-uses-available">1</span>
+                    <span class="scratch-label">/ 1 use</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-scratch-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-scratch-use">
+                      <span class="scratch-text" id="scratch-btn-text">Use</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
+              <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">⚡ Forceful Strike</h3>
+                </div>
+                <div class="forceful-strike-content">
+                  <div class="forceful-strike-info">
+                    <span class="forceful-label">-20% skill • +2 dmg</span>
+                  </div>
+                  <div class="forceful-strike-toggle">
+                    <button type="button" class="btn btn-forceful" id="btn-forceful-toggle">
+                      <span class="forceful-text" id="forceful-btn-text">Activate</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+            
+            <!-- Divider before spell-like abilities -->
+            <hr class="ability-cards-divider" id="spell-like-divider" style="display: none;">
 
             <!-- Spell-Like Abilities Section (only visible if character has Spell-Like Abilities) -->
             <section class="spell-like-section" id="spell-like-section" style="display: none;">
@@ -1230,63 +1284,6 @@
               <div class="spell-like-content collapsible" id="spell-like-content">
                 <div class="spell-like-description" id="spell-like-description">
                   <!-- Spell description will be populated dynamically -->
-                </div>
-              </div>
-            </section>
-
-            <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
-            <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
-              <div class="section-header-row">
-                <h3 class="section-header">Forceful Strike</h3>
-              </div>
-              <div class="forceful-strike-content">
-                <div class="forceful-strike-info">
-                  <span class="forceful-label">Combat Skill -20% | Damage Mod +2 steps</span>
-                </div>
-                <div class="forceful-strike-toggle">
-                  <button type="button" class="btn btn-forceful" id="btn-forceful-toggle">
-                    <span class="forceful-icon">💪</span>
-                    <span class="forceful-text" id="forceful-btn-text">Activate Forceful Strike</span>
-                  </button>
-                </div>
-              </div>
-            </section>
-            
-            <!-- Brute Strength Section (only visible if character has Brute Strength ability) -->
-            <section class="brute-strength-section" id="brute-strength-section" style="display: none;">
-              <div class="section-header-row">
-                <h3 class="section-header">Brute Strength</h3>
-              </div>
-              <div class="brute-strength-content">
-                <div class="brute-strength-info">
-                  <span class="brute-label">Brawn +20% for one action | Causes Fatigue after use</span>
-                </div>
-                <div class="brute-strength-toggle">
-                  <button type="button" class="btn btn-brute" id="btn-brute-toggle">
-                    <span class="brute-icon">💪</span>
-                    <span class="brute-text" id="brute-btn-text">Use Brute Strength</span>
-                  </button>
-                </div>
-              </div>
-            </section>
-            
-            <!-- Just a Scratch Section (only visible if character has Just a Scratch ability) -->
-            <section class="just-a-scratch-section" id="just-a-scratch-section" style="display: none;">
-              <div class="section-header-row">
-                <h3 class="section-header">Just a Scratch</h3>
-              </div>
-              <div class="just-a-scratch-content">
-                <div class="scratch-info-row">
-                  <span class="scratch-label">Uses Available Daily:</span>
-                  <span class="scratch-value" id="scratch-uses-available">1</span>
-                  <span class="scratch-label">/ Max: 1</span>
-                  <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-scratch-uses" title="Reset uses to maximum">↺</button>
-                </div>
-                <div class="scratch-button-row">
-                  <button type="button" class="btn btn-scratch" id="btn-scratch-use">
-                    <span class="scratch-icon">🩹</span>
-                    <span class="scratch-text" id="scratch-btn-text">Use Just a Scratch</span>
-                  </button>
                 </div>
               </div>
             </section>

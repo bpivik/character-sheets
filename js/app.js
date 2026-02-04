@@ -11061,12 +11061,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    */
   checkSpellLikeAbilitiesVisibility() {
     const section = document.getElementById('spell-like-section');
+    const divider = document.getElementById('spell-like-divider');
     if (!section) return;
     
     // Check species abilities for Spell-Like Abilities
     const container = document.getElementById('species-abilities-list');
     if (!container) {
       section.style.display = 'none';
+      if (divider) divider.style.display = 'none';
       return;
     }
     
@@ -11086,9 +11088,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     if (spellName && this.SPELL_LIKE_ABILITIES_DATA[spellName]) {
       section.style.display = '';
+      if (divider) divider.style.display = '';
       this.updateSpellLikeSection(spellName);
     } else {
       section.style.display = 'none';
+      if (divider) divider.style.display = 'none';
     }
   },
 
@@ -11097,6 +11101,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    */
   updateSpellLikeSection(spellName) {
     const section = document.getElementById('spell-like-section');
+    const divider = document.getElementById('spell-like-divider');
     const titleEl = document.getElementById('spell-like-title');
     const descEl = document.getElementById('spell-like-description');
     
@@ -11105,10 +11110,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const spellData = this.SPELL_LIKE_ABILITIES_DATA[spellName];
     if (!spellData) {
       section.style.display = 'none';
+      if (divider) divider.style.display = 'none';
       return;
     }
     
     section.style.display = '';
+    if (divider) divider.style.display = '';
     titleEl.textContent = spellData.name;
     
     let html = `<span class="spell-name">${spellData.name}</span>`;
