@@ -1028,3 +1028,50 @@
   border-color: #5d5 !important;
   color: #5f5 !important;
 }
+
+/* Compact abilities buttons - Dark Mode */
+[data-theme="dark"] .abilities-mini-btn {
+  background: #3a3a3a;
+  border-color: #555;
+  color: #ccc;
+}
+
+[data-theme="dark"] .abilities-mini-btn:hover {
+  background: #5a8;
+  border-color: #5a8;
+  color: white;
+}
+
+[data-theme="dark"] .abilities-subsection-title {
+  color: #ccc;
+}
+
+[data-theme="dark"] .species-header .abilities-subsection-title {
+  color: #888;
+}
+
+[data-theme="dark"] .class-ability-info-btn {
+  background: #3a3a4a;
+  border-color: #66a;
+  color: #99c;
+}
+
+[data-theme="dark"] .class-ability-info-btn:hover {
+  background: #66a;
+  color: white;
+}
+
+[data-theme="dark"] .species-ability-info-btn {
+  background: #3a4a3a;
+  border-color: #6a6;
+  color: #9c9;
+}
+
+[data-theme="dark"] .species-ability-info-btn:hover {
+  background: #6a6;
+  color: white;
+}
+
+[data-theme="dark"] .species-ability-input:read-only {
+  background: rgba(100,150,100,0.15);
+}
