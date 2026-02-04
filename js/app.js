@@ -4077,8 +4077,12 @@ const App = {
     
     const rows = Array.from(container.children);
     
-    // Remove all empty rows
+    // Remove all empty rows and sort spacers
     rows.forEach(row => {
+      if (row.classList.contains('class-ability-sort-spacer')) {
+        row.remove();
+        return;
+      }
       const input = row.querySelector('.class-ability-input');
       if (input && !input.value.trim()) {
         row.remove();
@@ -4814,10 +4818,11 @@ const App = {
     // Sort alphabetically
     abilities.sort((a, b) => a.value.toLowerCase().localeCompare(b.value.toLowerCase()));
     
-    // Calculate items per column for column-major ordering
-    const totalItems = abilities.length;
+    // Calculate column-major layout for 3-column CSS grid
+    // We want: col1 reads down, col2 reads down, col3 reads down
+    // But CSS grid fills row-by-row, so we interleave
     const numCols = 3;
-    const itemsPerCol = Math.ceil(totalItems / numCols);
+    const itemsPerCol = Math.ceil(abilities.length / numCols);
     
     // Split into columns
     const columns = [
@@ -4826,27 +4831,32 @@ const App = {
       abilities.slice(itemsPerCol * 2)
     ];
     
-    // CSS grid fills row-by-row, so we need to interleave columns
+    // Interleave: row0 = col1[0], col2[0], col3[0]; row1 = col1[1], col2[1], col3[1]; etc.
+    // Include null for empty grid slots to maintain alignment
     const interleaved = [];
     for (let row = 0; row < itemsPerCol; row++) {
       for (let col = 0; col < numCols; col++) {
         if (columns[col] && columns[col][row]) {
           interleaved.push(columns[col][row]);
         } else {
-          interleaved.push({ value: '', classAbility: '' });
+          interleaved.push(null); // Empty grid slot placeholder
         }
       }
     }
     
-    // Clear container and rebuild with correct number of rows
+    // Clear container and rebuild
     container.innerHTML = '';
-    interleaved.forEach((item, index) => {
-      if (item.value) {
-        // Use addClassAbilityRow but skip ability effect re-application (already active)
+    interleaved.forEach((item) => {
+      if (item) {
         const input = this.addClassAbilityRow(item.value, item.classAbility || null);
         if (input) {
           input.dataset.previousValue = item.value;
         }
+      } else {
+        // Add invisible spacer div for grid alignment (no class-ability-row to avoid cleanup)
+        const spacer = document.createElement('div');
+        spacer.className = 'class-ability-sort-spacer';
+        container.appendChild(spacer);
       }
     });
     
