@@ -4796,7 +4796,7 @@ const App = {
     const container = document.getElementById('class-abilities-list');
     if (!container) return;
     
-    // Collect all abilities
+    // Collect all non-empty abilities
     const inputs = Array.from(container.querySelectorAll('.class-ability-input'));
     const abilities = [];
     
@@ -4809,11 +4809,12 @@ const App = {
       }
     });
     
+    if (abilities.length === 0) return;
+    
     // Sort alphabetically
     abilities.sort((a, b) => a.value.toLowerCase().localeCompare(b.value.toLowerCase()));
     
     // Calculate items per column for column-major ordering
-    // We want: col1 gets first N items, col2 gets next N, col3 gets rest
     const totalItems = abilities.length;
     const numCols = 3;
     const itemsPerCol = Math.ceil(totalItems / numCols);
@@ -4826,9 +4827,6 @@ const App = {
     ];
     
     // CSS grid fills row-by-row, so we need to interleave columns
-    // Row 0: col1[0], col2[0], col3[0]
-    // Row 1: col1[1], col2[1], col3[1]
-    // etc.
     const interleaved = [];
     for (let row = 0; row < itemsPerCol; row++) {
       for (let col = 0; col < numCols; col++) {
@@ -4840,32 +4838,26 @@ const App = {
       }
     }
     
-    // Assign back to inputs
-    inputs.forEach((input, index) => {
-      const item = interleaved[index] || { value: '', classAbility: '' };
-      input.value = item.value;
-      if (item.classAbility) {
-        input.dataset.classAbility = item.classAbility;
-      } else {
-        delete input.dataset.classAbility;
-      }
-      input.dataset.previousValue = item.value;
-      
-      // Update info button visibility
-      const infoBtn = input.parentElement?.querySelector('.class-ability-info-btn');
-      if (infoBtn) {
-        infoBtn.style.display = item.value ? '' : 'none';
+    // Clear container and rebuild with correct number of rows
+    container.innerHTML = '';
+    interleaved.forEach((item, index) => {
+      if (item.value) {
+        // Use addClassAbilityRow but skip ability effect re-application (already active)
+        const input = this.addClassAbilityRow(item.value, item.classAbility || null);
+        if (input) {
+          input.dataset.previousValue = item.value;
+        }
       }
     });
     
     // Update tooltips after sorting
     this.updateAllAbilityTooltips();
     
-    // Ensure there's an empty row for new input
-    this.cleanupEmptyClassAbilityRows();
-    
     // Update character data to match the sorted DOM
     this.syncClassAbilitiesToCharacter();
+    
+    // Check Just a Scratch visibility
+    this.checkJustAScratchVisibility();
     
     this.scheduleAutoSave();
   },
