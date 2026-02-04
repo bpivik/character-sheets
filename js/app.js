@@ -21,15 +21,11 @@ const App = {
     'agile': {
       description: '+4 Initiative (when Unburdened, light armor, 50%+ Evade/Acrobatics)',
       apply: function(app) {
-        // Don't apply bonus directly - it's managed by checkAgileBonus based on conditions
-        // Just mark that the ability is present and trigger a check
-        app.character.hasAgile = true;
-        app.checkAgileBonus();
+        app.updateAgileDisplay();
       },
       remove: function(app) {
-        // Remove the bonus if it was active
-        app.character.hasAgile = false;
-        app.removeAgileBonus();
+        // Force removal by ensuring displayed flag matches reality
+        app.updateAgileDisplay();
       }
     },
     'artful dodger': {
@@ -272,7 +268,7 @@ const App = {
     // Initial calculations
     this.recalculateAll();
     
-    // Restore ability effects (Agile, Artful Dodger, etc.) after calculations
+    // Restore ability effects (Artful Dodger, etc.) after calculations
     this.restoreAbilityEffects();
     
     // Restore characteristic increase display name if applicable
@@ -316,14 +312,17 @@ const App = {
         this.character.hasArtfulDodger = true;
         // Reset active state to ensure fresh application
         this.character.artfulDodgerActive = false;
+        // Mark as active in effects tracking so removal works properly
+        this.activeAbilityEffects['artful dodger'] = { active: true };
         this.checkArtfulDodgerBonus();
       }
+      
+      // Check Agile display (always check, updateAgileDisplay handles ability presence)
+      this.character.agileDisplayed = false; // Reset to ensure clean state
       if (this.hasAbility('Agile')) {
-        this.character.hasAgile = true;
-        // Reset active state to ensure fresh application
-        this.character.agileActive = false;
-        this.checkAgileBonus();
+        this.activeAbilityEffects['agile'] = { active: true };
       }
+      this.updateAgileDisplay();
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -1198,14 +1197,7 @@ const App = {
             }
           }
           
-          // Special handling for Initiative when Agile is active
-          // Save the BASE value (without the +4 bonus)
-          if (fieldId === 'initiative-current' && this.character.agileActive) {
-            const displayedValue = parseInt(e.target.value, 10) || 0;
-            this.character.derived[key] = Math.max(0, displayedValue - 4).toString();
-          } else {
-            this.character.derived[key] = e.target.dataset.originalValue || e.target.value;
-          }
+          this.character.derived[key] = e.target.dataset.originalValue || e.target.value;
           this.scheduleAutoSave();
           
           // Update weapon damages when damage modifier changes
@@ -3180,8 +3172,8 @@ const App = {
           
           armorInput.dataset.previousArmor = currentArmor;
           
-          // Check Agile bonus (depends on armor type)
-          this.checkAgileBonus();
+          // Check Agile display (depends on armor type)
+          this.updateAgileDisplay();
         });
         
         // Track when user manually edits AP
@@ -4369,12 +4361,8 @@ const App = {
     // (The saved Evade value is the BASE value without the bonus)
     this.character.artfulDodgerActive = false;
     
-    // Reset Agile active state so it gets applied fresh
-    // (The saved Initiative value is the BASE value without the bonus)
-    this.character.agileActive = false;
-    
     // Check all class abilities on the sheet and apply their effects
-    // Skip Artful Dodger and Agile during init - they're handled by the final setTimeout
+    // Skip Artful Dodger during init - it's handled by the final setTimeout
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
       const inputs = classContainer.querySelectorAll('.class-ability-input');
@@ -4382,7 +4370,7 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           // Skip ENC-dependent abilities during initialization
-          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+          if (this.isInitializing && baseName === 'artful dodger') {
             return;
           }
           const effect = this.ABILITY_EFFECTS[baseName];
@@ -4399,7 +4387,7 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       // Skip ENC-dependent abilities during initialization
-      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+      if (this.isInitializing && baseName === 'artful dodger') {
         return;
       }
       const effect = this.ABILITY_EFFECTS[baseName];
@@ -5905,7 +5893,7 @@ const App = {
     // Populate class abilities
     this.updateClassAbilities(null);
     
-    // Re-apply ability effects (Agile, Artful Dodger, Weapon Precision)
+    // Re-apply ability effects (Artful Dodger, Weapon Precision, etc.)
     // These modify calculated values and need to be reapplied after base recalculation
     this.reapplyAbilityEffects();
   },
@@ -5936,7 +5924,7 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           // Skip ENC-dependent abilities during initialization
-          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+          if (this.isInitializing && baseName === 'artful dodger') {
             return;
           }
           const effect = this.ABILITY_EFFECTS[baseName];
@@ -5954,7 +5942,7 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       // Skip ENC-dependent abilities during initialization
-      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+      if (this.isInitializing && baseName === 'artful dodger') {
         return;
       }
       const effect = this.ABILITY_EFFECTS[baseName];
@@ -8717,7 +8705,7 @@ const App = {
       total = parseFloat(totalDisplay?.textContent) || 0;
     }
     
-    // Always calculate and display ENC status (needed for abilities like Artful Dodger, Agile)
+    // Always calculate and display ENC status (needed for abilities like Artful Dodger)
     const STR = parseInt(this.character.attributes.STR) || 0;
     const status = Calculator.getEncStatus(total, STR);
     
@@ -8746,8 +8734,8 @@ const App = {
       // Check Artful Dodger bonus (depends on encumbrance status)
       this.checkArtfulDodgerBonus();
       
-      // Check Agile bonus (depends on encumbrance status)
-      this.checkAgileBonus();
+      // Check Agile display (depends on encumbrance status)
+      this.updateAgileDisplay();
     }
   },
   
@@ -9853,6 +9841,9 @@ const App = {
       this.character.evadeWithoutArtfulDodger = currField.value;
     }
     
+    // Store the BASE value in character data before adding bonus
+    this.character.standardSkills.evade = currVal.toString();
+    
     currField.value = currVal + 10;
     
     // Add visual styling
@@ -9906,176 +9897,97 @@ const App = {
   // ============================================
   // AGILE ABILITY SYSTEM
   // ============================================
+  // Design: Never modify saved data. Store base Initiative in character.derived.
+  // Only add +4 bonus to the DISPLAY field. Track display state with agileDisplayed flag.
   
   /**
-   * Check if Agile bonus should be applied based on conditions:
-   * 1. Must be Unburdened (ENC < STR×2)
-   * 2. Must be wearing light armor or less
-   * 3. Must have 50%+ in Evade or Acrobatics
+   * Check and update Agile bonus display based on current conditions
+   * Called on: page load, ENC change, armor change, ability add/remove
    */
-  checkAgileBonus() {
-    // Check if character has Agile ability
-    const hasAbility = this.character.hasAgile || this.hasAbility('Agile');
+  updateAgileDisplay() {
+    const hasAbility = this.hasAbility('Agile');
+    const currField = document.getElementById('initiative-current');
+    if (!currField) return;
+    
+    // If ability is not present, ensure display is clean
     if (!hasAbility) {
-      if (this.character.agileActive) {
-        this.removeAgileBonus();
+      if (this.character.agileDisplayed) {
+        // Remove display bonus
+        const displayedVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, displayedVal - 4);
+        currField.classList.remove('agile-bonus');
+        currField.title = '';
+        this.character.agileDisplayed = false;
       }
       return;
     }
     
-    // Check all three conditions
-    const isUnburdened = this.checkAgileUnburdened();
-    const hasLightArmor = this.checkAgileLightArmor();
-    const hasSkillReq = this.checkAgileSkillRequirement();
+    // Check conditions
+    const meetsConditions = this.checkAgileConditions();
     
-    const meetsAllConditions = isUnburdened && hasLightArmor && hasSkillReq;
-    
-    if (meetsAllConditions && !this.character.agileActive) {
-      this.applyAgileBonus();
-    } else if (!meetsAllConditions && this.character.agileActive) {
-      this.removeAgileBonus();
-    } else if (meetsAllConditions && this.character.agileActive) {
-      // Bonus is already active - ensure visual styling
-      const currField = document.getElementById('initiative-current');
-      if (currField && !currField.classList.contains('agile-bonus')) {
-        currField.classList.add('agile-bonus');
-        currField.title = '+4 due to Agile';
-      }
+    if (meetsConditions && !this.character.agileDisplayed) {
+      // Add display bonus
+      const baseVal = parseInt(currField.value, 10) || 0;
+      currField.value = baseVal + 4;
+      currField.classList.add('agile-bonus');
+      currField.title = '+4 due to Agile';
+      this.character.agileDisplayed = true;
+    } else if (!meetsConditions && this.character.agileDisplayed) {
+      // Remove display bonus
+      const displayedVal = parseInt(currField.value, 10) || 0;
+      currField.value = Math.max(0, displayedVal - 4);
+      currField.classList.remove('agile-bonus');
+      currField.title = '';
+      this.character.agileDisplayed = false;
     }
+    // If conditions match current state, do nothing
   },
   
   /**
-   * Check if character is Unburdened for Agile
+   * Check if all Agile conditions are met
+   * Returns true if: Unburdened AND light armor AND 50%+ Evade/Acrobatics
    */
-  checkAgileUnburdened() {
+  checkAgileConditions() {
+    // Condition 1: Unburdened
     const statusEl = document.getElementById('enc-status');
     const statusName = statusEl?.textContent?.trim() || 'Unburdened';
-    return (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
-  },
-  
-  /**
-   * Check if character is wearing light armor or less for Agile
-   * Light armor types: None, Furs/Hides, Soft Leather, Hard Leather, Linen, Padded, Ring
-   * NOT light: Scale, Chain, Brigandine, Plate, etc.
-   */
-  checkAgileLightArmor() {
+    const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
+    if (!isUnburdened) return false;
+    
+    // Condition 2: Light armor or less
     const lightArmorTypes = [
       '', 'none', 'furs', 'hides', 'furs/hides', 'soft leather', 'hard leather', 
       'leather', 'linen', 'padded', 'ring', 'ringmail', 'ring mail'
     ];
-    
-    // Check all hit location armor fields
     const armorFields = document.querySelectorAll('[id$="-armor"]');
     for (const field of armorFields) {
       const armorName = (field.value || '').toLowerCase().trim();
       if (armorName && !lightArmorTypes.some(type => armorName.includes(type))) {
-        // Found non-light armor
-        return false;
+        return false; // Non-light armor found
       }
     }
-    return true;
-  },
-  
-  /**
-   * Check if character has 50%+ in Evade or Acrobatics for Agile
-   */
-  checkAgileSkillRequirement() {
-    // Check Evade
-    const evadeField = document.getElementById('evade-current');
-    let evadeVal = parseInt(evadeField?.value, 10) || 0;
-    // If Artful Dodger is active, use base value
+    
+    // Condition 3: 50%+ in Evade or Acrobatics
+    let evadeVal = parseInt(document.getElementById('evade-current')?.value, 10) || 0;
     if (this.character.artfulDodgerActive) {
       evadeVal = this.getEvadeWithoutArtfulDodger();
     }
     if (evadeVal >= 50) return true;
     
-    // Check Acrobatics (professional skill)
+    // Check Acrobatics in professional skills
     for (let i = 0; i < 22; i++) {
       const nameField = document.getElementById(`prof-skill-${i}-name`);
       const currentField = document.getElementById(`prof-skill-${i}-current`);
       if (nameField && currentField) {
-        const skillName = (nameField.value || '').toLowerCase().trim();
-        if (skillName === 'acrobatics') {
-          const skillVal = parseInt(currentField.value, 10) || 0;
-          if (skillVal >= 50) return true;
+        if ((nameField.value || '').toLowerCase().trim() === 'acrobatics') {
+          if ((parseInt(currentField.value, 10) || 0) >= 50) return true;
         }
       }
     }
     
     return false;
   },
-  
-  /**
-   * Apply Agile +4 bonus to Initiative
-   */
-  applyAgileBonus() {
-    const origField = document.getElementById('initiative-original');
-    const currField = document.getElementById('initiative-current');
-    
-    // Set active flag BEFORE changing value
-    this.character.agileActive = true;
-    
-    if (origField) {
-      const origVal = parseInt(origField.value, 10) || 0;
-      origField.value = origVal + 4;
-    }
-    if (currField) {
-      const currVal = parseInt(currField.value, 10) || 0;
-      currField.value = currVal + 4;
-      
-      // Add visual styling
-      currField.classList.add('agile-bonus');
-      currField.title = '+4 due to Agile';
-    }
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Remove Agile +4 bonus from Initiative
-   */
-  removeAgileBonus() {
-    const origField = document.getElementById('initiative-original');
-    const currField = document.getElementById('initiative-current');
-    
-    const wasActive = this.character.agileActive;
-    
-    // Set active flag to FALSE BEFORE changing value
-    this.character.agileActive = false;
-    
-    if (wasActive) {
-      if (origField) {
-        const origVal = parseInt(origField.value, 10) || 0;
-        origField.value = Math.max(0, origVal - 4);
-      }
-      if (currField) {
-        const currVal = parseInt(currField.value, 10) || 0;
-        currField.value = Math.max(0, currVal - 4);
-      }
-    }
-    
-    // Remove visual styling
-    if (currField) {
-      currField.classList.remove('agile-bonus');
-      currField.title = '';
-    }
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Get Initiative value without Agile bonus (for EXP improvement)
-   */
-  getInitiativeWithoutAgile() {
-    const currField = document.getElementById('initiative-current');
-    if (!currField) return 0;
-    
-    if (this.character.agileActive) {
-      return Math.max(0, (parseInt(currField.value, 10) || 0) - 4);
-    }
-    return parseInt(currField.value, 10) || 0;
-  },
-  
+
   /**
    * Get the next step up in damage modifier progression
    */
