@@ -2541,6 +2541,39 @@ select:focus {
   display: inline-block;
 }
 
+/* Heal All button */
+.heal-all-header {
+  width: 40px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.hit-location-table th:nth-child(6),
+.hit-location-table td:nth-child(6) {
+  width: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.btn-heal-all {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, #3a5a3a 0%, #4a7a4a 50%, #3a5a3a 100%);
+  border: 1px solid #6a9a6a;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-heal-all:hover {
+  background: linear-gradient(135deg, #4a6a4a 0%, #5a8a5a 50%, #4a6a4a 100%);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(90, 150, 90, 0.4);
+}
+
 /* Combat Skills */
 .combat-skills-section {
   margin-bottom: 1rem;

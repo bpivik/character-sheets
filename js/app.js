@@ -1492,6 +1492,14 @@ const App = {
         }
       }
     });
+    
+    // Heal All button - restore all hit location HP to max
+    const healAllBtn = document.getElementById('btn-heal-all');
+    if (healAllBtn) {
+      healAllBtn.addEventListener('click', () => {
+        this.healAllHitLocations();
+      });
+    }
   },
   
   /**
@@ -2858,6 +2866,7 @@ const App = {
           /
           <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
         </td>
+        <td></td>
       `;
       tbody.appendChild(tr);
       
@@ -2929,6 +2938,37 @@ const App = {
       }
       this.character.combat.hitLocations[i].hp = loc.hp.toString();
     });
+  },
+
+  /**
+   * Heal all hit locations - restore current HP to max HP
+   */
+  healAllHitLocations() {
+    // Confirmation dialog
+    if (!confirm('Are you sure you want to heal all damage?')) {
+      return;
+    }
+    
+    // Find all hit location rows and restore current to max
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+      const hpMaxInput = document.getElementById(`loc-${i}-hp`);
+      const hpCurrentInput = document.getElementById(`loc-${i}-current`);
+      
+      if (hpMaxInput && hpCurrentInput) {
+        const maxHP = hpMaxInput.value || '';
+        hpCurrentInput.value = maxHP;
+      }
+    });
+    
+    // Save changes
+    this.scheduleAutoSave();
+    
+    // Update summary widgets if visible
+    this.refreshSummaryWidgets();
   },
 
   /**
