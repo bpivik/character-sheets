@@ -3574,6 +3574,243 @@ select:focus {
   border-color: #1b5e20;
 }
 
+/* Game Session Buttons */
+.game-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+}
+
+.game-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border: 2px solid;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.game-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.game-btn:active {
+  transform: translateY(0);
+}
+
+.game-icon {
+  font-size: 1rem;
+}
+
+.game-btn-new {
+  border-color: #1565c0;
+  background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+  color: #0d47a1;
+}
+
+.game-btn-new:hover {
+  background: linear-gradient(to bottom, #bbdefb, #90caf9);
+  border-color: #0d47a1;
+}
+
+.game-btn-finish {
+  border-color: #7b1fa2;
+  background: linear-gradient(to bottom, #f3e5f5, #e1bee7);
+  color: #4a148c;
+}
+
+.game-btn-finish:hover {
+  background: linear-gradient(to bottom, #e1bee7, #ce93d8);
+  border-color: #4a148c;
+}
+
+/* New Game Modal */
+.new-game-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.new-game-modal-header {
+  background: linear-gradient(135deg, rgba(21, 101, 192, 0.2) 0%, rgba(13, 71, 161, 0.15) 100%);
+  border-bottom: 2px solid #1565c0;
+}
+
+.new-game-modal-header h3 {
+  color: #0d47a1;
+}
+
+.new-game-modal-body {
+  padding: 1.5rem;
+}
+
+.new-game-message {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-header);
+  margin: 0 0 0.5rem 0;
+}
+
+.new-game-effect {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0 0 1.25rem 0;
+}
+
+.new-game-luck-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 0 auto;
+  max-width: 150px;
+}
+
+.new-game-luck-display .luck-icon {
+  font-size: 2rem;
+}
+
+.new-game-luck-display .luck-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2e7d32;
+  line-height: 1;
+}
+
+.new-game-luck-display .luck-label {
+  font-size: 0.85rem;
+  color: #1b5e20;
+  font-weight: 600;
+}
+
+.new-game-modal-footer {
+  border-top: 1px solid var(--border-light);
+  padding: 1rem;
+  background: rgba(0,0,0,0.03);
+}
+
+.new-game-modal-footer .btn-primary {
+  padding: 0.6rem 2rem;
+  font-size: 1rem;
+}
+
+/* Finish Game Modal */
+.finish-game-modal {
+  max-width: 450px;
+}
+
+.finish-game-modal-header {
+  background: linear-gradient(135deg, rgba(123, 31, 162, 0.2) 0%, rgba(74, 20, 140, 0.15) 100%);
+  border-bottom: 2px solid #7b1fa2;
+}
+
+.finish-game-modal-header h3 {
+  color: #4a148c;
+}
+
+.finish-game-modal-body {
+  padding: 1.5rem;
+}
+
+.finish-game-message {
+  font-size: 1.1rem;
+  color: var(--text-header);
+  margin: 0 0 1.25rem 0;
+  text-align: center;
+}
+
+.finish-game-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.finish-game-input-row label {
+  font-weight: 600;
+  color: var(--text-header);
+}
+
+.finish-game-exp-input {
+  width: 70px;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid #7b1fa2;
+  border-radius: 6px;
+  background: #faf4fc;
+}
+
+.finish-game-exp-input:focus {
+  outline: none;
+  border-color: #4a148c;
+  box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.2);
+}
+
+.finish-game-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(0,0,0,0.03);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.finish-game-summary .exp-current {
+  color: var(--text-secondary);
+}
+
+.finish-game-summary .exp-arrow {
+  color: #7b1fa2;
+  font-weight: bold;
+}
+
+.finish-game-summary .exp-new {
+  color: #4a148c;
+}
+
+.finish-game-summary strong {
+  font-size: 1.1rem;
+}
+
+.finish-game-modal-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem;
+  border-top: 1px solid var(--border-light);
+  background: rgba(0,0,0,0.03);
+}
+
+.btn-finish-confirm {
+  background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 50%, #7b1fa2 100%);
+  color: white;
+  border: 1px solid #6a1b9a;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-finish-confirm:hover {
+  background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 50%, #6a1b9a 100%);
+  box-shadow: 0 2px 8px rgba(123, 31, 162, 0.4);
+}
+
 /* Short Rest Modal */
 .short-rest-modal-overlay {
   display: none;

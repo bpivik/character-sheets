@@ -915,3 +915,69 @@
   background: linear-gradient(to bottom, #204a20, #153a15);
   border-color: #5a5;
 }
+
+/* Game Buttons - Dark Mode */
+[data-theme="dark"] .game-btn-new {
+  background: linear-gradient(to bottom, #1a3a5c, #0d2a4a);
+  border-color: #1976d2;
+  color: #90caf9;
+}
+
+[data-theme="dark"] .game-btn-new:hover {
+  background: linear-gradient(to bottom, #1e4a6e, #1a3a5c);
+}
+
+[data-theme="dark"] .game-btn-finish {
+  background: linear-gradient(to bottom, #3a1a4a, #2a0a3a);
+  border-color: #9c27b0;
+  color: #ce93d8;
+}
+
+[data-theme="dark"] .game-btn-finish:hover {
+  background: linear-gradient(to bottom, #4a2a5a, #3a1a4a);
+}
+
+/* New Game Modal - Dark Mode */
+[data-theme="dark"] .new-game-modal-header {
+  background: linear-gradient(135deg, rgba(21, 101, 192, 0.3) 0%, rgba(13, 71, 161, 0.25) 100%);
+}
+
+[data-theme="dark"] .new-game-modal-header h3 {
+  color: #90caf9;
+}
+
+[data-theme="dark"] .new-game-luck-display {
+  background: linear-gradient(135deg, #1b3d1b 0%, #2a5a2a 100%);
+  border-color: #4caf50;
+}
+
+[data-theme="dark"] .new-game-luck-display .luck-value {
+  color: #81c784;
+}
+
+[data-theme="dark"] .new-game-luck-display .luck-label {
+  color: #a5d6a7;
+}
+
+/* Finish Game Modal - Dark Mode */
+[data-theme="dark"] .finish-game-modal-header {
+  background: linear-gradient(135deg, rgba(123, 31, 162, 0.3) 0%, rgba(74, 20, 140, 0.25) 100%);
+}
+
+[data-theme="dark"] .finish-game-modal-header h3 {
+  color: #ce93d8;
+}
+
+[data-theme="dark"] .finish-game-exp-input {
+  background: #2a1a3a;
+  border-color: #9c27b0;
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .finish-game-summary .exp-arrow {
+  color: #ce93d8;
+}
+
+[data-theme="dark"] .finish-game-summary .exp-new {
+  color: #e1bee7;
+}

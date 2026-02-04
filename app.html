@@ -127,6 +127,16 @@
                   <span class="rest-text">Long Rest</span>
                 </button>
               </div>
+              <div class="game-buttons">
+                <button class="game-btn game-btn-new" id="btn-new-game" title="Start a new game session - restore Luck Points">
+                  <span class="game-icon">🎲</span>
+                  <span class="game-text">New Game</span>
+                </button>
+                <button class="game-btn game-btn-finish" id="btn-finish-game" title="Finish game session - add EXP Rolls">
+                  <span class="game-icon">🏆</span>
+                  <span class="game-text">Finish Game</span>
+                </button>
+              </div>
             </div>
           </div>
           
@@ -818,6 +828,54 @@
         </div>
         <div class="modal-footer wound-info-footer">
           <button type="button" class="btn btn-secondary" id="btn-wound-info-close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Game Modal -->
+    <div id="new-game-modal" class="modal-overlay hidden">
+      <div class="modal-content new-game-modal">
+        <div class="modal-header new-game-modal-header">
+          <h3>🎲 New Game Session</h3>
+          <button type="button" class="btn-modal-close" id="new-game-modal-close">&times;</button>
+        </div>
+        <div class="modal-body new-game-modal-body">
+          <p class="new-game-message">Good luck adventuring!</p>
+          <p class="new-game-effect">Your Luck Points have been restored to maximum.</p>
+          <div class="new-game-luck-display">
+            <span class="luck-icon">🍀</span>
+            <span class="luck-value" id="new-game-luck-value">0</span>
+            <span class="luck-label">Luck Points</span>
+          </div>
+        </div>
+        <div class="modal-footer new-game-modal-footer">
+          <button type="button" class="btn btn-primary" id="btn-new-game-ok">Let's Go!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finish Game Modal -->
+    <div id="finish-game-modal" class="modal-overlay hidden">
+      <div class="modal-content finish-game-modal">
+        <div class="modal-header finish-game-modal-header">
+          <h3>🏆 Finish Game Session</h3>
+          <button type="button" class="btn-modal-close" id="finish-game-modal-close">&times;</button>
+        </div>
+        <div class="modal-body finish-game-modal-body">
+          <p class="finish-game-message">Great session! How many EXP Rolls did you gain?</p>
+          <div class="finish-game-input-row">
+            <label for="finish-game-exp">EXP Rolls Earned:</label>
+            <input type="number" id="finish-game-exp" class="finish-game-exp-input" min="0" value="1" placeholder="0">
+          </div>
+          <div class="finish-game-summary">
+            <span class="exp-current">Current: <strong id="finish-game-current-exp">0</strong></span>
+            <span class="exp-arrow">→</span>
+            <span class="exp-new">New Total: <strong id="finish-game-new-exp">0</strong></span>
+          </div>
+        </div>
+        <div class="modal-footer finish-game-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-finish-game-cancel">Cancel</button>
+          <button type="button" class="btn btn-finish-confirm" id="btn-finish-game-confirm">Save & Finish</button>
         </div>
       </div>
     </div>

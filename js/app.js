@@ -1579,6 +1579,69 @@ const App = {
         this.adjustLocationHP(locIndex, isUp ? 1 : -1);
       }
     });
+    
+    // New Game button
+    const newGameBtn = document.getElementById('btn-new-game');
+    if (newGameBtn) {
+      newGameBtn.addEventListener('click', () => {
+        this.startNewGame();
+      });
+    }
+    
+    // New Game Modal handlers
+    const newGameModalClose = document.getElementById('new-game-modal-close');
+    if (newGameModalClose) {
+      newGameModalClose.addEventListener('click', () => this.closeNewGameModal());
+    }
+    
+    const newGameOkBtn = document.getElementById('btn-new-game-ok');
+    if (newGameOkBtn) {
+      newGameOkBtn.addEventListener('click', () => this.closeNewGameModal());
+    }
+    
+    const newGameModal = document.getElementById('new-game-modal');
+    if (newGameModal) {
+      newGameModal.addEventListener('click', (e) => {
+        if (e.target === newGameModal) this.closeNewGameModal();
+      });
+    }
+    
+    // Finish Game button
+    const finishGameBtn = document.getElementById('btn-finish-game');
+    if (finishGameBtn) {
+      finishGameBtn.addEventListener('click', () => {
+        this.showFinishGameModal();
+      });
+    }
+    
+    // Finish Game Modal handlers
+    const finishGameModalClose = document.getElementById('finish-game-modal-close');
+    if (finishGameModalClose) {
+      finishGameModalClose.addEventListener('click', () => this.closeFinishGameModal());
+    }
+    
+    const finishGameCancelBtn = document.getElementById('btn-finish-game-cancel');
+    if (finishGameCancelBtn) {
+      finishGameCancelBtn.addEventListener('click', () => this.closeFinishGameModal());
+    }
+    
+    const finishGameConfirmBtn = document.getElementById('btn-finish-game-confirm');
+    if (finishGameConfirmBtn) {
+      finishGameConfirmBtn.addEventListener('click', () => this.confirmFinishGame());
+    }
+    
+    const finishGameModal = document.getElementById('finish-game-modal');
+    if (finishGameModal) {
+      finishGameModal.addEventListener('click', (e) => {
+        if (e.target === finishGameModal) this.closeFinishGameModal();
+      });
+    }
+    
+    // Update EXP preview when input changes
+    const finishGameExpInput = document.getElementById('finish-game-exp');
+    if (finishGameExpInput) {
+      finishGameExpInput.addEventListener('input', () => this.updateFinishGamePreview());
+    }
   },
   
   /**
@@ -3373,6 +3436,125 @@ const App = {
    */
   closeWoundInfoModal() {
     const modal = document.getElementById('wound-info-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Start a new game session - restore Luck Points to maximum
+   */
+  startNewGame() {
+    // Get the maximum Luck Points (calculated value)
+    const luckPointsMax = document.getElementById('luck-points')?.value || '0';
+    const luckPointsCurrent = document.getElementById('luck-points-current');
+    
+    if (luckPointsCurrent) {
+      luckPointsCurrent.value = luckPointsMax;
+    }
+    
+    // Save the change
+    this.scheduleAutoSave();
+    
+    // Update the modal display and show it
+    const luckDisplay = document.getElementById('new-game-luck-value');
+    if (luckDisplay) {
+      luckDisplay.textContent = luckPointsMax;
+    }
+    
+    const modal = document.getElementById('new-game-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  },
+
+  /**
+   * Close the New Game modal
+   */
+  closeNewGameModal() {
+    const modal = document.getElementById('new-game-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  /**
+   * Show the Finish Game modal
+   */
+  showFinishGameModal() {
+    // Get current EXP Rolls
+    const expRollsInput = document.getElementById('exp-rolls');
+    const currentExp = parseInt(expRollsInput?.value, 10) || 0;
+    
+    // Update the display
+    const currentExpDisplay = document.getElementById('finish-game-current-exp');
+    if (currentExpDisplay) {
+      currentExpDisplay.textContent = currentExp;
+    }
+    
+    // Reset the input to 1
+    const expInput = document.getElementById('finish-game-exp');
+    if (expInput) {
+      expInput.value = 1;
+    }
+    
+    // Update the preview
+    this.updateFinishGamePreview();
+    
+    // Show the modal
+    const modal = document.getElementById('finish-game-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  },
+
+  /**
+   * Update the Finish Game EXP preview
+   */
+  updateFinishGamePreview() {
+    const expRollsInput = document.getElementById('exp-rolls');
+    const currentExp = parseInt(expRollsInput?.value, 10) || 0;
+    
+    const earnedInput = document.getElementById('finish-game-exp');
+    const earned = parseInt(earnedInput?.value, 10) || 0;
+    
+    const newTotal = currentExp + earned;
+    
+    const newExpDisplay = document.getElementById('finish-game-new-exp');
+    if (newExpDisplay) {
+      newExpDisplay.textContent = newTotal;
+    }
+  },
+
+  /**
+   * Confirm and apply Finish Game changes
+   */
+  confirmFinishGame() {
+    const expRollsInput = document.getElementById('exp-rolls');
+    const currentExp = parseInt(expRollsInput?.value, 10) || 0;
+    
+    const earnedInput = document.getElementById('finish-game-exp');
+    const earned = parseInt(earnedInput?.value, 10) || 0;
+    
+    if (earned > 0 && expRollsInput) {
+      expRollsInput.value = currentExp + earned;
+    }
+    
+    // Close the modal
+    this.closeFinishGameModal();
+    
+    // Save the character sheet
+    this.saveCharacter();
+    
+    // Show confirmation (could be a toast in the future)
+    console.log(`Game session finished! Added ${earned} EXP Rolls. Total: ${currentExp + earned}`);
+  },
+
+  /**
+   * Close the Finish Game modal
+   */
+  closeFinishGameModal() {
+    const modal = document.getElementById('finish-game-modal');
     if (modal) {
       modal.classList.add('hidden');
     }
