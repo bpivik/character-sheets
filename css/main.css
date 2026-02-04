@@ -6024,15 +6024,15 @@ select:focus {
 .d10-icon {
   width: 18px;
   height: 18px;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity 0.15s, transform 0.15s;
-  color: #9090c0;
+  color: #2a1f14;
 }
 
 .d100-btn:hover .d10-icon {
-  opacity: 1;
+  opacity: 0.8;
   transform: scale(1.1);
-  color: #6060a0;
+  color: #000;
 }
 
 /* Damage dice button styling */

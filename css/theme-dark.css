@@ -810,3 +810,14 @@
   background: rgba(0,0,0,0.3);
   border-color: var(--border-color);
 }
+
+/* D10 Dice Icon - Dark Mode */
+[data-theme="dark"] .d10-icon {
+  color: #b0a090;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .d100-btn:hover .d10-icon {
+  color: #d4c4a0;
+  opacity: 0.9;
+}
