@@ -207,6 +207,7 @@ const App = {
     this.setupButtons();
     
     // Generate dynamic content
+    this.generateAlignments();
     this.generatePassions();
     this.generateOaths();
     this.generateLanguages();
@@ -1844,6 +1845,51 @@ const App = {
       if (input) {
         this.character.derived[key] = input.value;
       }
+    }
+  },
+
+  /**
+   * Generate alignment rows dynamically - only for saved alignments with names
+   */
+  generateAlignments() {
+    const container = document.getElementById('alignment-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Filter out any empty alignments (from old save format)
+    const savedAlignments = (this.character.alignments || []).filter(a => a && a.name && a.name.trim());
+    // Update character data to remove empty entries
+    this.character.alignments = savedAlignments;
+    
+    let rowIndex = 1;
+    for (let i = 0; i < savedAlignments.length; i++) {
+      const row = document.createElement('div');
+      row.className = 'belief-row';
+      row.dataset.index = rowIndex;
+      row.innerHTML = `
+        <input type="text" class="belief-name" id="alignment-${rowIndex}-name" placeholder="">
+        <span class="belief-formula">POW+INT+50</span>
+        <span class="belief-base" id="alignment-${rowIndex}-base">0</span>
+        <input type="number" class="belief-input" id="alignment-${rowIndex}-current" placeholder="">
+      `;
+      container.appendChild(row);
+      
+      // Add event listeners
+      const nameInput = row.querySelector('.belief-name');
+      const currentInput = row.querySelector('.belief-input');
+      
+      nameInput.addEventListener('blur', (e) => {
+        if (e.target.value.trim()) {
+          e.target.value = this.toTitleCase(e.target.value.trim());
+        }
+        this.scheduleAutoSave();
+      });
+      
+      nameInput.addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', () => this.scheduleAutoSave());
+      
+      rowIndex++;
     }
   },
 
@@ -5301,16 +5347,21 @@ const App = {
       electrum: document.getElementById('money-electrum')?.value || ''
     };
     
-    // Alignments
-    for (let i = 1; i <= 2; i++) {
-      const nameInput = document.getElementById(`alignment-${i}-name`);
-      const currentInput = document.getElementById(`alignment-${i}-current`);
-      if (nameInput && currentInput) {
-        this.character.alignments[i-1] = {
-          name: nameInput.value,
-          current: currentInput.value
-        };
-      }
+    // Alignments (dynamic rows) - only save rows with a name
+    this.character.alignments = [];
+    const alignmentContainer = document.getElementById('alignment-container');
+    if (alignmentContainer) {
+      const alignmentRows = alignmentContainer.querySelectorAll('.belief-row');
+      alignmentRows.forEach((row, i) => {
+        const nameInput = row.querySelector('.belief-name');
+        const currentInput = row.querySelector('.belief-input');
+        if (nameInput?.value?.trim()) {
+          this.character.alignments.push({
+            name: nameInput.value,
+            current: currentInput?.value || ''
+          });
+        }
+      });
     }
     
     // Passions (dynamic rows with custom formulas) - only save rows with a name
@@ -5677,10 +5728,14 @@ const App = {
       }
     }
     
-    // Update belief bases
-    for (let i = 1; i <= 2; i++) {
-      const baseSpan = document.getElementById(`alignment-${i}-base`);
-      if (baseSpan) baseSpan.textContent = results.beliefs.alignment;
+    // Update alignment bases (dynamic count)
+    const alignmentContainer = document.getElementById('alignment-container');
+    if (alignmentContainer) {
+      const alignmentRows = alignmentContainer.querySelectorAll('.belief-row');
+      alignmentRows.forEach(row => {
+        const alignmentBase = row.querySelector('.belief-base');
+        if (alignmentBase) alignmentBase.textContent = results.beliefs.alignment;
+      });
     }
     
     // Update all passion bases (dynamic count) - each passion can have a custom formula
@@ -12603,6 +12658,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     document.getElementById('btn-add-oath')?.addEventListener('click', () => this.addOathRow());
     document.getElementById('btn-remove-oath')?.addEventListener('click', () => this.removeLastRow('oaths-container', '.belief-row', '.belief-name'));
     
+    // Alignments
+    document.getElementById('btn-add-alignment')?.addEventListener('click', () => this.addAlignmentRow());
+    document.getElementById('btn-remove-alignment')?.addEventListener('click', () => this.removeLastRow('alignment-container', '.belief-row', '.belief-name'));
+    
     // Passions
     document.getElementById('btn-add-passion')?.addEventListener('click', () => this.addPassionRow());
     document.getElementById('btn-remove-passion')?.addEventListener('click', () => this.removeLastRow('passions-container', '.belief-row', '.belief-name'));
@@ -13229,6 +13288,35 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   /**
    * Add a new oath row
    */
+  addAlignmentRow() {
+    const container = document.getElementById('alignment-container');
+    if (!container) return;
+    
+    // Find current highest index
+    const rows = container.querySelectorAll('.belief-row');
+    const newIndex = rows.length + 1;
+    
+    const row = document.createElement('div');
+    row.className = 'belief-row';
+    row.dataset.index = newIndex;
+    row.innerHTML = `
+      <input type="text" class="belief-name" id="alignment-${newIndex}-name" placeholder="">
+      <span class="belief-formula">POW+INT+50</span>
+      <span class="belief-base" id="alignment-${newIndex}-base">0</span>
+      <input type="number" class="belief-input" id="alignment-${newIndex}-current" placeholder="">
+    `;
+    container.appendChild(row);
+    
+    // Calculate base value
+    this.recalculateAll();
+    
+    // Focus the new row
+    row.querySelector('.belief-name').focus();
+    
+    this.scheduleAutoSave();
+    this.addSkillDiceButtons();
+  },
+
   addOathRow() {
     const container = document.getElementById('oaths-container');
     if (!container) return;
@@ -13941,17 +14029,29 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       `;
     };
     
-    // Alignment (2 fixed slots)
-    for (let i = 1; i <= 2; i++) {
-      const nameInput = document.getElementById(`alignment-${i}-name`);
-      const currentInput = document.getElementById(`alignment-${i}-current`);
-      
-      if (nameInput && nameInput.value.trim()) {
-        const name = nameInput.value.trim();
-        const current = currentInput?.value || '0';
-        alignmentContainer.innerHTML += createRow(`alignment:${i}`, name, current);
-      }
+    // Alignment (dynamically added, check container)
+    const alignmentData = [];
+    const alignmentContainerEl = document.getElementById('alignment-container');
+    if (alignmentContainerEl) {
+      const alignmentRows = alignmentContainerEl.querySelectorAll('.belief-row');
+      alignmentRows.forEach((row, idx) => {
+        const index = row.dataset.index || (idx + 1);
+        const nameInput = document.getElementById(`alignment-${index}-name`);
+        const currentInput = document.getElementById(`alignment-${index}-current`);
+        
+        if (nameInput && nameInput.value.trim()) {
+          alignmentData.push({
+            index: index,
+            name: nameInput.value.trim(),
+            current: currentInput?.value || '0'
+          });
+        }
+      });
     }
+    
+    alignmentData.forEach(alignment => {
+      alignmentContainer.innerHTML += createRow(`alignment:${alignment.index}`, alignment.name, alignment.current);
+    });
     
     if (alignmentContainer.innerHTML === '') {
       alignmentContainer.innerHTML = '<p class="no-skills-message">No alignments defined</p>';

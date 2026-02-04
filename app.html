@@ -567,24 +567,21 @@
             
             <!-- Alignment Section -->
             <section class="alignment-section">
-              <h3 class="section-header">Alignment</h3>
+              <div class="section-header-row">
+                <h3 class="section-header">Alignment</h3>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-alignment" title="Add alignment row">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-alignment" title="Remove last alignment row">−</button>
+                </div>
+              </div>
               <div class="section-subheader">
                 <span></span>
                 <span></span>
                 <span class="header-base">Base %</span>
                 <span class="header-current">%</span>
               </div>
-              <div class="belief-row">
-                <input type="text" class="belief-name" id="alignment-1-name" placeholder="">
-                <span class="belief-formula">POW+INT+50</span>
-                <span class="belief-base" id="alignment-1-base">0</span>
-                <input type="number" class="belief-input" id="alignment-1-current" placeholder="">
-              </div>
-              <div class="belief-row">
-                <input type="text" class="belief-name" id="alignment-2-name" placeholder="">
-                <span class="belief-formula">POW+INT+50</span>
-                <span class="belief-base" id="alignment-2-base">0</span>
-                <input type="number" class="belief-input" id="alignment-2-current" placeholder="">
+              <div id="alignment-container">
+                <!-- Alignment rows are dynamically generated -->
               </div>
             </section>
 
