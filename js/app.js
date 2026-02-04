@@ -569,8 +569,6 @@ const App = {
         
         // Refresh summary widgets when switching to Summary page
         if (targetPage === 'summary') {
-          // Save current form data first so widgets have fresh data
-          this.saveFormToCharacter();
           this.refreshSummaryWidgets();
         }
       });
@@ -11475,39 +11473,26 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         
         // Helper to create belief item with d100 button
         const createBeliefItem = (name, current) => {
-          const safeValue = current || '0';
-          return `<div class="skill-item belief-roll-item" data-skill-name="${name}" data-skill-value="${safeValue}">
+          return `<div class="skill-item belief-roll-item" data-skill-name="${name}" data-skill-value="${current}">
             <span>${name}</span>
             <span class="belief-roll-group">
-              <span class="belief-value">${safeValue}%</span>
+              <span class="belief-value">${current}%</span>
               <button type="button" class="btn-belief-roll" title="Roll d100">🎲</button>
             </span>
           </div>`;
         };
         
-        // Get data from character object (more reliable than DOM queries)
-        const app = window.MythrasApp || CharacterSheet;
-        
-        // Alignment - read from DOM since it's on the visible page or use saved data
-        const alignmentEntries = [];
+        // Alignment
         const alignmentContainer = document.getElementById('alignment-container');
+        const alignmentEntries = [];
         if (alignmentContainer) {
           const alignmentRows = alignmentContainer.querySelectorAll('.belief-row');
           alignmentRows.forEach((row, idx) => {
-            const nameInput = row.querySelector('.belief-name');
-            const currentInput = row.querySelector('.belief-input');
-            const name = nameInput?.value || '';
-            const current = currentInput?.value || '0';
+            const index = row.dataset.index || (idx + 1);
+            const name = document.getElementById(`alignment-${index}-name`)?.value || '';
+            const current = document.getElementById(`alignment-${index}-current`)?.value || '-';
             if (name.trim()) {
               alignmentEntries.push({ name: name.trim(), current });
-            }
-          });
-        }
-        // Fallback to saved data if DOM query returned nothing
-        if (alignmentEntries.length === 0 && app.character?.alignments) {
-          app.character.alignments.forEach(a => {
-            if (a.name && a.name.trim()) {
-              alignmentEntries.push({ name: a.name.trim(), current: a.current || '0' });
             }
           });
         }
@@ -11520,25 +11505,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         }
         
         // Passions
-        const passionEntries = [];
         const passionsContainer = document.getElementById('passions-container');
+        const passionEntries = [];
         if (passionsContainer) {
           const passionRows = passionsContainer.querySelectorAll('.belief-row');
           passionRows.forEach((row, idx) => {
-            const nameInput = row.querySelector('.belief-name');
-            const currentInput = row.querySelector('.belief-input');
-            const name = nameInput?.value || '';
-            const current = currentInput?.value || '0';
+            const index = row.dataset.index || (idx + 1);
+            const name = document.getElementById(`passion-${index}-name`)?.value || '';
+            const current = document.getElementById(`passion-${index}-current`)?.value || '-';
             if (name.trim()) {
               passionEntries.push({ name: name.trim(), current });
-            }
-          });
-        }
-        // Fallback to saved data
-        if (passionEntries.length === 0 && app.character?.passions) {
-          app.character.passions.forEach(p => {
-            if (p.name && p.name.trim()) {
-              passionEntries.push({ name: p.name.trim(), current: p.current || '0' });
             }
           });
         }
@@ -11551,25 +11527,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         }
         
         // Oaths
-        const oathEntries = [];
         const oathsContainer = document.getElementById('oaths-container');
+        const oathEntries = [];
         if (oathsContainer) {
           const oathRows = oathsContainer.querySelectorAll('.belief-row');
           oathRows.forEach((row, idx) => {
-            const nameInput = row.querySelector('.belief-name');
-            const currentInput = row.querySelector('.belief-input');
-            const name = nameInput?.value || '';
-            const current = currentInput?.value || '0';
+            const index = row.dataset.index || (idx + 1);
+            const name = document.getElementById(`oath-${index}-name`)?.value || '';
+            const current = document.getElementById(`oath-${index}-current`)?.value || '-';
             if (name.trim()) {
               oathEntries.push({ name: name.trim(), current });
-            }
-          });
-        }
-        // Fallback to saved data
-        if (oathEntries.length === 0 && app.character?.oaths) {
-          app.character.oaths.forEach(o => {
-            if (o.name && o.name.trim()) {
-              oathEntries.push({ name: o.name.trim(), current: o.current || '0' });
             }
           });
         }
