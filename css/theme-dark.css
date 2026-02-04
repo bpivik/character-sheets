@@ -796,6 +796,11 @@
   border-top-color: #444;
 }
 
+[data-theme="dark"] .skirmish-combat-skill,
+[data-theme="dark"] .skirmish-athletics-skill {
+  color: var(--text-header);
+}
+
 /* Species Abilities Section - Dark Mode */
 [data-theme="dark"] .species-abilities-section {
   background: rgba(0,0,0,0.3);

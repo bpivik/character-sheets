@@ -5729,6 +5729,35 @@ select:focus {
   margin: 0.75rem 0;
 }
 
+.skirmish-combat-skill,
+.skirmish-athletics-skill {
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+.skirmish-roll-section {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.skirmish-effective {
+  font-size: 0.95rem;
+}
+
+.skirmish-limited-by {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.skirmish-roll-btn {
+  font-size: 0.95rem !important;
+  padding: 0.35rem 0.8rem !important;
+}
+
 .ability-detail-no-desc {
   color: var(--text-secondary);
   font-style: italic;

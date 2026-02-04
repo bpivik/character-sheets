@@ -4618,8 +4618,56 @@ const App = {
     overlay.querySelector('.ability-detail-title').textContent = displayName;
     overlay.querySelector('.ability-detail-description').innerHTML = formattedContent;
     
+    // Populate Skirmishing dynamic values and roll button
+    if (abilityName.toLowerCase().trim() === 'skirmishing') {
+      this.populateSkirmishingDetail(overlay);
+    }
+    
     // Show overlay
     overlay.classList.add('active');
+  },
+  
+  /**
+   * Populate Skirmishing ability detail with dynamic skill values and roll button
+   */
+  populateSkirmishingDetail(overlay) {
+    const combatSkillField = document.getElementById('combat-skill-1-percent');
+    const athleticsField = document.getElementById('athletics-current');
+    
+    const combatPct = parseInt(combatSkillField?.value, 10) || 0;
+    const athleticsPct = parseInt(athleticsField?.value, 10) || 0;
+    
+    // Fill in the skill value spans
+    const combatSpan = overlay.querySelector('.skirmish-combat-skill');
+    const athleticsSpan = overlay.querySelector('.skirmish-athletics-skill');
+    if (combatSpan) combatSpan.textContent = `(${combatPct}%)`;
+    if (athleticsSpan) athleticsSpan.textContent = `(${athleticsPct}%)`;
+    
+    // Determine effective skill (lower of the two)
+    const effectivePct = Math.min(combatPct, athleticsPct);
+    const limitedBy = effectivePct === athleticsPct ? 'Athletics' : 'Combat Skill';
+    
+    // Add roll button section
+    const descEl = overlay.querySelector('.ability-detail-description');
+    if (descEl) {
+      const rollSection = document.createElement('div');
+      rollSection.className = 'ability-callout skirmish-roll-section';
+      rollSection.innerHTML = `
+        <div class="skirmish-effective">
+          <strong>Effective Skill:</strong> ${effectivePct}% <span class="skirmish-limited-by">(limited by ${limitedBy})</span>
+        </div>
+        <button class="ability-nav-btn skirmish-roll-btn" title="Roll d100 against ${effectivePct}%">
+          🎲 Roll Skirmishing (${effectivePct}%)
+        </button>
+      `;
+      descEl.appendChild(rollSection);
+      
+      // Wire up roll button
+      rollSection.querySelector('.skirmish-roll-btn').addEventListener('click', () => {
+        this.closeAbilityDetail();
+        this.rollD100('Skirmishing', effectivePct);
+      });
+    }
   },
   
   /**
