@@ -1015,3 +1015,16 @@
   background: linear-gradient(135deg, #4a5a5a 0%, #5a6a6a 100%);
   border-color: #7cc;
 }
+
+/* Forceful Strike - Dark Mode */
+[data-theme="dark"] .forceful-penalized {
+  background-color: rgba(200, 100, 0, 0.3) !important;
+  border-color: #d95 !important;
+  color: #fa6 !important;
+}
+
+[data-theme="dark"] .forceful-boosted {
+  background-color: rgba(0, 180, 60, 0.25) !important;
+  border-color: #5d5 !important;
+  color: #5f5 !important;
+}

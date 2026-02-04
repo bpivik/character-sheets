@@ -1298,13 +1298,15 @@ select:focus {
 
 /* Forceful Strike penalized skill indicators */
 .forceful-penalized {
-  background-color: rgba(150, 100, 0, 0.15) !important;
-  border-color: #a84 !important;
+  background-color: rgba(200, 100, 0, 0.25) !important;
+  border: 2px solid #c84 !important;
+  color: #a63 !important;
 }
 
 .forceful-boosted {
-  background-color: rgba(0, 150, 50, 0.15) !important;
-  border-color: #4a4 !important;
+  background-color: rgba(0, 180, 60, 0.2) !important;
+  border: 2px solid #4c4 !important;
+  color: #2a2 !important;
 }
 
 /* ============================================

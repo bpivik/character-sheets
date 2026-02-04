@@ -10131,7 +10131,7 @@ const App = {
     
     // Store pre-activation values
     this.character.preForcefulValues = {
-      combatSkill: document.getElementById('combat-skill-current')?.value || '0',
+      combatSkill: document.getElementById('combat-skill-1-percent')?.value || '0',
       damageMod: document.getElementById('damage-mod-current')?.value || '+0',
       damageModOrig: document.getElementById('damage-mod-original')?.value || '+0'
     };
@@ -10157,12 +10157,14 @@ const App = {
    * Apply Forceful Strike effects
    */
   applyForcefulStrikeEffects() {
-    // Combat Skill -20%
-    const combatField = document.getElementById('combat-skill-current');
+    // Combat Skill -20% (one difficulty grade harder)
+    // Target the main combat skill field (combat-skill-1-percent)
+    const combatField = document.getElementById('combat-skill-1-percent');
     if (combatField) {
       const curr = parseInt(combatField.value, 10) || 0;
       combatField.value = curr - 20;
       combatField.classList.add('forceful-penalized');
+      combatField.title = 'Forceful Strike: -20% (one grade harder)';
     }
     
     // Damage Mod +2 steps
@@ -10173,6 +10175,7 @@ const App = {
       newMod = this.getNextDamageModStep(newMod); // +2 steps
       dmgCurrField.value = newMod;
       dmgCurrField.classList.add('forceful-boosted');
+      dmgCurrField.title = 'Forceful Strike: +2 steps';
     }
     if (dmgOrigField) {
       let newMod = this.getNextDamageModStep(dmgOrigField.value);
@@ -10222,10 +10225,11 @@ const App = {
     if (!this.character.preForcefulValues) return;
     
     // Restore Combat Skill
-    const combatField = document.getElementById('combat-skill-current');
+    const combatField = document.getElementById('combat-skill-1-percent');
     if (combatField) {
       combatField.value = this.character.preForcefulValues.combatSkill;
       combatField.classList.remove('forceful-penalized');
+      combatField.title = '';
     }
     
     // Restore Damage Mod
@@ -10234,6 +10238,7 @@ const App = {
     if (dmgCurrField) {
       dmgCurrField.value = this.character.preForcefulValues.damageMod;
       dmgCurrField.classList.remove('forceful-boosted');
+      dmgCurrField.title = '';
     }
     if (dmgOrigField) {
       dmgOrigField.value = this.character.preForcefulValues.damageModOrig;
@@ -10266,12 +10271,18 @@ const App = {
     }
     
     // Re-apply visual indicators
-    const combatField = document.getElementById('combat-skill-current');
+    const combatField = document.getElementById('combat-skill-1-percent');
     const dmgCurrField = document.getElementById('damage-mod-current');
     const dmgOrigField = document.getElementById('damage-mod-original');
     
-    if (combatField) combatField.classList.add('forceful-penalized');
-    if (dmgCurrField) dmgCurrField.classList.add('forceful-boosted');
+    if (combatField) {
+      combatField.classList.add('forceful-penalized');
+      combatField.title = 'Forceful Strike: -20% (one grade harder)';
+    }
+    if (dmgCurrField) {
+      dmgCurrField.classList.add('forceful-boosted');
+      dmgCurrField.title = 'Forceful Strike: +2 steps';
+    }
     if (dmgOrigField) dmgOrigField.classList.add('forceful-boosted');
   },
   
