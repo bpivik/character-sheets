@@ -6098,6 +6098,24 @@ select:focus {
   color: #e94560;
 }
 
+/* Weapon table damage cell with dice button */
+.damage-cell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.damage-cell input.weapon-damage {
+  flex: 1;
+  min-width: 0;
+}
+
+.weapon-dice-btn {
+  flex-shrink: 0;
+  padding: 0 2px;
+  font-size: 0.85rem;
+}
+
 .skill-roll {
   display: flex;
   align-items: center;

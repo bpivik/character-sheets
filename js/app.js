@@ -2834,7 +2834,7 @@ const App = {
         tr.innerHTML = `
           <td><input type="text" id="melee-${i}-name" class="weapon-name" placeholder=""></td>
           <td><input type="text" id="melee-${i}-hands" placeholder=""></td>
-          <td><input type="text" id="melee-${i}-damage" placeholder=""></td>
+          <td class="damage-cell"><input type="text" id="melee-${i}-damage" class="weapon-damage" placeholder=""><button class="dice-btn weapon-dice-btn" title="Roll damage">🎲</button></td>
           <td><input type="text" id="melee-${i}-size" placeholder=""></td>
           <td><input type="text" id="melee-${i}-effects" placeholder=""></td>
           <td><input type="text" id="melee-${i}-aphp" placeholder=""></td>
@@ -2884,7 +2884,7 @@ const App = {
         tr.innerHTML = `
           <td><input type="text" id="ranged-${i}-name" class="weapon-name" placeholder=""></td>
           <td><input type="text" id="ranged-${i}-hands" placeholder=""></td>
-          <td><input type="text" id="ranged-${i}-damage" placeholder=""></td>
+          <td class="damage-cell"><input type="text" id="ranged-${i}-damage" class="weapon-damage" placeholder=""><button class="dice-btn weapon-dice-btn" title="Roll damage">🎲</button></td>
           <td><input type="text" id="ranged-${i}-dm" placeholder=""></td>
           <td><input type="text" id="ranged-${i}-range" placeholder=""></td>
           <td><input type="text" id="ranged-${i}-load" placeholder=""></td>
@@ -2938,7 +2938,7 @@ const App = {
     tr.innerHTML = `
       <td><input type="text" id="melee-${i}-name" class="weapon-name" placeholder=""></td>
       <td><input type="text" id="melee-${i}-hands" placeholder=""></td>
-      <td><input type="text" id="melee-${i}-damage" placeholder=""></td>
+      <td class="damage-cell"><input type="text" id="melee-${i}-damage" class="weapon-damage" placeholder=""><button class="dice-btn weapon-dice-btn" title="Roll damage">🎲</button></td>
       <td><input type="text" id="melee-${i}-size" placeholder=""></td>
       <td><input type="text" id="melee-${i}-effects" placeholder=""></td>
       <td><input type="text" id="melee-${i}-aphp" placeholder=""></td>
@@ -3014,7 +3014,7 @@ const App = {
     tr.innerHTML = `
       <td><input type="text" id="ranged-${i}-name" class="weapon-name" placeholder=""></td>
       <td><input type="text" id="ranged-${i}-hands" placeholder=""></td>
-      <td><input type="text" id="ranged-${i}-damage" placeholder=""></td>
+      <td class="damage-cell"><input type="text" id="ranged-${i}-damage" class="weapon-damage" placeholder=""><button class="dice-btn weapon-dice-btn" title="Roll damage">🎲</button></td>
       <td><input type="text" id="ranged-${i}-dm" placeholder=""></td>
       <td><input type="text" id="ranged-${i}-range" placeholder=""></td>
       <td><input type="text" id="ranged-${i}-load" placeholder=""></td>
@@ -11165,7 +11165,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const diceBtn = e.target.closest('.dice-btn');
       if (diceBtn) {
         e.stopPropagation();
-        const damage = diceBtn.dataset.damage;
+        let damage = diceBtn.dataset.damage;
+        
+        // If no data-damage, check for sibling weapon-damage input
+        if (!damage) {
+          const damageInput = diceBtn.parentElement?.querySelector('.weapon-damage');
+          if (damageInput) {
+            damage = damageInput.value;
+          }
+        }
+        
         if (damage) {
           this.rollDamage(damage);
         }
