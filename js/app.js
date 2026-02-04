@@ -1568,6 +1568,17 @@ const App = {
         }
       }
     });
+    
+    // Event delegation for HP up/down buttons
+    document.addEventListener('click', (e) => {
+      const hpBtn = e.target.closest('.hp-btn');
+      if (hpBtn) {
+        e.preventDefault();
+        const locIndex = hpBtn.dataset.loc;
+        const isUp = hpBtn.classList.contains('hp-up');
+        this.adjustLocationHP(locIndex, isUp ? 1 : -1);
+      }
+    });
   },
   
   /**
@@ -2929,10 +2940,14 @@ const App = {
         <td>${loc.location}</td>
         <td>${loc.noArmor ? '<span class="no-armor-note">Wings may not have armor</span>' : `<input type="text" class="armor-input" id="loc-${i}-armor" placeholder="">`}</td>
         <td>${loc.noArmor ? '' : `<input type="number" class="ap-input" id="loc-${i}-ap" placeholder="0">`}</td>
-        <td>
+        <td class="hp-cell">
           <input type="number" class="hp-max-input derived-readonly" id="loc-${i}-hp" placeholder="" readonly>
-          /
-          <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
+          <span class="hp-separator">/</span>
+          <div class="hp-current-wrapper">
+            <button type="button" class="hp-btn hp-down" data-loc="${i}" title="Decrease HP">▼</button>
+            <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
+            <button type="button" class="hp-btn hp-up" data-loc="${i}" title="Increase HP">▲</button>
+          </div>
         </td>
         <td><span class="wound-status clickable" id="loc-${i}-status" data-status="none" data-location="${loc.location}">—</span></td>
       `;
@@ -2945,6 +2960,12 @@ const App = {
       
       if (currentInput && statusSpan) {
         currentInput.addEventListener('input', () => {
+          // Enforce max limit - current cannot exceed original max HP
+          const maxHP = parseInt(maxInput.value, 10) || 0;
+          const currentHP = parseInt(currentInput.value, 10);
+          if (!isNaN(currentHP) && currentHP > maxHP && maxHP > 0) {
+            currentInput.value = maxHP;
+          }
           this.updateWoundStatus(i);
           this.scheduleAutoSave();
         });
@@ -3074,6 +3095,41 @@ const App = {
     if (modal) {
       modal.classList.add('hidden');
     }
+  },
+
+  /**
+   * Adjust a hit location's current HP by a delta
+   * @param {number|string} locationIndex - Index of the hit location
+   * @param {number} delta - Amount to change HP by (+1 or -1)
+   */
+  adjustLocationHP(locationIndex, delta) {
+    const maxInput = document.getElementById(`loc-${locationIndex}-hp`);
+    const currentInput = document.getElementById(`loc-${locationIndex}-current`);
+    
+    if (!currentInput) return;
+    
+    const maxHP = parseInt(maxInput?.value, 10) || 0;
+    let currentHP = parseInt(currentInput.value, 10);
+    
+    // If current is empty, start from max
+    if (isNaN(currentHP) || currentInput.value === '') {
+      currentHP = maxHP;
+    }
+    
+    // Apply delta
+    let newHP = currentHP + delta;
+    
+    // Enforce max limit (cannot go above original max)
+    if (newHP > maxHP && maxHP > 0) {
+      newHP = maxHP;
+    }
+    
+    currentInput.value = newHP;
+    
+    // Update wound status (this will apply fatigue if needed)
+    this.updateWoundStatus(locationIndex);
+    
+    this.scheduleAutoSave();
   },
 
   /**

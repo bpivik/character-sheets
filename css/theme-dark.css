@@ -894,3 +894,24 @@
 [data-theme="dark"] .wound-effects-major li {
   color: #ef9a9a;
 }
+
+/* HP Buttons - Dark Mode */
+[data-theme="dark"] .hp-btn {
+  background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+  border-color: #555;
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .hp-btn:hover {
+  background: linear-gradient(to bottom, #4a4a4a, #3a3a3a);
+}
+
+[data-theme="dark"] .hp-btn.hp-down:hover {
+  background: linear-gradient(to bottom, #4a2020, #3a1515);
+  border-color: #a55;
+}
+
+[data-theme="dark"] .hp-btn.hp-up:hover {
+  background: linear-gradient(to bottom, #204a20, #153a15);
+  border-color: #5a5;
+}
