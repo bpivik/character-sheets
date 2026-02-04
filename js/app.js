@@ -10456,14 +10456,10 @@ const App = {
    */
   checkJustAScratchVisibility() {
     const section = document.getElementById('just-a-scratch-section');
-    if (!section) {
-      console.log('checkJustAScratchVisibility: section not found');
-      return;
-    }
+    if (!section) return;
     
     // Check if character has Just a Scratch ability
     const hasJustAScratch = this.hasAbility('Just a Scratch');
-    console.log('checkJustAScratchVisibility: hasJustAScratch =', hasJustAScratch);
     
     if (hasJustAScratch) {
       section.style.display = '';
@@ -10477,11 +10473,9 @@ const App = {
    * Initialize Just a Scratch system
    */
   initJustAScratch() {
-    console.log('initJustAScratch called, scratchUsesRemaining =', this.character.scratchUsesRemaining);
     // Initialize uses if not set
     if (this.character.scratchUsesRemaining === undefined) {
       this.character.scratchUsesRemaining = 1;
-      console.log('initJustAScratch: set scratchUsesRemaining to 1');
     }
     
     this.setupJustAScratchListeners();
@@ -10495,12 +10489,8 @@ const App = {
     const useBtn = document.getElementById('btn-scratch-use');
     const resetBtn = document.getElementById('btn-reset-scratch-uses');
     
-    console.log('setupJustAScratchListeners called, useBtn exists:', !!useBtn, 'resetBtn exists:', !!resetBtn);
-    
     if (useBtn && !useBtn.dataset.listenerAdded) {
-      console.log('Adding click listener to btn-scratch-use');
       useBtn.addEventListener('click', () => {
-        console.log('btn-scratch-use clicked!');
         this.openJustAScratchModal();
       });
       useBtn.dataset.listenerAdded = 'true';
@@ -10521,16 +10511,12 @@ const App = {
     const usesEl = document.getElementById('scratch-uses-available');
     const useBtn = document.getElementById('btn-scratch-use');
     
-    console.log('updateJustAScratchDisplay: scratchUsesRemaining =', this.character.scratchUsesRemaining, 'useBtn exists:', !!useBtn);
-    
     if (usesEl) {
       usesEl.textContent = this.character.scratchUsesRemaining || 0;
     }
     
     if (useBtn) {
-      const shouldDisable = (this.character.scratchUsesRemaining || 0) <= 0;
-      console.log('updateJustAScratchDisplay: shouldDisable =', shouldDisable);
-      useBtn.disabled = shouldDisable;
+      useBtn.disabled = (this.character.scratchUsesRemaining || 0) <= 0;
     }
   },
   
