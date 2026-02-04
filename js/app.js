@@ -6005,6 +6005,29 @@ const App = {
     const combatSkillPercent = document.getElementById('combat-skill-1-percent');
     if (combatSkillRef && combatSkillPercent) {
       combatSkillRef.textContent = combatSkillPercent.value ? `${combatSkillPercent.value}%` : '-';
+      // Mirror forceful-penalized styling
+      if (combatSkillPercent.classList.contains('forceful-penalized')) {
+        combatSkillRef.classList.add('forceful-penalized');
+      } else {
+        combatSkillRef.classList.remove('forceful-penalized');
+      }
+    }
+    
+    // Damage Modifier
+    const combatDmgMod = document.getElementById('combat-damage-mod');
+    const dmgModCurrent = document.getElementById('damage-mod-current');
+    const dmgModOriginal = document.getElementById('damage-mod-original');
+    if (combatDmgMod) {
+      const dmgVal = (dmgModCurrent && dmgModCurrent.value.trim()) ? dmgModCurrent.value.trim() 
+                   : (dmgModOriginal && dmgModOriginal.value.trim()) ? dmgModOriginal.value.trim() 
+                   : '-';
+      combatDmgMod.textContent = dmgVal;
+      // Mirror forceful-boosted styling
+      if (dmgModCurrent && dmgModCurrent.classList.contains('forceful-boosted')) {
+        combatDmgMod.classList.add('forceful-boosted');
+      } else {
+        combatDmgMod.classList.remove('forceful-boosted');
+      }
     }
     
     // Combat-relevant skills - show the user's entered % value from Character page
@@ -10099,7 +10122,9 @@ const App = {
     this.character.preForcefulValues = {
       combatSkill: document.getElementById('combat-skill-1-percent')?.value || '0',
       damageMod: document.getElementById('damage-mod-current')?.value || '+0',
-      damageModOrig: document.getElementById('damage-mod-original')?.value || '+0'
+      damageModOrig: document.getElementById('damage-mod-original')?.value || '+0',
+      wpDamageMod: document.getElementById('wp-damage-mod-current')?.value || '+0',
+      wpDamageModOrig: document.getElementById('wp-damage-mod-original')?.value || '+0'
     };
     
     // Apply Forceful Strike effects
@@ -10150,6 +10175,23 @@ const App = {
       dmgOrigField.classList.add('forceful-boosted');
     }
     
+    // Weapon Precision Damage Mod +2 steps (for WP-eligible weapons)
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+    if (wpDmgCurrField && wpDmgCurrField.value.trim()) {
+      let newMod = this.getNextDamageModStep(wpDmgCurrField.value);
+      newMod = this.getNextDamageModStep(newMod); // +2 steps
+      wpDmgCurrField.value = newMod;
+      wpDmgCurrField.classList.add('forceful-boosted');
+      wpDmgCurrField.title = 'Forceful Strike: +2 steps';
+    }
+    if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
+      let newMod = this.getNextDamageModStep(wpDmgOrigField.value);
+      newMod = this.getNextDamageModStep(newMod); // +2 steps
+      wpDmgOrigField.value = newMod;
+      wpDmgOrigField.classList.add('forceful-boosted');
+    }
+    
     // Update weapon damage displays to reflect new Damage Modifier
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
@@ -10164,6 +10206,9 @@ const App = {
     
     // Update summary page
     this.refreshSummaryWidgets();
+    
+    // Update combat quick reference
+    this.updateCombatQuickRef();
   },
   
   /**
@@ -10218,6 +10263,19 @@ const App = {
       dmgOrigField.classList.remove('forceful-boosted');
     }
     
+    // Restore WP Damage Mod
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+    if (wpDmgCurrField) {
+      wpDmgCurrField.value = this.character.preForcefulValues.wpDamageMod || wpDmgCurrField.value;
+      wpDmgCurrField.classList.remove('forceful-boosted');
+      wpDmgCurrField.title = '';
+    }
+    if (wpDmgOrigField) {
+      wpDmgOrigField.value = this.character.preForcefulValues.wpDamageModOrig || wpDmgOrigField.value;
+      wpDmgOrigField.classList.remove('forceful-boosted');
+    }
+    
     // Update weapon damage displays to reflect restored Damage Modifier
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
@@ -10232,6 +10290,9 @@ const App = {
     
     // Update summary page
     this.refreshSummaryWidgets();
+    
+    // Update combat quick reference
+    this.updateCombatQuickRef();
     
     this.character.preForcefulValues = null;
   },
@@ -10265,12 +10326,26 @@ const App = {
     }
     if (dmgOrigField) dmgOrigField.classList.add('forceful-boosted');
     
+    // WP Damage Mod visual indicators
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+    if (wpDmgCurrField && wpDmgCurrField.value.trim()) {
+      wpDmgCurrField.classList.add('forceful-boosted');
+      wpDmgCurrField.title = 'Forceful Strike: +2 steps';
+    }
+    if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
+      wpDmgOrigField.classList.add('forceful-boosted');
+    }
+    
     // Style all weapon damage fields green
     const weaponDamageFields = document.querySelectorAll('.weapon-damage');
     weaponDamageFields.forEach(field => {
       field.classList.add('forceful-boosted');
       field.title = 'Increased damage modifier with Forceful Strike';
     });
+    
+    // Update combat quick reference
+    this.updateCombatQuickRef();
   },
   
   /**
