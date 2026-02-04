@@ -788,6 +788,24 @@
       </div>
     </div>
 
+    <!-- Heal All Confirmation Modal -->
+    <div id="heal-all-modal" class="modal-overlay hidden">
+      <div class="modal-content heal-modal">
+        <div class="modal-header heal-modal-header">
+          <h3>❤️‍🩹 Heal All Damage</h3>
+          <button type="button" class="btn-modal-close" id="heal-modal-close">&times;</button>
+        </div>
+        <div class="modal-body heal-modal-body">
+          <p>Are you sure you want to heal all damage?</p>
+          <p class="heal-modal-note">This will restore all hit location Current HP to their maximum values.</p>
+        </div>
+        <div class="modal-footer heal-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-heal-cancel">Cancel</button>
+          <button type="button" class="btn btn-heal-confirm" id="btn-heal-confirm">Yes, Heal All</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== PAGE 3: COMBAT AND SPECIAL ABILITIES ==================== -->
     <section id="page-combat" class="sheet-page page-combat">
       <div class="page-content ornate-border">
@@ -857,7 +875,12 @@
 
           <!-- Hit Locations -->
           <div class="hit-locations">
-            <h3 class="section-header">Hit Locations</h3>
+            <div class="section-header-row">
+              <h3 class="section-header">Hit Locations</h3>
+              <div class="header-buttons">
+                <button type="button" class="btn btn-small btn-heal-all" id="btn-heal-all" title="Heal all locations to max HP">❤️‍🩹 Heal All</button>
+              </div>
+            </div>
             <table class="hit-location-table">
               <thead>
                 <tr>
@@ -866,7 +889,6 @@
                   <th>Armor</th>
                   <th>AP</th>
                   <th>HP / Current</th>
-                  <th class="heal-all-header"><button type="button" class="btn btn-small btn-heal-all" id="btn-heal-all" title="Heal all locations to max HP">❤️‍🩹</button></th>
                 </tr>
               </thead>
               <tbody id="hit-locations-body">

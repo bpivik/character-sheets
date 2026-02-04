@@ -1500,6 +1500,38 @@ const App = {
         this.healAllHitLocations();
       });
     }
+    
+    // Heal All Modal buttons
+    const healConfirmBtn = document.getElementById('btn-heal-confirm');
+    if (healConfirmBtn) {
+      healConfirmBtn.addEventListener('click', () => {
+        this.confirmHealAll();
+      });
+    }
+    
+    const healCancelBtn = document.getElementById('btn-heal-cancel');
+    if (healCancelBtn) {
+      healCancelBtn.addEventListener('click', () => {
+        this.closeHealModal();
+      });
+    }
+    
+    const healModalClose = document.getElementById('heal-modal-close');
+    if (healModalClose) {
+      healModalClose.addEventListener('click', () => {
+        this.closeHealModal();
+      });
+    }
+    
+    // Close heal modal on overlay click
+    const healModal = document.getElementById('heal-all-modal');
+    if (healModal) {
+      healModal.addEventListener('click', (e) => {
+        if (e.target === healModal) {
+          this.closeHealModal();
+        }
+      });
+    }
   },
   
   /**
@@ -2866,7 +2898,6 @@ const App = {
           /
           <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
         </td>
-        <td></td>
       `;
       tbody.appendChild(tr);
       
@@ -2941,14 +2972,20 @@ const App = {
   },
 
   /**
-   * Heal all hit locations - restore current HP to max HP
+   * Heal all hit locations - show confirmation modal
    */
   healAllHitLocations() {
-    // Confirmation dialog
-    if (!confirm('Are you sure you want to heal all damage?')) {
-      return;
+    // Show confirmation modal
+    const modal = document.getElementById('heal-all-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
     }
-    
+  },
+
+  /**
+   * Confirm heal all - actually restore HP
+   */
+  confirmHealAll() {
     // Find all hit location rows and restore current to max
     const tbody = document.getElementById('hit-locations-body');
     if (!tbody) return;
@@ -2964,11 +3001,24 @@ const App = {
       }
     });
     
+    // Close modal
+    this.closeHealModal();
+    
     // Save changes
     this.scheduleAutoSave();
     
     // Update summary widgets if visible
     this.refreshSummaryWidgets();
+  },
+
+  /**
+   * Close the heal all confirmation modal
+   */
+  closeHealModal() {
+    const modal = document.getElementById('heal-all-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
   },
 
   /**

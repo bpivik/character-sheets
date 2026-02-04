@@ -2541,25 +2541,22 @@ select:focus {
   display: inline-block;
 }
 
+/* Hit Locations section header */
+.hit-locations .section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.hit-locations .section-header {
+  margin: 0;
+}
+
 /* Heal All button */
-.heal-all-header {
-  width: 40px;
-  padding: 0 !important;
-  background: transparent !important;
-  border: none !important;
-}
-
-.hit-location-table th:nth-child(6),
-.hit-location-table td:nth-child(6) {
-  width: 40px;
-  padding: 0;
-  border: none;
-  background: transparent;
-}
-
 .btn-heal-all {
-  padding: 0.15rem 0.4rem;
-  font-size: 0.9rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
   background: linear-gradient(135deg, #3a5a3a 0%, #4a7a4a 50%, #3a5a3a 100%);
   border: 1px solid #6a9a6a;
   color: white;
@@ -2570,7 +2567,62 @@ select:focus {
 
 .btn-heal-all:hover {
   background: linear-gradient(135deg, #4a6a4a 0%, #5a8a5a 50%, #4a6a4a 100%);
-  transform: scale(1.1);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(90, 150, 90, 0.4);
+}
+
+/* Heal All Confirmation Modal */
+.heal-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.heal-modal-header {
+  background: linear-gradient(135deg, rgba(60, 100, 60, 0.3), rgba(80, 130, 80, 0.2));
+  border-bottom-color: #6a9a6a;
+}
+
+.heal-modal-header h3 {
+  color: #4a8a4a;
+}
+
+.heal-modal-body {
+  padding: 1.5rem;
+}
+
+.heal-modal-body p {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+}
+
+.heal-modal-note {
+  font-size: 0.9rem !important;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.heal-modal-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-light);
+  background: rgba(0,0,0,0.03);
+}
+
+.btn-heal-confirm {
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%);
+  color: white;
+  border: 1px solid #5a9a5a;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-heal-confirm:hover {
+  background: linear-gradient(135deg, #4a7a4a 0%, #5a9a5a 50%, #4a7a4a 100%);
   box-shadow: 0 2px 8px rgba(90, 150, 90, 0.4);
 }
 
