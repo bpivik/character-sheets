@@ -4017,10 +4017,12 @@ const App = {
     input.addEventListener('blur', () => {
       this.handleAbilityChange(input);
       this.cleanupEmptyClassAbilityRows();
+      this.syncClassAbilitiesToCharacter();
     });
     
     input.addEventListener('input', () => {
       infoBtn.style.display = input.value.trim() ? '' : 'none';
+      this.syncClassAbilitiesToCharacter();
       this.scheduleAutoSave();
     });
     
@@ -4069,6 +4071,7 @@ const App = {
     
     lastRow.remove();
     this.reindexClassAbilityRows();
+    this.syncClassAbilitiesToCharacter();
     this.scheduleAutoSave();
   },
   
@@ -4090,6 +4093,7 @@ const App = {
     });
     
     this.reindexClassAbilityRows();
+    this.syncClassAbilitiesToCharacter();
   },
   
   /**
@@ -4866,7 +4870,30 @@ const App = {
     // Ensure there's an empty row for new input
     this.cleanupEmptyClassAbilityRows();
     
+    // Update character data to match the sorted DOM
+    this.syncClassAbilitiesToCharacter();
+    
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Sync class abilities from DOM to character data
+   * Called when abilities are added, edited, or sorted
+   */
+  syncClassAbilitiesToCharacter() {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    this.character.combat.specialAbilities = [];
+    const inputs = container.querySelectorAll('.class-ability-input');
+    inputs.forEach(input => {
+      if (input.value.trim()) {
+        this.character.combat.specialAbilities.push({
+          name: input.value.trim(),
+          source: input.dataset.classAbility || null
+        });
+      }
+    });
   },
 
   /**
