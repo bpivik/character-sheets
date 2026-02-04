@@ -6102,12 +6102,14 @@ select:focus {
 .damage-cell {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  width: 100%;
 }
 
 .damage-cell input.weapon-damage {
   flex: 1;
   min-width: 0;
+  width: auto !important;
 }
 
 .weapon-dice-btn {
