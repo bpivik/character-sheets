@@ -3507,6 +3507,20 @@ select:focus {
   flex-wrap: nowrap;
 }
 
+.field-row-with-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.field-row-with-buttons .field-input {
+  flex: 1;
+}
+
+.field-row-with-buttons .game-buttons {
+  margin-left: 1rem;
+}
+
 .rest-buttons {
   display: flex;
   gap: 1rem;

@@ -3446,8 +3446,8 @@ const App = {
    */
   startNewGame() {
     // Get the maximum Luck Points (calculated value)
-    const luckPointsMax = document.getElementById('luck-points')?.value || '0';
-    const luckPointsCurrent = document.getElementById('luck-points-current');
+    const luckPointsMax = document.getElementById('luck-original')?.value || '0';
+    const luckPointsCurrent = document.getElementById('luck-current');
     
     if (luckPointsCurrent) {
       luckPointsCurrent.value = luckPointsMax;
@@ -13962,10 +13962,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const passionsContainerEl = document.getElementById('passions-container');
     if (passionsContainerEl) {
       const passionRows = passionsContainerEl.querySelectorAll('.belief-row');
-      passionRows.forEach(row => {
-        const index = row.dataset.index;
-        const nameInput = row.querySelector(`#passion-${index}-name`);
-        const currentInput = row.querySelector(`#passion-${index}-current`);
+      passionRows.forEach((row, idx) => {
+        // Use data-index if available, otherwise use loop index + 1
+        const index = row.dataset.index || (idx + 1);
+        const nameInput = document.getElementById(`passion-${index}-name`);
+        const currentInput = document.getElementById(`passion-${index}-current`);
         
         if (nameInput && nameInput.value.trim()) {
           passionsData.push({
@@ -13993,10 +13994,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const oathsContainerEl = document.getElementById('oaths-container');
     if (oathsContainerEl) {
       const oathRows = oathsContainerEl.querySelectorAll('.belief-row');
-      oathRows.forEach(row => {
-        const index = row.dataset.index;
-        const nameInput = row.querySelector(`#oath-${index}-name`);
-        const currentInput = row.querySelector(`#oath-${index}-current`);
+      oathRows.forEach((row, idx) => {
+        // Use data-index if available, otherwise use loop index + 1
+        const index = row.dataset.index || (idx + 1);
+        const nameInput = document.getElementById(`oath-${index}-name`);
+        const currentInput = document.getElementById(`oath-${index}-current`);
         
         if (nameInput && nameInput.value.trim()) {
           oathsData.push({
