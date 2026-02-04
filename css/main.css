@@ -522,6 +522,16 @@ select:focus {
   width: fit-content;
 }
 
+.rank-section-content {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.rank-fields {
+  flex: 1;
+}
+
 .rank-section .section-header {
   margin-bottom: 0.5rem;
   padding: 0.3rem 0.5rem;
@@ -555,6 +565,23 @@ select:focus {
 
 .rank-section .field-input-tiny {
   width: 55px;
+}
+
+/* Game Buttons - Vertical Layout in Rank Section */
+.game-buttons-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.game-btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.game-btn-small .game-icon {
+  font-size: 0.9rem;
 }
 
 /* Tenacity & EXP */

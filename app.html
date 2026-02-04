@@ -104,19 +104,9 @@
               <span class="field-separator">/</span>
               <input type="text" id="class-tertiary" class="field-input field-input-third" placeholder="">
             </div>
-            <div class="field-row field-row-with-buttons">
+            <div class="field-row">
               <label class="field-label">Rank Name</label>
               <input type="text" id="rank-name" class="field-input" placeholder="">
-              <div class="game-buttons">
-                <button class="game-btn game-btn-new" id="btn-new-game" title="Start a new game session - restore Luck Points">
-                  <span class="game-icon">🎲</span>
-                  <span class="game-text">New Game</span>
-                </button>
-                <button class="game-btn game-btn-finish" id="btn-finish-game" title="Finish game session - add EXP Rolls">
-                  <span class="game-icon">🏆</span>
-                  <span class="game-text">Finish Game</span>
-                </button>
-              </div>
             </div>
             <div class="field-row">
               <label class="field-label">Gender</label>
@@ -206,20 +196,34 @@
           
           <div class="header-right">
             <div class="rank-section">
-              <h3 class="section-header">Rank(s)</h3>
-              <div class="rank-row">
-                <label class="field-label">Primary Class</label>
-                <input type="number" id="rank-primary" class="field-input field-input-tiny" min="0" max="5" placeholder="">
-              </div>
-              <div class="rank-row">
-                <label class="field-label">2nd</label>
-                <input type="number" id="rank-secondary" class="field-input field-input-tiny" min="0" max="5" placeholder="">
-                <label class="field-label">3rd</label>
-                <input type="number" id="rank-tertiary" class="field-input field-input-tiny" min="0" max="5" placeholder="">
-              </div>
-              <div class="rank-row combined-rank-row">
-                <label class="field-label">Combined Rank</label>
-                <input type="number" id="rank-combined" class="field-input field-input-tiny derived-readonly" readonly>
+              <div class="rank-section-content">
+                <div class="rank-fields">
+                  <h3 class="section-header">Rank(s)</h3>
+                  <div class="rank-row">
+                    <label class="field-label">Primary Class</label>
+                    <input type="number" id="rank-primary" class="field-input field-input-tiny" min="0" max="5" placeholder="">
+                  </div>
+                  <div class="rank-row">
+                    <label class="field-label">2nd</label>
+                    <input type="number" id="rank-secondary" class="field-input field-input-tiny" min="0" max="5" placeholder="">
+                    <label class="field-label">3rd</label>
+                    <input type="number" id="rank-tertiary" class="field-input field-input-tiny" min="0" max="5" placeholder="">
+                  </div>
+                  <div class="rank-row combined-rank-row">
+                    <label class="field-label">Combined Rank</label>
+                    <input type="number" id="rank-combined" class="field-input field-input-tiny derived-readonly" readonly>
+                  </div>
+                </div>
+                <div class="game-buttons-vertical">
+                  <button class="game-btn game-btn-new game-btn-small" id="btn-new-game" title="Start a new game session - restore Luck Points">
+                    <span class="game-icon">🎲</span>
+                    <span class="game-text">New Game</span>
+                  </button>
+                  <button class="game-btn game-btn-finish game-btn-small" id="btn-finish-game" title="Finish game session - add EXP Rolls">
+                    <span class="game-icon">🏆</span>
+                    <span class="game-text">Finish Game</span>
+                  </button>
+                </div>
               </div>
             </div>
             <div class="tenacity-section">
