@@ -1636,8 +1636,8 @@ select:focus {
 .passion-section .section-subheader,
 .oath-section .section-subheader {
   display: grid !important;
-  grid-template-columns: 1fr 80px 55px 60px !important;
-  gap: 0.5rem;
+  grid-template-columns: 1fr 135px 45px 50px 24px !important;
+  gap: 0.4rem;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -1648,12 +1648,22 @@ select:focus {
 
 .belief-row {
   display: grid;
-  grid-template-columns: 1fr 135px 45px 50px;
+  grid-template-columns: 1fr 135px 45px 50px 24px;
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0;
   font-size: 1.1rem;
   border-bottom: 1px solid var(--border-light);
+}
+
+.belief-row .d100-btn {
+  padding: 0;
+  margin: 0;
+}
+
+.belief-row .d10-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .belief-row:last-child {
@@ -1793,12 +1803,22 @@ select:focus {
 /* Professional Skills */
 .professional-skill-row {
   display: grid;
-  grid-template-columns: 42px 1fr 80px 55px 60px 20px;
+  grid-template-columns: 42px 1fr 80px 55px 60px 24px 20px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
   font-size: 1.1rem;
   border-bottom: 1px solid var(--border-light);
+}
+
+.professional-skill-row .d100-btn {
+  padding: 0;
+  margin: 0;
+}
+
+.professional-skill-row .d10-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .professional-skill-row .prereq-keys {

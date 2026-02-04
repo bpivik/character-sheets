@@ -205,7 +205,6 @@ const App = {
     this.setupAutoSave();
     this.setupImageUploads();
     this.setupButtons();
-    this.addSkillDiceButtons();
     
     // Generate dynamic content
     this.generatePassions();
@@ -227,6 +226,9 @@ const App = {
     
     // Populate form with loaded data
     this.populateForm();
+    
+    // Add dice buttons to skill rows (after dynamic content is generated)
+    this.addSkillDiceButtons();
     
     // Ensure Unarmed is always present as a melee weapon
     this.ensureUnarmedWeapon();
@@ -1477,34 +1479,115 @@ const App = {
   },
   
   /**
-   * Add d100 dice buttons to standard skill rows on Character page
+   * Add d100 dice buttons to skill rows on Character page
    */
   addSkillDiceButtons() {
+    // Helper to create dice button
+    const createDiceButton = (skillNameGetter, valueGetter) => {
+      const btn = document.createElement('button');
+      btn.className = 'd100-btn skill-roll-btn';
+      btn.title = 'Roll d100!';
+      btn.innerHTML = '<img src="images/d10.svg" alt="d10" class="d10-icon">';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const skillName = skillNameGetter();
+        const currentValue = valueGetter();
+        this.rollD100(skillName, currentValue);
+      });
+      return btn;
+    };
+    
     // Add to Standard Skills on Character page
     document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
-      // Skip if already has a dice button
       if (row.querySelector('.d100-btn')) return;
       
       const skillName = row.querySelector('.skill-name')?.textContent || '';
       const skillInput = row.querySelector('.skill-input');
       const encIndicator = row.querySelector('.enc-indicator');
       
-      if (skillInput && encIndicator) {
-        // Create dice button
-        const btn = document.createElement('button');
-        btn.className = 'd100-btn skill-roll-btn';
-        btn.title = 'Roll d100!';
-        btn.innerHTML = '<img src="images/d10.svg" alt="d10" class="d10-icon">';
+      if (skillInput) {
+        const btn = createDiceButton(
+          () => skillName,
+          () => parseInt(skillInput.value) || 0
+        );
         
-        // Insert before enc-indicator (triangle)
-        row.insertBefore(btn, encIndicator);
+        // Insert before enc-indicator if present, otherwise append
+        if (encIndicator) {
+          row.insertBefore(btn, encIndicator);
+        } else {
+          row.appendChild(btn);
+        }
+      }
+    });
+    
+    // Add to Alignment rows
+    document.querySelectorAll('.alignment-section .belief-row').forEach(row => {
+      if (row.querySelector('.d100-btn')) return;
+      
+      const nameInput = row.querySelector('.belief-name');
+      const valueInput = row.querySelector('.belief-input');
+      
+      if (nameInput && valueInput) {
+        const btn = createDiceButton(
+          () => nameInput.value || 'Alignment',
+          () => parseInt(valueInput.value) || 0
+        );
+        row.appendChild(btn);
+      }
+    });
+    
+    // Add to Passion rows
+    document.querySelectorAll('#passions-container .belief-row').forEach(row => {
+      if (row.querySelector('.d100-btn')) return;
+      
+      const nameInput = row.querySelector('.belief-name');
+      const valueInput = row.querySelector('.belief-input');
+      
+      if (nameInput && valueInput) {
+        const btn = createDiceButton(
+          () => nameInput.value || 'Passion',
+          () => parseInt(valueInput.value) || 0
+        );
+        row.appendChild(btn);
+      }
+    });
+    
+    // Add to Oath rows
+    document.querySelectorAll('#oaths-container .belief-row').forEach(row => {
+      if (row.querySelector('.d100-btn')) return;
+      
+      const nameInput = row.querySelector('.belief-name');
+      const valueInput = row.querySelector('.belief-input');
+      
+      if (nameInput && valueInput) {
+        const btn = createDiceButton(
+          () => nameInput.value || 'Oath',
+          () => parseInt(valueInput.value) || 0
+        );
+        row.appendChild(btn);
+      }
+    });
+    
+    // Add to Professional Skill rows
+    document.querySelectorAll('.professional-skill-row').forEach(row => {
+      if (row.querySelector('.d100-btn')) return;
+      
+      const nameInput = row.querySelector('.prof-skill-name');
+      const valueInput = row.querySelector('.prof-skill-current');
+      const encIndicator = row.querySelector('.prof-enc-indicator');
+      
+      if (nameInput && valueInput) {
+        const btn = createDiceButton(
+          () => nameInput.value || 'Professional Skill',
+          () => parseInt(valueInput.value) || 0
+        );
         
-        // Add click handler
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          const currentValue = parseInt(skillInput.value) || 0;
-          this.rollD100(skillName, currentValue);
-        });
+        // Insert before enc-indicator if present, otherwise append
+        if (encIndicator) {
+          row.insertBefore(btn, encIndicator);
+        } else {
+          row.appendChild(btn);
+        }
       }
     });
   },
@@ -12008,6 +12091,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.recalculateAll();
     row.querySelector('.belief-name').focus();
     this.scheduleAutoSave();
+    this.addSkillDiceButtons();
   },
 
   /**
@@ -12087,6 +12171,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     nameInput.focus();
     
     this.scheduleAutoSave();
+    this.addSkillDiceButtons();
   },
 
   /**
@@ -12149,6 +12234,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     row.querySelector('.belief-name').focus();
     
     this.scheduleAutoSave();
+    this.addSkillDiceButtons();
   },
 
   /**
