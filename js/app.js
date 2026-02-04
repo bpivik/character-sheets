@@ -2589,9 +2589,12 @@ const App = {
     
     container.innerHTML = '';
     
-    // Use the rows property from config, fallback to maxEnc or 10
-    const config = CONTAINER_CONFIGS[containerId];
-    const rowCount = config.rows || Math.max(maxEnc, 10);
+    // Calculate row count based on saved data + extra empty rows
+    const savedItems = this.character.containers?.[containerId] || [];
+    const savedCount = savedItems.length;
+    const extraRows = 3; // Number of empty rows to show
+    const minRows = 5;   // Minimum rows to display
+    const rowCount = Math.max(savedCount + extraRows, minRows);
     
     for (let i = 0; i < rowCount; i++) {
       const row = document.createElement('div');
@@ -2691,10 +2694,13 @@ const App = {
       container.querySelectorAll('.equipment-row').forEach((row, i) => {
         const nameInput = row.querySelector('.equipment-name');
         const encInput = row.querySelector('.equipment-enc');
-        items.push({
-          name: nameInput?.value || '',
-          enc: encInput?.value || ''
-        });
+        const name = nameInput?.value?.trim() || '';
+        const enc = encInput?.value || '';
+        
+        // Only save non-empty rows
+        if (name || (enc && enc !== '0')) {
+          items.push({ name, enc });
+        }
       });
     }
     
