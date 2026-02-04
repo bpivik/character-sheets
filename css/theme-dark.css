@@ -813,11 +813,11 @@
 
 /* D10 Dice Icon - Dark Mode */
 [data-theme="dark"] .d10-icon {
-  color: #b0a090;
-  opacity: 0.6;
+  color: #e0d8c8;
+  opacity: 0.7;
 }
 
 [data-theme="dark"] .d100-btn:hover .d10-icon {
-  color: #d4c4a0;
-  opacity: 0.9;
+  color: #fff;
+  opacity: 1;
 }
