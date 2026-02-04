@@ -13,6 +13,9 @@ const App = {
   // Track active ability effects (to prevent stacking and enable removal)
   activeAbilityEffects: {},
   
+  // Flag to track if we're in the middle of initialization
+  isInitializing: false,
+  
   // Ability effects configuration - abilities that modify stats/skills
   ABILITY_EFFECTS: {
     'agile': {
@@ -163,6 +166,9 @@ const App = {
   init() {
     console.log('Initializing Mythras Character Sheet...');
     
+    // Set initialization flag to prevent premature bonus applications
+    this.isInitializing = true;
+    
     // Check storage availability
     if (!StorageManager.isStorageAvailable()) {
       console.warn('LocalStorage not available. Auto-save disabled.');
@@ -296,18 +302,61 @@ const App = {
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
-    // Final Artful Dodger check - ensure bonus is applied after all initialization is complete
-    // This handles edge cases where ENC status wasn't populated during restoreAbilityEffects
+    // Final initialization sequence - ensure all ENC-dependent abilities are properly applied
+    // Use setTimeout to ensure DOM is fully rendered
     setTimeout(() => {
-      if (this.hasAbility('Artful Dodger')) {
+      // Mark initialization as complete
+      this.isInitializing = false;
+      
+      console.log('=== POST-INIT ABILITY CHECK ===');
+      
+      // Force recalculate ENC status (needed for ability bonuses)
+      this.updateTotalEnc();
+      
+      // Debug: Check what abilities are on the sheet
+      const classAbilities = document.getElementById('class-abilities-list');
+      const speciesAbilities = document.getElementById('species-abilities-list');
+      console.log('Class abilities list exists:', !!classAbilities);
+      console.log('Species abilities list exists:', !!speciesAbilities);
+      
+      if (classAbilities) {
+        const inputs = classAbilities.querySelectorAll('.class-ability-input');
+        console.log('Class ability inputs found:', inputs.length);
+        inputs.forEach((input, i) => console.log(`  Class ability ${i}: "${input.value}"`));
+      }
+      if (speciesAbilities) {
+        const inputs = speciesAbilities.querySelectorAll('.species-ability-input');
+        console.log('Species ability inputs found:', inputs.length);
+        inputs.forEach((input, i) => console.log(`  Species ability ${i}: "${input.value}"`));
+      }
+      
+      // Check ENC status
+      const statusEl = document.getElementById('enc-status');
+      console.log('ENC status element:', statusEl?.textContent);
+      
+      // Now explicitly check and apply ability bonuses
+      const hasArtfulDodger = this.hasAbility('Artful Dodger');
+      console.log('hasAbility("Artful Dodger"):', hasArtfulDodger);
+      if (hasArtfulDodger) {
         this.character.hasArtfulDodger = true;
+        // Reset active state to ensure fresh application
+        this.character.artfulDodgerActive = false;
+        console.log('Calling checkArtfulDodgerBonus...');
         this.checkArtfulDodgerBonus();
       }
-      if (this.hasAbility('Agile')) {
+      
+      const hasAgile = this.hasAbility('Agile');
+      console.log('hasAbility("Agile"):', hasAgile);
+      if (hasAgile) {
         this.character.hasAgile = true;
+        // Reset active state to ensure fresh application
+        this.character.agileActive = false;
+        console.log('Calling checkAgileBonus...');
         this.checkAgileBonus();
       }
-    }, 50);
+      
+      console.log('=== POST-INIT COMPLETE ===');
+    }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
     this.scheduleAutoSave();
@@ -4357,12 +4406,17 @@ const App = {
     this.character.agileActive = false;
     
     // Check all class abilities on the sheet and apply their effects
+    // Skip Artful Dodger and Agile during init - they're handled by the final setTimeout
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
       const inputs = classContainer.querySelectorAll('.class-ability-input');
       inputs.forEach(input => {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
+          // Skip ENC-dependent abilities during initialization
+          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+            return;
+          }
           const effect = this.ABILITY_EFFECTS[baseName];
           if (effect && !this.activeAbilityEffects[baseName]) {
             this.activeAbilityEffects[baseName] = { active: true };
@@ -4376,6 +4430,10 @@ const App = {
     const speciesAbilities = this.getSpeciesAbilities();
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
+      // Skip ENC-dependent abilities during initialization
+      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+        return;
+      }
       const effect = this.ABILITY_EFFECTS[baseName];
       if (effect && !this.activeAbilityEffects[baseName]) {
         this.activeAbilityEffects[baseName] = { active: true };
@@ -5909,6 +5967,10 @@ const App = {
       inputs.forEach(input => {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
+          // Skip ENC-dependent abilities during initialization
+          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+            return;
+          }
           const effect = this.ABILITY_EFFECTS[baseName];
           // Skip persistent effects - they were already applied when gained
           if (effect && !effect.persistent && !this.activeAbilityEffects[baseName]) {
@@ -5923,6 +5985,10 @@ const App = {
     const speciesAbilities = this.getSpeciesAbilities();
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
+      // Skip ENC-dependent abilities during initialization
+      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+        return;
+      }
       const effect = this.ABILITY_EFFECTS[baseName];
       // Skip persistent effects - they were already applied when gained
       if (effect && !effect.persistent && !this.activeAbilityEffects[baseName]) {
@@ -8707,11 +8773,14 @@ const App = {
     // Update ENC penalty display
     this.updateEncPenaltyDisplay(status);
     
-    // Check Artful Dodger bonus (depends on encumbrance status)
-    this.checkArtfulDodgerBonus();
-    
-    // Check Agile bonus (depends on encumbrance status)
-    this.checkAgileBonus();
+    // Check ability bonuses (skip during initialization to avoid conflicts)
+    if (!this.isInitializing) {
+      // Check Artful Dodger bonus (depends on encumbrance status)
+      this.checkArtfulDodgerBonus();
+      
+      // Check Agile bonus (depends on encumbrance status)
+      this.checkAgileBonus();
+    }
   },
   
   /**
@@ -9769,6 +9838,7 @@ const App = {
   checkArtfulDodgerBonus() {
     // Check if character has Artful Dodger ability
     const hasAbility = this.character.hasArtfulDodger || this.hasAbility('Artful Dodger');
+    console.log('checkArtfulDodgerBonus:', { hasAbility, hasArtfulDodger: this.character.hasArtfulDodger, artfulDodgerActive: this.character.artfulDodgerActive });
     if (!hasAbility) {
       // Make sure bonus is removed if ability was lost
       if (this.character.artfulDodgerActive) {
@@ -9782,15 +9852,19 @@ const App = {
     const statusEl = document.getElementById('enc-status');
     const statusName = statusEl?.textContent?.trim() || 'Unburdened';
     const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
+    console.log('checkArtfulDodgerBonus:', { statusName, isUnburdened, artfulDodgerActive: this.character.artfulDodgerActive });
     
     if (isUnburdened && !this.character.artfulDodgerActive) {
       // Apply the bonus
+      console.log('Applying Artful Dodger bonus');
       this.applyArtfulDodgerBonus();
     } else if (!isUnburdened && this.character.artfulDodgerActive) {
       // Remove the bonus
+      console.log('Removing Artful Dodger bonus (burdened)');
       this.removeArtfulDodgerBonus();
     } else if (isUnburdened && this.character.artfulDodgerActive) {
       // Bonus is already active - just ensure visual styling is applied (for page load)
+      console.log('Artful Dodger bonus already active, ensuring styling');
       const currField = document.getElementById('evade-current');
       if (currField && !currField.classList.contains('artful-dodger-bonus')) {
         currField.classList.add('artful-dodger-bonus');
@@ -9804,9 +9878,13 @@ const App = {
    */
   applyArtfulDodgerBonus() {
     const currField = document.getElementById('evade-current');
-    if (!currField) return;
+    if (!currField) {
+      console.log('applyArtfulDodgerBonus: evade-current field not found!');
+      return;
+    }
     
     const currVal = parseInt(currField.value, 10) || 0;
+    console.log('applyArtfulDodgerBonus: current value =', currVal, 'will become', currVal + 10);
     
     // Set active flag BEFORE changing value so save handler knows to subtract 10
     this.character.artfulDodgerActive = true;
@@ -9822,6 +9900,7 @@ const App = {
     currField.classList.add('artful-dodger-bonus');
     currField.title = '+10 due to Artful Dodger';
     
+    console.log('applyArtfulDodgerBonus: applied! New value =', currField.value);
     this.scheduleAutoSave();
   },
   
@@ -9879,6 +9958,7 @@ const App = {
   checkAgileBonus() {
     // Check if character has Agile ability
     const hasAbility = this.character.hasAgile || this.hasAbility('Agile');
+    console.log('checkAgileBonus:', { hasAbility, hasAgile: this.character.hasAgile, agileActive: this.character.agileActive });
     if (!hasAbility) {
       if (this.character.agileActive) {
         this.removeAgileBonus();
@@ -9892,13 +9972,17 @@ const App = {
     const hasSkillReq = this.checkAgileSkillRequirement();
     
     const meetsAllConditions = isUnburdened && hasLightArmor && hasSkillReq;
+    console.log('checkAgileBonus conditions:', { isUnburdened, hasLightArmor, hasSkillReq, meetsAllConditions });
     
     if (meetsAllConditions && !this.character.agileActive) {
+      console.log('Applying Agile bonus');
       this.applyAgileBonus();
     } else if (!meetsAllConditions && this.character.agileActive) {
+      console.log('Removing Agile bonus (conditions not met)');
       this.removeAgileBonus();
     } else if (meetsAllConditions && this.character.agileActive) {
       // Bonus is already active - ensure visual styling
+      console.log('Agile bonus already active, ensuring styling');
       const currField = document.getElementById('initiative-current');
       if (currField && !currField.classList.contains('agile-bonus')) {
         currField.classList.add('agile-bonus');
@@ -9975,15 +10059,19 @@ const App = {
     const origField = document.getElementById('initiative-original');
     const currField = document.getElementById('initiative-current');
     
+    console.log('applyAgileBonus: origField exists =', !!origField, ', currField exists =', !!currField);
+    
     // Set active flag BEFORE changing value
     this.character.agileActive = true;
     
     if (origField) {
       const origVal = parseInt(origField.value, 10) || 0;
+      console.log('applyAgileBonus: original value =', origVal, 'will become', origVal + 4);
       origField.value = origVal + 4;
     }
     if (currField) {
       const currVal = parseInt(currField.value, 10) || 0;
+      console.log('applyAgileBonus: current value =', currVal, 'will become', currVal + 4);
       currField.value = currVal + 4;
       
       // Add visual styling
@@ -9991,6 +10079,7 @@ const App = {
       currField.title = '+4 due to Agile';
     }
     
+    console.log('applyAgileBonus: applied!');
     this.scheduleAutoSave();
   },
   
