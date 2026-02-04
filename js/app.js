@@ -308,54 +308,22 @@ const App = {
       // Mark initialization as complete
       this.isInitializing = false;
       
-      console.log('=== POST-INIT ABILITY CHECK ===');
-      
       // Force recalculate ENC status (needed for ability bonuses)
       this.updateTotalEnc();
       
-      // Debug: Check what abilities are on the sheet
-      const classAbilities = document.getElementById('class-abilities-list');
-      const speciesAbilities = document.getElementById('species-abilities-list');
-      console.log('Class abilities list exists:', !!classAbilities);
-      console.log('Species abilities list exists:', !!speciesAbilities);
-      
-      if (classAbilities) {
-        const inputs = classAbilities.querySelectorAll('.class-ability-input');
-        console.log('Class ability inputs found:', inputs.length);
-        inputs.forEach((input, i) => console.log(`  Class ability ${i}: "${input.value}"`));
-      }
-      if (speciesAbilities) {
-        const inputs = speciesAbilities.querySelectorAll('.species-ability-input');
-        console.log('Species ability inputs found:', inputs.length);
-        inputs.forEach((input, i) => console.log(`  Species ability ${i}: "${input.value}"`));
-      }
-      
-      // Check ENC status
-      const statusEl = document.getElementById('enc-status');
-      console.log('ENC status element:', statusEl?.textContent);
-      
       // Now explicitly check and apply ability bonuses
-      const hasArtfulDodger = this.hasAbility('Artful Dodger');
-      console.log('hasAbility("Artful Dodger"):', hasArtfulDodger);
-      if (hasArtfulDodger) {
+      if (this.hasAbility('Artful Dodger')) {
         this.character.hasArtfulDodger = true;
         // Reset active state to ensure fresh application
         this.character.artfulDodgerActive = false;
-        console.log('Calling checkArtfulDodgerBonus...');
         this.checkArtfulDodgerBonus();
       }
-      
-      const hasAgile = this.hasAbility('Agile');
-      console.log('hasAbility("Agile"):', hasAgile);
-      if (hasAgile) {
+      if (this.hasAbility('Agile')) {
         this.character.hasAgile = true;
         // Reset active state to ensure fresh application
         this.character.agileActive = false;
-        console.log('Calling checkAgileBonus...');
         this.checkAgileBonus();
       }
-      
-      console.log('=== POST-INIT COMPLETE ===');
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -9838,7 +9806,6 @@ const App = {
   checkArtfulDodgerBonus() {
     // Check if character has Artful Dodger ability
     const hasAbility = this.character.hasArtfulDodger || this.hasAbility('Artful Dodger');
-    console.log('checkArtfulDodgerBonus:', { hasAbility, hasArtfulDodger: this.character.hasArtfulDodger, artfulDodgerActive: this.character.artfulDodgerActive });
     if (!hasAbility) {
       // Make sure bonus is removed if ability was lost
       if (this.character.artfulDodgerActive) {
@@ -9852,19 +9819,15 @@ const App = {
     const statusEl = document.getElementById('enc-status');
     const statusName = statusEl?.textContent?.trim() || 'Unburdened';
     const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
-    console.log('checkArtfulDodgerBonus:', { statusName, isUnburdened, artfulDodgerActive: this.character.artfulDodgerActive });
     
     if (isUnburdened && !this.character.artfulDodgerActive) {
       // Apply the bonus
-      console.log('Applying Artful Dodger bonus');
       this.applyArtfulDodgerBonus();
     } else if (!isUnburdened && this.character.artfulDodgerActive) {
       // Remove the bonus
-      console.log('Removing Artful Dodger bonus (burdened)');
       this.removeArtfulDodgerBonus();
     } else if (isUnburdened && this.character.artfulDodgerActive) {
       // Bonus is already active - just ensure visual styling is applied (for page load)
-      console.log('Artful Dodger bonus already active, ensuring styling');
       const currField = document.getElementById('evade-current');
       if (currField && !currField.classList.contains('artful-dodger-bonus')) {
         currField.classList.add('artful-dodger-bonus');
@@ -9878,13 +9841,9 @@ const App = {
    */
   applyArtfulDodgerBonus() {
     const currField = document.getElementById('evade-current');
-    if (!currField) {
-      console.log('applyArtfulDodgerBonus: evade-current field not found!');
-      return;
-    }
+    if (!currField) return;
     
     const currVal = parseInt(currField.value, 10) || 0;
-    console.log('applyArtfulDodgerBonus: current value =', currVal, 'will become', currVal + 10);
     
     // Set active flag BEFORE changing value so save handler knows to subtract 10
     this.character.artfulDodgerActive = true;
@@ -9900,7 +9859,6 @@ const App = {
     currField.classList.add('artful-dodger-bonus');
     currField.title = '+10 due to Artful Dodger';
     
-    console.log('applyArtfulDodgerBonus: applied! New value =', currField.value);
     this.scheduleAutoSave();
   },
   
@@ -9958,7 +9916,6 @@ const App = {
   checkAgileBonus() {
     // Check if character has Agile ability
     const hasAbility = this.character.hasAgile || this.hasAbility('Agile');
-    console.log('checkAgileBonus:', { hasAbility, hasAgile: this.character.hasAgile, agileActive: this.character.agileActive });
     if (!hasAbility) {
       if (this.character.agileActive) {
         this.removeAgileBonus();
@@ -9972,17 +9929,13 @@ const App = {
     const hasSkillReq = this.checkAgileSkillRequirement();
     
     const meetsAllConditions = isUnburdened && hasLightArmor && hasSkillReq;
-    console.log('checkAgileBonus conditions:', { isUnburdened, hasLightArmor, hasSkillReq, meetsAllConditions });
     
     if (meetsAllConditions && !this.character.agileActive) {
-      console.log('Applying Agile bonus');
       this.applyAgileBonus();
     } else if (!meetsAllConditions && this.character.agileActive) {
-      console.log('Removing Agile bonus (conditions not met)');
       this.removeAgileBonus();
     } else if (meetsAllConditions && this.character.agileActive) {
       // Bonus is already active - ensure visual styling
-      console.log('Agile bonus already active, ensuring styling');
       const currField = document.getElementById('initiative-current');
       if (currField && !currField.classList.contains('agile-bonus')) {
         currField.classList.add('agile-bonus');
@@ -10059,19 +10012,15 @@ const App = {
     const origField = document.getElementById('initiative-original');
     const currField = document.getElementById('initiative-current');
     
-    console.log('applyAgileBonus: origField exists =', !!origField, ', currField exists =', !!currField);
-    
     // Set active flag BEFORE changing value
     this.character.agileActive = true;
     
     if (origField) {
       const origVal = parseInt(origField.value, 10) || 0;
-      console.log('applyAgileBonus: original value =', origVal, 'will become', origVal + 4);
       origField.value = origVal + 4;
     }
     if (currField) {
       const currVal = parseInt(currField.value, 10) || 0;
-      console.log('applyAgileBonus: current value =', currVal, 'will become', currVal + 4);
       currField.value = currVal + 4;
       
       // Add visual styling
@@ -10079,7 +10028,6 @@ const App = {
       currField.title = '+4 due to Agile';
     }
     
-    console.log('applyAgileBonus: applied!');
     this.scheduleAutoSave();
   },
   
@@ -10918,10 +10866,18 @@ const App = {
         .trim();
     };
     
+    // Use the global AbilityDescriptions object
+    const getDesc = (name) => {
+      if (window.AbilityDescriptions && window.AbilityDescriptions.getDescription) {
+        return window.AbilityDescriptions.getDescription(name);
+      }
+      return null;
+    };
+    
     // Berserk Rage
     const rageSection = document.getElementById('berserk-rage-section');
     if (rageSection) {
-      const rageDesc = this.ABILITY_DESCRIPTIONS['berserk rage'];
+      const rageDesc = getDesc('berserk rage');
       if (rageDesc) {
         const tooltip = stripHtml(rageDesc);
         rageSection.title = tooltip;
@@ -10933,7 +10889,7 @@ const App = {
     // Brute Strength
     const bruteSection = document.getElementById('brute-strength-section');
     if (bruteSection) {
-      const bruteDesc = this.ABILITY_DESCRIPTIONS['brute strength'];
+      const bruteDesc = getDesc('brute strength');
       if (bruteDesc) {
         const tooltip = stripHtml(bruteDesc);
         bruteSection.title = tooltip;
@@ -10945,7 +10901,7 @@ const App = {
     // Just a Scratch
     const scratchSection = document.getElementById('just-a-scratch-section');
     if (scratchSection) {
-      const scratchDesc = this.ABILITY_DESCRIPTIONS['just a scratch'];
+      const scratchDesc = getDesc('just a scratch');
       if (scratchDesc) {
         const tooltip = stripHtml(scratchDesc);
         scratchSection.title = tooltip;
@@ -10957,7 +10913,7 @@ const App = {
     // Forceful Strike
     const forcefulSection = document.getElementById('forceful-strike-section');
     if (forcefulSection) {
-      const forcefulDesc = this.ABILITY_DESCRIPTIONS['forceful strike'];
+      const forcefulDesc = getDesc('forceful strike');
       if (forcefulDesc) {
         const tooltip = stripHtml(forcefulDesc);
         forcefulSection.title = tooltip;
