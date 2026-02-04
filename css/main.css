@@ -848,22 +848,26 @@ select:focus {
   padding: 0.75rem;
   border: 1px solid var(--border-light);
   border-radius: 8px;
+  overflow-x: hidden;
 }
 
 /* Scrollable containers for dynamic rows */
 #passions-container {
   max-height: calc(4 * 42px);  /* 4 rows */
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #oaths-container {
   max-height: calc(5 * 42px);  /* 5 rows */
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #professional-skills-container {
   max-height: calc(20 * 38px);  /* 20 rows */
   overflow-y: auto;
+  overflow-x: hidden;
   resize: vertical;
   min-height: 190px;
 }
@@ -6048,7 +6052,6 @@ select:focus {
 
 .d100-btn:hover {
   opacity: 1;
-  transform: scale(1.2);
 }
 
 .d10-icon {
@@ -6060,7 +6063,6 @@ select:focus {
 
 .d100-btn:hover .d10-icon {
   opacity: 0.8;
-  transform: scale(1.1);
 }
 
 /* Damage dice button styling */
