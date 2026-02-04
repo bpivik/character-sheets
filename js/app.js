@@ -205,6 +205,7 @@ const App = {
     this.setupAutoSave();
     this.setupImageUploads();
     this.setupButtons();
+    this.addSkillDiceButtons();
     
     // Generate dynamic content
     this.generatePassions();
@@ -1473,6 +1474,39 @@ const App = {
         }
       });
     }
+  },
+  
+  /**
+   * Add d100 dice buttons to standard skill rows on Character page
+   */
+  addSkillDiceButtons() {
+    // Add to Standard Skills on Character page
+    document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
+      // Skip if already has a dice button
+      if (row.querySelector('.d100-btn')) return;
+      
+      const skillName = row.querySelector('.skill-name')?.textContent || '';
+      const skillInput = row.querySelector('.skill-input');
+      const encIndicator = row.querySelector('.enc-indicator');
+      
+      if (skillInput && encIndicator) {
+        // Create dice button
+        const btn = document.createElement('button');
+        btn.className = 'd100-btn skill-roll-btn';
+        btn.title = 'Roll d100!';
+        btn.innerHTML = '<img src="images/d10.svg" alt="d10" class="d10-icon">';
+        
+        // Insert before enc-indicator (triangle)
+        row.insertBefore(btn, encIndicator);
+        
+        // Add click handler
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const currentValue = parseInt(skillInput.value) || 0;
+          this.rollD100(skillName, currentValue);
+        });
+      }
+    });
   },
   
   /**
