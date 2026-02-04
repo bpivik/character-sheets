@@ -6466,6 +6466,31 @@ select:focus {
   border-bottom: none;
 }
 
+.widget-content .belief-roll-item {
+  cursor: default;
+}
+
+.widget-content .belief-roll-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.widget-content .btn-belief-roll {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.widget-content .btn-belief-roll:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
 /* Bold styles for skill names and values */
 .widget-content .skill-name-bold {
   font-weight: 700;

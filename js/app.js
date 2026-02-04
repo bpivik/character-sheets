@@ -11433,66 +11433,81 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       render: () => {
         let html = '<h4>Beliefs</h4>';
         
+        // Helper to create belief item with d100 button
+        const createBeliefItem = (name, current) => {
+          return `<div class="skill-item belief-roll-item" data-skill-name="${name}" data-skill-value="${current}">
+            <span>${name}</span>
+            <span class="belief-roll-group">
+              <span class="belief-value">${current}%</span>
+              <button type="button" class="btn-belief-roll" title="Roll d100">🎲</button>
+            </span>
+          </div>`;
+        };
+        
         // Alignment
         const alignmentContainer = document.getElementById('alignment-container');
+        const alignmentEntries = [];
         if (alignmentContainer) {
           const alignmentRows = alignmentContainer.querySelectorAll('.belief-row');
-          if (alignmentRows.length > 0) {
-            html += '<div class="beliefs-section"><strong>Alignment</strong>';
-            alignmentRows.forEach((row, idx) => {
-              const index = row.dataset.index || (idx + 1);
-              const name = document.getElementById(`alignment-${index}-name`)?.value || '';
-              const current = document.getElementById(`alignment-${index}-current`)?.value || '-';
-              if (name.trim()) {
-                html += `<div class="skill-item"><span>${name}</span><span>${current}%</span></div>`;
-              }
-            });
-            html += '</div>';
-          }
+          alignmentRows.forEach((row, idx) => {
+            const index = row.dataset.index || (idx + 1);
+            const name = document.getElementById(`alignment-${index}-name`)?.value || '';
+            const current = document.getElementById(`alignment-${index}-current`)?.value || '-';
+            if (name.trim()) {
+              alignmentEntries.push({ name: name.trim(), current });
+            }
+          });
+        }
+        if (alignmentEntries.length > 0) {
+          html += '<div class="beliefs-section"><strong>Alignment</strong>';
+          alignmentEntries.forEach(a => {
+            html += createBeliefItem(a.name, a.current);
+          });
+          html += '</div>';
         }
         
         // Passions
         const passionsContainer = document.getElementById('passions-container');
+        const passionEntries = [];
         if (passionsContainer) {
           const passionRows = passionsContainer.querySelectorAll('.belief-row');
-          const passionEntries = [];
           passionRows.forEach((row, idx) => {
             const index = row.dataset.index || (idx + 1);
             const name = document.getElementById(`passion-${index}-name`)?.value || '';
             const current = document.getElementById(`passion-${index}-current`)?.value || '-';
             if (name.trim()) {
-              passionEntries.push({ name, current });
+              passionEntries.push({ name: name.trim(), current });
             }
           });
-          if (passionEntries.length > 0) {
-            html += '<div class="beliefs-section"><strong>Passions</strong>';
-            passionEntries.forEach(p => {
-              html += `<div class="skill-item"><span>${p.name}</span><span>${p.current}%</span></div>`;
-            });
-            html += '</div>';
-          }
+        }
+        if (passionEntries.length > 0) {
+          html += '<div class="beliefs-section"><strong>Passions</strong>';
+          passionEntries.forEach(p => {
+            html += createBeliefItem(p.name, p.current);
+          });
+          html += '</div>';
         }
         
         // Oaths
         const oathsContainer = document.getElementById('oaths-container');
+        const oathEntries = [];
         if (oathsContainer) {
           const oathRows = oathsContainer.querySelectorAll('.belief-row');
-          const oathEntries = [];
           oathRows.forEach((row, idx) => {
             const index = row.dataset.index || (idx + 1);
             const name = document.getElementById(`oath-${index}-name`)?.value || '';
             const current = document.getElementById(`oath-${index}-current`)?.value || '-';
             if (name.trim()) {
-              oathEntries.push({ name, current });
+              oathEntries.push({ name: name.trim(), current });
             }
           });
-          if (oathEntries.length > 0) {
-            html += '<div class="beliefs-section"><strong>Oaths</strong>';
-            oathEntries.forEach(o => {
-              html += `<div class="skill-item"><span>${o.name}</span><span>${o.current}%</span></div>`;
-            });
-            html += '</div>';
-          }
+        }
+        if (oathEntries.length > 0) {
+          html += '<div class="beliefs-section"><strong>Oaths</strong>';
+          oathEntries.forEach(o => {
+            html += createBeliefItem(o.name, o.current);
+          });
+          html += '</div>';
         }
         
         // If nothing to show
@@ -12354,6 +12369,19 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const totalItems = list.querySelectorAll('.ability-widget-item, .spell-widget-item, .equipment-widget-item').length;
             expandBtn.textContent = `Show All (${totalItems})`;
           }
+        }
+        return;
+      }
+      
+      // Handle belief roll buttons
+      const beliefRollBtn = e.target.closest('.btn-belief-roll');
+      if (beliefRollBtn) {
+        e.stopPropagation();
+        const beliefItem = beliefRollBtn.closest('.belief-roll-item');
+        if (beliefItem) {
+          const skillName = beliefItem.dataset.skillName || 'Belief';
+          const skillValue = parseInt(beliefItem.dataset.skillValue, 10) || 50;
+          this.rollD100(skillName, skillValue);
         }
         return;
       }
