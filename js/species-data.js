@@ -73,7 +73,7 @@ const SpeciesData = {
   
   vulpan: {
     movement: 20,
-    abilities: ["Agile", "Camouflaged", "Darkvision", "Illusion Sensitivity", "Keen Senses", "Spell-Like Ability", "Tail Balance"],
+    abilities: ["Agile", "Camouflaged", "Darkvision", "Illusion Sensitivity", "Keen Senses", "Spell-Like Ability (Speak with Animals - foxes)", "Tail Balance"],
     characteristics: { STR: [8, 18], CON: [8, 18], SIZ: [7, 12], DEX: [6, 21], INT: [8, 18], POW: [3, 18], CHA: [5, 20] }
   }
 };

@@ -293,6 +293,9 @@ const App = {
     // Check if Just a Scratch section should be visible
     this.checkJustAScratchVisibility();
     
+    // Setup tooltips for ability cards
+    this.setupAbilityCardTooltips();
+    
     // Final Artful Dodger check - ensure bonus is applied after all initialization is complete
     // This handles edge cases where ENC status wasn't populated during restoreAbilityEffects
     setTimeout(() => {
@@ -10795,6 +10798,71 @@ const App = {
     alert(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP}).`);
     
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Setup tooltips for ability cards showing ability descriptions
+   */
+  setupAbilityCardTooltips() {
+    // Helper to strip HTML and format for tooltip
+    const stripHtml = (html) => {
+      if (!html) return '';
+      return html
+        .replace(/<strong>/g, '')
+        .replace(/<\/strong>/g, '')
+        .replace(/<br>/g, '\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/\n\n/g, '\n')
+        .trim();
+    };
+    
+    // Berserk Rage
+    const rageSection = document.getElementById('berserk-rage-section');
+    if (rageSection) {
+      const rageDesc = this.ABILITY_DESCRIPTIONS['berserk rage'];
+      if (rageDesc) {
+        const tooltip = stripHtml(rageDesc);
+        rageSection.title = tooltip;
+        const rageBtn = document.getElementById('btn-rage-toggle');
+        if (rageBtn) rageBtn.title = tooltip;
+      }
+    }
+    
+    // Brute Strength
+    const bruteSection = document.getElementById('brute-strength-section');
+    if (bruteSection) {
+      const bruteDesc = this.ABILITY_DESCRIPTIONS['brute strength'];
+      if (bruteDesc) {
+        const tooltip = stripHtml(bruteDesc);
+        bruteSection.title = tooltip;
+        const bruteBtn = document.getElementById('btn-brute-toggle');
+        if (bruteBtn) bruteBtn.title = tooltip;
+      }
+    }
+    
+    // Just a Scratch
+    const scratchSection = document.getElementById('just-a-scratch-section');
+    if (scratchSection) {
+      const scratchDesc = this.ABILITY_DESCRIPTIONS['just a scratch'];
+      if (scratchDesc) {
+        const tooltip = stripHtml(scratchDesc);
+        scratchSection.title = tooltip;
+        const scratchBtn = document.getElementById('btn-scratch-use');
+        if (scratchBtn) scratchBtn.title = tooltip;
+      }
+    }
+    
+    // Forceful Strike
+    const forcefulSection = document.getElementById('forceful-strike-section');
+    if (forcefulSection) {
+      const forcefulDesc = this.ABILITY_DESCRIPTIONS['forceful strike'];
+      if (forcefulDesc) {
+        const tooltip = stripHtml(forcefulDesc);
+        forcefulSection.title = tooltip;
+        const forcefulBtn = document.getElementById('btn-forceful-toggle');
+        if (forcefulBtn) forcefulBtn.title = tooltip;
+      }
+    }
   },
 
   /**
