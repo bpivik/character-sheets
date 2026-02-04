@@ -1532,6 +1532,42 @@ const App = {
         }
       });
     }
+    
+    // Wound Info Modal handlers
+    const woundInfoClose = document.getElementById('wound-info-close');
+    if (woundInfoClose) {
+      woundInfoClose.addEventListener('click', () => {
+        this.closeWoundInfoModal();
+      });
+    }
+    
+    const woundInfoCloseBtn = document.getElementById('btn-wound-info-close');
+    if (woundInfoCloseBtn) {
+      woundInfoCloseBtn.addEventListener('click', () => {
+        this.closeWoundInfoModal();
+      });
+    }
+    
+    const woundInfoModal = document.getElementById('wound-info-modal');
+    if (woundInfoModal) {
+      woundInfoModal.addEventListener('click', (e) => {
+        if (e.target === woundInfoModal) {
+          this.closeWoundInfoModal();
+        }
+      });
+    }
+    
+    // Event delegation for wound status badge clicks
+    document.addEventListener('click', (e) => {
+      const woundStatus = e.target.closest('.wound-status.clickable');
+      if (woundStatus) {
+        const statusClass = woundStatus.dataset.status;
+        const locationName = woundStatus.dataset.location || '';
+        if (statusClass && statusClass !== 'none') {
+          this.showWoundInfoModal(statusClass, locationName);
+        }
+      }
+    });
   },
   
   /**
@@ -2898,7 +2934,7 @@ const App = {
           /
           <input type="number" class="hp-current" id="loc-${i}-current" placeholder="">
         </td>
-        <td><span class="wound-status" id="loc-${i}-status" data-status="none">—</span></td>
+        <td><span class="wound-status clickable" id="loc-${i}-status" data-status="none" data-location="${loc.location}">—</span></td>
       `;
       tbody.appendChild(tr);
       
@@ -3079,7 +3115,7 @@ const App = {
     
     statusSpan.textContent = status;
     statusSpan.dataset.status = statusClass;
-    statusSpan.className = `wound-status ${statusClass}`;
+    statusSpan.className = `wound-status clickable ${statusClass}`;
   },
 
   /**
@@ -3093,6 +3129,157 @@ const App = {
     rows.forEach((row, i) => {
       this.updateWoundStatus(i);
     });
+  },
+
+  /**
+   * Show wound info modal for a specific wound type
+   */
+  showWoundInfoModal(woundType, locationName) {
+    const modal = document.getElementById('wound-info-modal');
+    const header = document.getElementById('wound-info-header');
+    const title = document.getElementById('wound-info-title');
+    const body = document.getElementById('wound-info-body');
+    
+    if (!modal || !body) return;
+    
+    // Get healing rate for major wound info
+    const healingRate = document.getElementById('healing-rate')?.value || '3';
+    const combatRounds = parseInt(healingRate, 10) * 2;
+    
+    // Get Endurance skill value
+    const enduranceValue = document.getElementById('endurance-current')?.value || '0';
+    
+    let content = '';
+    let headerClass = '';
+    
+    switch (woundType) {
+      case 'wound-minor':
+        headerClass = 'wound-info-header-minor';
+        title.innerHTML = '🩹 Minor Wound';
+        content = `
+          <div class="wound-info-section">
+            <p class="wound-intro">A Minor Wound is nothing more than a scratch, bruise, or superficial cut. It might sting, but it won't slow your character down.</p>
+            <p class="wound-effect-good"><strong>Your character can keep fighting as normal.</strong></p>
+          </div>
+        `;
+        break;
+        
+      case 'wound-serious':
+        headerClass = 'wound-info-header-serious';
+        title.innerHTML = '⚠️ Serious Wound';
+        content = `
+          <div class="wound-info-section">
+            <p class="wound-intro">A Serious Wound happens when a Hit Location is reduced to <strong>0 HP or below</strong>. These wounds are painful and debilitating.</p>
+          </div>
+          
+          <div class="wound-info-section">
+            <h4>Effects of a Serious Wound:</h4>
+            <ul class="wound-effects-list">
+              <li>The location is <strong>scarred permanently</strong>.</li>
+              <li>Your character is <strong>stunned for 1d3 Turns</strong>, unable to attack or cast spells (but they can still Parry or Evade).</li>
+              <li>Your character must make an <strong>Opposed Endurance roll</strong> against the attacker's roll to avoid further effects.</li>
+            </ul>
+            <div class="wound-roll-section">
+              <button type="button" class="btn btn-roll-endurance" id="btn-roll-endurance-serious">
+                🎲 Roll Endurance (${enduranceValue}%)
+              </button>
+            </div>
+          </div>
+          
+          <div class="wound-info-section wound-penalties">
+            <h4>Additional Penalties for Specific Locations:</h4>
+            
+            <div class="wound-location-group">
+              <h5>🦵 Arm or Leg Wound:</h5>
+              <ul>
+                <li>Failing the Endurance roll means the <strong>limb is useless</strong> until it's healed.</li>
+                <li>If it's a <strong>leg</strong>, your character <strong>falls prone</strong>.</li>
+                <li>If it's an <strong>arm</strong>, your character <strong>drops whatever they're holding</strong> unless it's strapped on.</li>
+              </ul>
+            </div>
+            
+            <div class="wound-location-group">
+              <h5>💀 Abdomen, Chest, or Head Wound:</h5>
+              <ul>
+                <li>Failing the Endurance roll results in <strong>unconsciousness</strong> for a number of minutes equal to the damage taken.</li>
+              </ul>
+            </div>
+            
+            <p class="wound-note">Even if your character remains conscious, any tasks involving the wounded location suffer a penalty of <strong>one Difficulty Grade</strong> until the wound is downgraded to Minor.</p>
+          </div>
+        `;
+        break;
+        
+      case 'wound-major':
+        headerClass = 'wound-info-header-major';
+        title.innerHTML = '💀 Major Wound';
+        content = `
+          <div class="wound-info-section">
+            <p class="wound-intro wound-intro-major">A Major Wound happens when a Hit Location's Hit Points are reduced to a <strong>negative score equal to or greater than its starting HP</strong> (e.g., going from 6 to -6). These wounds are <strong>catastrophic and life-threatening</strong>.</p>
+          </div>
+          
+          <div class="wound-info-section">
+            <h4>Effects of a Major Wound:</h4>
+            <ul class="wound-effects-list wound-effects-major">
+              <li>Your character is <strong>immediately Incapacitated</strong> and can't continue fighting.</li>
+              <li>The affected limb is <strong>severed, shattered, or ripped off</strong>.</li>
+              <li>Your character <strong>falls prone</strong> and must make an <strong>Opposed Endurance roll</strong> against the attacker's roll to avoid unconsciousness.</li>
+            </ul>
+            <div class="wound-roll-section">
+              <button type="button" class="btn btn-roll-endurance btn-roll-major" id="btn-roll-endurance-major">
+                🎲 Roll Endurance (${enduranceValue}%)
+              </button>
+            </div>
+          </div>
+          
+          <div class="wound-info-section wound-fatal">
+            <h4>⚰️ Abdomen, Chest, or Head Wound:</h4>
+            <p class="wound-death-warning">Failing the Endurance roll means <strong>instant death</strong>. This could be decapitation, being chopped in half, or impalement through the heart.</p>
+          </div>
+          
+          <div class="wound-info-section wound-survival">
+            <h4>🩸 If Your Character Survives:</h4>
+            <p>They still need <strong>immediate medical attention</strong>. The wound must be treated within <strong>${combatRounds} Combat Rounds</strong> (2× Healing Rate of ${healingRate}).</p>
+            <p class="wound-death-warning">If not treated in time, your character will <strong>die from Blood Loss and shock</strong>.</p>
+          </div>
+        `;
+        break;
+        
+      default:
+        return; // Don't show modal for "No Damage" or empty status
+    }
+    
+    // Update header class
+    header.className = `modal-header wound-info-header ${headerClass}`;
+    
+    // Set content and show modal
+    body.innerHTML = content;
+    modal.classList.remove('hidden');
+    
+    // Add roll button listeners
+    const seriousRollBtn = document.getElementById('btn-roll-endurance-serious');
+    const majorRollBtn = document.getElementById('btn-roll-endurance-major');
+    
+    if (seriousRollBtn) {
+      seriousRollBtn.addEventListener('click', () => {
+        this.rollD100('Endurance', enduranceValue);
+      });
+    }
+    if (majorRollBtn) {
+      majorRollBtn.addEventListener('click', () => {
+        this.rollD100('Endurance', enduranceValue);
+      });
+    }
+  },
+
+  /**
+   * Close wound info modal
+   */
+  closeWoundInfoModal() {
+    const modal = document.getElementById('wound-info-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
   },
 
   /**

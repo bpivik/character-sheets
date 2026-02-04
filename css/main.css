@@ -2679,6 +2679,228 @@ select:focus {
   box-shadow: 0 2px 8px rgba(90, 150, 90, 0.4);
 }
 
+/* Wound Info Modal */
+.wound-info-modal {
+  max-width: 550px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.wound-info-header {
+  border-bottom: 2px solid;
+}
+
+.wound-info-header-minor {
+  background: linear-gradient(135deg, rgba(255, 235, 59, 0.2) 0%, rgba(255, 193, 7, 0.15) 100%);
+  border-bottom-color: #ffc107;
+}
+
+.wound-info-header-minor h3 {
+  color: #f57f17;
+}
+
+.wound-info-header-serious {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.2) 0%, rgba(211, 47, 47, 0.15) 100%);
+  border-bottom-color: #f44336;
+}
+
+.wound-info-header-serious h3 {
+  color: #c62828;
+}
+
+.wound-info-header-major {
+  background: linear-gradient(135deg, rgba(74, 0, 0, 0.9) 0%, rgba(123, 0, 0, 0.85) 100%);
+  border-bottom-color: #b71c1c;
+}
+
+.wound-info-header-major h3 {
+  color: #ffcdd2;
+}
+
+.wound-info-body {
+  padding: 1rem 1.25rem;
+}
+
+.wound-info-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.wound-info-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.wound-intro {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.wound-intro-major {
+  color: #c62828;
+  font-weight: 500;
+}
+
+.wound-effect-good {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #a5d6a7;
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.wound-info-section h4 {
+  font-family: var(--font-header);
+  font-size: 1rem;
+  color: var(--text-header);
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.wound-info-section h5 {
+  font-size: 0.9rem;
+  color: var(--text-header);
+  margin: 0.75rem 0 0.5rem 0;
+}
+
+.wound-effects-list {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.wound-effects-list li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.wound-effects-major li {
+  color: #b71c1c;
+}
+
+.wound-location-group {
+  background: rgba(0,0,0,0.03);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--border-gold);
+}
+
+.wound-location-group h5 {
+  margin-top: 0;
+}
+
+.wound-location-group ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.wound-location-group li {
+  margin-bottom: 0.3rem;
+}
+
+.wound-roll-section {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.btn-roll-endurance {
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 50%, #1565c0 100%);
+  color: white;
+  border: 1px solid #1976d2;
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(21, 101, 192, 0.3);
+}
+
+.btn-roll-endurance:hover {
+  background: linear-gradient(135deg, #1976d2 0%, #2196f3 50%, #1976d2 100%);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-roll-major {
+  background: linear-gradient(135deg, #b71c1c 0%, #c62828 50%, #b71c1c 100%);
+  border-color: #d32f2f;
+  box-shadow: 0 2px 6px rgba(183, 28, 28, 0.3);
+}
+
+.btn-roll-major:hover {
+  background: linear-gradient(135deg, #c62828 0%, #e53935 50%, #c62828 100%);
+  box-shadow: 0 4px 12px rgba(183, 28, 28, 0.4);
+}
+
+.wound-note {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.wound-penalties {
+  background: rgba(255, 235, 59, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.wound-fatal {
+  background: rgba(183, 28, 28, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(183, 28, 28, 0.3);
+}
+
+.wound-death-warning {
+  color: #b71c1c;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  background: rgba(183, 28, 28, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #b71c1c;
+}
+
+.wound-survival {
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.wound-info-footer {
+  border-top: 1px solid var(--border-light);
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  background: rgba(0,0,0,0.03);
+}
+
+/* Clickable wound status */
+.wound-status.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wound-status.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.wound-status.clickable:not(.wound-none):hover::after {
+  content: ' ℹ️';
+  font-size: 0.6rem;
+}
+
 /* Combat Skills */
 .combat-skills-section {
   margin-bottom: 1rem;

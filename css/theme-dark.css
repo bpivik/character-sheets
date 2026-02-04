@@ -846,3 +846,51 @@
   color: #ffcdd2;
   border-color: #b71c1c;
 }
+
+/* Wound Info Modal - Dark Mode */
+[data-theme="dark"] .wound-info-header-minor {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 152, 0, 0.15) 100%);
+}
+
+[data-theme="dark"] .wound-info-header-serious {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.25) 0%, rgba(211, 47, 47, 0.2) 100%);
+}
+
+[data-theme="dark"] .wound-effect-good {
+  background: linear-gradient(135deg, #1b3d1b 0%, #2a5a2a 100%);
+  color: #81c784;
+  border-color: #4caf50;
+}
+
+[data-theme="dark"] .wound-location-group {
+  background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .wound-note {
+  background: rgba(255, 193, 7, 0.15);
+}
+
+[data-theme="dark"] .wound-penalties {
+  background: rgba(255, 193, 7, 0.1);
+}
+
+[data-theme="dark"] .wound-fatal {
+  background: rgba(183, 28, 28, 0.2);
+}
+
+[data-theme="dark"] .wound-death-warning {
+  background: rgba(183, 28, 28, 0.2);
+  color: #ef9a9a;
+}
+
+[data-theme="dark"] .wound-survival {
+  background: rgba(255, 152, 0, 0.15);
+}
+
+[data-theme="dark"] .wound-intro-major {
+  color: #ef9a9a;
+}
+
+[data-theme="dark"] .wound-effects-major li {
+  color: #ef9a9a;
+}
