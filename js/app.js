@@ -148,6 +148,33 @@ const App = {
         // Remove Resilient flag - HP calculation will use standard CON+SIZ
         // recalculateAll will be called after ability is removed
       }
+    },
+    'extra rage i': {
+      description: '+1 Berserk Rage use per day',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        // Reduce remaining uses if they exceed the new max
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
+    },
+    'extra rage 1': {
+      description: '+1 Berserk Rage use per day',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
     }
   },
 
@@ -9201,10 +9228,10 @@ const App = {
     
     // Reset Berserk Rage uses if character has the ability
     if (this.hasAbility('Berserk Rage')) {
-      const con = parseInt(this.character.attributes?.CON, 10) || 10;
-      const maxUses = Math.ceil(con / 4);
+      const maxUses = this.getMaxRageUses();
       const prevUses = this.character.rageUsesRemaining || 0;
       this.character.rageUsesRemaining = maxUses;
+      this.character.firstRageFatigueWaived = false;
       this.updateBerserkRageDisplay();
       if (prevUses < maxUses) {
         messages.push(`<strong>Berserk Rage uses restored:</strong> ${prevUses} → ${maxUses}`);
@@ -9578,7 +9605,7 @@ const App = {
    */
   updateBerserkRageDisplay() {
     const con = parseInt(this.character.attributes?.CON, 10) || 10;
-    const maxUses = Math.ceil(con / 4);
+    const maxUses = this.getMaxRageUses();
     const maxRounds = con;
     
     // Initialize uses remaining if not set
@@ -9643,6 +9670,14 @@ const App = {
     
     this.character.isRaging = true;
     this.character.rageUsesRemaining--;
+    
+    // Track if this is the first rage of the day (for Rank 2+ no-fatigue passive)
+    if (this.getBerserkerRank() >= 2 && !this.character.firstRageFatigueWaived) {
+      this.character.currentRageIsFirst = true;
+      this.character.firstRageFatigueWaived = true;
+    } else {
+      this.character.currentRageIsFirst = false;
+    }
     
     // Store pre-rage values
     this.character.preRageValues = {
@@ -9834,10 +9869,16 @@ const App = {
     
     this.updateBerserkRageDisplay();
     
-    // Apply one level of fatigue
+    // Apply one level of fatigue (unless this was the first rage of the day for Rank 2+ berserker)
     if (applyFatigue) {
-      this.increaseFatigueByOne();
+      if (this.character.currentRageIsFirst) {
+        // Rank 2+ passive: first rage of the day has no fatigue cost
+        // Show a message so the user knows
+      } else {
+        this.increaseFatigueByOne();
+      }
     }
+    this.character.currentRageIsFirst = false;
     
     this.scheduleAutoSave();
   },
@@ -10097,11 +10138,46 @@ const App = {
   },
   
   /**
+   * Get the rank of the Berserker class (checks all class slots)
+   */
+  getBerserkerRank() {
+    const slots = [
+      { cls: 'class-primary', rank: 'rank-primary' },
+      { cls: 'class-secondary', rank: 'rank-secondary' },
+      { cls: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    for (const slot of slots) {
+      const className = document.getElementById(slot.cls)?.value?.trim().toLowerCase() || '';
+      if (className === 'berserker') {
+        return parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      }
+    }
+    return 0;
+  },
+  
+  /**
+   * Get maximum Berserk Rage uses per day
+   * Base = ceil(CON / 4), plus +1 for each Extra Rage ability
+   */
+  getMaxRageUses() {
+    const con = parseInt(this.character.attributes?.CON, 10) || 10;
+    let maxUses = Math.ceil(con / 4);
+    
+    // Extra Rage abilities add +1 each
+    if (this.hasAbility('Extra Rage I') || this.hasAbility('Extra Rage 1')) maxUses += 1;
+    if (this.hasAbility('Extra Rage II') || this.hasAbility('Extra Rage 2')) maxUses += 1;
+    if (this.hasAbility('Extra Rage III') || this.hasAbility('Extra Rage 3')) maxUses += 1;
+    if (this.hasAbility('Extra Rage IV') || this.hasAbility('Extra Rage 4')) maxUses += 1;
+    
+    return maxUses;
+  },
+
+  /**
    * Reset rage uses (called on long rest)
    */
   resetRageUses() {
-    const con = parseInt(this.character.attributes?.CON, 10) || 10;
-    this.character.rageUsesRemaining = Math.ceil(con / 4);
+    this.character.rageUsesRemaining = this.getMaxRageUses();
+    this.character.firstRageFatigueWaived = false;
     this.updateBerserkRageDisplay();
     this.scheduleAutoSave();
   },

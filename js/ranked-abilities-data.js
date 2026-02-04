@@ -209,6 +209,31 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: null,
       summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
     },
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "1 bonus Action Point for Reactive Actions (Parry/Evade only)"
+    },
+    { 
+      name: "Extra Rage I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 additional Berserk Rage use per day"
+    },
+    { 
+      name: "Greater Sweeping Strike", 
+      rank: 2, 
+      prereqs: "Sweeping Strike; Combat Style 70%",
+      summary: "Sweeping Strike against ALL enemies in range (if each attack drops a foe)"
+    },
   ],
   
   // More classes to be added...
