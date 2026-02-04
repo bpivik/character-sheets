@@ -309,6 +309,9 @@ const App = {
     // Check if Forceful Strike section should be visible
     this.checkForcefulStrikeVisibility();
     
+    // Check if Brute Strength section should be visible
+    this.checkBruteStrengthVisibility();
+    
     // Check if Spell-Like Abilities section should be visible
     this.checkSpellLikeAbilitiesVisibility();
     
@@ -2521,6 +2524,30 @@ const App = {
         }
       });
     }
+    
+    // Alphabetize button
+    const alphabetizeBtn = document.getElementById('btn-alphabetize-container');
+    if (alphabetizeBtn) {
+      alphabetizeBtn.addEventListener('click', () => {
+        this.alphabetizeContainerItems();
+      });
+    }
+    
+    // Add row button
+    const addRowBtn = document.getElementById('btn-add-container-row');
+    if (addRowBtn) {
+      addRowBtn.addEventListener('click', () => {
+        this.addContainerRow();
+      });
+    }
+    
+    // Remove row button
+    const removeRowBtn = document.getElementById('btn-remove-container-row');
+    if (removeRowBtn) {
+      removeRowBtn.addEventListener('click', () => {
+        this.removeLastContainerRow();
+      });
+    }
   },
 
   /**
@@ -2688,6 +2715,118 @@ const App = {
       if (nameInput && item.name) nameInput.value = this.toTitleCase(item.name);
       if (encInput && item.enc) encInput.value = item.enc;
     });
+  },
+
+  /**
+   * Alphabetize container items
+   */
+  alphabetizeContainerItems() {
+    const container = document.getElementById('container-items');
+    if (!container) return;
+    
+    // Gather all items with their data
+    const items = [];
+    container.querySelectorAll('.equipment-row').forEach(row => {
+      const nameInput = row.querySelector('.equipment-name');
+      const encInput = row.querySelector('.equipment-enc');
+      const name = nameInput?.value?.trim() || '';
+      const enc = encInput?.value || '';
+      items.push({ name, enc });
+    });
+    
+    // Separate filled and empty items
+    const filledItems = items.filter(item => item.name);
+    const emptyItems = items.filter(item => !item.name);
+    
+    // Sort filled items alphabetically
+    filledItems.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    
+    // Combine: filled first, then empty
+    const sortedItems = [...filledItems, ...emptyItems];
+    
+    // Update the DOM
+    const rows = container.querySelectorAll('.equipment-row');
+    sortedItems.forEach((item, i) => {
+      if (rows[i]) {
+        const nameInput = rows[i].querySelector('.equipment-name');
+        const encInput = rows[i].querySelector('.equipment-enc');
+        if (nameInput) nameInput.value = item.name;
+        if (encInput) encInput.value = item.enc;
+      }
+    });
+  },
+
+  /**
+   * Add a new row to the container
+   */
+  addContainerRow() {
+    const container = document.getElementById('container-items');
+    if (!container) return;
+    
+    const rowCount = container.querySelectorAll('.equipment-row').length;
+    const i = rowCount;
+    
+    const row = document.createElement('div');
+    row.className = 'equipment-row';
+    row.innerHTML = `
+      <input type="text" class="equipment-name" id="container-${i}-name" placeholder="">
+      <input type="number" class="equipment-enc" id="container-${i}-enc" placeholder="" step="0.1">
+    `;
+    container.appendChild(row);
+    
+    const nameInput = row.querySelector('.equipment-name');
+    const encInput = row.querySelector('.equipment-enc');
+    const rowIndex = i;
+    
+    // Autofill ENC on blur
+    nameInput.addEventListener('blur', () => {
+      // Convert to title case
+      if (nameInput.value.trim()) {
+        nameInput.value = this.toTitleCase(nameInput.value.trim());
+      }
+      if (window.EncumbranceData) {
+        const itemName = nameInput.value;
+        if (itemName.trim() === '') {
+          window.EncumbranceData.clearEquipmentEncIfEmpty('container', rowIndex, itemName);
+        } else {
+          window.EncumbranceData.autofillEquipmentEnc('container', rowIndex, itemName);
+        }
+        this.updateContainerCapacity();
+      }
+    });
+    
+    encInput.addEventListener('input', () => {
+      this.updateContainerCapacity();
+    });
+    
+    // Focus the new row
+    nameInput.focus();
+  },
+
+  /**
+   * Remove the last empty row from the container
+   */
+  removeLastContainerRow() {
+    const container = document.getElementById('container-items');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.equipment-row');
+    if (rows.length <= 1) return; // Keep at least one row
+    
+    // Find the last empty row (from the end)
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const nameInput = rows[i].querySelector('.equipment-name');
+      const encInput = rows[i].querySelector('.equipment-enc');
+      const isEmpty = (!nameInput?.value?.trim()) && (!encInput?.value?.trim() || encInput?.value === '0');
+      
+      if (isEmpty) {
+        rows[i].remove();
+        return;
+      }
+    }
+    
+    // If no empty row found, don't remove anything (alert user)
+    alert('No empty rows to remove. Clear a row first.');
   },
 
   /**
@@ -3857,6 +3996,11 @@ const App = {
           this.checkForcefulStrikeVisibility();
         }
         
+        // Check if Brute Strength section should now be visible
+        if (normalizedName === 'brute strength') {
+          this.checkBruteStrengthVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -3874,6 +4018,11 @@ const App = {
     // Check if Forceful Strike section should now be visible
     if (normalizedName === 'forceful strike') {
       this.checkForcefulStrikeVisibility();
+    }
+    
+    // Check if Brute Strength section should now be visible
+    if (normalizedName === 'brute strength') {
+      this.checkBruteStrengthVisibility();
     }
     
     return !!newInput;
@@ -9077,6 +9226,190 @@ const App = {
     if (dmgOrigField) dmgOrigField.classList.add('forceful-boosted');
   },
   
+  /**
+   * Check if character has Brute Strength ability and show/hide section
+   */
+  checkBruteStrengthVisibility() {
+    const section = document.getElementById('brute-strength-section');
+    if (!section) return;
+    
+    // Check if character has Brute Strength ability
+    const hasBruteStrength = this.hasAbility('Brute Strength');
+    
+    if (hasBruteStrength) {
+      section.style.display = '';
+      this.initBruteStrength();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Initialize Brute Strength system
+   */
+  initBruteStrength() {
+    this.setupBruteStrengthListeners();
+    
+    // Restore state if it was active
+    if (this.character.isBruteStrengthActive) {
+      this.restoreBruteStrengthState();
+    }
+  },
+  
+  /**
+   * Setup Brute Strength button listeners
+   */
+  setupBruteStrengthListeners() {
+    const toggleBtn = document.getElementById('btn-brute-toggle');
+    
+    if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
+      toggleBtn.addEventListener('click', () => {
+        if (this.character.isBruteStrengthActive) {
+          this.deactivateBruteStrength();
+        } else {
+          this.activateBruteStrength();
+        }
+      });
+      toggleBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Activate Brute Strength (+20 to Brawn for one action)
+   */
+  activateBruteStrength() {
+    if (this.character.isBruteStrengthActive) return;
+    
+    this.character.isBruteStrengthActive = true;
+    
+    // Store pre-activation Brawn value
+    const brawnInput = document.getElementById('brawn-current');
+    this.character.preBruteStrengthBrawn = brawnInput?.value || '0';
+    
+    // Apply Brute Strength effect (+20 to Brawn)
+    this.applyBruteStrengthEffects();
+    
+    // Update UI
+    const toggleBtn = document.getElementById('btn-brute-toggle');
+    const btnText = document.getElementById('brute-btn-text');
+    
+    if (toggleBtn) {
+      toggleBtn.classList.add('active');
+    }
+    if (btnText) {
+      btnText.textContent = '💪 Brute Strength Active - Click to End';
+    }
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Apply Brute Strength effects (+20 to Brawn)
+   */
+  applyBruteStrengthEffects() {
+    const brawnInput = document.getElementById('brawn-current');
+    if (brawnInput) {
+      const curr = parseInt(brawnInput.value, 10) || 0;
+      brawnInput.value = curr + 20;
+      brawnInput.classList.add('brute-boosted');
+    }
+    
+    // Update summary page
+    this.refreshSummaryWidgets();
+  },
+  
+  /**
+   * Deactivate Brute Strength and apply fatigue (unless Berserker)
+   */
+  deactivateBruteStrength() {
+    if (!this.character.isBruteStrengthActive) return;
+    
+    this.character.isBruteStrengthActive = false;
+    
+    // Remove Brute Strength effects (restore original Brawn)
+    this.removeBruteStrengthEffects();
+    
+    // Update UI
+    const toggleBtn = document.getElementById('btn-brute-toggle');
+    const btnText = document.getElementById('brute-btn-text');
+    
+    if (toggleBtn) {
+      toggleBtn.classList.remove('active');
+    }
+    if (btnText) {
+      btnText.textContent = 'Use Brute Strength';
+    }
+    
+    // Check if class is Berserker - if not, apply fatigue
+    const primaryClass = document.getElementById('class-primary')?.value?.trim().toLowerCase() || '';
+    const secondaryClass = document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '';
+    const tertiaryClass = document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '';
+    
+    const isBerserker = primaryClass === 'berserker' || secondaryClass === 'berserker' || tertiaryClass === 'berserker';
+    
+    if (!isBerserker) {
+      // Apply one level of fatigue
+      this.applyBruteStrengthFatigue();
+    } else {
+      alert('Brute Strength ended. No fatigue applied (Berserker class).');
+    }
+    
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Remove Brute Strength effects
+   */
+  removeBruteStrengthEffects() {
+    const brawnInput = document.getElementById('brawn-current');
+    if (brawnInput && this.character.preBruteStrengthBrawn !== undefined) {
+      brawnInput.value = this.character.preBruteStrengthBrawn;
+      brawnInput.classList.remove('brute-boosted');
+    }
+    
+    // Update summary page
+    this.refreshSummaryWidgets();
+    
+    this.character.preBruteStrengthBrawn = null;
+  },
+  
+  /**
+   * Apply fatigue from Brute Strength use
+   */
+  applyBruteStrengthFatigue() {
+    const fatigueOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
+    const currentState = this.character.fatigueState || 'fresh';
+    const currentIndex = fatigueOrder.indexOf(currentState);
+    
+    if (currentIndex < fatigueOrder.length - 1) {
+      const newState = fatigueOrder[currentIndex + 1];
+      this.setFatigueState(newState, true);
+      
+      alert(`Brute Strength ended! Fatigue increased from ${this.formatFatigueState(currentState)} to ${this.formatFatigueState(newState)}.`);
+    } else {
+      alert('Brute Strength ended! Already at maximum fatigue.');
+    }
+  },
+  
+  /**
+   * Restore Brute Strength visual state after page load
+   */
+  restoreBruteStrengthState() {
+    const toggleBtn = document.getElementById('btn-brute-toggle');
+    const btnText = document.getElementById('brute-btn-text');
+    
+    if (toggleBtn) {
+      toggleBtn.classList.add('active');
+    }
+    if (btnText) {
+      btnText.textContent = '💪 Brute Strength Active - Click to End';
+    }
+    
+    // Re-apply visual indicator
+    const brawnInput = document.getElementById('brawn-current');
+    if (brawnInput) brawnInput.classList.add('brute-boosted');
+  },
+
   /**
    * Check if character has a specific ability
    */
