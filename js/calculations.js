@@ -303,9 +303,19 @@ const Calculator = {
     const heightFeet = this.parseHeight(heightStr);
     const heightInches = heightFeet * 12;
     
+    // Vertical jump = half height
+    const verticalInches = heightInches / 2;
+    const verticalFeet = Math.floor(verticalInches / 12);
+    const verticalRemainder = Math.round(verticalInches % 12);
+    
+    // Horizontal jump = 2x height
+    const horizontalInches = heightInches * 2;
+    const horizontalFeet = Math.floor(horizontalInches / 12);
+    const horizontalRemainder = Math.round(horizontalInches % 12);
+    
     return {
-      vertical: `${Math.floor(heightInches / 24)}' ${Math.round((heightInches / 2) % 12)}"`,
-      horizontal: `${Math.floor(heightFeet)}' ${Math.round((heightFeet * 24) % 12)}"`
+      vertical: `${verticalFeet}' ${verticalRemainder}"`,
+      horizontal: `${horizontalFeet}' ${horizontalRemainder}"`
     };
   },
 
