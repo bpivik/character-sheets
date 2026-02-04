@@ -1145,33 +1145,30 @@
 
         <!-- Abilities Sections Container -->
         <div class="abilities-sections-container">
-          <!-- Left Column: Combined Abilities List -->
+          <!-- Left Column: Class Abilities and Species Abilities -->
           <div class="abilities-left-column">
-            <!-- Combined Abilities Section -->
-            <section class="abilities-combined-section">
-              <!-- Class Abilities -->
-              <div class="abilities-subsection">
-                <div class="abilities-subsection-header">
-                  <span class="abilities-subsection-title">Class Abilities</span>
-                  <div class="abilities-mini-btns">
-                    <button type="button" class="abilities-mini-btn" id="btn-sort-abilities" title="Sort alphabetically">↕</button>
-                    <button type="button" class="abilities-mini-btn" id="btn-add-ability" title="Add ability">+</button>
-                    <button type="button" class="abilities-mini-btn" id="btn-remove-ability" title="Remove last empty">−</button>
-                  </div>
-                </div>
-                <div class="class-abilities-list" id="class-abilities-list">
-                  <!-- Dynamically populated -->
+            <!-- Class Abilities Section (formerly Special Abilities) -->
+            <section class="class-abilities-section">
+              <div class="section-header-row">
+                <h3 class="section-header">Class Abilities</h3>
+                <div class="header-buttons">
+                  <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
+                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
+                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
                 </div>
               </div>
-              
-              <!-- Species Abilities (below class abilities) -->
-              <div class="abilities-subsection species-subsection" id="species-abilities-subsection">
-                <div class="abilities-subsection-header species-header">
-                  <span class="abilities-subsection-title">Species Abilities</span>
-                </div>
-                <div class="species-abilities-list" id="species-abilities-list">
-                  <!-- Dynamically populated based on species -->
-                </div>
+              <div class="class-abilities-list" id="class-abilities-list">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Species Abilities Section -->
+            <section class="species-abilities-section">
+              <div class="section-header-row">
+                <h3 class="section-header">Species Abilities</h3>
+              </div>
+              <div class="species-abilities-list" id="species-abilities-list">
+                <!-- Dynamically populated based on species -->
               </div>
             </section>
           </div>
