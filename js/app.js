@@ -12674,15 +12674,18 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const canvas = document.getElementById('summary-canvas');
     if (!canvas) return;
     
-    canvas.querySelectorAll('.widget-item').forEach(item => {
-      const widgetId = item.dataset.widgetId;
-      const widget = this.summaryWidgets[widgetId];
-      if (widget) {
-        const content = item.querySelector('.widget-content');
-        if (content) {
-          content.innerHTML = widget.render();
+    // Use requestAnimationFrame to ensure DOM is ready after page switch
+    requestAnimationFrame(() => {
+      canvas.querySelectorAll('.widget-item').forEach(item => {
+        const widgetId = item.dataset.widgetId;
+        const widget = this.summaryWidgets[widgetId];
+        if (widget) {
+          const content = item.querySelector('.widget-content');
+          if (content) {
+            content.innerHTML = widget.render();
+          }
         }
-      }
+      });
     });
   },
   
