@@ -3078,8 +3078,10 @@ const App = {
 
   /**
    * Update wound status for a specific hit location
+   * @param {number} locationIndex - Index of the hit location
+   * @param {boolean} applyFatigue - Whether to apply fatigue changes (default true)
    */
-  updateWoundStatus(locationIndex) {
+  updateWoundStatus(locationIndex, applyFatigue = true) {
     const maxInput = document.getElementById(`loc-${locationIndex}-hp`);
     const currentInput = document.getElementById(`loc-${locationIndex}-current`);
     const statusSpan = document.getElementById(`loc-${locationIndex}-status`);
@@ -3089,11 +3091,14 @@ const App = {
     const maxHP = parseInt(maxInput.value, 10) || 0;
     const currentHP = parseInt(currentInput.value, 10);
     
+    // Get previous status to detect changes
+    const previousStatus = statusSpan.dataset.status || 'none';
+    
     // If current is empty or NaN, show no status
     if (isNaN(currentHP) || currentInput.value === '') {
       statusSpan.textContent = '—';
       statusSpan.dataset.status = 'none';
-      statusSpan.className = 'wound-status';
+      statusSpan.className = 'wound-status clickable';
       return;
     }
     
@@ -3113,13 +3118,45 @@ const App = {
       statusClass = 'wound-major';
     }
     
+    // Check if wound status worsened to Serious or Major - apply fatigue
+    if (applyFatigue && statusClass !== previousStatus) {
+      if (statusClass === 'wound-major' && previousStatus !== 'wound-major') {
+        // Major Wound - set to Incapacitated (if not already worse)
+        this.applyWoundFatigue('incapacitated', 'Major Wound');
+      } else if (statusClass === 'wound-serious' && previousStatus !== 'wound-serious' && previousStatus !== 'wound-major') {
+        // Serious Wound - set to Debilitated (if not already worse)
+        this.applyWoundFatigue('debilitated', 'Serious Wound');
+      }
+    }
+    
     statusSpan.textContent = status;
     statusSpan.dataset.status = statusClass;
     statusSpan.className = `wound-status clickable ${statusClass}`;
   },
 
   /**
-   * Update all wound statuses
+   * Apply fatigue from wound (only if current fatigue is less severe)
+   */
+  applyWoundFatigue(targetState, woundType) {
+    const fatigueOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
+    const currentState = this.character.fatigueState || 'fresh';
+    
+    const currentIndex = fatigueOrder.indexOf(currentState);
+    const targetIndex = fatigueOrder.indexOf(targetState);
+    
+    // Only apply if target is more severe than current
+    if (targetIndex > currentIndex) {
+      this.setFatigueState(targetState, true);
+      
+      // Show notification
+      const formattedCurrent = this.formatFatigueState(currentState);
+      const formattedTarget = this.formatFatigueState(targetState);
+      alert(`${woundType}! Fatigue changed from ${formattedCurrent} to ${formattedTarget}.`);
+    }
+  },
+
+  /**
+   * Update all wound statuses (without applying fatigue - used for loading/refreshing)
    */
   updateAllWoundStatuses() {
     const tbody = document.getElementById('hit-locations-body');
@@ -3127,7 +3164,7 @@ const App = {
     
     const rows = tbody.querySelectorAll('tr');
     rows.forEach((row, i) => {
-      this.updateWoundStatus(i);
+      this.updateWoundStatus(i, false); // Don't apply fatigue on bulk updates
     });
   },
 
