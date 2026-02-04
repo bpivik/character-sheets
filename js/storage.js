@@ -306,7 +306,16 @@ const StorageManager = {
       return target;
     };
     
-    return deepMerge(base, data);
+    const result = deepMerge(base, data);
+    
+    // Clean up old/stale runtime flags that should not be persisted
+    delete result.artfulDodgerActive;
+    delete result.hasArtfulDodger;
+    delete result.evadeWithoutArtfulDodger;
+    delete result.artfulDodgerDisplayed;
+    delete result.agileDisplayed;
+    
+    return result;
   },
 
   /**

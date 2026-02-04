@@ -31,15 +31,10 @@ const App = {
     'artful dodger': {
       description: '+10 Evade (when Unburdened)',
       apply: function(app) {
-        // Don't apply bonus directly - it's managed by checkArtfulDodgerBonus based on encumbrance
-        // Just mark that the ability is present and trigger a check
-        app.character.hasArtfulDodger = true;
-        app.checkArtfulDodgerBonus();
+        app.updateArtfulDodgerDisplay();
       },
       remove: function(app) {
-        // Remove the bonus if it was active
-        app.character.hasArtfulDodger = false;
-        app.removeArtfulDodgerBonus();
+        app.updateArtfulDodgerDisplay();
       }
     },
     'weapon precision': {
@@ -304,25 +299,21 @@ const App = {
       // Mark initialization as complete
       this.isInitializing = false;
       
-      // Force recalculate ENC status (needed for ability bonuses)
-      this.updateTotalEnc();
+      // Initialize display flags BEFORE any function that might call updateArtfulDodgerDisplay/updateAgileDisplay
+      this.artfulDodgerDisplayed = false; // Runtime flag, NOT on this.character
+      this.agileDisplayed = false; // Runtime flag, NOT on this.character
       
-      // Now explicitly check and apply ability bonuses
+      // Set up ability effect tracking
       if (this.hasAbility('Artful Dodger')) {
-        this.character.hasArtfulDodger = true;
-        // Reset active state to ensure fresh application
-        this.character.artfulDodgerActive = false;
-        // Mark as active in effects tracking so removal works properly
         this.activeAbilityEffects['artful dodger'] = { active: true };
-        this.checkArtfulDodgerBonus();
       }
-      
-      // Check Agile display (always check, updateAgileDisplay handles ability presence)
-      this.character.agileDisplayed = false; // Reset to ensure clean state
       if (this.hasAbility('Agile')) {
         this.activeAbilityEffects['agile'] = { active: true };
       }
-      this.updateAgileDisplay();
+      
+      // Force recalculate ENC status - this will also call updateArtfulDodgerDisplay
+      // and updateAgileDisplay since isInitializing is now false
+      this.updateTotalEnc();
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -1243,16 +1234,18 @@ const App = {
           setTimeout(() => this.applyAllPenalties(), 10);
         } else {
           // Normal edit - also update originalValue if it exists
-          if (e.target.dataset.originalValue !== undefined) {
-            e.target.dataset.originalValue = e.target.value;
-          }
-          
-          // Special handling for Evade when Artful Dodger is active
-          // Save the BASE value (without the +10 bonus)
-          if (skillKey === 'evade' && this.character.artfulDodgerActive) {
+          // For Evade: if Artful Dodger display bonus is active, save base value (minus display bonus)
+          if (skillKey === 'evade' && this.artfulDodgerDisplayed) {
             const displayedValue = parseInt(e.target.value, 10) || 0;
-            this.character.standardSkills[skillKey] = Math.max(0, displayedValue - 10).toString();
+            const baseValue = Math.max(0, displayedValue - 10).toString();
+            if (e.target.dataset.originalValue !== undefined) {
+              e.target.dataset.originalValue = baseValue;
+            }
+            this.character.standardSkills[skillKey] = baseValue;
           } else {
+            if (e.target.dataset.originalValue !== undefined) {
+              e.target.dataset.originalValue = e.target.value;
+            }
             this.character.standardSkills[skillKey] = e.target.value;
           }
         }
@@ -4223,6 +4216,11 @@ const App = {
     
     if (!effect) return;
     
+    // Skip ENC-dependent abilities during initialization - handled by final setTimeout
+    if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+      return;
+    }
+    
     // Check if effect is already active (no stacking)
     if (this.activeAbilityEffects[baseName]) {
       console.log(`Ability effect "${baseName}" already active, not stacking.`);
@@ -4361,12 +4359,8 @@ const App = {
    * Restore ability effects on page load
    */
   restoreAbilityEffects() {
-    // Reset Artful Dodger active state so it gets applied fresh
-    // (The saved Evade value is the BASE value without the bonus)
-    this.character.artfulDodgerActive = false;
-    
     // Check all class abilities on the sheet and apply their effects
-    // Skip Artful Dodger during init - it's handled by the final setTimeout
+    // Skip Artful Dodger and Agile during init - they're handled by the final setTimeout
     const classContainer = document.getElementById('class-abilities-list');
     if (classContainer) {
       const inputs = classContainer.querySelectorAll('.class-ability-input');
@@ -4374,7 +4368,7 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           // Skip ENC-dependent abilities during initialization
-          if (this.isInitializing && baseName === 'artful dodger') {
+          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
             return;
           }
           const effect = this.ABILITY_EFFECTS[baseName];
@@ -4391,7 +4385,7 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       // Skip ENC-dependent abilities during initialization
-      if (this.isInitializing && baseName === 'artful dodger') {
+      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
         return;
       }
       const effect = this.ABILITY_EFFECTS[baseName];
@@ -5951,7 +5945,7 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           // Skip ENC-dependent abilities during initialization
-          if (this.isInitializing && baseName === 'artful dodger') {
+          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
             return;
           }
           const effect = this.ABILITY_EFFECTS[baseName];
@@ -5969,7 +5963,7 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       // Skip ENC-dependent abilities during initialization
-      if (this.isInitializing && baseName === 'artful dodger') {
+      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
         return;
       }
       const effect = this.ABILITY_EFFECTS[baseName];
@@ -8758,8 +8752,8 @@ const App = {
     
     // Check ability bonuses (skip during initialization to avoid conflicts)
     if (!this.isInitializing) {
-      // Check Artful Dodger bonus (depends on encumbrance status)
-      this.checkArtfulDodgerBonus();
+      // Check Artful Dodger display (depends on encumbrance status)
+      this.updateArtfulDodgerDisplay();
       
       // Check Agile display (depends on encumbrance status)
       this.updateAgileDisplay();
@@ -9559,7 +9553,9 @@ const App = {
       endurance: document.getElementById('endurance-current')?.value || '0',
       willpower: document.getElementById('willpower-current')?.value || '0',
       brawn: document.getElementById('brawn-current')?.value || '0',
-      evade: document.getElementById('evade-current')?.value || '0'
+      evade: this.artfulDodgerDisplayed 
+        ? this.getEvadeWithoutArtfulDodger().toString() 
+        : (document.getElementById('evade-current')?.value || '0')
     };
     
     // Apply rage bonuses
@@ -9628,11 +9624,15 @@ const App = {
       brawnField.classList.add('rage-boosted');
     }
     
-    // Evade -20%
+    // Evade -20% (use base value without Artful Dodger display bonus)
     const evadeField = document.getElementById('evade-current');
     if (evadeField) {
-      const curr = parseInt(evadeField.value, 10) || 0;
-      evadeField.value = Math.max(0, curr - 20);
+      // Remove Artful Dodger display bonus first if active
+      const baseEvade = this.artfulDodgerDisplayed
+        ? this.getEvadeWithoutArtfulDodger()
+        : (parseInt(evadeField.value, 10) || 0);
+      this.artfulDodgerDisplayed = false;
+      evadeField.value = Math.max(0, baseEvade - 20);
       evadeField.classList.add('rage-penalized');
       // Remove Artful Dodger styling during rage (it will be restored when rage ends)
       evadeField.classList.remove('artful-dodger-bonus');
@@ -9718,8 +9718,9 @@ const App = {
     // Remove Artful Dodger strikethrough
     this.setArtfulDodgerStrikethrough(false);
     
-    // Re-check Artful Dodger status to restore styling if applicable
-    this.checkArtfulDodgerBonus();
+    // Re-check Artful Dodger display to restore styling if applicable
+    this.artfulDodgerDisplayed = false;
+    this.updateArtfulDodgerDisplay();
     
     // Update UI
     const rageBtn = document.getElementById('btn-rage-toggle');
@@ -9773,6 +9774,7 @@ const App = {
       // Remove Artful Dodger styling during rage (it will be restored when rage ends)
       evadeField.classList.remove('artful-dodger-bonus');
       evadeField.title = '';
+      this.artfulDodgerDisplayed = false;
     }
     
     this.setArtfulDodgerStrikethrough(true);
@@ -9815,96 +9817,51 @@ const App = {
   },
   
   /**
-   * Check if Artful Dodger bonus should be applied based on encumbrance
-   * Bonus only applies when Unburdened or Extremely Unburdened
+   * Check and update Artful Dodger bonus display based on current conditions
+   * Called on: page load, ENC change, ability add/remove, rage end
    */
-  checkArtfulDodgerBonus() {
-    // Check if character has Artful Dodger ability
-    const hasAbility = this.character.hasArtfulDodger || this.hasAbility('Artful Dodger');
+  updateArtfulDodgerDisplay() {
+    const hasAbility = this.hasAbility('Artful Dodger');
+    const currField = document.getElementById('evade-current');
+    if (!currField) return;
+    
+    // Don't apply during rage
+    if (this.character.isRaging) return;
+    
+    // If ability is not present, ensure display is clean
     if (!hasAbility) {
-      // Make sure bonus is removed if ability was lost
-      if (this.character.artfulDodgerActive) {
-        this.removeArtfulDodgerBonus();
+      if (this.artfulDodgerDisplayed) {
+        // Remove display bonus
+        const displayedVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, displayedVal - 10);
+        currField.classList.remove('artful-dodger-bonus');
+        currField.title = '';
+        this.artfulDodgerDisplayed = false;
       }
       return;
     }
     
-    // Read encumbrance status directly from the displayed element
-    // Default to Unburdened if element doesn't exist or is empty
+    // Check conditions (must be Unburdened)
     const statusEl = document.getElementById('enc-status');
     const statusName = statusEl?.textContent?.trim() || 'Unburdened';
-    const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
+    const meetsConditions = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
     
-    if (isUnburdened && !this.character.artfulDodgerActive) {
-      // Apply the bonus
-      this.applyArtfulDodgerBonus();
-    } else if (!isUnburdened && this.character.artfulDodgerActive) {
-      // Remove the bonus
-      this.removeArtfulDodgerBonus();
-    } else if (isUnburdened && this.character.artfulDodgerActive) {
-      // Bonus is already active - just ensure visual styling is applied (for page load)
-      const currField = document.getElementById('evade-current');
-      if (currField && !currField.classList.contains('artful-dodger-bonus')) {
-        currField.classList.add('artful-dodger-bonus');
-        currField.title = '+10 due to Artful Dodger';
-      }
+    if (meetsConditions && !this.artfulDodgerDisplayed) {
+      // Add display bonus
+      const baseVal = parseInt(currField.value, 10) || 0;
+      currField.value = baseVal + 10;
+      currField.classList.add('artful-dodger-bonus');
+      currField.title = '+10 due to Artful Dodger';
+      this.artfulDodgerDisplayed = true;
+    } else if (!meetsConditions && this.artfulDodgerDisplayed) {
+      // Remove display bonus
+      const displayedVal = parseInt(currField.value, 10) || 0;
+      currField.value = Math.max(0, displayedVal - 10);
+      currField.classList.remove('artful-dodger-bonus');
+      currField.title = '';
+      this.artfulDodgerDisplayed = false;
     }
-  },
-  
-  /**
-   * Apply Artful Dodger +10 bonus to Evade current
-   */
-  applyArtfulDodgerBonus() {
-    const currField = document.getElementById('evade-current');
-    if (!currField) return;
-    
-    const currVal = parseInt(currField.value, 10) || 0;
-    
-    // Set active flag BEFORE changing value so save handler knows to subtract 10
-    this.character.artfulDodgerActive = true;
-    
-    // Store the base value without bonus if not already stored
-    if (!this.character.evadeWithoutArtfulDodger) {
-      this.character.evadeWithoutArtfulDodger = currField.value;
-    }
-    
-    // Store the BASE value in character data before adding bonus
-    this.character.standardSkills.evade = currVal.toString();
-    
-    currField.value = currVal + 10;
-    
-    // Add visual styling
-    currField.classList.add('artful-dodger-bonus');
-    currField.title = '+10 due to Artful Dodger';
-    
-    this.scheduleAutoSave();
-  },
-  
-  /**
-   * Remove Artful Dodger +10 bonus from Evade current
-   */
-  removeArtfulDodgerBonus() {
-    const currField = document.getElementById('evade-current');
-    if (!currField) return;
-    
-    const wasActive = this.character.artfulDodgerActive;
-    
-    // Set active flag to FALSE BEFORE changing value so save handler saves raw value
-    this.character.artfulDodgerActive = false;
-    
-    if (wasActive) {
-      const currVal = parseInt(currField.value, 10) || 0;
-      currField.value = Math.max(0, currVal - 10);
-      
-      // Update the stored base value
-      this.character.evadeWithoutArtfulDodger = currField.value;
-    }
-    
-    // Remove visual styling
-    currField.classList.remove('artful-dodger-bonus');
-    currField.title = '';
-    
-    this.scheduleAutoSave();
+    // If conditions match current state, do nothing
   },
   
   /**
@@ -9914,8 +9871,7 @@ const App = {
     const currField = document.getElementById('evade-current');
     if (!currField) return 0;
     
-    if (this.character.artfulDodgerActive) {
-      // Return current value minus the bonus
+    if (this.artfulDodgerDisplayed) {
       return Math.max(0, (parseInt(currField.value, 10) || 0) - 10);
     }
     return parseInt(currField.value, 10) || 0;
@@ -9938,13 +9894,13 @@ const App = {
     
     // If ability is not present, ensure display is clean
     if (!hasAbility) {
-      if (this.character.agileDisplayed) {
+      if (this.agileDisplayed) {
         // Remove display bonus
         const displayedVal = parseInt(currField.value, 10) || 0;
         currField.value = Math.max(0, displayedVal - 4);
         currField.classList.remove('agile-bonus');
         currField.title = '';
-        this.character.agileDisplayed = false;
+        this.agileDisplayed = false;
       }
       return;
     }
@@ -9952,20 +9908,20 @@ const App = {
     // Check conditions
     const meetsConditions = this.checkAgileConditions();
     
-    if (meetsConditions && !this.character.agileDisplayed) {
+    if (meetsConditions && !this.agileDisplayed) {
       // Add display bonus
       const baseVal = parseInt(currField.value, 10) || 0;
       currField.value = baseVal + 4;
       currField.classList.add('agile-bonus');
       currField.title = '+4 due to Agile';
-      this.character.agileDisplayed = true;
-    } else if (!meetsConditions && this.character.agileDisplayed) {
+      this.agileDisplayed = true;
+    } else if (!meetsConditions && this.agileDisplayed) {
       // Remove display bonus
       const displayedVal = parseInt(currField.value, 10) || 0;
       currField.value = Math.max(0, displayedVal - 4);
       currField.classList.remove('agile-bonus');
       currField.title = '';
-      this.character.agileDisplayed = false;
+      this.agileDisplayed = false;
     }
     // If conditions match current state, do nothing
   },
@@ -9996,7 +9952,7 @@ const App = {
     
     // Condition 3: 50%+ in Evade or Acrobatics
     let evadeVal = parseInt(document.getElementById('evade-current')?.value, 10) || 0;
-    if (this.character.artfulDodgerActive) {
+    if (this.artfulDodgerDisplayed) {
       evadeVal = this.getEvadeWithoutArtfulDodger();
     }
     if (evadeVal >= 50) return true;
@@ -11368,9 +11324,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const fatigueSevere = fatigue.skillPenalty >= 60; // Herculean or worse
     
     // --- SKILLS ---
+    // Reset display bonus flags since penalties restore from base originalValue
+    this.artfulDodgerDisplayed = false;
     this.applySkillPenalties(encPenaltyPercent, encIsBurdened, encHasPenalty, fatigue);
     
     // --- INITIATIVE ---
+    this.agileDisplayed = false;
     this.applyInitiativePenalty(encStatus, fatigue);
     
     // --- MOVEMENT ---
@@ -11378,6 +11337,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // --- ACTION POINTS ---
     this.applyActionPointPenalty(fatigue);
+    
+    // --- Re-apply display-only ability bonuses (Artful Dodger, Agile) ---
+    // These were reset when penalties restored base values from originalValue
+    if (!this.isInitializing) {
+      this.updateArtfulDodgerDisplay();
+      this.updateAgileDisplay();
+    }
     
     // --- Update combat quick ref ---
     this.updateCombatQuickRef();
@@ -14651,7 +14617,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const skillName = standardLabels[skillId] || skillId;
       
       // For Evade, use the value without Artful Dodger bonus
-      if (skillId === 'evade' && this.character.artfulDodgerActive) {
+      if (skillId === 'evade' && this.artfulDodgerDisplayed) {
         current = this.getEvadeWithoutArtfulDodger().toString();
       }
       
@@ -16951,22 +16917,22 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const [type, id] = skillId.split(':');
     let el = null;
     
-    // Special handling for Evade with Artful Dodger
-    if (type === 'standard' && id === 'evade' && this.character.artfulDodgerActive) {
-      // The newValue is calculated without the Artful Dodger bonus
-      // We need to set the base value first, then let checkArtfulDodgerBonus re-apply the bonus
+    // Special handling for Evade with Artful Dodger display bonus
+    if (type === 'standard' && id === 'evade' && this.artfulDodgerDisplayed) {
+      // Remove display bonus, set new base value, then re-apply display bonus
       el = document.getElementById('evade-current');
       if (el) {
-        // Temporarily disable artfulDodgerActive so checkArtfulDodgerBonus will re-apply
-        this.character.artfulDodgerActive = false;
+        // Remove display bonus first
+        this.artfulDodgerDisplayed = false;
         el.classList.remove('artful-dodger-bonus');
         el.title = '';
         el.value = newValue;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log(`Updated ${skillId} to ${newValue} (Artful Dodger will be re-applied)`);
+        el.dataset.originalValue = newValue;
+        this.character.standardSkills[this.camelCase(id)] = newValue.toString();
+        // Re-apply display bonus
+        this.updateArtfulDodgerDisplay();
+        console.log(`Updated ${skillId} to ${newValue} (Artful Dodger display re-applied)`);
       }
-      // recalculateAll will be called below, which triggers checkArtfulDodgerBonus
     } else if (type === 'standard') {
       // Standard skills use {id}-current, except unarmed which uses unarmed-percent
       if (id === 'unarmed') {
@@ -16994,7 +16960,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       el = document.getElementById(`oath-${id}-current`);
     }
     
-    if (el && !(type === 'standard' && id === 'evade' && this.character.hasArtfulDodger)) {
+    if (el && !(type === 'standard' && id === 'evade' && this.artfulDodgerDisplayed)) {
       el.value = newValue;
       // Dispatch input event to trigger any listeners
       el.dispatchEvent(new Event('input', { bubbles: true }));
