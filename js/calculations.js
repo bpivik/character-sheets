@@ -37,7 +37,7 @@ const Calculator = {
 
   /**
    * Calculate Action Points based on combined Rank
-   * Rank 0-1: 2, Rank 2: 3, Rank 3: 4, Rank 4: 6, Rank 5: 8
+   * Rank 0-1: 2, Rank 2-3: 3, Rank 4-5: 4
    */
   calculateActionPoints(combinedRank) {
     const rank = Math.min(Math.max(0, combinedRank), 5);

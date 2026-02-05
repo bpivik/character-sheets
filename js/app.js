@@ -9760,6 +9760,8 @@ const App = {
         mod = this.getNextDamageModStep(mod);
       }
       dmgCurrField.value = mod;
+      dmgCurrField.classList.add('rage-boosted');
+      dmgCurrField.title = `+${dmgSteps} step${dmgSteps > 1 ? 's' : ''} due to Rage`;
     }
     if (dmgOrigField) {
       let mod = dmgOrigField.value;
@@ -9767,6 +9769,7 @@ const App = {
         mod = this.getNextDamageModStep(mod);
       }
       dmgOrigField.value = mod;
+      dmgOrigField.classList.add('rage-boosted');
     }
     
     // Endurance +20%
@@ -9828,9 +9831,12 @@ const App = {
     const dmgOrigField = document.getElementById('damage-mod-original');
     if (dmgCurrField) {
       dmgCurrField.value = this.character.preRageValues.damageMod;
+      dmgCurrField.classList.remove('rage-boosted');
+      dmgCurrField.title = '';
     }
     if (dmgOrigField) {
       dmgOrigField.value = this.character.preRageValues.damageModOrig;
+      dmgOrigField.classList.remove('rage-boosted');
     }
     
     // Restore Endurance
@@ -9937,11 +9943,19 @@ const App = {
     if (btnText) btnText.textContent = '🔥 RAGING! 🔥';
     
     // Re-apply visual indicators to fields
+    const dmgCurrField = document.getElementById('damage-mod-current');
+    const dmgOrigField = document.getElementById('damage-mod-original');
     const enduranceField = document.getElementById('endurance-current');
     const willpowerField = document.getElementById('willpower-current');
     const brawnField = document.getElementById('brawn-current');
     const evadeField = document.getElementById('evade-current');
     
+    if (dmgCurrField) {
+      dmgCurrField.classList.add('rage-boosted');
+      const steps = this.character.rageDmgStepsApplied || 1;
+      dmgCurrField.title = `+${steps} step${steps > 1 ? 's' : ''} due to Rage`;
+    }
+    if (dmgOrigField) dmgOrigField.classList.add('rage-boosted');
     if (enduranceField) enduranceField.classList.add('rage-boosted');
     if (willpowerField) willpowerField.classList.add('rage-boosted');
     if (brawnField) brawnField.classList.add('rage-boosted');

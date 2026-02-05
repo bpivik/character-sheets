@@ -145,9 +145,9 @@ const DAMAGE_MOD_TABLE = [
   // Each additional 10 points continues the progression
 ];
 
-// Action Points by combined Rank (base 2 for Rank 0-1, then bonuses stack)
-// Rank 0: 2, Rank 1: 2, Rank 2: 3 (+1), Rank 3: 4 (+1), Rank 4: 6 (+2), Rank 5: 8 (+2)
-const ACTION_POINTS_BY_RANK = [2, 2, 3, 4, 6, 8];
+// Action Points by combined Rank (base 2 for Rank 0-1, then bonuses per rank)
+// Rank 0: 2, Rank 1: 2, Rank 2: 3 (+1), Rank 3: 3 (+1), Rank 4: 4 (+2), Rank 5: 4 (+2)
+const ACTION_POINTS_BY_RANK = [2, 2, 3, 3, 4, 4];
 
 // Experience Modifier lookup table (based on CHA)
 const EXP_MOD_TABLE = [
@@ -182,9 +182,9 @@ const LUCK_POINTS_TABLE = [
   // Each additional 6 points: +1
 ];
 
-// Luck Points by Rank (bonus starts at Rank 2: +1, Rank 3: +2 more, Rank 4: +3 more, Rank 5: +4 more)
-// Cumulative: R0=0, R1=0, R2=1, R3=3, R4=6, R5=10
-const LUCK_BY_RANK = [0, 0, 1, 3, 6, 10];
+// Luck Points by Rank (total bonus at each rank level)
+// R0=0, R1=0, R2=+1, R3=+2, R4=+3, R5=+4
+const LUCK_BY_RANK = [0, 0, 1, 2, 3, 4];
 
 // Hit Points base table by CON+SIZ for each location type
 // Columns: 1-5, 6-10, 11-15, 16-20, 21-25, 26-30, 31-35, 36-40 (each +5 adds +1)
@@ -197,8 +197,9 @@ const HP_TABLE = {
   wing:    [1, 2, 3, 4, 5, 6, 7, 8]
 };
 
-// HP bonus by rank: Rank 2: +1, Rank 3: +1 more, Rank 4: +2 more, Rank 5: +2 more
-const HP_BONUS_BY_RANK = [0, 0, 1, 2, 4, 6];
+// HP bonus by rank (total bonus at each rank level)
+// R0=0, R1=0, R2=+1, R3=+1, R4=+2, R5=+2
+const HP_BONUS_BY_RANK = [0, 0, 1, 1, 2, 2];
 
 // Encumbrance thresholds
 const ENC_STATUS = [
