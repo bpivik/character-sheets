@@ -1204,6 +1204,16 @@ select:focus {
 .rage-boosted {
   background-color: rgba(0, 150, 0, 0.15) !important;
   border-color: #4a4 !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
+/* Ensure rage-boosted wins over derived-input compound selectors */
+.derived-input.rage-boosted,
+.derived-input.derived-readonly.rage-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 .rage-penalized {

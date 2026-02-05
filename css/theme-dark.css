@@ -1050,3 +1050,11 @@
   border-color: #5d5 !important;
   color: #5f5 !important;
 }
+
+[data-theme="dark"] .rage-boosted,
+[data-theme="dark"] .derived-input.rage-boosted,
+[data-theme="dark"] .derived-input.derived-readonly.rage-boosted {
+  background-color: rgba(0, 150, 0, 0.25) !important;
+  border: 1px solid #5a5 !important;
+  color: #5f5 !important;
+}
