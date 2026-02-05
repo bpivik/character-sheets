@@ -227,7 +227,7 @@
               </div>
             </div>
             <div class="tenacity-section">
-              <label class="field-label" title="Tenacity Points represent a character's mental stamina – like psychological Hit Points. They take damage from mental or emotional trauma. Equal to POW. As Tenacity drops, the character becomes more likely to suffer Conditions. If Tenacity falls below zero, Conditions from traumatic events become permanent. If Tenacity reaches a negative number equal to starting value, the character is permanently insane or mentally broken.">Tenacity Points</label>
+              <label class="field-label"><button type="button" class="attr-info-btn" data-attr="tenacity">ℹ</button>Tenacity Points</label>
               <input type="number" id="tenacity-max" class="field-input field-input-tiny derived-readonly" readonly>
               <span class="field-separator">/</span>
               <input type="number" id="tenacity-current" class="field-input field-input-tiny" placeholder="">
@@ -306,47 +306,47 @@
                   <span class="derived-header-curr">Curr</span>
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Action Points determine how often a character can act during a Combat Round. Starting characters begin with 2 Action Points but gain more as they advance in Rank.">Action Points</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="action-points">ℹ</button>Action Points</span>
                   <input type="number" id="action-points-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="action-points-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Damage Modifier reflects the bonus (or penalty) applied to damage from physical strikes. Add STR+SIZ and consult the table: 5 or less = -1d8, 6-10 = -1d6, 11-15 = -1d4, 16-20 = -1d2, 21-25 = +0, 26-30 = +1d2, 31-35 = +1d4, 36-40 = +1d6, 41-45 = +1d8, 46-50 = +1d10, 51-60 = +1d12, 61-70 = +2d6, 71-80 = +1d8+1d6, 81-90 = +2d8, 91-100 = +1d10+1d8, 101-110 = +2d10, then continue progression. If negative modifier reduces damage to zero or less, no damage is inflicted.">Damage Mod</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="damage-mod">ℹ</button>Damage Mod</span>
                   <input type="text" id="damage-mod-original" class="derived-input derived-readonly" readonly>
                   <input type="text" id="damage-mod-current" class="derived-input" placeholder="">
                 </div>
-                <div class="derived-row has-original wp-damage-row" id="wp-damage-row" style="display: none;" title="Weapon Precision Damage Modifier: Applies to clubs, daggers, garrotes, knives, shortswords, main gauche, rapiers, unarmed, darts, slings, short bows, javelins">
-                  <span class="derived-label">Precision Dmg Mod</span>
+                <div class="derived-row has-original wp-damage-row" id="wp-damage-row" style="display: none;">
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="precision-dmg">ℹ</button>Precision Dmg Mod</span>
                   <input type="text" id="wp-damage-mod-original" class="derived-input derived-readonly" readonly>
                   <input type="text" id="wp-damage-mod-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Experience Modifier affects Experience Rolls used for character growth. Based on CHA: 6 or less = -1, 7-12 = +0, 13-18 = +1, then +1 per 6 points. High CHA makes it easier to find support and training; low CHA can create challenges like difficulty finding a sparring partner.">Exp Mod</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="exp-mod">ℹ</button>Exp Mod</span>
                   <input type="number" id="exp-mod-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="exp-mod-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Healing Rate determines how quickly a character recovers naturally from injuries. Based on CON: 6 or less = 1, 7-12 = 2, 13-18 = 3, then +1 per 6 points. Specifies Hit Points regained each day, week, or month depending on injury severity.">Healing Rate</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="healing-rate">ℹ</button>Healing Rate</span>
                   <input type="number" id="healing-rate-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="healing-rate-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Initiative Modifier determines how quickly a character reacts in combat and influences turn order. Calculated as the average of DEX and INT: (DEX + INT) / 2, rounded up.">Initiative</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="initiative">ℹ</button>Initiative</span>
                   <input type="number" id="initiative-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="initiative-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Luck Points represent fate, karma, or sheer good fortune that sets adventurers apart. Spend them to: re-roll unfavorable dice, mitigate damage or misfortune, or gain a crucial edge in combat. Once spent, Luck Points cannot be replenished until the next session (New Game button), unless awarded by the GM. Based on POW: 6 or less = 1, 7-12 = 2, 13-18 = 3, then +1 per 6 points. Humans get +1 bonus.">Luck Points</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="luck-points">ℹ</button>Luck Points</span>
                   <input type="number" id="luck-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="luck-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Magic Points fuel spellcasting. Equal to the character's POW. Points are spent based on spell type and replenish after rest. A caster without Magic Points cannot cast spells until they recover via Short or Long Rest.">Magic Points</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="magic-points">ℹ</button>Magic Points</span>
                   <input type="number" id="magic-points-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="magic-points-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label" title="Movement Rate indicates how far a character can travel. Species-specific, not derived from Characteristics. Human/Elf/Half-Elf/Half-Orc/Syrin/Abyssar = 20ft (4 squares), Dwarf/Gnome/Halfling/Khelmar/Vulpan = 15ft (3 squares), Bruxx = 25ft (5 squares). Certain skills and Class Abilities can improve Movement Rate.">Movement Rate (ft)</span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="movement-rate">ℹ</button>Movement Rate (ft)</span>
                   <input type="number" id="movement-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="movement-current" class="derived-input" placeholder="">
                 </div>

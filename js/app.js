@@ -351,6 +351,9 @@ const App = {
     // Setup prereq label click handlers
     this.setupPrereqLabelClicks();
     
+    // Setup attribute info buttons
+    this.setupAttributeInfoButtons();
+    
     // Setup summary page
     this.setupSummaryPage();
     
@@ -4873,7 +4876,253 @@ const App = {
       overlay.classList.remove('active');
     }
   },
-  
+
+  /**
+   * Attribute descriptions data for info modals
+   */
+  ATTRIBUTE_INFO: {
+    'action-points': {
+      title: 'Action Points',
+      content: `
+        <p>Action Points determine how often a character can act during a Combat Round. Starting characters begin with 2 Action Points but gain more as they advance in Rank.</p>
+        <table class="attr-info-table">
+          <thead><tr><th>Combined Rank</th><th>Action Points</th></tr></thead>
+          <tbody>
+            <tr><td>0–1</td><td>2</td></tr>
+            <tr><td>2–3</td><td>3</td></tr>
+            <tr><td>4–5</td><td>4</td></tr>
+          </tbody>
+        </table>
+      `
+    },
+    'damage-mod': {
+      title: 'Damage Modifier',
+      content: `
+        <p>The Damage Modifier reflects the bonus (or penalty) applied to damage from physical strikes or force. This modifier is used in combat and when attempting to break objects—an extra die roll added to or subtracted from weapon or tool damage.</p>
+        <p>If a negative modifier reduces damage to zero or less, no damage is inflicted.</p>
+        <p>Add together STR and SIZ, then consult the table below. <em>Note: some Class Abilities allow for STR+SIZ+DEX, but still refer to this table.</em></p>
+        <table class="attr-info-table">
+          <thead><tr><th>STR+SIZ</th><th>Damage Mod</th></tr></thead>
+          <tbody>
+            <tr><td>5 or less</td><td>−1d8</td></tr>
+            <tr><td>6–10</td><td>−1d6</td></tr>
+            <tr><td>11–15</td><td>−1d4</td></tr>
+            <tr><td>16–20</td><td>−1d2</td></tr>
+            <tr><td>21–25</td><td>+0</td></tr>
+            <tr><td>26–30</td><td>+1d2</td></tr>
+            <tr><td>31–35</td><td>+1d4</td></tr>
+            <tr><td>36–40</td><td>+1d6</td></tr>
+            <tr><td>41–45</td><td>+1d8</td></tr>
+            <tr><td>46–50</td><td>+1d10</td></tr>
+            <tr><td>51–60</td><td>+1d12</td></tr>
+            <tr><td>61–70</td><td>+2d6</td></tr>
+            <tr><td>71–80</td><td>+1d8+1d6</td></tr>
+            <tr><td>81–90</td><td>+2d8</td></tr>
+            <tr><td>91–100</td><td>+1d10+1d8</td></tr>
+            <tr><td>101–110</td><td>+2d10</td></tr>
+            <tr><td>111–120</td><td>+2d10+1d2</td></tr>
+            <tr><td>121–130</td><td>+2d10+1d4</td></tr>
+            <tr><td>Each +10</td><td>Continue progression</td></tr>
+          </tbody>
+        </table>
+      `
+    },
+    'precision-dmg': {
+      title: 'Weapon Precision Damage Modifier',
+      content: `
+        <p>Weapon Precision replaces STR with DEX for Damage Modifier calculations with finesse weapons.</p>
+        <p><strong>Applies to:</strong> clubs, daggers, garrotes, knives, shortswords, main gauche, rapiers, unarmed, darts, slings, short bows, and javelins.</p>
+        <p>Uses DEX+SIZ instead of STR+SIZ for the Damage Modifier table.</p>
+      `
+    },
+    'exp-mod': {
+      title: 'Experience Modifier',
+      content: `
+        <p>Characters grow and improve through Experience Rolls. A character's CHA score represents their reputation and ability to build relationships.</p>
+        <ul>
+          <li><strong>High CHA:</strong> Makes it easier to find support and training.</li>
+          <li><strong>Low CHA:</strong> Can create challenges, such as difficulty finding a sparring partner.</li>
+        </ul>
+        <table class="attr-info-table">
+          <thead><tr><th>CHA</th><th>Exp. Modifier</th></tr></thead>
+          <tbody>
+            <tr><td>6 or less</td><td>−1</td></tr>
+            <tr><td>7–12</td><td>+0</td></tr>
+            <tr><td>13–18</td><td>+1</td></tr>
+            <tr><td>Each +6</td><td>+1</td></tr>
+          </tbody>
+        </table>
+      `
+    },
+    'healing-rate': {
+      title: 'Healing Rate',
+      content: `
+        <p>Healing Rate determines how quickly a character recovers naturally from injuries. Depending on the severity of the injury (see the Combat/Abilities page), it specifies the number of Hit Points the character regains each day, week, or month.</p>
+        <table class="attr-info-table">
+          <thead><tr><th>CON</th><th>Healing Rate</th></tr></thead>
+          <tbody>
+            <tr><td>6 or less</td><td>1</td></tr>
+            <tr><td>7–12</td><td>2</td></tr>
+            <tr><td>13–18</td><td>3</td></tr>
+            <tr><td>Each +6</td><td>+1</td></tr>
+          </tbody>
+        </table>
+      `
+    },
+    'initiative': {
+      title: 'Initiative Modifier',
+      content: `
+        <p>The Initiative Modifier determines how quickly a character reacts in combat and influences when they can act in comparison to others.</p>
+        <p><strong>Formula:</strong> (DEX + INT) ÷ 2, rounded up.</p>
+      `
+    },
+    'luck-points': {
+      title: 'Luck Points',
+      content: `
+        <p>Luck Points represent that extraordinary force that sets adventurers apart. Call it fate, karma, or sheer good fortune. Players can spend Luck Points to:</p>
+        <ul>
+          <li>Re-roll unfavorable dice results</li>
+          <li>Mitigate damage or misfortune</li>
+          <li>Gain a crucial edge in combat</li>
+        </ul>
+        <p>Once spent, Luck Points reduce the character's pool and cannot be replenished until the next session (using the <strong>New Game</strong> button at the top of this page), unless awarded by the Games Master.</p>
+        <table class="attr-info-table">
+          <thead><tr><th>POW</th><th>Luck Points</th></tr></thead>
+          <tbody>
+            <tr><td>6 or less</td><td>1</td></tr>
+            <tr><td>7–12</td><td>2</td></tr>
+            <tr><td>13–18</td><td>3</td></tr>
+            <tr><td>Each +6</td><td>+1</td></tr>
+          </tbody>
+        </table>
+        <p><em>Note: Humans receive +1 bonus Luck Point.</em></p>
+      `
+    },
+    'magic-points': {
+      title: 'Magic Points',
+      content: `
+        <p>Magic Points fuel spellcasting in Classic Fantasy. While some campaigns or professions may not require this Attribute, all casters rely on it for spellcasting.</p>
+        <ul>
+          <li><strong>Magic Points:</strong> Equal to the character's POW.</li>
+          <li><strong>Usage:</strong> Points are spent based on spell type and replenished after depletion.</li>
+          <li><strong>Exhaustion:</strong> A caster without Magic Points cannot cast spells until they recover. See Short and Long Rests.</li>
+        </ul>
+      `
+    },
+    'movement-rate': {
+      title: 'Movement Rate',
+      content: `
+        <p>Every creature has a Movement Rate that indicates how far they can travel in a given period. This value is species-specific and isn't derived from Characteristics.</p>
+        <p>Certain skills and Class Abilities can improve Movement Rate. Even running, sprinting, swimming and more can affect the Movement Rate. See the section on Movement (the Combat/Abilities page) for details.</p>
+        <table class="attr-info-table">
+          <thead><tr><th>Species</th><th>Move (ft)</th><th>Squares</th></tr></thead>
+          <tbody>
+            <tr><td>Abyssar</td><td>20</td><td>4</td></tr>
+            <tr><td>Bruxx</td><td>25</td><td>5</td></tr>
+            <tr><td>Dwarf</td><td>15</td><td>3</td></tr>
+            <tr><td>Elf</td><td>20</td><td>4</td></tr>
+            <tr><td>Gnome</td><td>15</td><td>3</td></tr>
+            <tr><td>Half-Elf</td><td>20</td><td>4</td></tr>
+            <tr><td>Half-Orc</td><td>20</td><td>4</td></tr>
+            <tr><td>Halfling</td><td>15</td><td>3</td></tr>
+            <tr><td>Human</td><td>20</td><td>4</td></tr>
+            <tr><td>Khelmar</td><td>15</td><td>3</td></tr>
+            <tr><td>Syrin</td><td>20</td><td>4</td></tr>
+            <tr><td>Vulpan</td><td>15</td><td>3</td></tr>
+          </tbody>
+        </table>
+      `
+    },
+    'tenacity': {
+      title: 'Tenacity Points',
+      content: `
+        <p>Tenacity Points represent a character's mental stamina—like psychological Hit Points. They take damage the same way physical Hit Points do and can drop when a character goes through mental or emotional trauma.</p>
+        <p>A character's Tenacity Points start equal to their <strong>POW</strong> score, which reflects their mental strength.</p>
+        <p>As Tenacity Points drop, the character becomes more likely to suffer certain Conditions. If their Tenacity Points fall below zero, any Conditions caused by traumatic, horrifying, or sanity-breaking events become <strong>permanent</strong>.</p>
+        <p>If their Tenacity Points reach a negative number equal to their starting value, the character is permanently insane or mentally broken and cannot recover.</p>
+      `
+    }
+  },
+
+  /**
+   * Setup click handlers for attribute info buttons
+   */
+  setupAttributeInfoButtons() {
+    const buttons = document.querySelectorAll('.attr-info-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const attrKey = btn.dataset.attr;
+        if (attrKey) {
+          this.showAttributeInfo(attrKey);
+        }
+      });
+    });
+  },
+
+  /**
+   * Show attribute info modal
+   */
+  showAttributeInfo(attrKey) {
+    const info = this.ATTRIBUTE_INFO[attrKey];
+    if (!info) return;
+
+    // Get or create the popup overlay (reuse ability detail structure)
+    let overlay = document.getElementById('attr-info-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'attr-info-overlay';
+      overlay.className = 'ability-detail-overlay';
+      overlay.innerHTML = `
+        <div class="ability-detail-popup attr-info-popup">
+          <div class="ability-detail-header">
+            <h3 class="ability-detail-title"></h3>
+            <button class="ability-detail-close">&times;</button>
+          </div>
+          <div class="ability-detail-body">
+            <div class="ability-detail-description"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      // Close handlers
+      overlay.querySelector('.ability-detail-close').addEventListener('click', () => {
+        this.closeAttributeInfo();
+      });
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.closeAttributeInfo();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+          this.closeAttributeInfo();
+        }
+      });
+    }
+
+    // Update content
+    overlay.querySelector('.ability-detail-title').textContent = info.title;
+    overlay.querySelector('.ability-detail-description').innerHTML = info.content;
+
+    // Show
+    overlay.classList.add('active');
+  },
+
+  /**
+   * Close attribute info modal
+   */
+  closeAttributeInfo() {
+    const overlay = document.getElementById('attr-info-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  },
+
   /**
    * Update all ability tooltips and info buttons (called on load)
    */
