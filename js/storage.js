@@ -315,6 +315,10 @@ const StorageManager = {
     delete result.artfulDodgerDisplayed;
     delete result.agileDisplayed;
     
+    // Clean up deprecated rage fatigue tracking booleans (replaced by counter system)
+    delete result.firstRageFatigueWaived;
+    delete result.currentRageIsFirst;
+    
     return result;
   },
 

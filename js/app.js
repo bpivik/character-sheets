@@ -1031,6 +1031,12 @@ const App = {
           }
           
           this.recalculateAll();
+          
+          // Update rage display text (damage steps, fatigue waivers) based on new rank
+          if (this.hasAbility('Berserk Rage')) {
+            this.updateBerserkRageDisplay();
+          }
+          
           this.scheduleAutoSave();
         };
         field.addEventListener('input', handleRankChange);
@@ -9231,7 +9237,7 @@ const App = {
       const maxUses = this.getMaxRageUses();
       const prevUses = this.character.rageUsesRemaining || 0;
       this.character.rageUsesRemaining = maxUses;
-      this.character.firstRageFatigueWaived = false;
+      this.character.rageFatigueWaiversUsed = 0;
       this.updateBerserkRageDisplay();
       if (prevUses < maxUses) {
         messages.push(`<strong>Berserk Rage uses restored:</strong> ${prevUses} → ${maxUses}`);
@@ -9628,6 +9634,24 @@ const App = {
     if (rageBtn) {
       rageBtn.disabled = this.character.rageUsesRemaining <= 0 && !this.character.isRaging;
     }
+    
+    // Update rage effects text based on Berserker rank
+    // While raging: show what was actually applied. While not raging: show what will apply.
+    const dmgEffectEl = document.getElementById('rage-effect-dmg');
+    if (dmgEffectEl) {
+      const stepsToShow = this.character.isRaging 
+        ? (this.character.rageDmgStepsApplied || 1)
+        : (this.getBerserkerRank() >= 3 ? 2 : 1);
+      dmgEffectEl.textContent = stepsToShow >= 2 ? 'Damage Mod: +2 steps' : 'Damage Mod: +1 step';
+    }
+    
+    // Update End Rage button text based on whether current rage is waived
+    const endRageBtn = document.getElementById('btn-end-rage');
+    if (endRageBtn && this.character.isRaging) {
+      endRageBtn.textContent = this.character.currentRageIsWaived 
+        ? 'End Rage (No Fatigue — Free Use!)' 
+        : 'End Rage (1 Fatigue Level)';
+    }
   },
   
   /**
@@ -9671,12 +9695,14 @@ const App = {
     this.character.isRaging = true;
     this.character.rageUsesRemaining--;
     
-    // Track if this is the first rage of the day (for Rank 2+ no-fatigue passive)
-    if (this.getBerserkerRank() >= 2 && !this.character.firstRageFatigueWaived) {
-      this.character.currentRageIsFirst = true;
-      this.character.firstRageFatigueWaived = true;
+    // Track fatigue waiver for this rage (Rank 2: first 1 free, Rank 3+: first 2 free)
+    const maxWaivers = this.getRageFatigueWaiverMax();
+    const waiversUsed = this.character.rageFatigueWaiversUsed || 0;
+    if (maxWaivers > 0 && waiversUsed < maxWaivers) {
+      this.character.currentRageIsWaived = true;
+      this.character.rageFatigueWaiversUsed = waiversUsed + 1;
     } else {
-      this.character.currentRageIsFirst = false;
+      this.character.currentRageIsWaived = false;
     }
     
     // Store pre-rage values
@@ -9721,16 +9747,26 @@ const App = {
    * Apply Berserk Rage bonuses
    */
   applyRageBonuses() {
-    // Damage Mod +1 step
+    // Damage Mod steps based on Berserker rank: Rank 3+ = +2 steps, otherwise +1 step
+    const berserkerRank = this.getBerserkerRank();
+    const dmgSteps = berserkerRank >= 3 ? 2 : 1;
+    this.character.rageDmgStepsApplied = dmgSteps; // Track for display accuracy if rank changes mid-rage
+    
     const dmgCurrField = document.getElementById('damage-mod-current');
     const dmgOrigField = document.getElementById('damage-mod-original');
     if (dmgCurrField) {
-      const nextMod = this.getNextDamageModStep(dmgCurrField.value);
-      dmgCurrField.value = nextMod;
+      let mod = dmgCurrField.value;
+      for (let i = 0; i < dmgSteps; i++) {
+        mod = this.getNextDamageModStep(mod);
+      }
+      dmgCurrField.value = mod;
     }
     if (dmgOrigField) {
-      const nextMod = this.getNextDamageModStep(dmgOrigField.value);
-      dmgOrigField.value = nextMod;
+      let mod = dmgOrigField.value;
+      for (let i = 0; i < dmgSteps; i++) {
+        mod = this.getNextDamageModStep(mod);
+      }
+      dmgOrigField.value = mod;
     }
     
     // Endurance +20%
@@ -9869,16 +9905,17 @@ const App = {
     
     this.updateBerserkRageDisplay();
     
-    // Apply one level of fatigue (unless this was the first rage of the day for Rank 2+ berserker)
+    // Apply one level of fatigue (unless this rage was waived by Rank 2+/3+ passive)
     if (applyFatigue) {
-      if (this.character.currentRageIsFirst) {
-        // Rank 2+ passive: first rage of the day has no fatigue cost
-        // Show a message so the user knows
+      if (this.character.currentRageIsWaived) {
+        // Rank passive: this rage has no fatigue cost — show notification
+        alert('Rage ended! No fatigue — this use of Rage was free (Berserker rank bonus).');
       } else {
         this.increaseFatigueByOne();
       }
     }
-    this.character.currentRageIsFirst = false;
+    this.character.currentRageIsWaived = false;
+    this.character.rageDmgStepsApplied = 0;
     
     this.scheduleAutoSave();
   },
@@ -9917,6 +9954,9 @@ const App = {
     }
     
     this.setArtfulDodgerStrikethrough(true);
+    
+    // Update dynamic rage text (damage steps, end-rage button) based on current rank
+    this.updateBerserkRageDisplay();
   },
   
   /**
@@ -10156,6 +10196,17 @@ const App = {
   },
   
   /**
+   * Get maximum fatigue waivers per day based on Berserker rank
+   * Rank 2: first 1 rage free, Rank 3+: first 2 rages free
+   */
+  getRageFatigueWaiverMax() {
+    const rank = this.getBerserkerRank();
+    if (rank >= 3) return 2;
+    if (rank >= 2) return 1;
+    return 0;
+  },
+  
+  /**
    * Get maximum Berserk Rage uses per day
    * Base = ceil(CON / 4), plus +1 for each Extra Rage ability
    */
@@ -10177,7 +10228,7 @@ const App = {
    */
   resetRageUses() {
     this.character.rageUsesRemaining = this.getMaxRageUses();
-    this.character.firstRageFatigueWaived = false;
+    this.character.rageFatigueWaiversUsed = 0;
     this.updateBerserkRageDisplay();
     this.scheduleAutoSave();
   },
