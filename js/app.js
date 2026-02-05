@@ -6968,8 +6968,13 @@ const App = {
       'sing': 'sing',
       'stealth': 'stealth',
       'swim': 'swim',
-      'unarmed': 'unarmed',
       'willpower': 'willpower'
+    };
+    
+    // Combat page skills use -percent suffix instead of -current
+    const combatSkillMap = {
+      'unarmed': 'unarmed-percent',
+      'combat skill': 'combat-skill-1-percent'
     };
     
     prereqSkills.forEach(skillName => {
@@ -6977,16 +6982,26 @@ const App = {
       let skillValue = 0;
       let found = false;
       
-      // 1. Check if it's a known standard skill FIRST
-      const standardSkillId = standardSkillMap[normalizedSkill];
-      if (standardSkillId) {
-        // The -current input contains the TOTAL skill value, not points added
-        const currentInput = document.getElementById(`${standardSkillId}-current`);
-        skillValue = parseInt(currentInput?.value, 10) || 0;
+      // 1. Check combat page skills first (Unarmed, Combat Skill)
+      const combatSkillId = combatSkillMap[normalizedSkill];
+      if (combatSkillId) {
+        const input = document.getElementById(combatSkillId);
+        skillValue = parseInt(input?.value, 10) || 0;
         found = true;
       }
       
-      // 2. Check if it's a known magic skill
+      // 2. Check if it's a known standard skill
+      if (!found) {
+        const standardSkillId = standardSkillMap[normalizedSkill];
+        if (standardSkillId) {
+          // The -current input contains the TOTAL skill value, not points added
+          const currentInput = document.getElementById(`${standardSkillId}-current`);
+          skillValue = parseInt(currentInput?.value, 10) || 0;
+          found = true;
+        }
+      }
+      
+      // 3. Check if it's a known magic skill
       if (!found) {
         const magicSkillMap = {
           'channel': 'channel-percent',
@@ -7005,13 +7020,6 @@ const App = {
           skillValue = parseInt(input?.value, 10) || 0;
           found = true;
         }
-      }
-      
-      // 3. Check combat skill
-      if (!found && normalizedSkill === 'combat skill') {
-        const combatPercent = document.getElementById('combat-skill-1-percent');
-        skillValue = parseInt(combatPercent?.value, 10) || 0;
-        found = true;
       }
       
       // 4. Check professional skills for exact match
@@ -16480,6 +16488,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       'musicianship': 'musicianship-percent',
       'combat style': 'combat-skill-1-percent',
       'combat skill': 'combat-skill-1-percent',
+      'unarmed': 'unarmed-percent',
     };
     
     // Try direct mapping first
