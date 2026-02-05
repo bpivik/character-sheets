@@ -38,7 +38,7 @@ const App = {
       }
     },
     'weapon precision': {
-      description: 'Use STR+DEX for Damage Modifier with finesse weapons',
+      description: 'Use higher of STR+DEX or STR+SIZ for Damage Modifier with finesse weapons',
       // List of weapons that benefit from Weapon Precision
       eligibleWeapons: ['club', 'dagger', 'garrote', 'knife', 'shortsword', 'short sword', 'main gauche', 'main-gauche', 'rapier', 'unarmed', 'dart', 'sling', 'short bow', 'shortbow', 'javelin'],
       apply: function(app) {
@@ -53,20 +53,24 @@ const App = {
         const dmgStrSiz = app.getDamageModifierForSum(strSiz);
         const dmgStrDex = app.getDamageModifierForSum(strDex);
         
+        // Use whichever is higher on the progression
+        const wpDmg = app.getHigherDamageMod(dmgStrDex, dmgStrSiz);
+        
         // Show the WP Damage Mod row
         const wpRow = document.getElementById('wp-damage-row');
         const wpOrigField = document.getElementById('wp-damage-mod-original');
         const wpCurrField = document.getElementById('wp-damage-mod-current');
         
         if (wpRow && wpOrigField && wpCurrField) {
-          // Always show WP row when ability is active, with STR+DEX based modifier
+          // Always show WP row when ability is active, with higher modifier
           wpRow.style.display = '';
-          wpOrigField.value = dmgStrDex;
-          wpCurrField.value = dmgStrDex;
+          wpOrigField.value = wpDmg;
+          wpCurrField.value = wpDmg;
           
           // Store values for comparison/removal
           app.activeAbilityEffects['weapon precision'].strDexDamage = dmgStrDex;
           app.activeAbilityEffects['weapon precision'].strSizDamage = dmgStrSiz;
+          app.activeAbilityEffects['weapon precision'].wpDamage = wpDmg;
         }
         
         // Update all weapon damage displays to use WP mod for eligible weapons
@@ -9709,6 +9713,8 @@ const App = {
     this.character.preRageValues = {
       damageMod: document.getElementById('damage-mod-current')?.value || '+0',
       damageModOrig: document.getElementById('damage-mod-original')?.value || '+0',
+      wpDamageMod: document.getElementById('wp-damage-mod-current')?.value || '',
+      wpDamageModOrig: document.getElementById('wp-damage-mod-original')?.value || '',
       endurance: document.getElementById('endurance-current')?.value || '0',
       willpower: document.getElementById('willpower-current')?.value || '0',
       brawn: document.getElementById('brawn-current')?.value || '0',
@@ -9811,10 +9817,40 @@ const App = {
       evadeField.title = '';
     }
     
+    // Weapon Precision Damage Mod also gets rage steps (if WP is active)
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+    if (wpDmgCurrField && wpDmgCurrField.value.trim()) {
+      let mod = wpDmgCurrField.value;
+      for (let i = 0; i < dmgSteps; i++) {
+        mod = this.getNextDamageModStep(mod);
+      }
+      wpDmgCurrField.value = mod;
+      wpDmgCurrField.classList.add('rage-boosted');
+      wpDmgCurrField.title = `+${dmgSteps} step${dmgSteps > 1 ? 's' : ''} due to Rage`;
+    }
+    if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
+      let mod = wpDmgOrigField.value;
+      for (let i = 0; i < dmgSteps; i++) {
+        mod = this.getNextDamageModStep(mod);
+      }
+      wpDmgOrigField.value = mod;
+      wpDmgOrigField.classList.add('rage-boosted');
+    }
+    
     // Update weapon damage displays to reflect new Damage Modifier
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
     }
+    
+    // Style all weapon damage fields green to indicate rage boost
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      if (field.value.trim()) {
+        field.classList.add('rage-boosted');
+        field.title = 'Increased damage modifier due to Rage';
+      }
+    });
     
     // Update summary page
     this.refreshSummaryWidgets();
@@ -9867,10 +9903,30 @@ const App = {
       evadeField.classList.remove('rage-penalized');
     }
     
+    // Restore WP Damage Mod
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+    if (wpDmgCurrField) {
+      wpDmgCurrField.value = this.character.preRageValues.wpDamageMod || wpDmgCurrField.value;
+      wpDmgCurrField.classList.remove('rage-boosted');
+      wpDmgCurrField.title = '';
+    }
+    if (wpDmgOrigField) {
+      wpDmgOrigField.value = this.character.preRageValues.wpDamageModOrig || wpDmgOrigField.value;
+      wpDmgOrigField.classList.remove('rage-boosted');
+    }
+    
     // Update weapon damage displays to reflect restored Damage Modifier
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
     }
+    
+    // Remove rage styling from all weapon damage fields
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      field.classList.remove('rage-boosted');
+      field.title = '';
+    });
     
     // Update summary page
     this.refreshSummaryWidgets();
@@ -9959,6 +10015,28 @@ const App = {
     if (enduranceField) enduranceField.classList.add('rage-boosted');
     if (willpowerField) willpowerField.classList.add('rage-boosted');
     if (brawnField) brawnField.classList.add('rage-boosted');
+    
+    // WP Damage Mod fields
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+    if (wpDmgCurrField && wpDmgCurrField.value.trim()) {
+      wpDmgCurrField.classList.add('rage-boosted');
+      const steps = this.character.rageDmgStepsApplied || 1;
+      wpDmgCurrField.title = `+${steps} step${steps > 1 ? 's' : ''} due to Rage`;
+    }
+    if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
+      wpDmgOrigField.classList.add('rage-boosted');
+    }
+    
+    // Re-apply rage styling to all weapon damage fields
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      if (field.value.trim()) {
+        field.classList.add('rage-boosted');
+        field.title = 'Increased damage modifier due to Rage';
+      }
+    });
+    
     if (evadeField) {
       evadeField.classList.add('rage-penalized');
       // Remove Artful Dodger styling during rage (it will be restored when rage ends)
@@ -10189,6 +10267,31 @@ const App = {
     }
     
     return currentMod; // Already at max
+  },
+  
+  /**
+   * Compare two damage modifiers and return the higher one
+   * Uses progression index for comparison
+   */
+  getHigherDamageMod(modA, modB) {
+    const progression = [
+      '-1d8', '-1d6', '-1d4', '-1d2', '+0',
+      '+1d2', '+1d4', '+1d6', '+1d8', '+1d10', '+1d12',
+      '+2d6', '+1d8+1d6', '+2d8', '+1d10+1d8', '+2d10',
+      '+2d10+1d2', '+2d10+1d4', '+2d10+1d6', '+2d10+1d8', '+2d10+1d10'
+    ];
+    
+    const normA = (modA || '+0').replace(/\s/g, '');
+    const normB = (modB || '+0').replace(/\s/g, '');
+    const indexA = progression.indexOf(normA);
+    const indexB = progression.indexOf(normB);
+    
+    // If either not found, return the one that was found, or modA as fallback
+    if (indexA === -1 && indexB === -1) return modA;
+    if (indexA === -1) return modB;
+    if (indexB === -1) return modA;
+    
+    return indexA >= indexB ? modA : modB;
   },
   
   /**
