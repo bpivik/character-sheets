@@ -537,13 +537,16 @@ const App = {
     
     const rows = container.querySelectorAll(rowSelector);
     rows.forEach((row, index) => {
-      row.dataset.index = index;
+      const oneIndexed = index + 1;
+      row.dataset.index = oneIndexed;
       
       // Update IDs for known section types
       if (containerId === 'passions-container') {
-        this.updatePassionRowIds(row, index + 1);
+        this.updatePassionRowIds(row, oneIndexed);
       } else if (containerId === 'oaths-container') {
-        this.updateOathRowIds(row, index + 1);
+        this.updateOathRowIds(row, oneIndexed);
+      } else if (containerId === 'alignment-container') {
+        this.updateAlignmentRowIds(row, oneIndexed);
       } else if (containerId === 'professional-skills-container') {
         this.updateProfSkillRowIds(row, index);
       } else if (containerId === 'equipment-container') {
@@ -574,6 +577,16 @@ const App = {
     if (name) name.id = `oath-${num}-name`;
     if (base) base.id = `oath-${num}-base`;
     if (current) current.id = `oath-${num}-current`;
+  },
+  
+  updateAlignmentRowIds(row, num) {
+    const name = row.querySelector('.belief-name');
+    const base = row.querySelector('.belief-base');
+    const current = row.querySelector('.belief-input');
+    
+    if (name) name.id = `alignment-${num}-name`;
+    if (base) base.id = `alignment-${num}-base`;
+    if (current) current.id = `alignment-${num}-current`;
   },
   
   updateProfSkillRowIds(row, index) {
