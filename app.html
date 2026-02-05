@@ -1609,6 +1609,20 @@
       <div class="page-content ornate-border notes-page-content">
         <h2 class="page-title">Notes</h2>
         
+        <!-- Notes Layout Controls -->
+        <div class="notes-layout-controls">
+          <div class="notes-palette" id="notes-palette">
+            <span class="palette-label">Available Sections:</span>
+            <div class="palette-items" id="notes-palette-items">
+              <!-- Removed sections appear here -->
+            </div>
+          </div>
+          <div class="notes-layout-buttons">
+            <button type="button" class="btn btn-small" id="btn-add-custom-section" title="Add custom section">+ Custom Section</button>
+            <button type="button" class="btn btn-small btn-secondary" id="btn-reset-notes-layout" title="Reset to default layout">Reset Layout</button>
+          </div>
+        </div>
+        
         <!-- Rich Text Toolbar -->
         <div class="notes-toolbar" id="notes-toolbar">
           <div class="toolbar-group">
@@ -1656,28 +1670,11 @@
           </div>
         </div>
         
-        <div class="notes-grid">
-          <!-- Background/Backstory -->
-          <div class="notes-section" id="section-background">
-            <div class="notes-section-header">
-              <h3>📜 Background / Backstory</h3>
-              <span class="notes-section-hint">Origin story, history, how they became an adventurer</span>
-            </div>
-            <div class="notes-editor" contenteditable="true" id="notes-background" data-placeholder="Write your character's backstory here..."></div>
-          </div>
-          
-          <!-- Appearance -->
-          <div class="notes-section" id="section-appearance">
-            <div class="notes-section-header">
-              <h3>👤 Appearance</h3>
-              <span class="notes-section-hint">Physical description, distinguishing marks, typical attire</span>
-            </div>
-            <div class="notes-editor" contenteditable="true" id="notes-appearance" data-placeholder="Describe your character's appearance..."></div>
-          </div>
-          
-          <!-- Personality -->
-          <div class="notes-section" id="section-personality">
-            <div class="notes-section-header">
+        <div class="notes-grid" id="notes-grid">
+          <!-- Sections are dynamically rendered -->
+        </div>
+      </div>
+    </section>
               <h3>🎭 Personality</h3>
               <span class="notes-section-hint">Traits, quirks, mannerisms, fears, flaws</span>
             </div>

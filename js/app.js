@@ -14057,17 +14057,536 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   // ============================================
   
   /**
+   * Notes section definitions
+   */
+  NOTES_SECTIONS: {
+    'background': {
+      id: 'background',
+      icon: '📜',
+      title: 'Background / Backstory',
+      hint: 'Origin story, history, how they became an adventurer',
+      placeholder: 'Write your character\'s backstory here...',
+      type: 'editor'
+    },
+    'appearance': {
+      id: 'appearance',
+      icon: '👤',
+      title: 'Appearance',
+      hint: 'Physical description, distinguishing marks, typical attire',
+      placeholder: 'Describe your character\'s appearance...',
+      type: 'editor'
+    },
+    'personality': {
+      id: 'personality',
+      icon: '🎭',
+      title: 'Personality',
+      hint: 'Traits, quirks, mannerisms, fears, flaws',
+      placeholder: 'What makes your character unique?',
+      type: 'editor'
+    },
+    'goals': {
+      id: 'goals',
+      icon: '🎯',
+      title: 'Goals & Motivations',
+      hint: 'What drives the character, short/long-term objectives',
+      placeholder: 'What does your character want to achieve?',
+      type: 'editor'
+    },
+    'connections': {
+      id: 'connections',
+      icon: '🤝',
+      title: 'Connections',
+      hint: 'NPCs, allies, enemies, family, mentors, rivals',
+      placeholder: 'Who are the important people in your character\'s life?',
+      type: 'editor'
+    },
+    'sessions': {
+      id: 'sessions',
+      icon: '📖',
+      title: 'Session Notes',
+      hint: 'Per-session journal entries',
+      type: 'journal',
+      defaultWide: true
+    },
+    'quests': {
+      id: 'quests',
+      icon: '⚔️',
+      title: 'Quest Log',
+      hint: 'Active and completed quests with notes',
+      placeholder: 'Track your quests and objectives...',
+      type: 'editor'
+    },
+    'places': {
+      id: 'places',
+      icon: '🗺️',
+      title: 'Places & Locations',
+      hint: 'Towns, dungeons, landmarks visited with notes',
+      placeholder: 'Record the places you\'ve visited...',
+      type: 'editor'
+    },
+    'secrets': {
+      id: 'secrets',
+      icon: '🔮',
+      title: 'Secrets & Rumors',
+      hint: 'Things the character has learned',
+      placeholder: 'What secrets have you uncovered?',
+      type: 'editor'
+    }
+  },
+  
+  /**
+   * Default notes layout
+   */
+  DEFAULT_NOTES_LAYOUT: [
+    { id: 'background', wide: false, height: 'medium' },
+    { id: 'appearance', wide: false, height: 'medium' },
+    { id: 'personality', wide: false, height: 'medium' },
+    { id: 'goals', wide: false, height: 'medium' },
+    { id: 'connections', wide: false, height: 'medium' },
+    { id: 'sessions', wide: true, height: 'large' },
+    { id: 'quests', wide: false, height: 'medium' },
+    { id: 'places', wide: false, height: 'medium' },
+    { id: 'secrets', wide: false, height: 'medium' }
+  ],
+  
+  /**
    * Setup the Notes page with rich text toolbar and journal functionality
    */
   setupNotesPage() {
+    // Load layout and render sections
+    this.renderNotesSections();
+    
     // Setup rich text toolbar
     this.setupNotesToolbar();
     
-    // Setup journal entry management
-    this.setupJournalEntries();
+    // Setup layout controls
+    this.setupNotesLayoutControls();
+    
+    // Setup drag and drop
+    this.setupNotesDragDrop();
     
     // Load existing notes data
     this.loadNotesData();
+  },
+  
+  /**
+   * Get notes layout from character or use default
+   */
+  getNotesLayout() {
+    if (this.character.notesLayout && this.character.notesLayout.length > 0) {
+      return this.character.notesLayout;
+    }
+    return JSON.parse(JSON.stringify(this.DEFAULT_NOTES_LAYOUT));
+  },
+  
+  /**
+   * Save notes layout to character
+   */
+  saveNotesLayout() {
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    
+    const layout = [];
+    grid.querySelectorAll('.notes-section').forEach(section => {
+      const id = section.dataset.sectionId;
+      if (id) {
+        layout.push({
+          id: id,
+          wide: section.classList.contains('notes-section-wide'),
+          height: section.dataset.height || 'medium',
+          custom: section.dataset.custom === 'true',
+          customTitle: section.dataset.customTitle || null,
+          customIcon: section.dataset.customIcon || null
+        });
+      }
+    });
+    
+    this.character.notesLayout = layout;
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Render all notes sections based on layout
+   */
+  renderNotesSections() {
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    const layout = this.getNotesLayout();
+    
+    layout.forEach(item => {
+      this.renderNotesSection(item, grid);
+    });
+    
+    this.updateNotesPalette();
+  },
+  
+  /**
+   * Render a single notes section
+   */
+  renderNotesSection(layoutItem, container) {
+    const sectionDef = this.NOTES_SECTIONS[layoutItem.id];
+    const isCustom = layoutItem.custom || !sectionDef;
+    
+    const section = document.createElement('div');
+    section.className = 'notes-section';
+    section.dataset.sectionId = layoutItem.id;
+    section.dataset.height = layoutItem.height || 'medium';
+    section.draggable = true;
+    
+    if (layoutItem.wide) {
+      section.classList.add('notes-section-wide');
+    }
+    
+    if (isCustom) {
+      section.dataset.custom = 'true';
+      section.dataset.customTitle = layoutItem.customTitle || 'Custom Section';
+      section.dataset.customIcon = layoutItem.customIcon || '📝';
+    }
+    
+    const icon = isCustom ? (layoutItem.customIcon || '📝') : sectionDef.icon;
+    const title = isCustom ? (layoutItem.customTitle || 'Custom Section') : sectionDef.title;
+    const hint = isCustom ? 'Custom notes section' : sectionDef.hint;
+    const placeholder = isCustom ? 'Write your notes here...' : (sectionDef.placeholder || '');
+    const type = sectionDef?.type || 'editor';
+    
+    let contentHTML = '';
+    if (type === 'journal') {
+      contentHTML = `
+        <div class="journal-container" id="journal-container">
+          <div class="journal-page">
+            <div class="journal-entries" id="journal-entries"></div>
+          </div>
+        </div>
+      `;
+    } else {
+      contentHTML = `
+        <div class="notes-editor" contenteditable="true" id="notes-${layoutItem.id}" data-placeholder="${placeholder}"></div>
+      `;
+    }
+    
+    const addEntryBtn = type === 'journal' ? 
+      `<button type="button" class="btn btn-small btn-add-entry" id="btn-add-session-entry">+ Add Entry</button>` : '';
+    
+    section.innerHTML = `
+      <div class="notes-section-header">
+        <span class="notes-section-drag-handle" title="Drag to reorder">⋮⋮</span>
+        <h3>${icon} ${title}</h3>
+        <div class="notes-section-controls">
+          ${addEntryBtn}
+          <button type="button" class="notes-section-btn btn-height" title="Change height">↕</button>
+          <button type="button" class="notes-section-btn btn-width ${layoutItem.wide ? 'is-wide' : ''}" title="Toggle width">↔</button>
+          <button type="button" class="notes-section-btn btn-delete" title="Remove section">×</button>
+        </div>
+        <span class="notes-section-hint">${hint}</span>
+      </div>
+      ${contentHTML}
+      <div class="notes-resize-handle" title="Drag to resize"></div>
+    `;
+    
+    container.appendChild(section);
+    
+    // Setup event handlers for this section
+    this.setupNotesSectionHandlers(section);
+    
+    // Setup journal if needed
+    if (type === 'journal') {
+      this.setupJournalEntries();
+    }
+  },
+  
+  /**
+   * Setup event handlers for a notes section
+   */
+  setupNotesSectionHandlers(section) {
+    // Width toggle
+    const widthBtn = section.querySelector('.btn-width');
+    if (widthBtn) {
+      widthBtn.addEventListener('click', () => {
+        section.classList.toggle('notes-section-wide');
+        widthBtn.classList.toggle('is-wide');
+        this.saveNotesLayout();
+      });
+    }
+    
+    // Height cycle
+    const heightBtn = section.querySelector('.btn-height');
+    if (heightBtn) {
+      heightBtn.addEventListener('click', () => {
+        const heights = ['small', 'medium', 'large', 'xlarge'];
+        const currentIdx = heights.indexOf(section.dataset.height || 'medium');
+        const nextIdx = (currentIdx + 1) % heights.length;
+        section.dataset.height = heights[nextIdx];
+        this.saveNotesLayout();
+      });
+    }
+    
+    // Delete section
+    const deleteBtn = section.querySelector('.btn-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        const sectionId = section.dataset.sectionId;
+        const sectionDef = this.NOTES_SECTIONS[sectionId];
+        const title = sectionDef?.title || section.dataset.customTitle || 'this section';
+        
+        if (confirm(`Remove "${title}" from the notes page?\n\nThe section will be moved to the palette and can be added back later. Content will be preserved.`)) {
+          section.remove();
+          this.saveNotesLayout();
+          this.updateNotesPalette();
+        }
+      });
+    }
+    
+    // Editor input handlers
+    const editor = section.querySelector('.notes-editor');
+    if (editor) {
+      editor.addEventListener('input', () => {
+        this.saveNotesData();
+        this.scheduleAutoSave();
+      });
+      
+      editor.addEventListener('focus', () => {
+        this.activeNotesEditor = editor;
+      });
+      
+      editor.addEventListener('keyup', () => {
+        this.updateToolbarState();
+      });
+      
+      editor.addEventListener('mouseup', () => {
+        this.updateToolbarState();
+      });
+    }
+  },
+  
+  /**
+   * Update the notes palette with available sections
+   */
+  updateNotesPalette() {
+    const palette = document.getElementById('notes-palette-items');
+    if (!palette) return;
+    
+    palette.innerHTML = '';
+    
+    // Get sections currently in the grid
+    const grid = document.getElementById('notes-grid');
+    const activeSections = new Set();
+    if (grid) {
+      grid.querySelectorAll('.notes-section').forEach(s => {
+        activeSections.add(s.dataset.sectionId);
+      });
+    }
+    
+    // Add missing predefined sections to palette
+    let hasItems = false;
+    Object.entries(this.NOTES_SECTIONS).forEach(([id, def]) => {
+      if (!activeSections.has(id)) {
+        hasItems = true;
+        const item = document.createElement('div');
+        item.className = 'palette-item';
+        item.draggable = true;
+        item.dataset.sectionId = id;
+        item.innerHTML = `<span class="palette-item-icon">${def.icon}</span><span>${def.title}</span>`;
+        
+        // Click to add
+        item.addEventListener('click', () => {
+          this.addNotesSectionFromPalette(id);
+        });
+        
+        // Drag start
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', id);
+          e.dataTransfer.setData('source', 'palette');
+          item.classList.add('dragging');
+        });
+        
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+        });
+        
+        palette.appendChild(item);
+      }
+    });
+    
+    if (!hasItems) {
+      palette.innerHTML = '<span class="palette-empty">All sections added</span>';
+    }
+  },
+  
+  /**
+   * Add a section from the palette to the grid
+   */
+  addNotesSectionFromPalette(sectionId) {
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    
+    const sectionDef = this.NOTES_SECTIONS[sectionId];
+    const layoutItem = {
+      id: sectionId,
+      wide: sectionDef?.defaultWide || false,
+      height: 'medium'
+    };
+    
+    this.renderNotesSection(layoutItem, grid);
+    this.loadNotesData(); // Load any existing content
+    this.saveNotesLayout();
+    this.updateNotesPalette();
+  },
+  
+  /**
+   * Setup notes layout control buttons
+   */
+  setupNotesLayoutControls() {
+    // Custom section button
+    const addCustomBtn = document.getElementById('btn-add-custom-section');
+    if (addCustomBtn) {
+      addCustomBtn.addEventListener('click', () => {
+        this.showAddCustomSectionModal();
+      });
+    }
+    
+    // Reset layout button
+    const resetBtn = document.getElementById('btn-reset-notes-layout');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm('Reset notes layout to default?\n\nThis will restore all sections to their default positions. Your content will be preserved.')) {
+          this.character.notesLayout = JSON.parse(JSON.stringify(this.DEFAULT_NOTES_LAYOUT));
+          this.renderNotesSections();
+          this.loadNotesData();
+          this.scheduleAutoSave();
+        }
+      });
+    }
+  },
+  
+  /**
+   * Show modal to add custom section
+   */
+  showAddCustomSectionModal() {
+    const title = prompt('Enter a title for your custom section:', 'My Notes');
+    if (!title || !title.trim()) return;
+    
+    const icons = ['📝', '📓', '📋', '📌', '💡', '🔖', '📚', '🎲', '⭐', '💎', '🗝️', '🏰'];
+    const icon = icons[Math.floor(Math.random() * icons.length)];
+    
+    const customId = 'custom-' + Date.now();
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    
+    const layoutItem = {
+      id: customId,
+      wide: false,
+      height: 'medium',
+      custom: true,
+      customTitle: title.trim(),
+      customIcon: icon
+    };
+    
+    this.renderNotesSection(layoutItem, grid);
+    this.saveNotesLayout();
+  },
+  
+  /**
+   * Setup drag and drop for notes sections
+   */
+  setupNotesDragDrop() {
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    
+    // Grid drop zone
+    grid.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      grid.classList.add('drag-over');
+    });
+    
+    grid.addEventListener('dragleave', (e) => {
+      if (!grid.contains(e.relatedTarget)) {
+        grid.classList.remove('drag-over');
+      }
+    });
+    
+    grid.addEventListener('drop', (e) => {
+      e.preventDefault();
+      grid.classList.remove('drag-over');
+      
+      const sectionId = e.dataTransfer.getData('text/plain');
+      const source = e.dataTransfer.getData('source');
+      
+      if (source === 'palette' && sectionId) {
+        this.addNotesSectionFromPalette(sectionId);
+      }
+    });
+    
+    // Event delegation for section drag
+    grid.addEventListener('dragstart', (e) => {
+      const section = e.target.closest('.notes-section');
+      if (section && e.target.classList.contains('notes-section-drag-handle')) {
+        section.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', section.dataset.sectionId);
+        e.dataTransfer.setData('source', 'grid');
+        e.dataTransfer.effectAllowed = 'move';
+        this.draggedNotesSection = section;
+      }
+    });
+    
+    grid.addEventListener('dragend', (e) => {
+      const section = e.target.closest('.notes-section');
+      if (section) {
+        section.classList.remove('dragging');
+      }
+      this.draggedNotesSection = null;
+      
+      // Remove all drag-over states
+      grid.querySelectorAll('.notes-section').forEach(s => {
+        s.classList.remove('drag-over');
+      });
+    });
+    
+    grid.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!this.draggedNotesSection) return;
+      
+      const section = e.target.closest('.notes-section');
+      if (section && section !== this.draggedNotesSection) {
+        section.classList.add('drag-over');
+      }
+    });
+    
+    grid.addEventListener('dragleave', (e) => {
+      const section = e.target.closest('.notes-section');
+      if (section) {
+        section.classList.remove('drag-over');
+      }
+    });
+    
+    grid.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (!this.draggedNotesSection) return;
+      
+      const targetSection = e.target.closest('.notes-section');
+      if (targetSection && targetSection !== this.draggedNotesSection) {
+        // Insert before or after based on position
+        const rect = targetSection.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        
+        if (e.clientY < midY) {
+          grid.insertBefore(this.draggedNotesSection, targetSection);
+        } else {
+          grid.insertBefore(this.draggedNotesSection, targetSection.nextSibling);
+        }
+        
+        this.saveNotesLayout();
+      }
+      
+      // Cleanup
+      grid.querySelectorAll('.notes-section').forEach(s => {
+        s.classList.remove('drag-over', 'dragging');
+      });
+      grid.classList.remove('drag-over');
+    });
   },
   
   /**
@@ -14129,21 +14648,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         document.execCommand('foreColor', false, textColor.value);
       });
     }
-    
-    // Track focus for toolbar state
-    document.querySelectorAll('.notes-editor, .journal-entry-content').forEach(editor => {
-      editor.addEventListener('focus', () => {
-        this.activeNotesEditor = editor;
-      });
-      
-      editor.addEventListener('keyup', () => {
-        this.updateToolbarState();
-      });
-      
-      editor.addEventListener('mouseup', () => {
-        this.updateToolbarState();
-      });
-    });
   },
   
   /**
@@ -14173,7 +14677,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   setupJournalEntries() {
     const addBtn = document.getElementById('btn-add-session-entry');
     if (addBtn) {
-      addBtn.addEventListener('click', () => {
+      // Remove existing listeners by cloning
+      const newBtn = addBtn.cloneNode(true);
+      addBtn.parentNode.replaceChild(newBtn, addBtn);
+      
+      newBtn.addEventListener('click', () => {
         this.addJournalEntry();
       });
     }
@@ -14181,22 +14689,23 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Event delegation for delete buttons
     const journalContainer = document.getElementById('journal-entries');
     if (journalContainer) {
-      journalContainer.addEventListener('click', (e) => {
+      // Remove existing listeners
+      const newContainer = journalContainer.cloneNode(true);
+      journalContainer.parentNode.replaceChild(newContainer, journalContainer);
+      
+      newContainer.addEventListener('click', (e) => {
         if (e.target.closest('.btn-delete-entry')) {
           const entry = e.target.closest('.journal-entry');
           if (entry && confirm('Delete this journal entry?')) {
             entry.remove();
             this.saveNotesData();
             this.scheduleAutoSave();
-            
-            // Show empty state if no entries
             this.updateJournalEmptyState();
           }
         }
       });
       
-      // Save on input in journal entries
-      journalContainer.addEventListener('input', () => {
+      newContainer.addEventListener('input', () => {
         this.saveNotesData();
         this.scheduleAutoSave();
       });
@@ -14287,12 +14796,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this.character.notesData = {};
     }
     
-    // Save regular notes sections
-    const sections = ['background', 'appearance', 'personality', 'goals', 'connections', 'quests', 'places', 'secrets'];
-    sections.forEach(section => {
-      const editor = document.getElementById(`notes-${section}`);
-      if (editor) {
-        this.character.notesData[section] = editor.innerHTML;
+    // Save all editor sections (including custom)
+    document.querySelectorAll('.notes-editor').forEach(editor => {
+      const sectionId = editor.id.replace('notes-', '');
+      if (sectionId) {
+        this.character.notesData[sectionId] = editor.innerHTML;
       }
     });
     
@@ -14323,12 +14831,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   loadNotesData() {
     const notesData = this.character.notesData || {};
     
-    // Load regular notes sections
-    const sections = ['background', 'appearance', 'personality', 'goals', 'connections', 'quests', 'places', 'secrets'];
-    sections.forEach(section => {
-      const editor = document.getElementById(`notes-${section}`);
-      if (editor && notesData[section]) {
-        editor.innerHTML = notesData[section];
+    // Load all editor sections
+    document.querySelectorAll('.notes-editor').forEach(editor => {
+      const sectionId = editor.id.replace('notes-', '');
+      if (sectionId && notesData[sectionId]) {
+        editor.innerHTML = notesData[sectionId];
       }
     });
     
@@ -14341,13 +14848,17 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
     
     // Load journal entries
-    const journalEntries = notesData.journalEntries || [];
-    if (journalEntries.length > 0) {
-      journalEntries.forEach(entry => {
-        this.addJournalEntry(entry);
-      });
-    } else {
-      this.updateJournalEmptyState();
+    const journalContainer = document.getElementById('journal-entries');
+    if (journalContainer) {
+      journalContainer.innerHTML = '';
+      const journalEntries = notesData.journalEntries || [];
+      if (journalEntries.length > 0) {
+        journalEntries.forEach(entry => {
+          this.addJournalEntry(entry);
+        });
+      } else {
+        this.updateJournalEmptyState();
+      }
     }
   },
 
