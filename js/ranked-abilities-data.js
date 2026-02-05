@@ -234,6 +234,19 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Sweeping Strike; Combat Style 70%",
       summary: "Sweeping Strike against ALL enemies in range (if each attack drops a foe)"
     },
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Extra Rage II", 
+      rank: 3, 
+      prereqs: "Endurance 100%",
+      summary: "+1 additional Berserk Rage use per day (stacks with Extra Rage I)"
+    },
   ],
   
   // More classes to be added...

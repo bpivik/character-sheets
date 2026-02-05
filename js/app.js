@@ -179,6 +179,32 @@ const App = {
         }
         app.updateBerserkRageDisplay();
       }
+    },
+    'extra rage ii': {
+      description: '+1 Berserk Rage use per day (stacks)',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
+    },
+    'extra rage 2': {
+      description: '+1 Berserk Rage use per day (stacks)',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
     }
   },
 
