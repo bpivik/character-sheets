@@ -4274,6 +4274,9 @@ const App = {
     // Convert to title case
     input.value = this.toTitleCase(value);
     
+    // Check if this ability supersedes a lower-tier version
+    this.removeSupersededAbility(input.value);
+    
     // Store current value as previous for next change
     input.dataset.previousValue = input.value;
     
@@ -4857,6 +4860,102 @@ const App = {
    * @param {string} abilityName - Name of the ability to add
    * @returns {boolean} - True if successfully added
    */
+  /**
+   * Abilities where higher tiers replace lower ones in the Class Abilities list.
+   * When "Defensive Reflexes II" is gained, "Defensive Reflexes I" is removed, etc.
+   * Abilities NOT in this list (like Extra Rage) stack and are all kept.
+   */
+  SUPERSEDING_ABILITY_BASES: [
+    'defensive reflexes',
+    'inspire courage'
+  ],
+
+  /**
+   * Parse a tiered ability name into its base name and tier number.
+   * Handles Roman numerals (I, II, III, IV, V) and Arabic numerals (1, 2, 3, 4, 5).
+   * Returns { base, tier } or null if not a tiered ability.
+   */
+  parseTieredAbility(name) {
+    const normalized = name.toLowerCase().trim();
+    
+    // Roman numeral patterns (must be at end of string)
+    const romanMatch = normalized.match(/^(.+?)\s+(i{1,3}|iv|v)$/);
+    if (romanMatch) {
+      const base = romanMatch[1].trim();
+      const romanMap = { 'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5 };
+      const tier = romanMap[romanMatch[2]] || 0;
+      if (tier > 0) return { base, tier };
+    }
+    
+    // Arabic numeral patterns (must be at end of string)
+    const arabicMatch = normalized.match(/^(.+?)\s+(\d+)$/);
+    if (arabicMatch) {
+      const base = arabicMatch[1].trim();
+      const tier = parseInt(arabicMatch[2], 10);
+      if (tier > 0 && tier <= 10) return { base, tier };
+    }
+    
+    return null;
+  },
+
+  /**
+   * Check if a newly added ability should supersede (replace) a lower-tier version.
+   * If so, removes the lower-tier ability from the class abilities list.
+   * Returns true if a replacement was made.
+   */
+  removeSupersededAbility(newAbilityName) {
+    const parsed = this.parseTieredAbility(newAbilityName);
+    if (!parsed) return false;
+    
+    // Only supersede for abilities in the SUPERSEDING_ABILITY_BASES list
+    if (!this.SUPERSEDING_ABILITY_BASES.includes(parsed.base)) return false;
+    
+    // Only replace if tier > 1 (tier 1 has nothing to replace)
+    if (parsed.tier <= 1) return false;
+    
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return false;
+    
+    const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
+    const rows = Array.from(container.querySelectorAll('.class-ability-row'));
+    let removed = false;
+    
+    for (const row of rows) {
+      const input = row.querySelector('.class-ability-input');
+      if (!input || !input.value.trim()) continue;
+      
+      const existingName = normalizeApostrophes(input.value.trim());
+      const existingParsed = this.parseTieredAbility(existingName);
+      if (!existingParsed) continue;
+      
+      // Same base ability but lower tier? Remove it
+      if (existingParsed.base === parsed.base && existingParsed.tier < parsed.tier) {
+        console.log(`Superseding "${input.value.trim()}" with "${newAbilityName}" (tier ${existingParsed.tier} → ${parsed.tier})`);
+        
+        // Remove ability effect if active
+        this.removeAbilityEffect(input.value.trim());
+        
+        // Remove the row
+        row.remove();
+        removed = true;
+        
+        // Also remove from acquiredAbilities tracking
+        if (this.character.acquiredAbilities) {
+          const oldName = input.value.trim();
+          this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => 
+            a.toLowerCase().trim() !== oldName.toLowerCase().trim()
+          );
+        }
+      }
+    }
+    
+    if (removed) {
+      this.reindexClassAbilityRows();
+    }
+    
+    return removed;
+  },
+
   addAbilityToSheet(abilityName) {
     const container = document.getElementById('class-abilities-list');
     if (!container) {
@@ -4868,6 +4967,9 @@ const App = {
       console.warn('addAbilityToSheet: empty ability name');
       return false;
     }
+    
+    // Check if this ability supersedes a lower-tier version and remove it
+    this.removeSupersededAbility(abilityName);
     
     // Normalize apostrophes for comparison
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
@@ -5931,7 +6033,33 @@ const App = {
     // Always update original attribute values (they are auto-calculated and readonly)
     const apOrig = document.getElementById('action-points-original');
     if (apOrig) {
-      apOrig.value = results.derived.actionPoints;
+      const oldAP = parseInt(apOrig.value, 10) || 0;
+      const newAP = results.derived.actionPoints;
+      apOrig.value = newAP;
+      
+      // Sync current AP when original increases (character gained AP from rank-up)
+      const apCurr = document.getElementById('action-points-current');
+      if (apCurr && newAP > oldAP) {
+        const currentVal = parseInt(apCurr.value, 10);
+        if (isNaN(currentVal) || currentVal === '' || currentVal === oldAP) {
+          // Current was at the old max or empty - bump to new max
+          apCurr.value = newAP;
+          this.character.derived.actionPointsCurrent = String(newAP);
+        } else if (currentVal < newAP) {
+          // Current was below old max (mid-combat) - still increase by the difference
+          const increase = newAP - oldAP;
+          apCurr.value = currentVal + increase;
+          this.character.derived.actionPointsCurrent = String(currentVal + increase);
+        }
+      }
+      // If original decreased, cap current to new max
+      if (apCurr && newAP < oldAP) {
+        const currentVal = parseInt(apCurr.value, 10) || 0;
+        if (currentVal > newAP) {
+          apCurr.value = newAP;
+          this.character.derived.actionPointsCurrent = String(newAP);
+        }
+      }
     }
     
     const dmgOrig = document.getElementById('damage-mod-original');
@@ -5956,7 +6084,30 @@ const App = {
     
     const luckOrig = document.getElementById('luck-original');
     if (luckOrig) {
-      luckOrig.value = results.derived.luckPoints;
+      const oldLuck = parseInt(luckOrig.value, 10) || 0;
+      const newLuck = results.derived.luckPoints;
+      luckOrig.value = newLuck;
+      
+      // Sync current Luck when original increases
+      const luckCurr = document.getElementById('luck-current');
+      if (luckCurr && newLuck > oldLuck) {
+        const currentVal = parseInt(luckCurr.value, 10);
+        if (isNaN(currentVal) || currentVal === '' || currentVal === oldLuck) {
+          luckCurr.value = newLuck;
+          this.character.derived.luckCurrent = String(newLuck);
+        } else if (currentVal < newLuck) {
+          const increase = newLuck - oldLuck;
+          luckCurr.value = currentVal + increase;
+          this.character.derived.luckCurrent = String(currentVal + increase);
+        }
+      }
+      if (luckCurr && newLuck < oldLuck) {
+        const currentVal = parseInt(luckCurr.value, 10) || 0;
+        if (currentVal > newLuck) {
+          luckCurr.value = newLuck;
+          this.character.derived.luckCurrent = String(newLuck);
+        }
+      }
     }
     
     const magicOrig = document.getElementById('magic-points-original');
@@ -5966,6 +6117,28 @@ const App = {
     
     // Update hit location HPs (original only)
     this.updateHitLocationHPs(results.hitLocations);
+    
+    // Save derived original values to character data for persistence
+    this.saveDerivedOriginalValues();
+    
+    // Seed empty current values from originals (first load or new character)
+    const originalToCurrentPairs = [
+      ['action-points-original', 'action-points-current', 'actionPointsCurrent'],
+      ['luck-original', 'luck-current', 'luckCurrent'],
+      ['magic-points-original', 'magic-points-current', 'magicPointsCurrent'],
+      ['initiative-original', 'initiative-current', 'initiativeCurrent'],
+      ['damage-mod-original', 'damage-mod-current', 'damageModCurrent'],
+      ['exp-mod-original', 'exp-mod-current', 'expModCurrent'],
+      ['healing-rate-original', 'healing-rate-current', 'healingRateCurrent']
+    ];
+    for (const [origId, currId, dataKey] of originalToCurrentPairs) {
+      const origEl = document.getElementById(origId);
+      const currEl = document.getElementById(currId);
+      if (origEl && currEl && origEl.value && !currEl.value) {
+        currEl.value = origEl.value;
+        this.character.derived[dataKey] = origEl.value;
+      }
+    }
     
     // Update movement rate from species
     const movementOrig = document.getElementById('movement-original');
