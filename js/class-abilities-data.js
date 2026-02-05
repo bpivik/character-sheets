@@ -9,7 +9,8 @@ const ClassAbilities = {
   },
   
   berserker: {
-    rank1: ["Artful Dodger", "Berserk Rage", "Brute Strength", "Combat Proficiency", "Detect Magic and Illusions", "Resilient"]
+    rank1: ["Artful Dodger", "Berserk Rage", "Brute Strength", "Combat Proficiency", "Detect Magic and Illusions", "Resilient"],
+    rank4: ["Enchantment Resistance"]
   },
   
   cavalier: {

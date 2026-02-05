@@ -68,6 +68,7 @@ const AbilityDescriptions = {
   "dual weapon specialist ii": "May double the Critical chance of attacks. In addition, the wielded\nmelee weapons gain a 1-step improvement to Damage Modifier.",
   "dual weapon specialist": "Strike with 2 weapons simul. Attack is 1 Grade Difficult.",
   "elven chain": "May cast Arcane magic spells while wearing elven chain at 1 Difficulty\nGrade harder.",
+  "enchantment resistance": "<strong>While Raging, your Willpower rolls to resist Enchantment spells are one Difficulty Grade easier</strong>.\n\n<div class=\"ability-callout\">📋 <strong>Note:</strong> This bonus is applied manually during gameplay when resisting Enchantment spells while in a Berserk Rage — it is not reflected in your Willpower value on the character sheet.</div>",
   "exotic mounts 1": "May obtain unicorn as mount. See description.",
   "exotic mounts 2": "May obtain pegasus as mount. See description.",
   "exotic mounts 3": "May obtain hippogriff as mount. See description.",

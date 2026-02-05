@@ -247,6 +247,38 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Endurance 100%",
       summary: "+1 additional Berserk Rage use per day (stacks with Extra Rage I)"
     },
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes I",
+      summary: "Use Defensive Reflexes twice per combat (not against the same attack, cannot combine with Luck)"
+    },
+    { 
+      name: "Extra Rage III", 
+      rank: 4, 
+      prereqs: "Endurance 120%",
+      summary: "+1 additional Berserk Rage use per day (stacks with Extra Rage I–II)"
+    },
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Extra Rage IV", 
+      rank: 5, 
+      prereqs: "Endurance 140%",
+      summary: "+1 additional Berserk Rage use per day (stacks with Extra Rage I–III)"
+    },
   ],
   
   // More classes to be added...

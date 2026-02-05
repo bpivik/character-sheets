@@ -205,6 +205,58 @@ const App = {
         }
         app.updateBerserkRageDisplay();
       }
+    },
+    'extra rage iii': {
+      description: '+1 Berserk Rage use per day (stacks)',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
+    },
+    'extra rage 3': {
+      description: '+1 Berserk Rage use per day (stacks)',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
+    },
+    'extra rage iv': {
+      description: '+1 Berserk Rage use per day (stacks)',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
+    },
+    'extra rage 4': {
+      description: '+1 Berserk Rage use per day (stacks)',
+      apply: function(app) {
+        app.updateBerserkRageDisplay();
+      },
+      remove: function(app) {
+        const newMax = app.getMaxRageUses();
+        if (app.character.rageUsesRemaining > newMax) {
+          app.character.rageUsesRemaining = newMax;
+        }
+        app.updateBerserkRageDisplay();
+      }
     }
   },
 
@@ -9671,8 +9723,8 @@ const App = {
     if (dmgEffectEl) {
       const stepsToShow = this.character.isRaging 
         ? (this.character.rageDmgStepsApplied || 1)
-        : (this.getBerserkerRank() >= 3 ? 2 : 1);
-      dmgEffectEl.textContent = stepsToShow >= 2 ? 'Damage Mod: +2 steps' : 'Damage Mod: +1 step';
+        : (this.getBerserkerRank() >= 5 ? 3 : (this.getBerserkerRank() >= 3 ? 2 : 1));
+      dmgEffectEl.textContent = `Damage Mod: +${stepsToShow} step${stepsToShow > 1 ? 's' : ''}`;
     }
     
     // Update End Rage button text based on whether current rage is waived
@@ -9779,9 +9831,9 @@ const App = {
    * Apply Berserk Rage bonuses
    */
   applyRageBonuses() {
-    // Damage Mod steps based on Berserker rank: Rank 3+ = +2 steps, otherwise +1 step
+    // Damage Mod steps based on Berserker rank: Rank 5 = +3 steps, Rank 3-4 = +2 steps, else +1 step
     const berserkerRank = this.getBerserkerRank();
-    const dmgSteps = berserkerRank >= 3 ? 2 : 1;
+    const dmgSteps = berserkerRank >= 5 ? 3 : (berserkerRank >= 3 ? 2 : 1);
     this.character.rageDmgStepsApplied = dmgSteps; // Track for display accuracy if rank changes mid-rage
     
     const dmgCurrField = document.getElementById('damage-mod-current');
@@ -10344,6 +10396,8 @@ const App = {
    */
   getRageFatigueWaiverMax() {
     const rank = this.getBerserkerRank();
+    if (rank >= 5) return 4;
+    if (rank >= 4) return 3;
     if (rank >= 3) return 2;
     if (rank >= 2) return 1;
     return 0;
