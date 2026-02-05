@@ -4669,6 +4669,434 @@ select:focus {
 }
 
 /* ============================================
+   Notes Page - Rich Text Sections
+   ============================================ */
+.notes-page-content {
+  padding: 1rem;
+}
+
+/* Rich Text Toolbar */
+.notes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: linear-gradient(to bottom, #f8f5f0, #ebe6dc);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 0.25rem;
+}
+
+.toolbar-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.toolbar-btn:hover {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.toolbar-btn.active {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.toolbar-select {
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.toolbar-color {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* Notes Grid Layout */
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .notes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Notes Section */
+.notes-section {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.notes-section-wide {
+  grid-column: 1 / -1;
+}
+
+.notes-section-header {
+  background: linear-gradient(to bottom, #f5f0e6, #ebe6dc);
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notes-section-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+}
+
+.notes-section-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.notes-section-header .btn-add-entry {
+  margin-left: auto;
+}
+
+/* Rich Text Editor */
+.notes-editor {
+  min-height: 150px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: #fffef9;
+}
+
+.notes-editor:focus {
+  outline: none;
+  background: #fffff5;
+}
+
+.notes-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.notes-editor h3 {
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+  color: var(--accent-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;
+}
+
+.notes-editor ul, .notes-editor ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.notes-editor li {
+  margin-bottom: 0.25rem;
+}
+
+.notes-editor hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 0.75rem 0;
+}
+
+/* Journal Section - Special Styling */
+.journal-section {
+  background: #f9f6f0;
+}
+
+.journal-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.journal-page {
+  background: linear-gradient(to right, #f5f0e0 0%, #faf8f2 2%, #faf8f2 98%, #f5f0e0 100%);
+  min-height: 400px;
+  position: relative;
+}
+
+.journal-page::before {
+  content: '';
+  position: absolute;
+  left: 40px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(200, 100, 100, 0.3);
+}
+
+.journal-entries {
+  padding: 1rem 1rem 1rem 50px;
+}
+
+/* Journal Entry */
+.journal-entry {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed #ccc;
+  position: relative;
+}
+
+.journal-entry:last-child {
+  border-bottom: none;
+}
+
+.journal-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.journal-entry-date {
+  font-family: 'Cinzel', var(--font-heading), serif;
+  font-size: 0.85rem;
+  color: #8b4513;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.journal-entry-date input {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  font-weight: inherit;
+  width: 140px;
+  padding: 0.1rem 0.25rem;
+  border-bottom: 1px dashed transparent;
+}
+
+.journal-entry-date input:focus {
+  outline: none;
+  border-bottom-color: #8b4513;
+}
+
+.journal-entry-title {
+  flex: 1;
+}
+
+.journal-entry-title input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: 'Cinzel', var(--font-heading), serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5d4037;
+  padding: 0.1rem 0.25rem;
+  border-bottom: 1px dashed transparent;
+}
+
+.journal-entry-title input:focus {
+  outline: none;
+  border-bottom-color: #5d4037;
+}
+
+.journal-entry-title input::placeholder {
+  color: #a99;
+  font-style: italic;
+}
+
+.btn-delete-entry {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #c00;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  border-radius: 4px;
+}
+
+.btn-delete-entry:hover {
+  opacity: 1;
+  background: rgba(200, 0, 0, 0.1);
+}
+
+.journal-entry-content {
+  min-height: 60px;
+  font-family: 'Georgia', var(--font-body), serif;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #333;
+  background: linear-gradient(transparent, transparent 1.7em, #e8e4da 1.7em);
+  background-size: 100% 1.8em;
+  padding: 0.25rem;
+}
+
+.journal-entry-content:focus {
+  outline: none;
+  background-color: rgba(255, 255, 200, 0.2);
+}
+
+.journal-entry-content:empty:before {
+  content: 'Write about this session...';
+  color: #a99;
+  font-style: italic;
+}
+
+/* Journal decorative elements */
+.journal-entry::before {
+  content: '•';
+  position: absolute;
+  left: -30px;
+  top: 0.4rem;
+  color: #8b4513;
+  font-size: 0.8rem;
+}
+
+/* Empty journal state */
+.journal-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #999;
+  font-style: italic;
+}
+
+.journal-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Add Entry Button */
+.btn-add-entry {
+  background: var(--btn-primary-bg);
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-add-entry:hover {
+  background: var(--btn-primary-hover);
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .notes-toolbar {
+  background: linear-gradient(to bottom, #3a3a3a, #2d2d2d);
+}
+
+[data-theme="dark"] .toolbar-btn {
+  background: #444;
+  border-color: #555;
+  color: #ddd;
+}
+
+[data-theme="dark"] .toolbar-btn:hover {
+  background: var(--accent-color);
+}
+
+[data-theme="dark"] .toolbar-select {
+  background: #444;
+  border-color: #555;
+  color: #ddd;
+}
+
+[data-theme="dark"] .notes-section {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+[data-theme="dark"] .notes-section-header {
+  background: linear-gradient(to bottom, #3a3a3a, #333);
+  border-color: #444;
+}
+
+[data-theme="dark"] .notes-editor {
+  background: #252525;
+  color: #ddd;
+}
+
+[data-theme="dark"] .notes-editor:focus {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .journal-page {
+  background: linear-gradient(to right, #2a2520 0%, #332d28 2%, #332d28 98%, #2a2520 100%);
+}
+
+[data-theme="dark"] .journal-page::before {
+  background: rgba(200, 100, 100, 0.2);
+}
+
+[data-theme="dark"] .journal-entry-date,
+[data-theme="dark"] .journal-entry-date input {
+  color: #c9a86c;
+}
+
+[data-theme="dark"] .journal-entry-title input {
+  color: #d4c4a8;
+}
+
+[data-theme="dark"] .journal-entry-content {
+  background: linear-gradient(transparent, transparent 1.7em, #3a352f 1.7em);
+  color: #ccc;
+}
+
+/* ============================================
    Page 4 & 5: Magic
    ============================================ */
 .magic-skills-section {

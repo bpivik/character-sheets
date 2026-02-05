@@ -1606,9 +1606,145 @@
 
     <!-- ==================== PAGE 7: NOTES ==================== -->
     <section id="page-notes" class="sheet-page page-notes">
-      <div class="page-content ornate-border">
+      <div class="page-content ornate-border notes-page-content">
         <h2 class="page-title">Notes</h2>
-        <textarea id="general-notes" class="notes-textarea full-page" placeholder="General notes, backstory, campaign information..."></textarea>
+        
+        <!-- Rich Text Toolbar -->
+        <div class="notes-toolbar" id="notes-toolbar">
+          <div class="toolbar-group">
+            <button type="button" class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+            <button type="button" class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+            <button type="button" class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+            <button type="button" class="toolbar-btn" data-command="strikeThrough" title="Strikethrough"><s>S</s></button>
+          </div>
+          <div class="toolbar-separator"></div>
+          <div class="toolbar-group">
+            <select class="toolbar-select" id="toolbar-font-family" title="Font Family">
+              <option value="inherit">Default</option>
+              <option value="'Cinzel', serif">Cinzel</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="'Georgia', serif">Georgia</option>
+              <option value="'Arial', sans-serif">Arial</option>
+              <option value="'Courier New', monospace">Courier New</option>
+            </select>
+            <select class="toolbar-select" id="toolbar-font-size" title="Font Size">
+              <option value="0.8rem">Small</option>
+              <option value="1rem" selected>Normal</option>
+              <option value="1.2rem">Large</option>
+              <option value="1.5rem">X-Large</option>
+            </select>
+          </div>
+          <div class="toolbar-separator"></div>
+          <div class="toolbar-group">
+            <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">•</button>
+            <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">1.</button>
+          </div>
+          <div class="toolbar-separator"></div>
+          <div class="toolbar-group">
+            <button type="button" class="toolbar-btn" data-command="formatBlock" data-value="h3" title="Heading">H</button>
+            <button type="button" class="toolbar-btn" data-command="insertHorizontalRule" title="Horizontal Line">─</button>
+          </div>
+          <div class="toolbar-separator"></div>
+          <div class="toolbar-group">
+            <input type="color" class="toolbar-color" id="toolbar-text-color" value="#000000" title="Text Color">
+            <input type="color" class="toolbar-color" id="toolbar-bg-color" value="#ffff00" title="Highlight Color">
+            <button type="button" class="toolbar-btn" data-command="hiliteColor" title="Apply Highlight">🖍</button>
+          </div>
+          <div class="toolbar-separator"></div>
+          <div class="toolbar-group">
+            <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting">✕</button>
+          </div>
+        </div>
+        
+        <div class="notes-grid">
+          <!-- Background/Backstory -->
+          <div class="notes-section" id="section-background">
+            <div class="notes-section-header">
+              <h3>📜 Background / Backstory</h3>
+              <span class="notes-section-hint">Origin story, history, how they became an adventurer</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-background" data-placeholder="Write your character's backstory here..."></div>
+          </div>
+          
+          <!-- Appearance -->
+          <div class="notes-section" id="section-appearance">
+            <div class="notes-section-header">
+              <h3>👤 Appearance</h3>
+              <span class="notes-section-hint">Physical description, distinguishing marks, typical attire</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-appearance" data-placeholder="Describe your character's appearance..."></div>
+          </div>
+          
+          <!-- Personality -->
+          <div class="notes-section" id="section-personality">
+            <div class="notes-section-header">
+              <h3>🎭 Personality</h3>
+              <span class="notes-section-hint">Traits, quirks, mannerisms, fears, flaws</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-personality" data-placeholder="What makes your character unique?"></div>
+          </div>
+          
+          <!-- Goals & Motivations -->
+          <div class="notes-section" id="section-goals">
+            <div class="notes-section-header">
+              <h3>🎯 Goals &amp; Motivations</h3>
+              <span class="notes-section-hint">What drives the character, short/long-term objectives</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-goals" data-placeholder="What does your character want to achieve?"></div>
+          </div>
+          
+          <!-- Connections -->
+          <div class="notes-section" id="section-connections">
+            <div class="notes-section-header">
+              <h3>🤝 Connections</h3>
+              <span class="notes-section-hint">NPCs, allies, enemies, family, mentors, rivals</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-connections" data-placeholder="Who are the important people in your character's life?"></div>
+          </div>
+          
+          <!-- Session Notes - Journal Style -->
+          <div class="notes-section notes-section-wide journal-section" id="section-sessions">
+            <div class="notes-section-header">
+              <h3>📖 Session Notes</h3>
+              <span class="notes-section-hint">Per-session journal entries</span>
+              <button type="button" class="btn btn-small btn-add-entry" id="btn-add-session-entry">+ Add Entry</button>
+            </div>
+            <div class="journal-container" id="journal-container">
+              <div class="journal-page">
+                <div class="journal-entries" id="journal-entries">
+                  <!-- Journal entries will be added dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Quest Log -->
+          <div class="notes-section" id="section-quests">
+            <div class="notes-section-header">
+              <h3>⚔️ Quest Log</h3>
+              <span class="notes-section-hint">Active and completed quests with notes</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-quests" data-placeholder="Track your quests and objectives..."></div>
+          </div>
+          
+          <!-- Places & Locations -->
+          <div class="notes-section" id="section-places">
+            <div class="notes-section-header">
+              <h3>🗺️ Places &amp; Locations</h3>
+              <span class="notes-section-hint">Towns, dungeons, landmarks visited with notes</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-places" data-placeholder="Record the places you've visited..."></div>
+          </div>
+          
+          <!-- Secrets & Rumors -->
+          <div class="notes-section" id="section-secrets">
+            <div class="notes-section-header">
+              <h3>🔮 Secrets &amp; Rumors</h3>
+              <span class="notes-section-hint">Things the character has learned</span>
+            </div>
+            <div class="notes-editor" contenteditable="true" id="notes-secrets" data-placeholder="What secrets have you uncovered?"></div>
+          </div>
+        </div>
       </div>
     </section>
 

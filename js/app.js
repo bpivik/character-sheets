@@ -357,6 +357,9 @@ const App = {
     // Setup summary page
     this.setupSummaryPage();
     
+    // Setup notes page
+    this.setupNotesPage();
+    
     // Setup EXP spending modal
     this.setupExpModal();
     
@@ -1395,16 +1398,14 @@ const App = {
       });
     });
     
-    // Notes
-    const notesFields = ['general-notes'];
-    notesFields.forEach(fieldId => {
-      const field = document.getElementById(fieldId);
-      if (field) {
-        field.addEventListener('input', (e) => {
-          this.character.notes = e.target.value;
-          this.scheduleAutoSave();
-        });
-      }
+    // Notes - Rich text sections (handled via setupNotesPage)
+    // The old general-notes textarea is replaced with contenteditable sections
+    const notesEditors = document.querySelectorAll('.notes-editor');
+    notesEditors.forEach(editor => {
+      editor.addEventListener('input', () => {
+        this.saveNotesData();
+        this.scheduleAutoSave();
+      });
     });
     
     // Combat skill inputs
@@ -5674,9 +5675,7 @@ const App = {
       }
     }
     
-    // Notes
-    const generalNotes = document.getElementById('general-notes');
-    if (generalNotes) generalNotes.value = this.character.notes || '';
+    // Notes are now loaded via setupNotesPage -> loadNotesData
     
     // Images
     if (this.character.images.fullBody) {
@@ -6260,11 +6259,8 @@ const App = {
       }
     });
     
-    // General Notes
-    const generalNotes = document.getElementById('general-notes');
-    if (generalNotes) {
-      this.character.notes = generalNotes.value;
-    }
+    // Notes - save rich text sections and journal
+    this.saveNotesData();
     
     // Species Abilities
     this.character.speciesAbilities = [];
@@ -14054,6 +14050,305 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         return;
       }
     });
+  },
+
+  // ============================================
+  // Notes Page Functions
+  // ============================================
+  
+  /**
+   * Setup the Notes page with rich text toolbar and journal functionality
+   */
+  setupNotesPage() {
+    // Setup rich text toolbar
+    this.setupNotesToolbar();
+    
+    // Setup journal entry management
+    this.setupJournalEntries();
+    
+    // Load existing notes data
+    this.loadNotesData();
+  },
+  
+  /**
+   * Setup rich text toolbar event handlers
+   */
+  setupNotesToolbar() {
+    const toolbar = document.getElementById('notes-toolbar');
+    if (!toolbar) return;
+    
+    // Command buttons (bold, italic, etc.)
+    toolbar.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const command = btn.dataset.command;
+        const value = btn.dataset.value || null;
+        
+        // Special handling for hiliteColor
+        if (command === 'hiliteColor') {
+          const bgColor = document.getElementById('toolbar-bg-color')?.value || '#ffff00';
+          document.execCommand(command, false, bgColor);
+        } else {
+          document.execCommand(command, false, value);
+        }
+        
+        // Update button states
+        this.updateToolbarState();
+      });
+    });
+    
+    // Font family select
+    const fontFamily = document.getElementById('toolbar-font-family');
+    if (fontFamily) {
+      fontFamily.addEventListener('change', () => {
+        document.execCommand('fontName', false, fontFamily.value);
+      });
+    }
+    
+    // Font size select
+    const fontSize = document.getElementById('toolbar-font-size');
+    if (fontSize) {
+      fontSize.addEventListener('change', () => {
+        // execCommand fontSize only accepts 1-7, so we use CSS instead
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          if (!range.collapsed) {
+            const span = document.createElement('span');
+            span.style.fontSize = fontSize.value;
+            range.surroundContents(span);
+          }
+        }
+      });
+    }
+    
+    // Text color
+    const textColor = document.getElementById('toolbar-text-color');
+    if (textColor) {
+      textColor.addEventListener('input', () => {
+        document.execCommand('foreColor', false, textColor.value);
+      });
+    }
+    
+    // Track focus for toolbar state
+    document.querySelectorAll('.notes-editor, .journal-entry-content').forEach(editor => {
+      editor.addEventListener('focus', () => {
+        this.activeNotesEditor = editor;
+      });
+      
+      editor.addEventListener('keyup', () => {
+        this.updateToolbarState();
+      });
+      
+      editor.addEventListener('mouseup', () => {
+        this.updateToolbarState();
+      });
+    });
+  },
+  
+  /**
+   * Update toolbar button states based on current selection
+   */
+  updateToolbarState() {
+    const toolbar = document.getElementById('notes-toolbar');
+    if (!toolbar) return;
+    
+    // Update toggle buttons
+    const toggleCommands = ['bold', 'italic', 'underline', 'strikeThrough'];
+    toggleCommands.forEach(cmd => {
+      const btn = toolbar.querySelector(`[data-command="${cmd}"]`);
+      if (btn) {
+        if (document.queryCommandState(cmd)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+  },
+  
+  /**
+   * Setup journal entry management
+   */
+  setupJournalEntries() {
+    const addBtn = document.getElementById('btn-add-session-entry');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        this.addJournalEntry();
+      });
+    }
+    
+    // Event delegation for delete buttons
+    const journalContainer = document.getElementById('journal-entries');
+    if (journalContainer) {
+      journalContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-delete-entry')) {
+          const entry = e.target.closest('.journal-entry');
+          if (entry && confirm('Delete this journal entry?')) {
+            entry.remove();
+            this.saveNotesData();
+            this.scheduleAutoSave();
+            
+            // Show empty state if no entries
+            this.updateJournalEmptyState();
+          }
+        }
+      });
+      
+      // Save on input in journal entries
+      journalContainer.addEventListener('input', () => {
+        this.saveNotesData();
+        this.scheduleAutoSave();
+      });
+    }
+  },
+  
+  /**
+   * Add a new journal entry
+   */
+  addJournalEntry(data = null) {
+    const container = document.getElementById('journal-entries');
+    if (!container) return;
+    
+    // Remove empty state if present
+    const emptyState = container.querySelector('.journal-empty');
+    if (emptyState) {
+      emptyState.remove();
+    }
+    
+    const today = new Date();
+    const dateStr = data?.date || today.toLocaleDateString('en-US', { 
+      month: 'short', day: 'numeric', year: 'numeric' 
+    });
+    
+    const entry = document.createElement('div');
+    entry.className = 'journal-entry';
+    entry.innerHTML = `
+      <div class="journal-entry-header">
+        <div class="journal-entry-date">
+          📅 <input type="text" value="${dateStr}" placeholder="Date">
+        </div>
+        <div class="journal-entry-title">
+          <input type="text" value="${data?.title || ''}" placeholder="Session Title">
+        </div>
+        <button type="button" class="btn-delete-entry" title="Delete entry">×</button>
+      </div>
+      <div class="journal-entry-content" contenteditable="true" data-placeholder="Write about this session...">${data?.content || ''}</div>
+    `;
+    
+    // Add to top (most recent first)
+    container.insertBefore(entry, container.firstChild);
+    
+    // Focus the title field
+    if (!data) {
+      entry.querySelector('.journal-entry-title input').focus();
+    }
+    
+    // Setup focus tracking for this entry's content
+    const contentEl = entry.querySelector('.journal-entry-content');
+    if (contentEl) {
+      contentEl.addEventListener('focus', () => {
+        this.activeNotesEditor = contentEl;
+      });
+    }
+    
+    if (!data) {
+      this.saveNotesData();
+      this.scheduleAutoSave();
+    }
+  },
+  
+  /**
+   * Update journal empty state display
+   */
+  updateJournalEmptyState() {
+    const container = document.getElementById('journal-entries');
+    if (!container) return;
+    
+    const entries = container.querySelectorAll('.journal-entry');
+    const emptyState = container.querySelector('.journal-empty');
+    
+    if (entries.length === 0 && !emptyState) {
+      container.innerHTML = `
+        <div class="journal-empty">
+          <div class="journal-empty-icon">📖</div>
+          <p>No session notes yet.</p>
+          <p>Click "+ Add Entry" to start recording your adventures!</p>
+        </div>
+      `;
+    }
+  },
+  
+  /**
+   * Save all notes data to character object
+   */
+  saveNotesData() {
+    if (!this.character.notesData) {
+      this.character.notesData = {};
+    }
+    
+    // Save regular notes sections
+    const sections = ['background', 'appearance', 'personality', 'goals', 'connections', 'quests', 'places', 'secrets'];
+    sections.forEach(section => {
+      const editor = document.getElementById(`notes-${section}`);
+      if (editor) {
+        this.character.notesData[section] = editor.innerHTML;
+      }
+    });
+    
+    // Save journal entries
+    const journalEntries = [];
+    document.querySelectorAll('.journal-entry').forEach(entry => {
+      const dateInput = entry.querySelector('.journal-entry-date input');
+      const titleInput = entry.querySelector('.journal-entry-title input');
+      const content = entry.querySelector('.journal-entry-content');
+      
+      journalEntries.push({
+        date: dateInput?.value || '',
+        title: titleInput?.value || '',
+        content: content?.innerHTML || ''
+      });
+    });
+    this.character.notesData.journalEntries = journalEntries;
+    
+    // Keep old notes for backwards compatibility
+    if (this.character.notes && !this.character.notesData.background) {
+      this.character.notesData.background = this.character.notes.replace(/\n/g, '<br>');
+    }
+  },
+  
+  /**
+   * Load notes data from character object
+   */
+  loadNotesData() {
+    const notesData = this.character.notesData || {};
+    
+    // Load regular notes sections
+    const sections = ['background', 'appearance', 'personality', 'goals', 'connections', 'quests', 'places', 'secrets'];
+    sections.forEach(section => {
+      const editor = document.getElementById(`notes-${section}`);
+      if (editor && notesData[section]) {
+        editor.innerHTML = notesData[section];
+      }
+    });
+    
+    // Migrate old notes to background if no new data exists
+    if (!notesData.background && this.character.notes) {
+      const bgEditor = document.getElementById('notes-background');
+      if (bgEditor) {
+        bgEditor.innerHTML = this.character.notes.replace(/\n/g, '<br>');
+      }
+    }
+    
+    // Load journal entries
+    const journalEntries = notesData.journalEntries || [];
+    if (journalEntries.length > 0) {
+      journalEntries.forEach(entry => {
+        this.addJournalEntry(entry);
+      });
+    } else {
+      this.updateJournalEmptyState();
+    }
   },
 
   /**
