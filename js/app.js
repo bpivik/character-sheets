@@ -1112,7 +1112,16 @@ const App = {
             this.handleRankDecrease(fieldId, previousRank, newRank);
           }
           
+          // Snapshot original derived values BEFORE recalculation so we can
+          // detect changes and sync current values after recalculate runs
+          const apOrigBefore = parseInt(document.getElementById('action-points-original')?.value, 10) || 0;
+          const luckOrigBefore = parseInt(document.getElementById('luck-original')?.value, 10) || 0;
+          
           this.recalculateAll();
+          
+          // Sync current AP when original changes from rank-up/down
+          this.syncCurrentToDerivedChange('action-points', apOrigBefore);
+          this.syncCurrentToDerivedChange('luck', luckOrigBefore);
           
           // Update rage display text (damage steps, fatigue waivers) based on new rank
           if (this.hasAbility('Berserk Rage')) {
@@ -2009,6 +2018,47 @@ const App = {
         this.character.derived[key] = input.value;
       }
     }
+  },
+
+  /**
+   * Sync a current derived value when its original changes (e.g., rank-up gives more AP).
+   * Call AFTER recalculateAll() with the snapshot taken BEFORE recalculate.
+   * @param {string} prefix - Field prefix, e.g. 'action-points' or 'luck'
+   * @param {number} origBefore - The original value before recalculation
+   */
+  syncCurrentToDerivedChange(prefix, origBefore) {
+    const origEl = document.getElementById(`${prefix}-original`);
+    const currEl = document.getElementById(`${prefix}-current`);
+    if (!origEl || !currEl) return;
+    
+    const origAfter = parseInt(origEl.value, 10) || 0;
+    if (origAfter === origBefore) return; // No change
+    
+    const currVal = parseInt(currEl.value, 10);
+    const dataKey = this.camelCase(`${prefix}-current`);
+    
+    if (origAfter > origBefore) {
+      // Original increased (rank-up)
+      const increase = origAfter - origBefore;
+      if (isNaN(currVal) || currVal === 0) {
+        // Current was empty/zero - set to new original
+        currEl.value = origAfter;
+      } else {
+        // Add the increase to current
+        currEl.value = currVal + increase;
+      }
+    } else {
+      // Original decreased (rank-down) - cap current to new max
+      if (!isNaN(currVal) && currVal > origAfter) {
+        currEl.value = origAfter;
+      }
+    }
+    
+    // Update dataset.originalValue for ENC/fatigue penalty system
+    currEl.dataset.originalValue = currEl.value;
+    
+    // Persist to character data
+    this.character.derived[dataKey] = currEl.value;
   },
 
   /**
@@ -4274,9 +4324,6 @@ const App = {
     // Convert to title case
     input.value = this.toTitleCase(value);
     
-    // Check if this ability supersedes a lower-tier version
-    this.removeSupersededAbility(input.value);
-    
     // Store current value as previous for next change
     input.dataset.previousValue = input.value;
     
@@ -4856,13 +4903,8 @@ const App = {
   },
 
   /**
-   * Add an ability to the Special Abilities section (first empty slot)
-   * @param {string} abilityName - Name of the ability to add
-   * @returns {boolean} - True if successfully added
-   */
-  /**
    * Abilities where higher tiers replace lower ones in the Class Abilities list.
-   * When "Defensive Reflexes II" is gained, "Defensive Reflexes I" is removed, etc.
+   * When "Defensive Reflexes II" is gained, "Defensive Reflexes I" is removed.
    * Abilities NOT in this list (like Extra Rage) stack and are all kept.
    */
   SUPERSEDING_ABILITY_BASES: [
@@ -4871,91 +4913,80 @@ const App = {
   ],
 
   /**
-   * Parse a tiered ability name into its base name and tier number.
-   * Handles Roman numerals (I, II, III, IV, V) and Arabic numerals (1, 2, 3, 4, 5).
-   * Returns { base, tier } or null if not a tiered ability.
+   * Parse a tiered ability name into base name and tier number.
+   * Handles Roman (I–V) and Arabic (1–5) numerals at the end.
+   * @returns {{ base: string, tier: number } | null}
    */
   parseTieredAbility(name) {
     const normalized = name.toLowerCase().trim();
-    
-    // Roman numeral patterns (must be at end of string)
     const romanMatch = normalized.match(/^(.+?)\s+(i{1,3}|iv|v)$/);
     if (romanMatch) {
-      const base = romanMatch[1].trim();
       const romanMap = { 'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5 };
-      const tier = romanMap[romanMatch[2]] || 0;
-      if (tier > 0) return { base, tier };
+      const tier = romanMap[romanMatch[2]];
+      if (tier) return { base: romanMatch[1].trim(), tier };
     }
-    
-    // Arabic numeral patterns (must be at end of string)
     const arabicMatch = normalized.match(/^(.+?)\s+(\d+)$/);
     if (arabicMatch) {
-      const base = arabicMatch[1].trim();
       const tier = parseInt(arabicMatch[2], 10);
-      if (tier > 0 && tier <= 10) return { base, tier };
+      if (tier > 0 && tier <= 10) return { base: arabicMatch[1].trim(), tier };
     }
-    
     return null;
   },
 
   /**
-   * Check if a newly added ability should supersede (replace) a lower-tier version.
-   * If so, removes the lower-tier ability from the class abilities list.
-   * Returns true if a replacement was made.
+   * Remove a lower-tier ability from the sheet when a higher-tier version is purchased.
+   * Only applies to abilities in SUPERSEDING_ABILITY_BASES (e.g. Defensive Reflexes).
+   * Called from finalizeAbilityUnlock only — never during init/refresh.
    */
   removeSupersededAbility(newAbilityName) {
     const parsed = this.parseTieredAbility(newAbilityName);
-    if (!parsed) return false;
-    
-    // Only supersede for abilities in the SUPERSEDING_ABILITY_BASES list
-    if (!this.SUPERSEDING_ABILITY_BASES.includes(parsed.base)) return false;
-    
-    // Only replace if tier > 1 (tier 1 has nothing to replace)
-    if (parsed.tier <= 1) return false;
-    
+    if (!parsed) return;
+    if (!this.SUPERSEDING_ABILITY_BASES.includes(parsed.base)) return;
+    if (parsed.tier <= 1) return; // Tier 1 has nothing to replace
+
     const container = document.getElementById('class-abilities-list');
-    if (!container) return false;
-    
+    if (!container) return;
+
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const rows = Array.from(container.querySelectorAll('.class-ability-row'));
     let removed = false;
-    
+
     for (const row of rows) {
       const input = row.querySelector('.class-ability-input');
       if (!input || !input.value.trim()) continue;
-      
-      const existingName = normalizeApostrophes(input.value.trim());
-      const existingParsed = this.parseTieredAbility(existingName);
+
+      const existingParsed = this.parseTieredAbility(normalizeApostrophes(input.value.trim()));
       if (!existingParsed) continue;
-      
-      // Same base ability but lower tier? Remove it
+
+      // Same base but lower tier → remove it
       if (existingParsed.base === parsed.base && existingParsed.tier < parsed.tier) {
-        console.log(`Superseding "${input.value.trim()}" with "${newAbilityName}" (tier ${existingParsed.tier} → ${parsed.tier})`);
-        
+        const oldName = input.value.trim();
+        console.log(`Superseding "${oldName}" with "${newAbilityName}"`);
+
         // Remove ability effect if active
-        this.removeAbilityEffect(input.value.trim());
-        
-        // Remove the row
+        this.removeAbilityEffect(oldName);
         row.remove();
         removed = true;
-        
-        // Also remove from acquiredAbilities tracking
+
+        // Remove from acquiredAbilities tracking
         if (this.character.acquiredAbilities) {
-          const oldName = input.value.trim();
-          this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => 
+          this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a =>
             a.toLowerCase().trim() !== oldName.toLowerCase().trim()
           );
         }
       }
     }
-    
+
     if (removed) {
       this.reindexClassAbilityRows();
     }
-    
-    return removed;
   },
 
+  /**
+   * Add an ability to the Special Abilities section (first empty slot)
+   * @param {string} abilityName - Name of the ability to add
+   * @returns {boolean} - True if successfully added
+   */
   addAbilityToSheet(abilityName) {
     const container = document.getElementById('class-abilities-list');
     if (!container) {
@@ -4967,9 +4998,6 @@ const App = {
       console.warn('addAbilityToSheet: empty ability name');
       return false;
     }
-    
-    // Check if this ability supersedes a lower-tier version and remove it
-    this.removeSupersededAbility(abilityName);
     
     // Normalize apostrophes for comparison
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
@@ -6037,28 +6065,34 @@ const App = {
       const newAP = results.derived.actionPoints;
       apOrig.value = newAP;
       
-      // Sync current AP when original increases (character gained AP from rank-up)
-      const apCurr = document.getElementById('action-points-current');
-      if (apCurr && newAP > oldAP) {
-        const currentVal = parseInt(apCurr.value, 10);
-        if (isNaN(currentVal) || currentVal === '' || currentVal === oldAP) {
-          // Current was at the old max or empty - bump to new max
-          apCurr.value = newAP;
-          this.character.derived.actionPointsCurrent = String(newAP);
-        } else if (currentVal < newAP) {
-          // Current was below old max (mid-combat) - still increase by the difference
-          const increase = newAP - oldAP;
-          apCurr.value = currentVal + increase;
-          this.character.derived.actionPointsCurrent = String(currentVal + increase);
-        }
+      // CRITICAL: Update the dataset.originalValue cache used by the fatigue/ENC penalty system.
+      // Without this, applyActionPointPenalty() will overwrite the new value with the stale cache.
+      if (apOrig.dataset.originalValue !== undefined) {
+        apOrig.dataset.originalValue = newAP;
       }
-      // If original decreased, cap current to new max
-      if (apCurr && newAP < oldAP) {
-        const currentVal = parseInt(apCurr.value, 10) || 0;
-        if (currentVal > newAP) {
-          apCurr.value = newAP;
-          this.character.derived.actionPointsCurrent = String(newAP);
+      
+      // Sync current AP when original increases (rank-up)
+      const apCurr = document.getElementById('action-points-current');
+      if (apCurr && newAP !== oldAP && oldAP > 0) {
+        const currentVal = parseInt(apCurr.value, 10);
+        if (newAP > oldAP) {
+          // Increase: bump current by the same delta
+          if (isNaN(currentVal) || currentVal === oldAP) {
+            apCurr.value = newAP;
+          } else {
+            apCurr.value = currentVal + (newAP - oldAP);
+          }
+        } else {
+          // Decrease: cap current to new max
+          if (!isNaN(currentVal) && currentVal > newAP) {
+            apCurr.value = newAP;
+          }
         }
+        // Update the penalty cache for current too
+        if (apCurr.dataset.originalValue !== undefined) {
+          apCurr.dataset.originalValue = apCurr.value;
+        }
+        this.character.derived.actionPointsCurrent = apCurr.value;
       }
     }
     
@@ -6084,30 +6118,7 @@ const App = {
     
     const luckOrig = document.getElementById('luck-original');
     if (luckOrig) {
-      const oldLuck = parseInt(luckOrig.value, 10) || 0;
-      const newLuck = results.derived.luckPoints;
-      luckOrig.value = newLuck;
-      
-      // Sync current Luck when original increases
-      const luckCurr = document.getElementById('luck-current');
-      if (luckCurr && newLuck > oldLuck) {
-        const currentVal = parseInt(luckCurr.value, 10);
-        if (isNaN(currentVal) || currentVal === '' || currentVal === oldLuck) {
-          luckCurr.value = newLuck;
-          this.character.derived.luckCurrent = String(newLuck);
-        } else if (currentVal < newLuck) {
-          const increase = newLuck - oldLuck;
-          luckCurr.value = currentVal + increase;
-          this.character.derived.luckCurrent = String(currentVal + increase);
-        }
-      }
-      if (luckCurr && newLuck < oldLuck) {
-        const currentVal = parseInt(luckCurr.value, 10) || 0;
-        if (currentVal > newLuck) {
-          luckCurr.value = newLuck;
-          this.character.derived.luckCurrent = String(newLuck);
-        }
-      }
+      luckOrig.value = results.derived.luckPoints;
     }
     
     const magicOrig = document.getElementById('magic-points-original');
@@ -6122,7 +6133,7 @@ const App = {
     this.saveDerivedOriginalValues();
     
     // Seed empty current values from originals (first load or new character)
-    const originalToCurrentPairs = [
+    const seedPairs = [
       ['action-points-original', 'action-points-current', 'actionPointsCurrent'],
       ['luck-original', 'luck-current', 'luckCurrent'],
       ['magic-points-original', 'magic-points-current', 'magicPointsCurrent'],
@@ -6131,7 +6142,7 @@ const App = {
       ['exp-mod-original', 'exp-mod-current', 'expModCurrent'],
       ['healing-rate-original', 'healing-rate-current', 'healingRateCurrent']
     ];
-    for (const [origId, currId, dataKey] of originalToCurrentPairs) {
+    for (const [origId, currId, dataKey] of seedPairs) {
       const origEl = document.getElementById(origId);
       const currEl = document.getElementById(currId);
       if (origEl && currEl && origEl.value && !currEl.value) {
@@ -17075,6 +17086,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (!this.character.acquiredAbilities.includes(name)) {
         this.character.acquiredAbilities.push(name);
       }
+    });
+    
+    // Before adding new abilities, remove any superseded lower-tier versions
+    // (e.g., gaining "Defensive Reflexes II" removes "Defensive Reflexes I")
+    newAbilities.forEach(name => {
+      this.removeSupersededAbility(name);
     });
     
     // Add abilities to the Special Abilities section on Combat page
