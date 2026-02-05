@@ -14138,15 +14138,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Default notes layout
    */
   DEFAULT_NOTES_LAYOUT: [
-    { id: 'background', wide: false, height: 'medium' },
-    { id: 'appearance', wide: false, height: 'medium' },
-    { id: 'personality', wide: false, height: 'medium' },
-    { id: 'goals', wide: false, height: 'medium' },
-    { id: 'connections', wide: false, height: 'medium' },
-    { id: 'sessions', wide: true, height: 'large' },
-    { id: 'quests', wide: false, height: 'medium' },
-    { id: 'places', wide: false, height: 'medium' },
-    { id: 'secrets', wide: false, height: 'medium' }
+    { id: 'background', wide: false, height: 180 },
+    { id: 'appearance', wide: false, height: 180 },
+    { id: 'personality', wide: false, height: 180 },
+    { id: 'goals', wide: false, height: 180 },
+    { id: 'connections', wide: false, height: 180 },
+    { id: 'sessions', wide: true, height: 350 },
+    { id: 'quests', wide: false, height: 180 },
+    { id: 'places', wide: false, height: 180 },
+    { id: 'secrets', wide: false, height: 180 }
   ],
   
   /**
@@ -14174,7 +14174,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    */
   getNotesLayout() {
     if (this.character.notesLayout && this.character.notesLayout.length > 0) {
-      return this.character.notesLayout;
+      // Convert any old string heights to pixel values
+      return this.character.notesLayout.map(item => {
+        if (typeof item.height === 'string') {
+          const heightMap = { small: 100, medium: 180, large: 280, xlarge: 400 };
+          item.height = heightMap[item.height] || 180;
+        }
+        return item;
+      });
     }
     return JSON.parse(JSON.stringify(this.DEFAULT_NOTES_LAYOUT));
   },
@@ -14190,10 +14197,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     grid.querySelectorAll('.notes-section').forEach(section => {
       const id = section.dataset.sectionId;
       if (id) {
+        // Get the actual height of the resizable element
+        const editor = section.querySelector('.notes-editor');
+        const journalContainer = section.querySelector('.journal-container');
+        let height = null;
+        
+        if (editor) {
+          height = editor.offsetHeight;
+        } else if (journalContainer) {
+          height = journalContainer.offsetHeight;
+        }
+        
         layout.push({
           id: id,
           wide: section.classList.contains('notes-section-wide'),
-          height: section.dataset.height || 'medium',
+          height: height,
           custom: section.dataset.custom === 'true',
           customTitle: section.dataset.customTitle || null,
           customIcon: section.dataset.customIcon || null
@@ -14232,7 +14250,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const section = document.createElement('div');
     section.className = 'notes-section';
     section.dataset.sectionId = layoutItem.id;
-    section.dataset.height = layoutItem.height || 'medium';
     section.draggable = true;
     
     if (layoutItem.wide) {
@@ -14251,10 +14268,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const placeholder = isCustom ? 'Write your notes here...' : (sectionDef.placeholder || '');
     const type = sectionDef?.type || 'editor';
     
+    // Get saved height or use default
+    const savedHeight = layoutItem.height || (type === 'journal' ? 350 : 180);
+    
     let contentHTML = '';
     if (type === 'journal') {
       contentHTML = `
-        <div class="journal-container" id="journal-container">
+        <div class="journal-container" id="journal-container" style="height: ${savedHeight}px;">
           <div class="journal-page">
             <div class="journal-entries" id="journal-entries"></div>
           </div>
@@ -14262,7 +14282,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       `;
     } else {
       contentHTML = `
-        <div class="notes-editor" contenteditable="true" id="notes-${layoutItem.id}" data-placeholder="${placeholder}"></div>
+        <div class="notes-editor" contenteditable="true" id="notes-${layoutItem.id}" data-placeholder="${placeholder}" style="height: ${savedHeight}px;"></div>
       `;
     }
     
@@ -14275,14 +14295,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         <h3>${icon} ${title}</h3>
         <div class="notes-section-controls">
           ${addEntryBtn}
-          <button type="button" class="notes-section-btn btn-height" title="Change height">↕</button>
-          <button type="button" class="notes-section-btn btn-width ${layoutItem.wide ? 'is-wide' : ''}" title="Toggle width">↔</button>
+          <button type="button" class="notes-section-btn btn-width ${layoutItem.wide ? 'is-wide' : ''}" title="Toggle full width">↔</button>
           <button type="button" class="notes-section-btn btn-delete" title="Remove section">×</button>
         </div>
         <span class="notes-section-hint">${hint}</span>
       </div>
       ${contentHTML}
-      <div class="notes-resize-handle" title="Drag to resize"></div>
     `;
     
     container.appendChild(section);
@@ -14310,18 +14328,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       });
     }
     
-    // Height cycle
-    const heightBtn = section.querySelector('.btn-height');
-    if (heightBtn) {
-      heightBtn.addEventListener('click', () => {
-        const heights = ['small', 'medium', 'large', 'xlarge'];
-        const currentIdx = heights.indexOf(section.dataset.height || 'medium');
-        const nextIdx = (currentIdx + 1) % heights.length;
-        section.dataset.height = heights[nextIdx];
-        this.saveNotesLayout();
-      });
-    }
-    
     // Delete section
     const deleteBtn = section.querySelector('.btn-delete');
     if (deleteBtn) {
@@ -14338,7 +14344,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       });
     }
     
-    // Editor input handlers
+    // Editor input handlers and resize observer
     const editor = section.querySelector('.notes-editor');
     if (editor) {
       editor.addEventListener('input', () => {
@@ -14356,7 +14362,33 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       
       editor.addEventListener('mouseup', () => {
         this.updateToolbarState();
+        // Save height after potential resize
+        this.saveNotesLayout();
       });
+      
+      // Use ResizeObserver to detect CSS resize changes
+      if (window.ResizeObserver) {
+        const resizeObserver = new ResizeObserver(() => {
+          // Debounce the save
+          clearTimeout(this.notesResizeTimeout);
+          this.notesResizeTimeout = setTimeout(() => {
+            this.saveNotesLayout();
+          }, 300);
+        });
+        resizeObserver.observe(editor);
+      }
+    }
+    
+    // Journal container resize observer
+    const journalContainer = section.querySelector('.journal-container');
+    if (journalContainer && window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(() => {
+        clearTimeout(this.notesResizeTimeout);
+        this.notesResizeTimeout = setTimeout(() => {
+          this.saveNotesLayout();
+        }, 300);
+      });
+      resizeObserver.observe(journalContainer);
     }
   },
   

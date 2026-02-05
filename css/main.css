@@ -4949,47 +4949,10 @@ select:focus {
   margin-left: 0;
 }
 
-/* Resize handle */
-.notes-resize-handle {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.1) 50%);
-  border-radius: 0 0 8px 0;
-}
-
-.notes-resize-handle:hover {
-  background: linear-gradient(135deg, transparent 50%, var(--accent-color) 50%);
-}
-
-/* Custom height for sections */
-.notes-section[data-height="small"] .notes-editor {
-  min-height: 80px;
-  max-height: 150px;
-}
-
-.notes-section[data-height="medium"] .notes-editor {
-  min-height: 150px;
-  max-height: 300px;
-}
-
-.notes-section[data-height="large"] .notes-editor {
-  min-height: 250px;
-  max-height: 500px;
-}
-
-.notes-section[data-height="xlarge"] .notes-editor {
-  min-height: 400px;
-  max-height: 700px;
-}
-
-/* Rich Text Editor */
+/* Rich Text Editor - resizable */
 .notes-editor {
-  min-height: 150px;
-  max-height: 300px;
+  min-height: 100px;
+  height: 180px;
   overflow-y: auto;
   padding: 0.75rem;
   font-family: var(--font-body);
@@ -4997,6 +4960,7 @@ select:focus {
   line-height: 1.6;
   color: var(--text-primary);
   background: #fffef9;
+  resize: vertical;
 }
 
 .notes-editor:focus {
@@ -5034,6 +4998,15 @@ select:focus {
   margin: 0.75rem 0;
 }
 
+/* Journal section - resizable container */
+.journal-section .journal-container {
+  min-height: 200px;
+  height: 350px;
+  overflow-y: auto;
+  resize: vertical;
+}
+
+/* Rich Text Editor */
 /* Journal Section - Special Styling */
 .journal-section {
   background: #f9f6f0;
