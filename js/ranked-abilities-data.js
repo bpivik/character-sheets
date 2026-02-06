@@ -203,6 +203,38 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: null,
       summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
     },
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 bonus Action Point for Reactive Actions (Parry/Evade)"
+    },
+    { 
+      name: "Greater Overrun", 
+      rank: 2, 
+      prereqs: "Overrun; Ride 70%",
+      replaces: "Overrun",
+      summary: "As Overrun, but attack ALL enemies along path if each drops"
+    },
+    { 
+      name: "Mental Strength II", 
+      rank: 2, 
+      prereqs: "Mental Strength I; Arcane Casting 80% OR Arcane Sorcery 80% OR Oath 80% OR Piety 80%",
+      summary: "2/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Mounted Combat Mastery", 
+      rank: 2, 
+      prereqs: "Ride 70%",
+      summary: "Shield +1 size for parry; ignore first 2 Difficulty Grades on Ride in combat"
+    },
   ],
   
   berserker: [

@@ -5325,6 +5325,11 @@ const App = {
       this.handleMentalStrengthUpgrade(abilityName);
     }
     
+    // Handle Greater Overrun - removes Overrun when gained
+    if (normalizedName === 'greater overrun') {
+      this.removeAbilityFromSheet('Overrun');
+    }
+    
     // Check if ability already exists
     const existingInputs = container.querySelectorAll('.class-ability-input');
     for (const input of existingInputs) {

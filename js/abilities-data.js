@@ -100,6 +100,7 @@ const AbilityDescriptions = {
   "greater holy smite": "The cleric may increase their Damage Modifier by four steps against\nundead, demons, and devils.",
   "greater sweeping strike": "As per Sweeping Strike, but it may be performed against ALL enemies in\nrange, assuming each preceding melee attack drops an opponent.",
   "greater turning": "When Turning Undead, you may reroll your Channel roll, but must take 2nd\nroll.",
+  "greater overrun": "As per Overrun, but you may perform the attack against all enemies along your path, provided each preceding attack drops an opponent.",
   "heart slow": "<strong>The monk can finely control their heart and metabolic rates, slowing\nthem to near cessation.</strong> While using this ability, the monk must remain\ncompletely inactive, and for all intents and purposes appears dead, with\nno pulse, heart rhythm, or detectable organic functions. This makes the\nmonk immune to the Life Sense ability of some creatures. Once the trait\nends, the monk's faculties are fully restored.",
   "hide in shadows": "<strong>You have perfected the art of hiding in shadows.</strong> When positioned in\nan area of shadow or darkness, all Perception rolls to spot you are made\n1 Difficulty Grade harder.",
   "high master": "High Masters gain additional benefits based on their chosen Weapon\nMaster weapon. See note on the right.",
