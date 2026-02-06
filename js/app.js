@@ -8078,9 +8078,16 @@ const App = {
    * - Male: Oath 80% or higher
    */
   checkCavalierExoticMountsI() {
-    // Check if already has Exotic Mounts I
+    // Check if already has Exotic Mounts I (with or without Unicorn suffix)
     const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
-    if (existingAbilities.includes('exotic mounts i') || existingAbilities.includes('exotic mounts 1')) {
+    const hasExoticMountsI = existingAbilities.some(a => 
+      a === 'exotic mounts i' || 
+      a === 'exotic mounts 1' || 
+      a.startsWith('exotic mounts i (') ||
+      a.startsWith('exotic mounts 1 (')
+    );
+    
+    if (hasExoticMountsI) {
       return; // Already has it
     }
     
@@ -8115,7 +8122,7 @@ const App = {
     
     // All prerequisites met - add the ability
     console.log('Exotic Mounts I: All prerequisites met, adding ability');
-    this.addSpecialAbility('Exotic Mounts I', 'cavalier');
+    this.addSpecialAbility('Exotic Mounts I (Unicorn)', 'cavalier');
     this.scheduleAutoSave();
   },
   
