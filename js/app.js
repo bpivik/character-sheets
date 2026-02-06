@@ -1184,6 +1184,28 @@ const App = {
       speciesField.addEventListener('change', () => handleSpeciesChange(true));
     }
     
+    // Set up gender field listener for Cavalier Exotic Mounts check
+    const genderField = document.getElementById('gender');
+    if (genderField) {
+      genderField.addEventListener('change', () => {
+        // Check if Cavalier at rank 2+ - if so, re-check Exotic Mounts I eligibility
+        const classSlots = [
+          { cls: 'class-primary', rank: 'rank-primary' },
+          { cls: 'class-secondary', rank: 'rank-secondary' },
+          { cls: 'class-tertiary', rank: 'rank-tertiary' }
+        ];
+        
+        for (const slot of classSlots) {
+          const className = (document.getElementById(slot.cls)?.value || '').toLowerCase().trim();
+          const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+          if (className === 'cavalier' && rank >= 2) {
+            this.checkCavalierExoticMountsI();
+            break;
+          }
+        }
+      });
+    }
+    
     infoFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
@@ -8040,6 +8062,61 @@ const App = {
         this.addSpellIfNotExists(actions.addSpell.rank, actions.addSpell.spell);
       }
     }
+    
+    // Cavalier Rank 2: Exotic Mounts I (Unicorn) - conditional on species, gender, and skills
+    if (classKey === 'cavalier' && rank >= 2) {
+      this.checkCavalierExoticMountsI();
+    }
+  },
+  
+  /**
+   * Check and potentially add Exotic Mounts I for Cavalier at Rank 2+
+   * Requirements:
+   * - Species is NOT Half-orc (unicorns never trust half-orcs)
+   * - Ride 60% or higher
+   * - Female: Oath 60% or higher
+   * - Male: Oath 80% or higher
+   */
+  checkCavalierExoticMountsI() {
+    // Check if already has Exotic Mounts I
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    if (existingAbilities.includes('exotic mounts i') || existingAbilities.includes('exotic mounts 1')) {
+      return; // Already has it
+    }
+    
+    // Check species - half-orcs are never trusted by unicorns
+    const species = (document.getElementById('species')?.value || '').toLowerCase().trim();
+    if (species === 'half-orc' || species === 'halforc' || species === 'half orc') {
+      console.log('Exotic Mounts I: Half-orcs are never trusted by unicorns');
+      return;
+    }
+    
+    // Check Ride skill >= 60%
+    const rideValue = this.getSkillValueByName('ride');
+    if (rideValue < 60) {
+      console.log(`Exotic Mounts I: Ride ${rideValue}% is below required 60%`);
+      return;
+    }
+    
+    // Check Oath based on gender
+    const gender = (document.getElementById('gender')?.value || '').toLowerCase().trim();
+    const oathValue = this.getSkillValueByName('oath');
+    
+    // Determine required Oath threshold
+    let requiredOath = 80; // Default to male requirement
+    if (gender === 'female' || gender === 'f') {
+      requiredOath = 60;
+    }
+    
+    if (oathValue < requiredOath) {
+      console.log(`Exotic Mounts I: Oath ${oathValue}% is below required ${requiredOath}% for ${gender || 'unknown'} gender`);
+      return;
+    }
+    
+    // All prerequisites met - add the ability
+    console.log('Exotic Mounts I: All prerequisites met, adding ability');
+    this.addSpecialAbility('Exotic Mounts I', 'cavalier');
+    this.scheduleAutoSave();
   },
   
   /**
