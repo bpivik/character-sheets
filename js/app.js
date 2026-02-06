@@ -10181,10 +10181,6 @@ const App = {
       const maxUses = this.getMaxTurnUndeadUses();
       const prevUses = this.character.turnUndeadUsesRemaining || 0;
       this.character.turnUndeadUsesRemaining = maxUses;
-      // End active turn undead effect if any
-      if (this.character.isTurnUndeadActive) {
-        this.endTurnUndead();
-      }
       this.updateTurnUndeadDisplay();
       if (prevUses < maxUses) {
         messages.push(`<strong>Turn Undead uses restored:</strong> ${prevUses} → ${maxUses}`);
@@ -12798,11 +12794,6 @@ const App = {
   initTurnUndead() {
     this.updateTurnUndeadDisplay();
     this.setupTurnUndeadListeners();
-    
-    // Restore turn undead state if active
-    if (this.character.isTurnUndeadActive) {
-      this.restoreTurnUndeadState();
-    }
   },
   
   /**
@@ -12852,9 +12843,8 @@ const App = {
     // Update button state
     const useBtn = document.getElementById('btn-turn-undead-use');
     const noUses = this.character.turnUndeadUsesRemaining <= 0;
-    const isActive = this.character.isTurnUndeadActive;
     
-    if (useBtn) useBtn.disabled = noUses || isActive;
+    if (useBtn) useBtn.disabled = noUses;
   },
   
   /**
@@ -12862,17 +12852,11 @@ const App = {
    */
   setupTurnUndeadListeners() {
     const useBtn = document.getElementById('btn-turn-undead-use');
-    const endBtn = document.getElementById('btn-end-turn-undead');
     const resetBtn = document.getElementById('btn-reset-turn-undead-uses');
     
     if (useBtn && !useBtn.dataset.listenerAdded) {
       useBtn.addEventListener('click', () => this.useTurnUndead());
       useBtn.dataset.listenerAdded = 'true';
-    }
-    
-    if (endBtn && !endBtn.dataset.listenerAdded) {
-      endBtn.addEventListener('click', () => this.endTurnUndead());
-      endBtn.dataset.listenerAdded = 'true';
     }
     
     if (resetBtn && !resetBtn.dataset.listenerAdded) {
@@ -12886,54 +12870,304 @@ const App = {
   },
   
   /**
-   * Use Turn Undead ability
+   * Use Turn Undead ability - show animation then open modal
    */
   useTurnUndead() {
-    if (this.character.isTurnUndeadActive || this.character.turnUndeadUsesRemaining <= 0) return;
+    if (this.character.turnUndeadUsesRemaining <= 0) return;
     
-    this.character.isTurnUndeadActive = true;
+    // Decrement uses
     this.character.turnUndeadUsesRemaining--;
-    
-    // Update UI to show active state
-    const buttonsRow = document.getElementById('turn-undead-buttons');
-    const activeRow = document.getElementById('turn-undead-active');
-    
-    if (buttonsRow) buttonsRow.style.display = 'none';
-    if (activeRow) activeRow.style.display = '';
-    
     this.updateTurnUndeadDisplay();
     this.scheduleAutoSave();
+    
+    // Show animation then open modal
+    this.showTurnUndeadAnimation(() => {
+      this.openTurnUndeadModal();
+    });
   },
   
   /**
-   * End Turn Undead active state
+   * Show Turn Undead animation (holy light burst)
    */
-  endTurnUndead() {
-    this.character.isTurnUndeadActive = false;
+  showTurnUndeadAnimation(callback) {
+    // Create animation overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'turn-undead-anim-overlay';
+    overlay.innerHTML = `
+      <div class="turn-undead-anim-content">
+        <div class="holy-burst"></div>
+        <div class="holy-rays">
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+          <div class="ray"></div>
+        </div>
+        <div class="turn-undead-icon">☀️</div>
+        <div class="turn-undead-anim-text">Channeling Divine Power...</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
     
-    // Update UI to show buttons again
-    const buttonsRow = document.getElementById('turn-undead-buttons');
-    const activeRow = document.getElementById('turn-undead-active');
+    // Trigger animation
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
     
-    if (buttonsRow) buttonsRow.style.display = '';
-    if (activeRow) activeRow.style.display = 'none';
-    
-    this.updateTurnUndeadDisplay();
-    this.scheduleAutoSave();
+    // Remove after animation and call callback
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => {
+        overlay.remove();
+        if (callback) callback();
+      }, 400);
+    }, 1500);
   },
   
   /**
-   * Restore Turn Undead state after page reload
+   * Open Turn Undead modal for rolling
    */
-  restoreTurnUndeadState() {
-    // Update UI to show active state
-    const buttonsRow = document.getElementById('turn-undead-buttons');
-    const activeRow = document.getElementById('turn-undead-active');
+  openTurnUndeadModal() {
+    let modal = document.getElementById('turn-undead-modal');
     
-    if (buttonsRow) buttonsRow.style.display = 'none';
-    if (activeRow) activeRow.style.display = '';
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'turn-undead-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content turn-undead-modal-content">
+          <div class="modal-header turn-undead-modal-header">
+            <h3>☀️ Turn Undead</h3>
+            <button class="modal-close" id="turn-undead-modal-close">&times;</button>
+          </div>
+          <div class="modal-body turn-undead-modal-body">
+            <div class="turn-undead-roll-section">
+              <h4>Step 1: Determine Turning Power</h4>
+              <p class="turn-undead-instruction">Roll to determine how much Intensity you can Turn.</p>
+              <div class="turn-undead-roll-row">
+                <span class="turn-undead-roll-label">Intensity Roll:</span>
+                <span class="turn-undead-roll-formula" id="turn-undead-intensity-formula">1d6+2</span>
+                <button type="button" class="btn btn-roll-intensity" id="btn-roll-intensity">🎲 Roll</button>
+                <span class="turn-undead-roll-result" id="turn-undead-intensity-result"></span>
+              </div>
+              <div class="turn-undead-intensity-display" id="turn-undead-intensity-display" style="display: none;">
+                <span>Turning Power: <strong id="turning-power-value">0</strong></span>
+              </div>
+            </div>
+            
+            <hr class="turn-undead-divider">
+            
+            <div class="turn-undead-roll-section">
+              <h4>Step 2: Channel Roll</h4>
+              <p class="turn-undead-instruction">Roll Channel to determine the outcome.</p>
+              <div class="turn-undead-roll-row">
+                <span class="turn-undead-roll-label">Channel:</span>
+                <span class="turn-undead-roll-skill" id="turn-undead-channel-value">0%</span>
+                <button type="button" class="btn btn-roll-channel" id="btn-roll-channel" disabled>🎲 Roll d100</button>
+                <span class="turn-undead-roll-result" id="turn-undead-channel-result"></span>
+              </div>
+            </div>
+            
+            <div class="turn-undead-outcome" id="turn-undead-outcome" style="display: none;">
+              <h4>Result</h4>
+              <div class="turn-undead-outcome-text" id="turn-undead-outcome-text"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="turn-undead-modal-done">Done</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Setup event listeners
+      document.getElementById('turn-undead-modal-close').addEventListener('click', () => {
+        this.closeTurnUndeadModal();
+      });
+      
+      document.getElementById('turn-undead-modal-done').addEventListener('click', () => {
+        this.closeTurnUndeadModal();
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeTurnUndeadModal();
+        }
+      });
+      
+      document.getElementById('btn-roll-intensity').addEventListener('click', () => {
+        this.rollTurnUndeadIntensity();
+      });
+      
+      document.getElementById('btn-roll-channel').addEventListener('click', () => {
+        this.rollTurnUndeadChannel();
+      });
+    }
     
-    this.updateTurnUndeadDisplay();
+    // Reset modal state
+    this.resetTurnUndeadModal();
+    
+    // Update Channel skill value
+    const channelPercent = parseInt(document.getElementById('channel-percent')?.value, 10) || 0;
+    document.getElementById('turn-undead-channel-value').textContent = channelPercent + '%';
+    
+    // Update intensity formula based on rank
+    const rank = this.getMaxTurnUndeadUses(); // Uses cleric rank
+    const bonus = rank * 2; // Rank 1 = +2, Rank 2 = +4, etc.
+    document.getElementById('turn-undead-intensity-formula').textContent = `1d6+${bonus}`;
+    
+    // Store rank for roll calculation
+    modal.dataset.clericRank = rank;
+    modal.dataset.channelSkill = channelPercent;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+  
+  /**
+   * Reset Turn Undead modal state
+   */
+  resetTurnUndeadModal() {
+    document.getElementById('turn-undead-intensity-result').textContent = '';
+    document.getElementById('turn-undead-intensity-result').className = 'turn-undead-roll-result';
+    document.getElementById('turn-undead-intensity-display').style.display = 'none';
+    document.getElementById('turn-undead-channel-result').textContent = '';
+    document.getElementById('turn-undead-channel-result').className = 'turn-undead-roll-result';
+    document.getElementById('turn-undead-outcome').style.display = 'none';
+    document.getElementById('btn-roll-intensity').disabled = false;
+    document.getElementById('btn-roll-channel').disabled = true;
+  },
+  
+  /**
+   * Roll Turning Power (Intensity)
+   */
+  rollTurnUndeadIntensity() {
+    const modal = document.getElementById('turn-undead-modal');
+    const rank = parseInt(modal.dataset.clericRank, 10) || 1;
+    const bonus = rank * 2;
+    
+    // Roll 1d6
+    const dieRoll = Math.floor(Math.random() * 6) + 1;
+    const total = dieRoll + bonus;
+    
+    // Display result with animation
+    const resultSpan = document.getElementById('turn-undead-intensity-result');
+    resultSpan.textContent = `🎲 ${dieRoll} + ${bonus} = `;
+    resultSpan.className = 'turn-undead-roll-result rolling';
+    
+    setTimeout(() => {
+      resultSpan.innerHTML = `🎲 ${dieRoll} + ${bonus} = <strong>${total}</strong>`;
+      resultSpan.className = 'turn-undead-roll-result success';
+      
+      // Show turning power
+      document.getElementById('turning-power-value').textContent = total;
+      document.getElementById('turn-undead-intensity-display').style.display = '';
+      
+      // Store for channel roll
+      modal.dataset.turningPower = total;
+      
+      // Enable channel roll, disable intensity roll
+      document.getElementById('btn-roll-intensity').disabled = true;
+      document.getElementById('btn-roll-channel').disabled = false;
+    }, 500);
+  },
+  
+  /**
+   * Roll Channel skill for Turn Undead
+   */
+  rollTurnUndeadChannel() {
+    const modal = document.getElementById('turn-undead-modal');
+    const channelSkill = parseInt(modal.dataset.channelSkill, 10) || 0;
+    const turningPower = parseInt(modal.dataset.turningPower, 10) || 0;
+    
+    // Roll d100
+    const roll = Math.floor(Math.random() * 100) + 1;
+    
+    // Determine result
+    // Critical = 1/10th of skill (round up), minimum 1
+    // Fumble = 100, or 99-100 if skill < 50
+    const critThreshold = Math.max(1, Math.ceil(channelSkill / 10));
+    const fumbleThreshold = channelSkill < 50 ? 99 : 100;
+    
+    let resultType = '';
+    let resultClass = '';
+    let outcomeHtml = '';
+    
+    if (roll <= critThreshold) {
+      resultType = 'CRITICAL!';
+      resultClass = 'critical';
+      const doublePower = turningPower * 2;
+      outcomeHtml = `
+        <div class="outcome-critical">
+          <p><strong>🌟 Critical Success!</strong></p>
+          <p>You may Turn undead with a total Intensity up to <strong>(${doublePower})</strong> (2× your Turning Power),</p>
+          <p>OR demons/devils with Intensity up to <strong>(${turningPower})</strong> (full Turning Power).</p>
+          <p class="outcome-note">Start with those of the lowest Intensity first.</p>
+        </div>
+      `;
+    } else if (roll >= fumbleThreshold) {
+      resultType = 'FUMBLE!';
+      resultClass = 'fumble';
+      const doublePower = turningPower * 2;
+      outcomeHtml = `
+        <div class="outcome-fumble">
+          <p><strong>💀 Fumble!</strong></p>
+          <p>Your attempt to Turn not only fails, but it <em>provokes</em> several undead, demons, or devils within the area.</p>
+          <p>Creatures with a combined Intensity equal to <strong>(${doublePower})</strong> (2× your Turning Power) will focus their attacks on you specifically.</p>
+        </div>
+      `;
+    } else if (roll <= channelSkill) {
+      resultType = 'Success';
+      resultClass = 'success';
+      const halfPower = Math.floor(turningPower / 2);
+      outcomeHtml = `
+        <div class="outcome-success">
+          <p><strong>✓ Success!</strong></p>
+          <p>You may Turn undead with a total Intensity up to <strong>(${turningPower})</strong> (your Turning Power),</p>
+          <p>OR demons/devils with Intensity up to <strong>(${halfPower})</strong> (half your Turning Power).</p>
+          <p class="outcome-note">Start with those of the lowest Intensity first.</p>
+        </div>
+      `;
+    } else {
+      resultType = 'Failure';
+      resultClass = 'failure';
+      outcomeHtml = `
+        <div class="outcome-failure">
+          <p><strong>✗ Failure</strong></p>
+          <p>No undead, demons, or devils Turned.</p>
+        </div>
+      `;
+    }
+    
+    // Display roll result with animation
+    const resultSpan = document.getElementById('turn-undead-channel-result');
+    resultSpan.textContent = `🎲 Rolling...`;
+    resultSpan.className = 'turn-undead-roll-result rolling';
+    
+    setTimeout(() => {
+      resultSpan.innerHTML = `🎲 <strong>${roll}</strong> vs ${channelSkill}% — <span class="result-${resultClass}">${resultType}</span>`;
+      resultSpan.className = `turn-undead-roll-result ${resultClass}`;
+      
+      // Show outcome
+      document.getElementById('turn-undead-outcome-text').innerHTML = outcomeHtml;
+      document.getElementById('turn-undead-outcome').style.display = '';
+      
+      // Disable channel roll button
+      document.getElementById('btn-roll-channel').disabled = true;
+    }, 800);
+  },
+  
+  /**
+   * Close Turn Undead modal
+   */
+  closeTurnUndeadModal() {
+    const modal = document.getElementById('turn-undead-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
   },
 
   /**

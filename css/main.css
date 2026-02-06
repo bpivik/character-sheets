@@ -1773,6 +1773,338 @@ select:focus {
   background: linear-gradient(135deg, #7a6a2a 0%, #9a8a3a 50%, #7a6a2a 100%);
 }
 
+/* Turn Undead Animation Overlay */
+.turn-undead-anim-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.turn-undead-anim-overlay.active {
+  opacity: 1;
+}
+
+.turn-undead-anim-overlay.fade-out {
+  opacity: 0;
+}
+
+.turn-undead-anim-content {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.holy-burst {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, #fff8dc 0%, #ffd700 30%, #ff8c00 60%, transparent 70%);
+  border-radius: 50%;
+  animation: holy-burst-pulse 0.8s ease-out infinite;
+}
+
+@keyframes holy-burst-pulse {
+  0% { transform: scale(0.5); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(0.5); opacity: 1; }
+}
+
+.holy-rays {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  animation: holy-rays-rotate 3s linear infinite;
+}
+
+@keyframes holy-rays-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.holy-rays .ray {
+  position: absolute;
+  width: 4px;
+  height: 100px;
+  background: linear-gradient(to top, transparent, #ffd700, #fff);
+  left: 50%;
+  top: 0;
+  transform-origin: bottom center;
+  opacity: 0.8;
+}
+
+.holy-rays .ray:nth-child(1) { transform: translateX(-50%) rotate(0deg); }
+.holy-rays .ray:nth-child(2) { transform: translateX(-50%) rotate(45deg); }
+.holy-rays .ray:nth-child(3) { transform: translateX(-50%) rotate(90deg); }
+.holy-rays .ray:nth-child(4) { transform: translateX(-50%) rotate(135deg); }
+.holy-rays .ray:nth-child(5) { transform: translateX(-50%) rotate(180deg); }
+.holy-rays .ray:nth-child(6) { transform: translateX(-50%) rotate(225deg); }
+.holy-rays .ray:nth-child(7) { transform: translateX(-50%) rotate(270deg); }
+.holy-rays .ray:nth-child(8) { transform: translateX(-50%) rotate(315deg); }
+
+.turn-undead-icon {
+  font-size: 4rem;
+  z-index: 1;
+  animation: turn-undead-icon-pulse 0.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px #ffd700);
+}
+
+@keyframes turn-undead-icon-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+
+.turn-undead-anim-text {
+  margin-top: 1rem;
+  color: #ffd700;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00;
+  z-index: 1;
+}
+
+/* Turn Undead Modal */
+.turn-undead-modal-content {
+  max-width: 550px;
+  width: 95%;
+}
+
+.turn-undead-modal-header {
+  background: linear-gradient(135deg, #5a4a1a 0%, #8b7a2a 100%);
+  border-bottom: 2px solid #ffd700;
+}
+
+.turn-undead-modal-header h3 {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.turn-undead-modal-body {
+  background: linear-gradient(to bottom, #fff8e7, #fff5d6);
+}
+
+.turn-undead-roll-section {
+  margin-bottom: 1rem;
+}
+
+.turn-undead-roll-section h4 {
+  color: #8b7a2a;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.25rem;
+}
+
+.turn-undead-instruction {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 0.75rem 0;
+  font-style: italic;
+}
+
+.turn-undead-roll-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.turn-undead-roll-label {
+  font-weight: bold;
+  color: #5a4a1a;
+  min-width: 100px;
+}
+
+.turn-undead-roll-formula,
+.turn-undead-roll-skill {
+  font-family: monospace;
+  background: #fff;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.btn-roll-intensity,
+.btn-roll-channel {
+  background: linear-gradient(135deg, #5a4a1a 0%, #8b7a2a 100%);
+  color: #fff;
+  border: 1px solid #ffd700;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-roll-intensity:hover:not(:disabled),
+.btn-roll-channel:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a6a2a 0%, #ab9a3a 100%);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.btn-roll-intensity:disabled,
+.btn-roll-channel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.turn-undead-roll-result {
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.turn-undead-roll-result.rolling {
+  color: #888;
+  animation: result-pulse 0.3s ease infinite;
+}
+
+@keyframes result-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.turn-undead-roll-result.success {
+  color: #2e7d32;
+}
+
+.turn-undead-roll-result.critical {
+  color: #1565c0;
+}
+
+.turn-undead-roll-result.failure {
+  color: #c62828;
+}
+
+.turn-undead-roll-result.fumble {
+  color: #6a1b9a;
+}
+
+.result-critical {
+  color: #1565c0;
+  font-weight: bold;
+}
+
+.result-success {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.result-failure {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.result-fumble {
+  color: #6a1b9a;
+  font-weight: bold;
+}
+
+.turn-undead-intensity-display {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #fff8dc, #fff5b8);
+  border: 2px solid #ffd700;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.turn-undead-intensity-display strong {
+  color: #8b7a2a;
+  font-size: 1.3rem;
+}
+
+.turn-undead-divider {
+  border: none;
+  border-top: 2px dashed #ccc;
+  margin: 1rem 0;
+}
+
+.turn-undead-outcome {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  animation: outcome-appear 0.3s ease;
+}
+
+@keyframes outcome-appear {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.turn-undead-outcome h4 {
+  margin: 0 0 0.5rem 0;
+  color: #5a4a1a;
+}
+
+.outcome-critical {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 2px solid #1565c0;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.outcome-critical p:first-child {
+  color: #1565c0;
+  font-size: 1.1rem;
+}
+
+.outcome-success {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border: 2px solid #2e7d32;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.outcome-success p:first-child {
+  color: #2e7d32;
+  font-size: 1.1rem;
+}
+
+.outcome-failure {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  border: 2px solid #c62828;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.outcome-failure p:first-child {
+  color: #c62828;
+  font-size: 1.1rem;
+}
+
+.outcome-fumble {
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+  border: 2px solid #6a1b9a;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.outcome-fumble p:first-child {
+  color: #6a1b9a;
+  font-size: 1.1rem;
+}
+
+.outcome-note {
+  font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
 /* ============================================
    BRUTE STRENGTH SECTION
    ============================================ */
