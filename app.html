@@ -1298,6 +1298,32 @@
                   </div>
                 </div>
               </section>
+              
+              <!-- Mental Strength Section (only visible if character has Mental Strength ability) -->
+              <section class="mental-strength-section" id="mental-strength-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🧠 Mental Strength</h3>
+                </div>
+                <div class="mental-strength-content">
+                  <div class="mental-strength-info-row">
+                    <span class="mental-strength-value" id="mental-strength-uses-available">0</span>
+                    <span class="mental-strength-label">/ <span id="mental-strength-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-mental-strength" id="btn-reset-mental-strength-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="mental-strength-button-row" id="mental-strength-buttons">
+                    <button type="button" class="btn btn-mental-strength" id="btn-mental-strength-use" title="+40% to Willpower vs mind magic">
+                      Resist Mind Magic
+                    </button>
+                  </div>
+                  <div class="mental-strength-active" id="mental-strength-active" style="display: none;">
+                    <div class="mental-strength-active-label">🧠 Willpower +40% 🧠</div>
+                    <div class="mental-strength-effects">
+                      <span>vs Mind Magic</span>
+                    </div>
+                    <button type="button" class="btn btn-end-mental-strength" id="btn-end-mental-strength">Done</button>
+                  </div>
+                </div>
+              </section>
             </div>
             
             <!-- Divider before spell-like abilities -->

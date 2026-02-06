@@ -408,6 +408,9 @@ const App = {
     // Check if Commanding section should be visible
     this.checkCommandingVisibility();
     
+    // Check if Mental Strength section should be visible
+    this.checkMentalStrengthVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -4234,6 +4237,8 @@ const App = {
         this.checkJustAScratchVisibility();
       } else if (normalizedName === 'commanding') {
         this.checkCommandingVisibility();
+      } else if (normalizedName.startsWith('mental strength')) {
+        this.checkMentalStrengthVisibility();
       }
     }
     
@@ -11918,6 +11923,212 @@ const App = {
     if (activeSkillLabel) activeSkillLabel.textContent = skill.charAt(0).toUpperCase() + skill.slice(1);
     
     this.updateCommandingDisplay();
+  },
+
+  // ============================================
+  // MENTAL STRENGTH ABILITY
+  // ============================================
+  
+  /**
+   * Check if character has Mental Strength ability and show/hide section
+   */
+  checkMentalStrengthVisibility() {
+    const section = document.getElementById('mental-strength-section');
+    if (!section) return;
+    
+    const hasMentalStrength = this.hasAbility('Mental Strength I') || 
+                              this.hasAbility('Mental Strength 1') ||
+                              this.hasAbility('Mental Strength II') ||
+                              this.hasAbility('Mental Strength 2') ||
+                              this.hasAbility('Mental Strength III') ||
+                              this.hasAbility('Mental Strength 3') ||
+                              this.hasAbility('Mental Strength IV') ||
+                              this.hasAbility('Mental Strength 4') ||
+                              this.hasAbility('Mental Strength V') ||
+                              this.hasAbility('Mental Strength 5');
+    
+    if (hasMentalStrength) {
+      section.style.display = '';
+      this.initMentalStrength();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Initialize Mental Strength system
+   */
+  initMentalStrength() {
+    this.updateMentalStrengthDisplay();
+    this.setupMentalStrengthListeners();
+    
+    // Restore mental strength state if active
+    if (this.character.isMentalStrengthActive) {
+      this.restoreMentalStrengthState();
+    }
+  },
+  
+  /**
+   * Get Mental Strength level (1-5) based on highest version character has
+   */
+  getMentalStrengthLevel() {
+    // Check from highest to lowest
+    if (this.hasAbility('Mental Strength V') || this.hasAbility('Mental Strength 5')) return 5;
+    if (this.hasAbility('Mental Strength IV') || this.hasAbility('Mental Strength 4')) return 4;
+    if (this.hasAbility('Mental Strength III') || this.hasAbility('Mental Strength 3')) return 3;
+    if (this.hasAbility('Mental Strength II') || this.hasAbility('Mental Strength 2')) return 2;
+    if (this.hasAbility('Mental Strength I') || this.hasAbility('Mental Strength 1')) return 1;
+    return 0;
+  },
+  
+  /**
+   * Get maximum Mental Strength uses (equal to level)
+   */
+  getMaxMentalStrengthUses() {
+    return this.getMentalStrengthLevel();
+  },
+  
+  /**
+   * Update Mental Strength display values
+   */
+  updateMentalStrengthDisplay() {
+    const maxUses = this.getMaxMentalStrengthUses();
+    
+    // Initialize uses remaining if not set
+    if (this.character.mentalStrengthUsesRemaining === undefined || this.character.mentalStrengthUsesRemaining === null) {
+      this.character.mentalStrengthUsesRemaining = maxUses;
+    }
+    
+    const usesAvail = document.getElementById('mental-strength-uses-available');
+    const usesMax = document.getElementById('mental-strength-uses-max');
+    
+    if (usesAvail) usesAvail.textContent = this.character.mentalStrengthUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+    
+    // Update button state
+    const useBtn = document.getElementById('btn-mental-strength-use');
+    const noUses = this.character.mentalStrengthUsesRemaining <= 0;
+    const isActive = this.character.isMentalStrengthActive;
+    
+    if (useBtn) useBtn.disabled = noUses || isActive;
+  },
+  
+  /**
+   * Setup Mental Strength event listeners
+   */
+  setupMentalStrengthListeners() {
+    const useBtn = document.getElementById('btn-mental-strength-use');
+    const endBtn = document.getElementById('btn-end-mental-strength');
+    const resetBtn = document.getElementById('btn-reset-mental-strength-uses');
+    
+    if (useBtn && !useBtn.dataset.listenerAdded) {
+      useBtn.addEventListener('click', () => this.useMentalStrength());
+      useBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (endBtn && !endBtn.dataset.listenerAdded) {
+      endBtn.addEventListener('click', () => this.endMentalStrength());
+      endBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.character.mentalStrengthUsesRemaining = this.getMaxMentalStrengthUses();
+        this.updateMentalStrengthDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Use Mental Strength ability
+   */
+  useMentalStrength() {
+    if (this.character.isMentalStrengthActive || this.character.mentalStrengthUsesRemaining <= 0) return;
+    
+    const willpowerField = document.getElementById('willpower-current');
+    
+    if (!willpowerField) {
+      alert('Error: Could not find Willpower skill field.');
+      return;
+    }
+    
+    // Store pre-mental strength value
+    const currentValue = parseInt(willpowerField.value, 10) || 0;
+    this.character.preMentalStrengthValue = currentValue;
+    this.character.isMentalStrengthActive = true;
+    this.character.mentalStrengthUsesRemaining--;
+    
+    // Apply +40% bonus (2 difficulty grades)
+    const newValue = currentValue + 40;
+    willpowerField.value = newValue;
+    willpowerField.classList.add('mental-strength-boosted');
+    willpowerField.title = '+40% from Mental Strength (2 Difficulty Grades easier vs mind magic)';
+    
+    // Update UI
+    const buttonsRow = document.getElementById('mental-strength-buttons');
+    const activeRow = document.getElementById('mental-strength-active');
+    
+    if (buttonsRow) buttonsRow.style.display = 'none';
+    if (activeRow) activeRow.style.display = '';
+    
+    this.updateMentalStrengthDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * End Mental Strength effect and restore Willpower
+   */
+  endMentalStrength() {
+    if (!this.character.isMentalStrengthActive) return;
+    
+    const willpowerField = document.getElementById('willpower-current');
+    
+    if (willpowerField) {
+      // Restore original value
+      willpowerField.value = this.character.preMentalStrengthValue;
+      willpowerField.classList.remove('mental-strength-boosted');
+      willpowerField.title = '';
+    }
+    
+    // Reset state
+    this.character.isMentalStrengthActive = false;
+    this.character.preMentalStrengthValue = null;
+    
+    // Update UI
+    const buttonsRow = document.getElementById('mental-strength-buttons');
+    const activeRow = document.getElementById('mental-strength-active');
+    
+    if (buttonsRow) buttonsRow.style.display = '';
+    if (activeRow) activeRow.style.display = 'none';
+    
+    this.updateMentalStrengthDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Restore Mental Strength state after page reload
+   */
+  restoreMentalStrengthState() {
+    const willpowerField = document.getElementById('willpower-current');
+    
+    if (willpowerField && this.character.preMentalStrengthValue !== null) {
+      // Reapply the +40% bonus display
+      const boostedValue = (this.character.preMentalStrengthValue || 0) + 40;
+      willpowerField.value = boostedValue;
+      willpowerField.classList.add('mental-strength-boosted');
+      willpowerField.title = '+40% from Mental Strength (2 Difficulty Grades easier vs mind magic)';
+    }
+    
+    // Update UI to show active state
+    const buttonsRow = document.getElementById('mental-strength-buttons');
+    const activeRow = document.getElementById('mental-strength-active');
+    
+    if (buttonsRow) buttonsRow.style.display = 'none';
+    if (activeRow) activeRow.style.display = '';
+    
+    this.updateMentalStrengthDisplay();
   },
 
   /**

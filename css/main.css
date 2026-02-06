@@ -1499,6 +1499,147 @@ select:focus {
 }
 
 /* ============================================
+   MENTAL STRENGTH SECTION
+   ============================================ */
+.mental-strength-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a2a 0%, #20203d 100%);
+  border: 2px solid #6a6a8b;
+  border-radius: 6px;
+}
+
+.mental-strength-section .section-header {
+  color: #99f;
+  text-shadow: 0 0 10px rgba(153, 153, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.mental-strength-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.mental-strength-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.mental-strength-value {
+  color: #99f;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.mental-strength-label {
+  color: #999;
+}
+
+.btn-reset-mental-strength {
+  background: transparent;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-reset-mental-strength:hover {
+  background: #444;
+  border-color: #99f;
+  color: #99f;
+}
+
+.mental-strength-button-row {
+  width: 100%;
+}
+
+.btn-mental-strength {
+  width: 100%;
+  background: linear-gradient(135deg, #3a3a5a 0%, #4a4a6a 50%, #3a3a5a 100%);
+  color: white;
+  border: 1px solid #99f;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(90, 90, 140, 0.4);
+}
+
+.btn-mental-strength:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4a4a6a 0%, #5a5a7a 50%, #4a4a6a 100%);
+  box-shadow: 0 4px 12px rgba(153, 153, 255, 0.5);
+}
+
+.btn-mental-strength:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mental-strength-active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(153, 153, 255, 0.1);
+  border-radius: 4px;
+  border: 1px solid #99f;
+}
+
+.mental-strength-active-label {
+  color: #99f;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-shadow: 0 0 8px rgba(153, 153, 255, 0.6);
+  animation: mental-strength-pulse 2s infinite;
+}
+
+.mental-strength-effects {
+  color: #aaf;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+@keyframes mental-strength-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.btn-end-mental-strength {
+  background: linear-gradient(135deg, #4a4a6a 0%, #5a5a7a 50%, #4a4a6a 100%);
+  color: white;
+  border: 1px solid #99f;
+  padding: 0.3rem 1rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-end-mental-strength:hover {
+  background: linear-gradient(135deg, #5a5a7a 0%, #6a6a8a 50%, #5a5a7a 100%);
+}
+
+/* Mental Strength boosted skill indicator */
+.mental-strength-boosted {
+  background-color: rgba(153, 153, 255, 0.25) !important;
+  border: 2px solid #99f !important;
+  color: #66c !important;
+}
+
+/* ============================================
    BRUTE STRENGTH SECTION
    ============================================ */
 .brute-strength-section {
