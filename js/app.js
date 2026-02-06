@@ -5226,7 +5226,8 @@ const App = {
    */
   SUPERSEDING_ABILITY_BASES: [
     'defensive reflexes',
-    'inspire courage'
+    'inspire courage',
+    'mental strength'
   ],
 
   /**
@@ -5328,6 +5329,11 @@ const App = {
     // Handle Greater Overrun - removes Overrun when gained
     if (normalizedName === 'greater overrun') {
       this.removeAbilityFromSheet('Overrun');
+    }
+    
+    // Handle Greater Sweeping Strike - removes Sweeping Strike when gained
+    if (normalizedName === 'greater sweeping strike') {
+      this.removeAbilityFromSheet('Sweeping Strike');
     }
     
     // Check if ability already exists
@@ -18602,6 +18608,56 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
+   * Ability upgrade chains - maps lower abilities to their upgrades
+   * If user has any upgrade, the base ability is considered "superseded"
+   */
+  ABILITY_UPGRADE_CHAINS: {
+    'mental strength i': ['mental strength ii', 'mental strength iii', 'mental strength iv', 'mental strength v'],
+    'mental strength 1': ['mental strength 2', 'mental strength 3', 'mental strength 4', 'mental strength 5'],
+    'mental strength ii': ['mental strength iii', 'mental strength iv', 'mental strength v'],
+    'mental strength 2': ['mental strength 3', 'mental strength 4', 'mental strength 5'],
+    'mental strength iii': ['mental strength iv', 'mental strength v'],
+    'mental strength 3': ['mental strength 4', 'mental strength 5'],
+    'mental strength iv': ['mental strength v'],
+    'mental strength 4': ['mental strength 5'],
+    'overrun': ['greater overrun'],
+    'sweeping strike': ['greater sweeping strike'],
+    'defensive reflexes i': ['defensive reflexes ii', 'defensive reflexes iii'],
+    'defensive reflexes 1': ['defensive reflexes 2', 'defensive reflexes 3'],
+    'defensive reflexes ii': ['defensive reflexes iii'],
+    'defensive reflexes 2': ['defensive reflexes 3'],
+  },
+
+  /**
+   * Check if an ability has been superseded by a higher version
+   * @param {string} abilityName - The ability to check
+   * @param {Set} acquiredAbilities - Set of abilities the character has
+   * @returns {string|null} - Name of superseding ability, or null if not superseded
+   */
+  getSupersedingAbility(abilityName, acquiredAbilities) {
+    const lowerName = abilityName.toLowerCase().trim();
+    const upgrades = this.ABILITY_UPGRADE_CHAINS[lowerName];
+    
+    if (!upgrades) return null;
+    
+    // Check if any upgrade exists in acquired abilities
+    for (const upgrade of upgrades) {
+      // Check exact match
+      if (acquiredAbilities.has(upgrade)) {
+        return this.toTitleCase(upgrade);
+      }
+      // Check with variations (roman vs arabic numerals handled by the chain itself)
+      for (const acquired of acquiredAbilities) {
+        if (acquired.toLowerCase() === upgrade) {
+          return this.toTitleCase(acquired);
+        }
+      }
+    }
+    
+    return null;
+  },
+
+  /**
    * Populate abilities list for a class and rank
    */
   populateAbilities(className, rank) {
@@ -18657,12 +18713,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       // Check if already acquired (using base name matching)
       const alreadyHas = hasAbility(ability.name, acquiredAbilities);
       
+      // Check if this ability has been superseded by a higher version
+      const supersededBy = this.getSupersedingAbility(ability.name, acquiredAbilities);
+      
       // Check if this is a repeatable ability (can take multiple times)
       const repeatable = isRepeatableAbility(ability.name);
       
       if (alreadyHas && !repeatable) {
         // Show as acquired (greyed out) - goes to bottom section
         acquired.push({ ...ability, acquired: true });
+        return;
+      }
+      
+      if (supersededBy) {
+        // Show as acquired because a higher version exists
+        acquired.push({ ...ability, acquired: true, acquiredNote: `(have ${supersededBy})` });
         return;
       }
       
