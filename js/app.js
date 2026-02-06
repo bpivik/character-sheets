@@ -8077,6 +8077,16 @@ const App = {
     if (classKey === 'cavalier' && rank >= 3) {
       this.checkCavalierExoticMountsII();
     }
+    
+    // Cavalier Rank 4: Exotic Mounts III (Hippogriff) - conditional on skills only
+    if (classKey === 'cavalier' && rank >= 4) {
+      this.checkCavalierExoticMountsIII();
+    }
+    
+    // Cavalier Rank 5: Exotic Mounts IV (Griffon) - conditional on skills only
+    if (classKey === 'cavalier' && rank >= 5) {
+      this.checkCavalierExoticMountsIV();
+    }
   },
   
   /**
@@ -8174,6 +8184,86 @@ const App = {
     // All prerequisites met - add the ability
     console.log('Exotic Mounts II: All prerequisites met, adding ability');
     this.addSpecialAbility('Exotic Mounts II (Pegasus)', 'cavalier');
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Check and potentially add Exotic Mounts III for Cavalier at Rank 4+
+   * Requirements:
+   * - Ride 110% or higher
+   * - Oath 110% or higher
+   */
+  checkCavalierExoticMountsIII() {
+    // Check if already has Exotic Mounts III (with or without Hippogriff suffix)
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    const hasExoticMountsIII = existingAbilities.some(a => 
+      a === 'exotic mounts iii' || 
+      a === 'exotic mounts 3' || 
+      a.startsWith('exotic mounts iii (') ||
+      a.startsWith('exotic mounts 3 (')
+    );
+    
+    if (hasExoticMountsIII) {
+      return; // Already has it
+    }
+    
+    // Check Ride skill >= 110%
+    const rideValue = this.getSkillValueByName('ride');
+    if (rideValue < 110) {
+      console.log(`Exotic Mounts III: Ride ${rideValue}% is below required 110%`);
+      return;
+    }
+    
+    // Check Oath >= 110%
+    const oathValue = this.getSkillValueByName('oath');
+    if (oathValue < 110) {
+      console.log(`Exotic Mounts III: Oath ${oathValue}% is below required 110%`);
+      return;
+    }
+    
+    // All prerequisites met - add the ability
+    console.log('Exotic Mounts III: All prerequisites met, adding ability');
+    this.addSpecialAbility('Exotic Mounts III (Hippogriff)', 'cavalier');
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Check and potentially add Exotic Mounts IV for Cavalier at Rank 5
+   * Requirements:
+   * - Ride 130% or higher
+   * - Oath 130% or higher
+   */
+  checkCavalierExoticMountsIV() {
+    // Check if already has Exotic Mounts IV (with or without Griffon suffix)
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    const hasExoticMountsIV = existingAbilities.some(a => 
+      a === 'exotic mounts iv' || 
+      a === 'exotic mounts 4' || 
+      a.startsWith('exotic mounts iv (') ||
+      a.startsWith('exotic mounts 4 (')
+    );
+    
+    if (hasExoticMountsIV) {
+      return; // Already has it
+    }
+    
+    // Check Ride skill >= 130%
+    const rideValue = this.getSkillValueByName('ride');
+    if (rideValue < 130) {
+      console.log(`Exotic Mounts IV: Ride ${rideValue}% is below required 130%`);
+      return;
+    }
+    
+    // Check Oath >= 130%
+    const oathValue = this.getSkillValueByName('oath');
+    if (oathValue < 130) {
+      console.log(`Exotic Mounts IV: Oath ${oathValue}% is below required 130%`);
+      return;
+    }
+    
+    // All prerequisites met - add the ability
+    console.log('Exotic Mounts IV: All prerequisites met, adding ability');
+    this.addSpecialAbility('Exotic Mounts IV (Griffon)', 'cavalier');
     this.scheduleAutoSave();
   },
   
@@ -18244,6 +18334,22 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         prereqs: [
           { type: 'skill', name: 'Ride', value: 90 },
           { type: 'skill', name: 'Oath', value: 90 }
+        ]
+      },
+      {
+        name: 'Exotic Mounts III (Hippogriff)',
+        rank: 4,
+        prereqs: [
+          { type: 'skill', name: 'Ride', value: 110 },
+          { type: 'skill', name: 'Oath', value: 110 }
+        ]
+      },
+      {
+        name: 'Exotic Mounts IV (Griffon)',
+        rank: 5,
+        prereqs: [
+          { type: 'skill', name: 'Ride', value: 130 },
+          { type: 'skill', name: 'Oath', value: 130 }
         ]
       }
     ]

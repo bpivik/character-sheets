@@ -248,6 +248,38 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Mental Strength II; Arcane Casting 100% OR Arcane Sorcery 100% OR Oath 100% OR Piety 100%",
       summary: "3/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
     },
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes I",
+      summary: "Use Defensive Reflexes twice per combat (no re-roll same attack, no Luck Point combo)"
+    },
+    { 
+      name: "Mental Strength IV", 
+      rank: 4, 
+      prereqs: "Mental Strength III; Arcane Casting 120% OR Arcane Sorcery 120% OR Oath 120% OR Piety 120%",
+      summary: "4/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength V", 
+      rank: 5, 
+      prereqs: "Mental Strength IV; Arcane Casting 140% OR Arcane Sorcery 140% OR Oath 140% OR Piety 140%",
+      summary: "5/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
   ],
   
   berserker: [
