@@ -5288,6 +5288,11 @@ const App = {
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const normalizedName = normalizeApostrophes(abilityName.toLowerCase().trim());
     
+    // Handle Mental Strength upgrades - remove lower versions when higher is added
+    if (normalizedName.startsWith('mental strength')) {
+      this.handleMentalStrengthUpgrade(abilityName);
+    }
+    
     // Check if ability already exists
     const existingInputs = container.querySelectorAll('.class-ability-input');
     for (const input of existingInputs) {
@@ -12129,6 +12134,53 @@ const App = {
     if (activeRow) activeRow.style.display = '';
     
     this.updateMentalStrengthDisplay();
+  },
+  
+  /**
+   * Handle Mental Strength upgrades - remove lower versions when a higher version is added
+   */
+  handleMentalStrengthUpgrade(newAbilityName) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    // Map ability names to their level
+    const mentalStrengthLevels = {
+      'mental strength i': 1, 'mental strength 1': 1,
+      'mental strength ii': 2, 'mental strength 2': 2,
+      'mental strength iii': 3, 'mental strength 3': 3,
+      'mental strength iv': 4, 'mental strength 4': 4,
+      'mental strength v': 5, 'mental strength 5': 5
+    };
+    
+    const newLevel = mentalStrengthLevels[newAbilityName.toLowerCase().trim()];
+    if (!newLevel) return;
+    
+    // Find and remove all lower-level Mental Strength abilities
+    const inputs = container.querySelectorAll('.class-ability-input');
+    const rowsToRemove = [];
+    
+    inputs.forEach(input => {
+      const existingName = input.value.toLowerCase().trim();
+      const existingLevel = mentalStrengthLevels[existingName];
+      
+      if (existingLevel && existingLevel < newLevel) {
+        // This is a lower-level Mental Strength - mark for removal
+        rowsToRemove.push(input.closest('.class-ability-row'));
+      }
+    });
+    
+    // Remove the rows
+    rowsToRemove.forEach(row => {
+      if (row) {
+        row.remove();
+        console.log('handleMentalStrengthUpgrade: removed lower Mental Strength version');
+      }
+    });
+    
+    // Sync to character data
+    if (rowsToRemove.length > 0) {
+      this.syncClassAbilitiesToCharacter();
+    }
   },
 
   /**
