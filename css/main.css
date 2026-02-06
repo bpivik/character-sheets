@@ -4691,6 +4691,330 @@ select:focus {
   50% { opacity: 1; transform: scale(1.2); }
 }
 
+/* ============================================
+   SHORT REST ANIMATIONS
+   ============================================ */
+.short-rest-anim-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.short-rest-anim-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.short-rest-anim-content {
+  text-align: center;
+  z-index: 2;
+}
+
+.short-rest-anim-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.short-rest-anim-text {
+  font-family: var(--font-header);
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+/* Eat/Ration Theme - Warm orange/amber */
+.short-rest-anim-overlay.eat-theme {
+  background: linear-gradient(135deg, #2d1f0f 0%, #4a3218 50%, #2d1f0f 100%);
+}
+
+.short-rest-anim-overlay.eat-theme .short-rest-anim-icon {
+  animation: steam-rise 1.5s ease-in-out infinite;
+}
+
+.short-rest-anim-overlay.eat-theme .short-rest-anim-text {
+  color: #e8b86d;
+}
+
+/* Campfire particles */
+.campfire-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ember {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #ff6600 0%, #ff3300 50%, transparent 100%);
+  border-radius: 50%;
+  animation: ember-float 2s ease-out infinite;
+}
+
+@keyframes ember-float {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.3); }
+}
+
+@keyframes steam-rise {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Pray/Study Theme - Purple/gold arcane */
+.short-rest-anim-overlay.study-theme {
+  background: linear-gradient(135deg, #1a1025 0%, #2d1f4a 50%, #1a1025 100%);
+}
+
+.short-rest-anim-overlay.study-theme .short-rest-anim-icon {
+  animation: magic-glow 2s ease-in-out infinite;
+}
+
+.short-rest-anim-overlay.study-theme .short-rest-anim-text {
+  color: #c9a0dc;
+}
+
+.magic-runes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rune {
+  position: absolute;
+  font-size: 1.5rem;
+  color: #9966cc;
+  opacity: 0;
+  animation: rune-fade 3s ease-in-out infinite;
+}
+
+@keyframes rune-fade {
+  0%, 100% { opacity: 0; transform: scale(0.8) rotate(-10deg); }
+  50% { opacity: 0.7; transform: scale(1.1) rotate(10deg); }
+}
+
+@keyframes magic-glow {
+  0%, 100% { filter: drop-shadow(0 0 10px #9966cc); }
+  50% { filter: drop-shadow(0 0 25px #cc99ff); }
+}
+
+/* Tend Wounds Theme - Soft green/white medicinal */
+.short-rest-anim-overlay.heal-theme {
+  background: linear-gradient(135deg, #0f1f15 0%, #1a3025 50%, #0f1f15 100%);
+}
+
+.short-rest-anim-overlay.heal-theme .short-rest-anim-icon {
+  animation: pulse-heal 1.5s ease-in-out infinite;
+}
+
+.short-rest-anim-overlay.heal-theme .short-rest-anim-text {
+  color: #8fbc8f;
+}
+
+.healing-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.heal-cross {
+  position: absolute;
+  font-size: 1.2rem;
+  color: #90ee90;
+  opacity: 0;
+  animation: heal-float 2.5s ease-out infinite;
+}
+
+@keyframes heal-float {
+  0% { opacity: 0; transform: translateY(20px) scale(0.5); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+}
+
+@keyframes pulse-heal {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Cast Spell Theme - Bright cyan/white magical */
+.short-rest-anim-overlay.magic-theme {
+  background: linear-gradient(135deg, #0a1520 0%, #0f2535 50%, #0a1520 100%);
+}
+
+.short-rest-anim-overlay.magic-theme .short-rest-anim-icon {
+  animation: sparkle-spin 2s linear infinite;
+}
+
+.short-rest-anim-overlay.magic-theme .short-rest-anim-text {
+  color: #87ceeb;
+}
+
+.sparkle-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00ffff, 0 0 12px #00ffff;
+  animation: sparkle-burst 1.5s ease-out infinite;
+}
+
+@keyframes sparkle-burst {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0) translateY(-30px); }
+}
+
+@keyframes sparkle-spin {
+  0% { transform: rotate(0deg); filter: drop-shadow(0 0 15px #00ffff); }
+  100% { transform: rotate(360deg); filter: drop-shadow(0 0 15px #00ffff); }
+}
+
+/* Dither Theme - Soft pastels, lazy afternoon */
+.short-rest-anim-overlay.dither-theme {
+  background: linear-gradient(135deg, #1a1a1f 0%, #252530 50%, #1a1a1f 100%);
+}
+
+.short-rest-anim-overlay.dither-theme .short-rest-anim-icon {
+  animation: lazy-bob 3s ease-in-out infinite;
+}
+
+.short-rest-anim-overlay.dither-theme .short-rest-anim-text {
+  color: #a0a0b0;
+}
+
+.cloud-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cloud {
+  position: absolute;
+  font-size: 2rem;
+  color: rgba(200, 200, 220, 0.3);
+  animation: cloud-drift 8s linear infinite;
+}
+
+@keyframes cloud-drift {
+  0% { transform: translateX(-50px); opacity: 0; }
+  20% { opacity: 0.5; }
+  80% { opacity: 0.5; }
+  100% { transform: translateX(calc(100vw + 50px)); opacity: 0; }
+}
+
+@keyframes lazy-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+/* Short Rest Toast Notification */
+.short-rest-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 400px;
+  background: var(--page-bg, #f5f0e6);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 10002;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.4s ease;
+  pointer-events: none;
+}
+
+.short-rest-toast.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.short-rest-toast-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.short-rest-toast.success .short-rest-toast-header {
+  background: linear-gradient(to bottom, #e8f5e9, #c8e6c9);
+  color: #1b5e20;
+}
+
+.short-rest-toast.info .short-rest-toast-header {
+  background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+  color: #0d47a1;
+}
+
+.short-rest-toast.warning .short-rest-toast-header {
+  background: linear-gradient(to bottom, #fff3e0, #ffe0b2);
+  color: #e65100;
+}
+
+.short-rest-toast-title {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.short-rest-toast-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 0.6;
+  line-height: 1;
+  padding: 0;
+  color: inherit;
+}
+
+.short-rest-toast-close:hover {
+  opacity: 1;
+}
+
+.short-rest-toast-body {
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.short-rest-toast-body strong {
+  color: var(--text-header);
+}
+
+.short-rest-toast-body em {
+  color: var(--text-secondary);
+}
+
 /* Long Rest Modal */
 .long-rest-modal-overlay {
   display: none;

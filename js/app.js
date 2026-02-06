@@ -10071,6 +10071,155 @@ const App = {
   },
 
   /**
+   * Short Rest animation data by action type
+   */
+  SHORT_REST_ANIMATIONS: {
+    'eat-ration': {
+      theme: 'eat-theme',
+      icons: ['🍖', '🍺', '🔥', '🥘', '🍲'],
+      texts: ['Enjoying a meal...', 'Refueling...', "A moment's respite...", 'Warming by the fire...', 'Taking nourishment...'],
+      particles: 'campfire'
+    },
+    'pray-study': {
+      theme: 'study-theme',
+      icons: ['📖', '✨', '🙏', '📜', '🔮'],
+      texts: ['Communing with the divine...', 'Studying the arcane...', 'Focusing your mind...', 'Meditating on the mysteries...', 'Channeling inner power...'],
+      particles: 'runes'
+    },
+    'tend-wounds': {
+      theme: 'heal-theme',
+      icons: ['🩹', '🌿', '💊', '🧴', '🪻'],
+      texts: ['Dressing wounds...', 'Applying salve...', 'Patching up...', 'Tending injuries...', 'Binding wounds...'],
+      particles: 'healing'
+    },
+    'cast-spells': {
+      theme: 'magic-theme',
+      icons: ['✨', '💫', '🌟', '⚡', '🌀'],
+      texts: ['Channeling healing energy...', 'Weaving restorative magic...', 'Casting beneficial spells...', 'Invoking magical aid...'],
+      particles: 'sparkles'
+    },
+    'prepare-spell': {
+      theme: 'study-theme',
+      icons: ['📖', '✨', '📜', '🔮', '🌙'],
+      texts: ['Preparing your mind...', 'Memorizing incantations...', 'Attuning to the arcane...', 'Organizing spell components...'],
+      particles: 'runes'
+    },
+    'dither': {
+      theme: 'dither-theme',
+      icons: ['😴', '🌤️', '🍃', '☁️', '💭'],
+      texts: ['Just... sitting here...', 'Relaxing...', 'Taking it easy...', 'Doing absolutely nothing...', 'Wasting time pleasantly...'],
+      particles: 'clouds'
+    },
+    'second-wind': {
+      theme: 'heal-theme',
+      icons: ['💨', '🌬️', '😤', '💪', '🔄'],
+      texts: ['Catching your breath...', 'Finding renewed vigor...', 'Pushing through...', 'Summoning inner strength...'],
+      particles: 'healing'
+    }
+  },
+
+  /**
+   * Show Short Rest animation overlay
+   */
+  showShortRestAnimation(actionType, callback) {
+    const animData = this.SHORT_REST_ANIMATIONS[actionType];
+    if (!animData) {
+      if (callback) callback();
+      return;
+    }
+    
+    // Random selection
+    const icon = animData.icons[Math.floor(Math.random() * animData.icons.length)];
+    const text = animData.texts[Math.floor(Math.random() * animData.texts.length)];
+    
+    // Create or get the overlay
+    let overlay = document.getElementById('short-rest-anim-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'short-rest-anim-overlay';
+      document.body.appendChild(overlay);
+    }
+    
+    // Generate particles based on type
+    let particlesHtml = '';
+    switch (animData.particles) {
+      case 'campfire':
+        particlesHtml = '<div class="campfire-particles">';
+        for (let i = 0; i < 15; i++) {
+          const left = 40 + Math.random() * 20;
+          const delay = Math.random() * 2;
+          particlesHtml += `<div class="ember" style="left:${left}%;bottom:30%;animation-delay:${delay}s;"></div>`;
+        }
+        particlesHtml += '</div>';
+        break;
+      case 'runes':
+        const runeSymbols = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ'];
+        particlesHtml = '<div class="magic-runes">';
+        for (let i = 0; i < 12; i++) {
+          const left = Math.random() * 100;
+          const top = Math.random() * 100;
+          const delay = Math.random() * 3;
+          const rune = runeSymbols[Math.floor(Math.random() * runeSymbols.length)];
+          particlesHtml += `<div class="rune" style="left:${left}%;top:${top}%;animation-delay:${delay}s;">${rune}</div>`;
+        }
+        particlesHtml += '</div>';
+        break;
+      case 'healing':
+        particlesHtml = '<div class="healing-particles">';
+        for (let i = 0; i < 10; i++) {
+          const left = 30 + Math.random() * 40;
+          const delay = Math.random() * 2.5;
+          particlesHtml += `<div class="heal-cross" style="left:${left}%;bottom:35%;animation-delay:${delay}s;">✚</div>`;
+        }
+        particlesHtml += '</div>';
+        break;
+      case 'sparkles':
+        particlesHtml = '<div class="sparkle-particles">';
+        for (let i = 0; i < 20; i++) {
+          const left = Math.random() * 100;
+          const top = Math.random() * 100;
+          const delay = Math.random() * 1.5;
+          particlesHtml += `<div class="sparkle" style="left:${left}%;top:${top}%;animation-delay:${delay}s;"></div>`;
+        }
+        particlesHtml += '</div>';
+        break;
+      case 'clouds':
+        particlesHtml = '<div class="cloud-particles">';
+        for (let i = 0; i < 5; i++) {
+          const top = 20 + Math.random() * 60;
+          const delay = i * 1.5;
+          particlesHtml += `<div class="cloud" style="top:${top}%;animation-delay:${delay}s;">☁</div>`;
+        }
+        particlesHtml += '</div>';
+        break;
+    }
+    
+    overlay.className = `short-rest-anim-overlay ${animData.theme}`;
+    overlay.innerHTML = `
+      ${particlesHtml}
+      <div class="short-rest-anim-content">
+        <div class="short-rest-anim-icon">${icon}</div>
+        <div class="short-rest-anim-text">${text}</div>
+      </div>
+    `;
+    
+    // Show overlay with fade in
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
+    
+    // After animation, fade out and call callback
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      
+      // Wait for fade out transition
+      setTimeout(() => {
+        if (callback) callback();
+      }, 600);
+    }, 2000);
+  },
+
+  /**
    * Apply the selected Short Rest action
    */
   applyShortRestAction() {
@@ -10081,6 +10230,20 @@ const App = {
     }
 
     const action = selected.value;
+    
+    // Close the modal first
+    this.closeShortRestModal();
+    
+    // Show animation, then perform the action
+    this.showShortRestAnimation(action, () => {
+      this.performShortRestAction(action);
+    });
+  },
+  
+  /**
+   * Perform the actual Short Rest action (called after animation)
+   */
+  performShortRestAction(action) {
     const stateOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
     const currentState = this.character.fatigueState || 'fresh';
     const currentIndex = stateOrder.indexOf(currentState);
@@ -10093,10 +10256,13 @@ const App = {
     // Index boundaries for fatigue levels
     const WINDED_INDEX = 1;
     const EXHAUSTED_INDEX = 4;
+    
+    let resultTitle = '';
+    let resultMessage = '';
+    let resultType = 'success';
 
     switch (action) {
       case 'eat-ration': {
-        // Remove one level if no greater than Exhausted (index <= 4)
         let messages = [];
         let newIndex = currentIndex;
         
@@ -10104,7 +10270,6 @@ const App = {
           newIndex = currentIndex - 1;
           messages.push(`Fatigue reduced from ${this.formatFatigueState(currentState)} to ${this.formatFatigueState(stateOrder[newIndex])}.`);
           
-          // Bonus: if now no greater than Winded, remove another level
           if (newIndex <= WINDED_INDEX && newIndex > 0) {
             newIndex = newIndex - 1;
             messages.push(`Bonus recovery (non-strenuous): now ${this.formatFatigueState(stateOrder[newIndex])}.`);
@@ -10118,12 +10283,12 @@ const App = {
         }
         
         messages.push('Hunger quelled.');
-        this.showShortRestResult('success', messages.join('<br>'));
+        resultTitle = '🍖 Meal Complete';
+        resultMessage = messages.join('<br>');
         break;
       }
 
       case 'pray-study': {
-        // Regain 1 MP
         const mpCurrent = document.getElementById('magic-points-current');
         const mpMax = document.getElementById('magic-points-original');
         let messages = [];
@@ -10142,7 +10307,6 @@ const App = {
           }
         }
         
-        // Remove fatigue if no greater than Winded
         if (currentIndex <= WINDED_INDEX && currentIndex > 0) {
           const newIndex = currentIndex - 1;
           this.setFatigueState(stateOrder[newIndex], true);
@@ -10151,52 +10315,48 @@ const App = {
           messages.push(`No fatigue recovery (currently ${this.formatFatigueState(currentState)}, must be Winded or better).`);
         }
         
-        this.showShortRestResult('success', messages.join('<br>'));
+        resultTitle = '📖 Study Complete';
+        resultMessage = messages.join('<br>');
         break;
       }
 
       case 'tend-wounds': {
-        this.showShortRestResult('info', 
-          '<strong>Tend to Wounds:</strong><br>' +
+        resultTitle = '🩹 Tend to Wounds';
+        resultMessage = '<strong>Wounds Tended:</strong><br>' +
           '• First Aid skill: 1 Rest Action (15 minutes)<br>' +
           '• Healing skill: 4 Rest Actions (1 hour)<br><br>' +
-          '<em>This action does not remove Fatigue.</em>'
-        );
+          '<em>This action does not remove Fatigue.</em>';
+        resultType = 'info';
         break;
       }
 
       case 'cast-spells': {
-        this.showShortRestResult('info', 
-          '<strong>Cast Spells:</strong><br>' +
+        resultTitle = '✨ Spellcasting';
+        resultMessage = '<strong>Cast Spells:</strong><br>' +
           'You may cast any number of healing or buff spells, limited by available Magic Points.<br><br>' +
-          '<em>This action does not remove Fatigue.</em>'
-        );
-        // Navigate to magic page after a brief delay
+          '<em>This action does not remove Fatigue.</em>';
+        resultType = 'info';
         setTimeout(() => {
-          this.closeShortRestModal();
           this.navigateToPage('page-magic1');
-        }, 1500);
-        return; // Don't close modal immediately
+        }, 2000);
+        break;
       }
 
       case 'prepare-spell': {
-        this.showShortRestResult('info', 
-          '<strong>Prepare a New Spell:</strong><br>' +
+        resultTitle = '📜 Spell Preparation';
+        resultMessage = '<strong>Prepare a New Spell:</strong><br>' +
           'Following at least 8 hours of sleep, you may memorize or forget an Arcane or Divine spell.<br><br>' +
-          '<em>This action does not remove Fatigue.</em>'
-        );
-        // Navigate to magic page after a brief delay
+          '<em>This action does not remove Fatigue.</em>';
+        resultType = 'info';
         setTimeout(() => {
-          this.closeShortRestModal();
           this.navigateToPage('page-magic1');
-        }, 1500);
-        return; // Don't close modal immediately
+        }, 2000);
+        break;
       }
 
       case 'dither': {
         let messages = [];
         
-        // Remove fatigue if no greater than Winded
         if (currentIndex <= WINDED_INDEX && currentIndex > 0) {
           const newIndex = currentIndex - 1;
           this.setFatigueState(stateOrder[newIndex], true);
@@ -10208,7 +10368,8 @@ const App = {
         }
         
         messages.push('You waste 15 minutes doing nothing useful.');
-        this.showShortRestResult('success', messages.join('<br>'));
+        resultTitle = '💭 Time Wasted';
+        resultMessage = messages.join('<br>');
         break;
       }
 
@@ -10217,24 +10378,61 @@ const App = {
         
         if (currentIndex === 0) {
           messages.push('Already at Fresh — no fatigue to recover.');
-          this.showShortRestResult('info', messages.join('<br>'));
+          resultType = 'info';
         } else {
-          // Remove up to 3 levels of fatigue
           const levelsToRemove = Math.min(3, currentIndex);
           const newIndex = currentIndex - levelsToRemove;
           this.setFatigueState(stateOrder[newIndex], true);
           messages.push(`<strong>Second Wind!</strong> After a 1 hour rest, you recover ${levelsToRemove} level${levelsToRemove > 1 ? 's' : ''} of Fatigue.`);
           messages.push(`${this.formatFatigueState(currentState)} → ${this.formatFatigueState(stateOrder[newIndex])}`);
-          this.showShortRestResult('success', messages.join('<br>'));
         }
+        resultTitle = '💨 Second Wind';
+        resultMessage = messages.join('<br>');
         break;
       }
     }
 
-    // Close modal after a brief delay to show result
+    // Show result in a toast/notification
+    this.showShortRestToast(resultTitle, resultMessage, resultType);
+  },
+  
+  /**
+   * Show Short Rest result as a toast notification
+   */
+  showShortRestToast(title, message, type = 'success') {
+    // Create or get the toast container
+    let toast = document.getElementById('short-rest-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'short-rest-toast';
+      toast.className = 'short-rest-toast';
+      toast.innerHTML = `
+        <div class="short-rest-toast-header">
+          <span class="short-rest-toast-title"></span>
+          <button class="short-rest-toast-close">&times;</button>
+        </div>
+        <div class="short-rest-toast-body"></div>
+      `;
+      document.body.appendChild(toast);
+      
+      toast.querySelector('.short-rest-toast-close').addEventListener('click', () => {
+        toast.classList.remove('active');
+      });
+    }
+    
+    toast.className = `short-rest-toast ${type}`;
+    toast.querySelector('.short-rest-toast-title').textContent = title;
+    toast.querySelector('.short-rest-toast-body').innerHTML = message;
+    
+    // Show toast
+    requestAnimationFrame(() => {
+      toast.classList.add('active');
+    });
+    
+    // Auto-hide after delay
     setTimeout(() => {
-      this.closeShortRestModal();
-    }, 2000);
+      toast.classList.remove('active');
+    }, 4000);
   },
 
   /**
