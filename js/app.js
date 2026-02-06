@@ -405,6 +405,9 @@ const App = {
     // Check if Just a Scratch section should be visible
     this.checkJustAScratchVisibility();
     
+    // Check if Commanding section should be visible
+    this.checkCommandingVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -4218,6 +4221,20 @@ const App = {
     // Apply ability effect if applicable
     if (abilityName) {
       this.applyAbilityEffect(abilityName);
+      
+      // Check visibility for ability-specific UI sections
+      const normalizedName = abilityName.toLowerCase().trim();
+      if (normalizedName === 'berserk rage') {
+        this.checkBerserkRageVisibility();
+      } else if (normalizedName === 'forceful strike') {
+        this.checkForcefulStrikeVisibility();
+      } else if (normalizedName === 'brute strength') {
+        this.checkBruteStrengthVisibility();
+      } else if (normalizedName === 'just a scratch') {
+        this.checkJustAScratchVisibility();
+      } else if (normalizedName === 'commanding') {
+        this.checkCommandingVisibility();
+      }
     }
     
     this.scheduleAutoSave();
@@ -5317,6 +5334,11 @@ const App = {
           this.checkJustAScratchVisibility();
         }
         
+        // Check if Commanding section should now be visible
+        if (normalizedName === 'commanding') {
+          this.checkCommandingVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -5344,6 +5366,11 @@ const App = {
     // Check if Just a Scratch section should now be visible
     if (normalizedName === 'just a scratch') {
       this.checkJustAScratchVisibility();
+    }
+    
+    // Check if Commanding section should now be visible
+    if (normalizedName === 'commanding') {
+      this.checkCommandingVisibility();
     }
     
     return !!newInput;
@@ -11667,6 +11694,230 @@ const App = {
     alert(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP}).`);
     
     this.scheduleAutoSave();
+  },
+
+  // ============================================
+  // COMMANDING ABILITY
+  // ============================================
+  
+  /**
+   * Check if character has Commanding ability and show/hide section
+   */
+  checkCommandingVisibility() {
+    const section = document.getElementById('commanding-section');
+    if (!section) return;
+    
+    const hasCommanding = this.hasAbility('Commanding');
+    
+    if (hasCommanding) {
+      section.style.display = '';
+      this.initCommanding();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Initialize Commanding system
+   */
+  initCommanding() {
+    this.updateCommandingDisplay();
+    this.setupCommandingListeners();
+    
+    // Restore commanding state if active
+    if (this.character.isCommanding) {
+      this.restoreCommandingState();
+    }
+  },
+  
+  /**
+   * Get maximum Commanding uses (1 per rank, based on rank of Paladin/Cavalier)
+   */
+  getMaxCommandingUses() {
+    // Check all class slots for Paladin or Cavalier
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    
+    let maxRank = 0;
+    
+    for (const slot of classSlots) {
+      const className = document.getElementById(slot.class)?.value?.toLowerCase().trim() || '';
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      
+      if ((className === 'paladin' || className === 'cavalier') && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    
+    // Return at least 1 use if character has Commanding ability
+    return Math.max(maxRank, 1);
+  },
+  
+  /**
+   * Update Commanding display values
+   */
+  updateCommandingDisplay() {
+    const maxUses = this.getMaxCommandingUses();
+    
+    // Initialize uses remaining if not set
+    if (this.character.commandingUsesRemaining === undefined || this.character.commandingUsesRemaining === null) {
+      this.character.commandingUsesRemaining = maxUses;
+    }
+    
+    const usesAvail = document.getElementById('commanding-uses-available');
+    const usesMax = document.getElementById('commanding-uses-max');
+    
+    if (usesAvail) usesAvail.textContent = this.character.commandingUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+    
+    // Update button states
+    const insightBtn = document.getElementById('btn-commanding-insight');
+    const influenceBtn = document.getElementById('btn-commanding-influence');
+    const noUses = this.character.commandingUsesRemaining <= 0;
+    const isActive = this.character.isCommanding;
+    
+    if (insightBtn) insightBtn.disabled = noUses || isActive;
+    if (influenceBtn) influenceBtn.disabled = noUses || isActive;
+  },
+  
+  /**
+   * Setup Commanding event listeners
+   */
+  setupCommandingListeners() {
+    const insightBtn = document.getElementById('btn-commanding-insight');
+    const influenceBtn = document.getElementById('btn-commanding-influence');
+    const endBtn = document.getElementById('btn-end-commanding');
+    const resetBtn = document.getElementById('btn-reset-commanding-uses');
+    
+    if (insightBtn && !insightBtn.dataset.listenerAdded) {
+      insightBtn.addEventListener('click', () => this.useCommanding('insight'));
+      insightBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (influenceBtn && !influenceBtn.dataset.listenerAdded) {
+      influenceBtn.addEventListener('click', () => this.useCommanding('influence'));
+      influenceBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (endBtn && !endBtn.dataset.listenerAdded) {
+      endBtn.addEventListener('click', () => this.endCommanding());
+      endBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.character.commandingUsesRemaining = this.getMaxCommandingUses();
+        this.updateCommandingDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Use Commanding ability on a skill
+   */
+  useCommanding(skill) {
+    if (this.character.isCommanding || this.character.commandingUsesRemaining <= 0) return;
+    
+    const skillId = skill === 'insight' ? 'insight-current' : 'influence-current';
+    const skillField = document.getElementById(skillId);
+    
+    if (!skillField) {
+      alert(`Error: Could not find ${skill} skill field.`);
+      return;
+    }
+    
+    // Store pre-commanding value
+    const currentValue = parseInt(skillField.value, 10) || 0;
+    this.character.preCommandingValue = currentValue;
+    this.character.commandingSkill = skill;
+    this.character.isCommanding = true;
+    this.character.commandingUsesRemaining--;
+    
+    // Apply +40% bonus
+    const newValue = currentValue + 40;
+    skillField.value = newValue;
+    skillField.classList.add('commanding-boosted');
+    skillField.title = '+40% from Commanding (2 Difficulty Grades easier)';
+    
+    // Update UI
+    const buttonsRow = document.getElementById('commanding-buttons');
+    const activeRow = document.getElementById('commanding-active');
+    const activeSkillLabel = document.getElementById('commanding-active-skill');
+    
+    if (buttonsRow) buttonsRow.style.display = 'none';
+    if (activeRow) activeRow.style.display = '';
+    if (activeSkillLabel) activeSkillLabel.textContent = skill.charAt(0).toUpperCase() + skill.slice(1);
+    
+    this.updateCommandingDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * End Commanding effect and restore skill
+   */
+  endCommanding() {
+    if (!this.character.isCommanding) return;
+    
+    const skill = this.character.commandingSkill;
+    const skillId = skill === 'insight' ? 'insight-current' : 'influence-current';
+    const skillField = document.getElementById(skillId);
+    
+    if (skillField) {
+      // Restore original value
+      skillField.value = this.character.preCommandingValue;
+      skillField.classList.remove('commanding-boosted');
+      skillField.title = '';
+    }
+    
+    // Reset state
+    this.character.isCommanding = false;
+    this.character.commandingSkill = null;
+    this.character.preCommandingValue = null;
+    
+    // Update UI
+    const buttonsRow = document.getElementById('commanding-buttons');
+    const activeRow = document.getElementById('commanding-active');
+    
+    if (buttonsRow) buttonsRow.style.display = '';
+    if (activeRow) activeRow.style.display = 'none';
+    
+    this.updateCommandingDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Restore Commanding state after page reload
+   */
+  restoreCommandingState() {
+    const skill = this.character.commandingSkill;
+    if (!skill) return;
+    
+    const skillId = skill === 'insight' ? 'insight-current' : 'influence-current';
+    const skillField = document.getElementById(skillId);
+    
+    if (skillField) {
+      // Reapply the +40% bonus display
+      const boostedValue = (this.character.preCommandingValue || 0) + 40;
+      skillField.value = boostedValue;
+      skillField.classList.add('commanding-boosted');
+      skillField.title = '+40% from Commanding (2 Difficulty Grades easier)';
+    }
+    
+    // Update UI to show active state
+    const buttonsRow = document.getElementById('commanding-buttons');
+    const activeRow = document.getElementById('commanding-active');
+    const activeSkillLabel = document.getElementById('commanding-active-skill');
+    
+    if (buttonsRow) buttonsRow.style.display = 'none';
+    if (activeRow) activeRow.style.display = '';
+    if (activeSkillLabel) activeSkillLabel.textContent = skill.charAt(0).toUpperCase() + skill.slice(1);
+    
+    this.updateCommandingDisplay();
   },
 
   /**
