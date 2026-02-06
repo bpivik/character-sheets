@@ -414,6 +414,9 @@ const App = {
     // Check if Turn Undead section should be visible
     this.checkTurnUndeadVisibility();
     
+    // Check if Syrin species abilities section should be visible
+    this.checkSyrinAbilitiesVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -1181,6 +1184,7 @@ const App = {
         
         this.recalculateAll();
         this.updateMagicVisibility();
+        this.checkSyrinAbilitiesVisibility();
         this.scheduleAutoSave();
       };
       speciesField.addEventListener('input', () => handleSpeciesChange(false));
@@ -13226,6 +13230,333 @@ const App = {
    */
   closeTurnUndeadModal() {
     const modal = document.getElementById('turn-undead-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  // ========================================
+  // SYRIN SPECIES ABILITIES SYSTEM
+  // ========================================
+  
+  /**
+   * Damage Modifier progression for stepping up/down
+   */
+  DAMAGE_MOD_PROGRESSION: [
+    '-1d8', '-1d6', '-1d4', '-1d2', '+0', '+1d2', '+1d4', '+1d6', '+1d8', '+1d10', '+1d12',
+    '+2d6', '+1d8+1d6', '+2d8', '+1d10+1d8', '+2d10', '+2d10+1d2', '+2d10+1d4',
+    '+2d10+1d6', '+2d10+1d8', '+2d10+1d10', '+2d10+1d12', '+3d10'
+  ],
+
+  /**
+   * Check if character is Syrin species and show/hide abilities section
+   */
+  checkSyrinAbilitiesVisibility() {
+    const section = document.getElementById('syrin-abilities-section');
+    const divider = document.getElementById('syrin-abilities-divider');
+    if (!section) return;
+    
+    const species = document.getElementById('species')?.value?.toLowerCase().trim() || '';
+    const isSyrin = species === 'syrin';
+    
+    if (isSyrin) {
+      section.style.display = '';
+      if (divider) divider.style.display = '';
+      this.initSyrinAbilities();
+    } else {
+      section.style.display = 'none';
+      if (divider) divider.style.display = 'none';
+      // End any active effects if species changes
+      if (this.character.isDivingStrikeActive) {
+        this.endDivingStrike();
+      }
+    }
+  },
+  
+  /**
+   * Initialize Syrin abilities system
+   */
+  initSyrinAbilities() {
+    this.updateDivingStrikeDisplay();
+    this.setupSyrinAbilitiesListeners();
+  },
+  
+  /**
+   * Setup Syrin abilities event listeners
+   */
+  setupSyrinAbilitiesListeners() {
+    // Diving Strike
+    const divingStrikeBtn = document.getElementById('btn-diving-strike');
+    const endDivingStrikeBtn = document.getElementById('btn-end-diving-strike');
+    const resetDivingStrikeBtn = document.getElementById('btn-reset-diving-strike');
+    
+    if (divingStrikeBtn && !divingStrikeBtn.dataset.listenerAdded) {
+      divingStrikeBtn.addEventListener('click', () => this.activateDivingStrike());
+      divingStrikeBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (endDivingStrikeBtn && !endDivingStrikeBtn.dataset.listenerAdded) {
+      endDivingStrikeBtn.addEventListener('click', () => this.endDivingStrike());
+      endDivingStrikeBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetDivingStrikeBtn && !resetDivingStrikeBtn.dataset.listenerAdded) {
+      resetDivingStrikeBtn.addEventListener('click', () => {
+        this.character.divingStrikeUsesRemaining = 1;
+        this.updateDivingStrikeDisplay();
+        this.scheduleAutoSave();
+      });
+      resetDivingStrikeBtn.dataset.listenerAdded = 'true';
+    }
+    
+    // Radiant Burst
+    const radiantBurstBtn = document.getElementById('btn-radiant-burst');
+    if (radiantBurstBtn && !radiantBurstBtn.dataset.listenerAdded) {
+      radiantBurstBtn.addEventListener('click', () => this.activateRadiantBurst());
+      radiantBurstBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Update Diving Strike display
+   */
+  updateDivingStrikeDisplay() {
+    // Initialize uses if not set
+    if (this.character.divingStrikeUsesRemaining === undefined) {
+      this.character.divingStrikeUsesRemaining = 1;
+    }
+    
+    const usesEl = document.getElementById('diving-strike-uses');
+    if (usesEl) usesEl.textContent = this.character.divingStrikeUsesRemaining;
+    
+    const btn = document.getElementById('btn-diving-strike');
+    const isActive = this.character.isDivingStrikeActive;
+    const noUses = this.character.divingStrikeUsesRemaining <= 0;
+    
+    if (btn) btn.disabled = noUses || isActive;
+    
+    // Show/hide active state
+    const buttonsRow = document.querySelector('#diving-strike-card .syrin-ability-buttons');
+    const activeRow = document.getElementById('diving-strike-active');
+    
+    if (isActive) {
+      if (buttonsRow) buttonsRow.style.display = 'none';
+      if (activeRow) activeRow.style.display = '';
+    } else {
+      if (buttonsRow) buttonsRow.style.display = '';
+      if (activeRow) activeRow.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Activate Diving Strike - increase damage modifiers by one step
+   */
+  activateDivingStrike() {
+    if (this.character.isDivingStrikeActive || this.character.divingStrikeUsesRemaining <= 0) return;
+    
+    // Store original values before modifying
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    
+    if (dmgCurrent) {
+      this.character.divingStrikeOriginalDmg = dmgCurrent.value;
+      const steppedUp = this.stepDamageModifier(dmgCurrent.value, 1);
+      dmgCurrent.value = steppedUp;
+    }
+    
+    if (wpDmgCurrent && wpDmgCurrent.value) {
+      this.character.divingStrikeOriginalWpDmg = wpDmgCurrent.value;
+      const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, 1);
+      wpDmgCurrent.value = steppedUp;
+    }
+    
+    this.character.isDivingStrikeActive = true;
+    this.character.divingStrikeUsesRemaining--;
+    
+    this.updateDivingStrikeDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * End Diving Strike - restore original damage modifiers
+   */
+  endDivingStrike() {
+    if (!this.character.isDivingStrikeActive) return;
+    
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    
+    // Restore original values
+    if (dmgCurrent && this.character.divingStrikeOriginalDmg !== undefined) {
+      dmgCurrent.value = this.character.divingStrikeOriginalDmg;
+    }
+    
+    if (wpDmgCurrent && this.character.divingStrikeOriginalWpDmg !== undefined) {
+      wpDmgCurrent.value = this.character.divingStrikeOriginalWpDmg;
+    }
+    
+    this.character.isDivingStrikeActive = false;
+    delete this.character.divingStrikeOriginalDmg;
+    delete this.character.divingStrikeOriginalWpDmg;
+    
+    this.updateDivingStrikeDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Step a damage modifier up or down by a number of steps
+   * @param {string} currentMod - Current damage modifier value
+   * @param {number} steps - Number of steps (positive = up, negative = down)
+   * @returns {string} - New damage modifier value
+   */
+  stepDamageModifier(currentMod, steps) {
+    const normalized = currentMod.trim().toLowerCase();
+    let currentIndex = this.DAMAGE_MOD_PROGRESSION.findIndex(
+      mod => mod.toLowerCase() === normalized
+    );
+    
+    // If not found, try to find closest match
+    if (currentIndex === -1) {
+      // Default to +0 if we can't find it
+      currentIndex = this.DAMAGE_MOD_PROGRESSION.indexOf('+0');
+    }
+    
+    const newIndex = Math.max(0, Math.min(this.DAMAGE_MOD_PROGRESSION.length - 1, currentIndex + steps));
+    return this.DAMAGE_MOD_PROGRESSION[newIndex];
+  },
+  
+  /**
+   * Activate Radiant Burst - costs 1 AP and 1 MP, opens modal
+   */
+  activateRadiantBurst() {
+    const apCurrent = document.getElementById('action-points-current');
+    const mpCurrent = document.getElementById('magic-points-current');
+    
+    const currentAP = parseInt(apCurrent?.value, 10) || 0;
+    const currentMP = parseInt(mpCurrent?.value, 10) || 0;
+    
+    // Check if enough resources
+    if (currentAP < 1 || currentMP < 1) {
+      alert('Radiant Burst requires 1 Action Point and 1 Magic Point.\n\nYou have: ' + currentAP + ' AP, ' + currentMP + ' MP');
+      return;
+    }
+    
+    // Deduct costs
+    if (apCurrent) apCurrent.value = currentAP - 1;
+    if (mpCurrent) mpCurrent.value = currentMP - 1;
+    
+    this.scheduleAutoSave();
+    
+    // Open the modal
+    this.openRadiantBurstModal();
+  },
+  
+  /**
+   * Open Radiant Burst modal for rolling
+   */
+  openRadiantBurstModal() {
+    let modal = document.getElementById('radiant-burst-modal');
+    
+    // Get POW value
+    const pow = parseInt(document.getElementById('pow-total')?.value, 10) || 
+                parseInt(document.getElementById('pow-base')?.value, 10) || 10;
+    const powX2 = pow * 2;
+    
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'radiant-burst-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content radiant-burst-modal-content">
+          <div class="modal-header radiant-burst-modal-header">
+            <h3>💫 Radiant Burst</h3>
+            <button class="modal-close" id="radiant-burst-modal-close">&times;</button>
+          </div>
+          <div class="modal-body radiant-burst-modal-body">
+            <div class="radiant-burst-effect">
+              <div class="radiant-burst-effect-title">✨ Luminous Energy Burst</div>
+              <div class="radiant-burst-effect-text">
+                You burst in luminous energy. Your enemies must Oppose your <strong>POW × 2</strong> 
+                <span class="radiant-burst-stat" id="radiant-pow-display">(${powX2})</span> 
+                vs their <strong>Willpower</strong>.
+              </div>
+              <div class="radiant-burst-effect-text">
+                <strong>Failure:</strong> They lose one Difficulty Grade for 
+                <span class="radiant-burst-roll-row">
+                  <button type="button" class="btn btn-roll-radiant" id="btn-roll-duration">🎲 1d4</button>
+                  <span class="radiant-burst-roll-result" id="radiant-duration-result"></span>
+                </span>
+                Rounds.
+              </div>
+            </div>
+            
+            <div class="radiant-burst-effect radiant-damage-section">
+              <div class="radiant-burst-effect-title">🔥 Infernal/Evil Damage</div>
+              <div class="radiant-burst-effect-text">
+                Any infernal or Evil creatures also take 
+                <span class="radiant-burst-roll-row">
+                  <button type="button" class="btn btn-roll-radiant" id="btn-roll-damage">🎲 1d3</button>
+                  <span class="radiant-burst-roll-result" id="radiant-damage-result"></span>
+                </span>
+                points of damage, ignoring any non-magical armor.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="radiant-burst-modal-done">Done</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Setup event listeners
+      document.getElementById('radiant-burst-modal-close').addEventListener('click', () => {
+        this.closeRadiantBurstModal();
+      });
+      
+      document.getElementById('radiant-burst-modal-done').addEventListener('click', () => {
+        this.closeRadiantBurstModal();
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeRadiantBurstModal();
+        }
+      });
+      
+      document.getElementById('btn-roll-duration').addEventListener('click', () => {
+        const roll = Math.floor(Math.random() * 4) + 1;
+        const resultEl = document.getElementById('radiant-duration-result');
+        resultEl.innerHTML = `= <strong>${roll} Round${roll !== 1 ? 's' : ''}</strong>`;
+        document.getElementById('btn-roll-duration').disabled = true;
+      });
+      
+      document.getElementById('btn-roll-damage').addEventListener('click', () => {
+        const roll = Math.floor(Math.random() * 3) + 1;
+        const resultEl = document.getElementById('radiant-damage-result');
+        resultEl.innerHTML = `= <strong>${roll} damage</strong>`;
+        document.getElementById('btn-roll-damage').disabled = true;
+      });
+    }
+    
+    // Reset modal state
+    document.getElementById('radiant-duration-result').textContent = '';
+    document.getElementById('radiant-damage-result').textContent = '';
+    document.getElementById('btn-roll-duration').disabled = false;
+    document.getElementById('btn-roll-damage').disabled = false;
+    
+    // Update POW display
+    document.getElementById('radiant-pow-display').textContent = `(${powX2})`;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  },
+  
+  /**
+   * Close Radiant Burst modal
+   */
+  closeRadiantBurstModal() {
+    const modal = document.getElementById('radiant-burst-modal');
     if (modal) {
       modal.classList.add('hidden');
     }

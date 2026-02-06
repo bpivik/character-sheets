@@ -1360,6 +1360,55 @@
                 </div>
               </div>
             </section>
+            
+            <!-- Syrin Species Abilities Section (only visible for Syrin species) -->
+            <hr class="ability-cards-divider" id="syrin-abilities-divider" style="display: none;">
+            <section class="syrin-abilities-section" id="syrin-abilities-section" style="display: none;">
+              <div class="section-header-row">
+                <h3 class="section-header">✨ Syrin Abilities</h3>
+              </div>
+              <div class="syrin-abilities-content">
+                <!-- Diving Strike -->
+                <div class="syrin-ability-card" id="diving-strike-card">
+                  <div class="syrin-ability-header">
+                    <span class="syrin-ability-name">🦅 Diving Strike</span>
+                    <div class="syrin-ability-uses">
+                      <span class="syrin-uses-value" id="diving-strike-uses">1</span>
+                      <span class="syrin-uses-label">/ 1 per round</span>
+                      <button type="button" class="btn btn-small btn-reset-syrin" id="btn-reset-diving-strike" title="Reset (new round)">↺</button>
+                    </div>
+                  </div>
+                  <div class="syrin-ability-buttons">
+                    <button type="button" class="btn btn-syrin-ability" id="btn-diving-strike" title="Diving Strike: Increase Damage Modifier one step">
+                      🦅 Activate Diving Strike
+                    </button>
+                  </div>
+                  <div class="syrin-ability-active" id="diving-strike-active" style="display: none;">
+                    <div class="syrin-active-label">🦅 Diving Strike Active 🦅</div>
+                    <div class="syrin-active-effects">
+                      <span>Damage Modifier increased by one step</span>
+                    </div>
+                    <button type="button" class="btn btn-end-syrin" id="btn-end-diving-strike">End</button>
+                  </div>
+                </div>
+                
+                <!-- Radiant Burst -->
+                <div class="syrin-ability-card" id="radiant-burst-card">
+                  <div class="syrin-ability-header">
+                    <span class="syrin-ability-name">💫 Radiant Burst</span>
+                    <div class="syrin-ability-cost">
+                      <span class="cost-label">Cost:</span>
+                      <span class="cost-value">1 AP, 1 MP</span>
+                    </div>
+                  </div>
+                  <div class="syrin-ability-buttons">
+                    <button type="button" class="btn btn-syrin-ability btn-radiant" id="btn-radiant-burst" title="Radiant Burst: Burst in luminous energy to daze enemies">
+                      💫 Radiant Burst
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
