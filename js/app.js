@@ -8336,21 +8336,25 @@ const App = {
       }
     }
     
-    // Check if language already exists in additional languages (2-7)
-    for (let i = 2; i <= 7; i++) {
-      const nameInput = document.getElementById(`language-${i}-name`);
-      if (nameInput) {
-        const normalizedExisting = normalizeApostrophes(nameInput.value.toLowerCase().trim());
-        if (normalizedExisting === normalizedLangName) {
-          return; // Already exists
+    // Check if language already exists in additional languages
+    const container = document.getElementById('language-container');
+    if (container) {
+      const rows = container.querySelectorAll('.language-row:not(.native)');
+      for (const row of rows) {
+        const nameInput = row.querySelector('.language-name');
+        if (nameInput) {
+          const normalizedExisting = normalizeApostrophes(nameInput.value.toLowerCase().trim());
+          if (normalizedExisting === normalizedLangName) {
+            return; // Already exists
+          }
         }
       }
     }
     
-    // Calculate current value (INT+CHA+40 for class-granted languages)
+    // Calculate base value (INT+CHA+40 for class-granted languages)
     const intVal = parseInt(document.getElementById('int-value')?.value, 10) || 0;
     const chaVal = parseInt(document.getElementById('cha-value')?.value, 10) || 0;
-    const currentValue = intVal + chaVal + 40;
+    const baseValue = intVal + chaVal + 40;
     
     // Determine source class for tracking
     let classSource = sourceClass;
@@ -8363,33 +8367,68 @@ const App = {
       }
     }
     
-    // Find first empty slot (starting at 2)
-    for (let i = 2; i <= 7; i++) {
-      const nameInput = document.getElementById(`language-${i}-name`);
-      const currentInput = document.getElementById(`language-${i}-current`);
-      
-      if (nameInput && !nameInput.value.trim()) {
-        nameInput.value = languageName;
-        if (classSource) {
-          nameInput.dataset.classLanguage = classSource.toLowerCase();
+    // Find first empty slot
+    let foundEmptySlot = false;
+    if (container) {
+      const rows = container.querySelectorAll('.language-row:not(.native)');
+      for (const row of rows) {
+        const nameInput = row.querySelector('.language-name');
+        if (nameInput && !nameInput.value.trim()) {
+          // Found empty slot - populate it
+          nameInput.value = languageName;
+          if (classSource) {
+            nameInput.dataset.classLanguage = classSource.toLowerCase();
+          }
+          
+          // Set the base value to INT+CHA+40
+          const baseSpan = row.querySelector('.language-base');
+          if (baseSpan) {
+            baseSpan.textContent = baseValue;
+          }
+          
+          // Update formula display to show +40
+          const formulaSpan = row.querySelector('.language-formula');
+          if (formulaSpan) {
+            formulaSpan.textContent = 'INT+CHA+40';
+          }
+          
+          // Set the current value to base value
+          const currentInput = row.querySelector('.language-input');
+          if (currentInput) {
+            currentInput.value = baseValue;
+          }
+          
+          // Mark row as class-granted for styling/tracking
+          row.dataset.classGranted = 'true';
+          
+          foundEmptySlot = true;
+          break;
         }
-        
-        // Set the current value to INT+CHA+40
-        if (currentInput) {
-          currentInput.value = currentValue;
-        }
-        
-        // Also add to Special Abilities as "Language (X)"
-        const abilityName = `Language (${languageName})`;
-        this.addAbilityToSheet(abilityName);
-        
-        this.scheduleAutoSave();
-        return;
       }
     }
     
-    // No empty slots - could potentially add a new row here
-    console.warn(`No empty language slots to add ${languageName}`);
+    // No empty slots - add a new row
+    if (!foundEmptySlot && container) {
+      const rows = container.querySelectorAll('.language-row:not(.native)');
+      const newIndex = rows.length + 2; // +2 because native is 1, first additional is 2
+      
+      const row = document.createElement('div');
+      row.className = 'language-row';
+      row.dataset.classGranted = 'true';
+      row.innerHTML = `
+        <input type="text" class="language-name" id="language-${newIndex}-name" placeholder="" value="${languageName}"${classSource ? ` data-class-language="${classSource.toLowerCase()}"` : ''}>
+        <span class="language-formula">INT+CHA+40</span>
+        <span class="language-base" id="language-${newIndex}-base">${baseValue}</span>
+        <input type="number" class="language-input" id="language-${newIndex}-current" placeholder="" value="${baseValue}">
+      `;
+      container.appendChild(row);
+    }
+    
+    // Also add to Special Abilities as "Language (X)"
+    const abilityName = `Language (${languageName})`;
+    this.addAbilityToSheet(abilityName);
+    
+    this.scheduleAutoSave();
   },
   
   /**
