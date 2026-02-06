@@ -2204,10 +2204,42 @@ input.weapon-damage.rage-boosted,
   font-size: 0.75rem;
 }
 
+.holy-smite-value {
+  color: #c8a8f8;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
 .holy-smite-label {
+  color: #999;
+}
+
+.holy-smite-bonus-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.holy-smite-bonus {
   color: #c8a8f8;
   font-weight: bold;
   font-size: 0.8rem;
+}
+
+.btn-reset-holy-smite {
+  background: transparent;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-reset-holy-smite:hover {
+  background: #444;
+  border-color: #c8a8f8;
+  color: #c8a8f8;
 }
 
 .holy-smite-toggle {
@@ -2249,6 +2281,87 @@ input.weapon-damage.rage-boosted,
 @keyframes holy-smite-pulse {
   0%, 100% { box-shadow: 0 0 15px rgba(74, 170, 74, 0.6); }
   50% { box-shadow: 0 0 25px rgba(74, 170, 74, 0.8); }
+}
+
+/* ============================================
+   POWERFUL CONCENTRATION SECTION
+   ============================================ */
+.powerful-concentration-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a2a2a 0%, #203540 100%);
+  border: 2px solid #4a9aaa;
+  border-radius: 6px;
+}
+
+.powerful-concentration-section .section-header {
+  color: #8ad4e8;
+  text-shadow: 0 0 10px rgba(138, 212, 232, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.powerful-concentration-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.powerful-concentration-description {
+  font-size: 0.75rem;
+  color: #aaa;
+  line-height: 1.4;
+}
+
+.powerful-concentration-description strong {
+  color: #8ad4e8;
+}
+
+.powerful-concentration-toggle {
+  width: 100%;
+}
+
+.btn-powerful-concentration {
+  width: 100%;
+  background: linear-gradient(135deg, #2a5a6a 0%, #3a7a8a 50%, #2a5a6a 100%);
+  color: white;
+  border: 1px solid #4a9aaa;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(74, 154, 170, 0.4);
+}
+
+.btn-powerful-concentration:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a6a7a 0%, #4a8a9a 50%, #3a6a7a 100%);
+  box-shadow: 0 0 15px rgba(74, 154, 170, 0.6);
+}
+
+.btn-powerful-concentration:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-powerful-concentration.active {
+  background: linear-gradient(135deg, #2a6a2a 0%, #3a8a3a 50%, #2a6a2a 100%);
+  border-color: #4a4;
+  box-shadow: 0 0 15px rgba(74, 170, 74, 0.6);
+  animation: powerful-concentration-pulse 2s infinite;
+}
+
+@keyframes powerful-concentration-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(74, 170, 74, 0.6); }
+  50% { box-shadow: 0 0 25px rgba(74, 170, 74, 0.8); }
+}
+
+/* Powerful Concentration bonus styling for Willpower */
+.powerful-concentration-bonus {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 /* ============================================

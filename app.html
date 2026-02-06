@@ -1351,11 +1351,33 @@
                 </div>
                 <div class="holy-smite-content">
                   <div class="holy-smite-info-row">
-                    <span class="holy-smite-label" id="holy-smite-bonus">+1 step vs Evil</span>
+                    <span class="holy-smite-value" id="holy-smite-uses-available">1</span>
+                    <span class="holy-smite-label">/ <span id="holy-smite-uses-max">1</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-holy-smite" id="btn-reset-holy-smite-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="holy-smite-bonus-row">
+                    <span class="holy-smite-bonus" id="holy-smite-bonus">+1 step vs Evil</span>
                   </div>
                   <div class="holy-smite-toggle">
                     <button type="button" class="btn btn-holy-smite" id="btn-holy-smite-toggle">
                       <span class="holy-smite-text" id="holy-smite-btn-text">Activate</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+              
+              <!-- Powerful Concentration Section (only visible if character has Powerful Concentration) -->
+              <section class="powerful-concentration-section" id="powerful-concentration-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🧠 Powerful Concentration</h3>
+                </div>
+                <div class="powerful-concentration-content">
+                  <div class="powerful-concentration-description">
+                    You possess exceptional focus when casting spells. <strong>Willpower tests to maintain Concentration</strong> for spells or spellcasting are one Difficulty Grade easier. Click to activate when casting.
+                  </div>
+                  <div class="powerful-concentration-toggle">
+                    <button type="button" class="btn btn-powerful-concentration" id="btn-powerful-concentration-toggle">
+                      <span id="powerful-concentration-btn-text">Activate (+20 Willpower)</span>
                     </button>
                   </div>
                 </div>

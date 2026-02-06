@@ -420,6 +420,9 @@ const App = {
     // Check if Holy Smite section should be visible
     this.checkHolySmiteVisibility();
     
+    // Check if Powerful Concentration section should be visible
+    this.checkPowerfulConcentrationVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -8035,6 +8038,7 @@ const App = {
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
     this.checkHolySmiteVisibility();
+    this.checkPowerfulConcentrationVisibility();
   },
   
   /**
@@ -10205,6 +10209,24 @@ const App = {
         messages.push(`<strong>Turn Undead uses restored:</strong> ${prevUses} → ${maxUses}`);
       } else {
         messages.push(`<strong>Turn Undead:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+    
+    // Reset Holy Smite uses if character has the ability
+    const holySmiteTier = this.getHolySmiteTier();
+    if (holySmiteTier.tier) {
+      const maxUses = this.getMaxHolySmiteUses();
+      const prevUses = this.character.holySmiteUsesRemaining || 0;
+      this.character.holySmiteUsesRemaining = maxUses;
+      // End active holy smite effect if any
+      if (this.character.isHolySmiteActive) {
+        this.endHolySmite();
+      }
+      this.updateHolySmiteDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>${holySmiteTier.tier} uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>${holySmiteTier.tier}:</strong> Already at maximum (${maxUses} uses)`);
       }
     }
     
@@ -13308,15 +13330,49 @@ const App = {
   },
   
   /**
+   * Get maximum Holy Smite uses per day (1 per Cleric rank)
+   */
+  getMaxHolySmiteUses() {
+    // Check all class slots for Cleric
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    
+    let maxRank = 0;
+    
+    for (const slot of classSlots) {
+      const className = document.getElementById(slot.class)?.value?.toLowerCase().trim() || '';
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      
+      if (className === 'cleric' && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    
+    // Uses = Cleric rank (minimum 1 if they have the ability)
+    return Math.max(1, maxRank);
+  },
+  
+  /**
    * Update Holy Smite display
    */
   updateHolySmiteDisplay() {
     const { tier, steps } = this.getHolySmiteTier();
+    const maxUses = this.getMaxHolySmiteUses();
+    
+    // Initialize uses remaining if not set
+    if (this.character.holySmiteUsesRemaining === undefined || this.character.holySmiteUsesRemaining === null) {
+      this.character.holySmiteUsesRemaining = maxUses;
+    }
     
     const headerEl = document.getElementById('holy-smite-header');
     const bonusEl = document.getElementById('holy-smite-bonus');
     const btnTextEl = document.getElementById('holy-smite-btn-text');
     const btn = document.getElementById('btn-holy-smite-toggle');
+    const usesAvailableEl = document.getElementById('holy-smite-uses-available');
+    const usesMaxEl = document.getElementById('holy-smite-uses-max');
     
     if (headerEl && tier) {
       headerEl.textContent = `⚔️ ${tier}`;
@@ -13326,13 +13382,20 @@ const App = {
       bonusEl.textContent = `+${steps} step${steps > 1 ? 's' : ''} vs Evil`;
     }
     
+    // Update uses display
+    if (usesAvailableEl) usesAvailableEl.textContent = this.character.holySmiteUsesRemaining;
+    if (usesMaxEl) usesMaxEl.textContent = maxUses;
+    
     if (btnTextEl && btn) {
       if (this.character.isHolySmiteActive) {
         btnTextEl.textContent = 'Deactivate';
         btn.classList.add('active');
+        btn.disabled = false;
       } else {
         btnTextEl.textContent = 'Activate';
         btn.classList.remove('active');
+        // Disable if no uses remaining
+        btn.disabled = this.character.holySmiteUsesRemaining <= 0;
       }
     }
   },
@@ -13342,10 +13405,20 @@ const App = {
    */
   setupHolySmiteListeners() {
     const toggleBtn = document.getElementById('btn-holy-smite-toggle');
+    const resetBtn = document.getElementById('btn-reset-holy-smite-uses');
     
     if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
       toggleBtn.addEventListener('click', () => this.toggleHolySmite());
       toggleBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.character.holySmiteUsesRemaining = this.getMaxHolySmiteUses();
+        this.updateHolySmiteDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
     }
   },
   
@@ -13365,6 +13438,11 @@ const App = {
    */
   activateHolySmite() {
     if (this.character.isHolySmiteActive) return;
+    
+    // Check if uses remaining
+    if (this.character.holySmiteUsesRemaining <= 0) {
+      return;
+    }
     
     const { tier, steps } = this.getHolySmiteTier();
     if (steps === 0) return;
@@ -13391,6 +13469,9 @@ const App = {
     }
     
     this.character.isHolySmiteActive = true;
+    
+    // Decrement uses remaining
+    this.character.holySmiteUsesRemaining--;
     
     // Update weapon damage displays and highlight them
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
@@ -13464,6 +13545,143 @@ const App = {
     this.applyDamageBoostToWeapons(tooltipText);
     
     this.updateHolySmiteDisplay();
+  },
+
+  // ========================================
+  // POWERFUL CONCENTRATION SYSTEM
+  // ========================================
+  
+  /**
+   * Check if character has Powerful Concentration ability and show/hide section
+   */
+  checkPowerfulConcentrationVisibility() {
+    const section = document.getElementById('powerful-concentration-section');
+    if (!section) return;
+    
+    const hasPowerfulConcentration = this.hasAbility('Powerful Concentration');
+    
+    if (hasPowerfulConcentration) {
+      section.style.display = '';
+      this.initPowerfulConcentration();
+    } else {
+      section.style.display = 'none';
+      // End active effect if ability lost
+      if (this.character.isPowerfulConcentrationActive) {
+        this.endPowerfulConcentration();
+      }
+    }
+  },
+  
+  /**
+   * Initialize Powerful Concentration system
+   */
+  initPowerfulConcentration() {
+    this.updatePowerfulConcentrationDisplay();
+    this.setupPowerfulConcentrationListeners();
+    
+    // Restore state if it was active
+    if (this.character.isPowerfulConcentrationActive) {
+      this.restorePowerfulConcentrationState();
+    }
+  },
+  
+  /**
+   * Update Powerful Concentration display
+   */
+  updatePowerfulConcentrationDisplay() {
+    const btnTextEl = document.getElementById('powerful-concentration-btn-text');
+    const btn = document.getElementById('btn-powerful-concentration-toggle');
+    
+    if (btnTextEl && btn) {
+      if (this.character.isPowerfulConcentrationActive) {
+        btnTextEl.textContent = 'Deactivate';
+        btn.classList.add('active');
+      } else {
+        btnTextEl.textContent = 'Activate (+20 Willpower)';
+        btn.classList.remove('active');
+      }
+    }
+  },
+  
+  /**
+   * Setup Powerful Concentration event listeners
+   */
+  setupPowerfulConcentrationListeners() {
+    const toggleBtn = document.getElementById('btn-powerful-concentration-toggle');
+    
+    if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
+      toggleBtn.addEventListener('click', () => this.togglePowerfulConcentration());
+      toggleBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Toggle Powerful Concentration on/off
+   */
+  togglePowerfulConcentration() {
+    if (this.character.isPowerfulConcentrationActive) {
+      this.endPowerfulConcentration();
+    } else {
+      this.activatePowerfulConcentration();
+    }
+  },
+  
+  /**
+   * Activate Powerful Concentration - add +20 to Willpower
+   */
+  activatePowerfulConcentration() {
+    if (this.character.isPowerfulConcentrationActive) return;
+    
+    const willpowerField = document.getElementById('willpower');
+    if (willpowerField) {
+      // Store original value
+      this.character.powerfulConcentrationOriginalWillpower = parseInt(willpowerField.value, 10) || 0;
+      
+      // Add +20 to Willpower
+      const newValue = this.character.powerfulConcentrationOriginalWillpower + 20;
+      willpowerField.value = newValue;
+      willpowerField.classList.add('powerful-concentration-bonus');
+      willpowerField.title = 'Powerful Concentration: +20 Willpower for concentration checks';
+    }
+    
+    this.character.isPowerfulConcentrationActive = true;
+    this.updatePowerfulConcentrationDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * End Powerful Concentration - restore original Willpower
+   */
+  endPowerfulConcentration() {
+    if (!this.character.isPowerfulConcentrationActive) return;
+    
+    const willpowerField = document.getElementById('willpower');
+    if (willpowerField && this.character.powerfulConcentrationOriginalWillpower !== undefined) {
+      willpowerField.value = this.character.powerfulConcentrationOriginalWillpower;
+      willpowerField.classList.remove('powerful-concentration-bonus');
+      willpowerField.title = '';
+    }
+    
+    this.character.isPowerfulConcentrationActive = false;
+    delete this.character.powerfulConcentrationOriginalWillpower;
+    
+    this.updatePowerfulConcentrationDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Restore Powerful Concentration state on page load
+   */
+  restorePowerfulConcentrationState() {
+    if (!this.character.isPowerfulConcentrationActive) return;
+    
+    const willpowerField = document.getElementById('willpower');
+    if (willpowerField) {
+      willpowerField.classList.add('powerful-concentration-bonus');
+      willpowerField.title = 'Powerful Concentration: +20 Willpower for concentration checks';
+    }
+    
+    this.updatePowerfulConcentrationDisplay();
   },
 
   // ========================================
