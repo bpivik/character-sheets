@@ -293,16 +293,26 @@ const RANKED_CLASS_ABILITIES = {
     { 
       name: "Holy Smite", 
       rank: 1, 
-      prereqs: "Piety 50%",
-      summary: "+1 step Damage Modifier vs undead, demons, and devils"
+      prereqs: "Piety 50%; Willpower 50%",
+      summary: "+1 step Damage Modifier vs undead/demons/devils (1/day per Rank)"
     },
     { 
-      name: "Weapon Specialization", 
+      name: "Mental Strength I", 
       rank: 1, 
-      prereqs: "Combat Style 60%",
-      summary: "Choose Damage or Defensive: +1 damage modifier OR +1 AP to parrying weapon",
-      repeatable: true,
-      specialType: 'weapon-spec'
+      prereqs: "Piety 60%",
+      summary: "1/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Powerful Concentration", 
+      rank: 1, 
+      prereqs: "Piety 50%",
+      summary: "Willpower tests to maintain spell Concentration are 1 grade easier"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Modifier with finesse weapons (max 2× weapon die)"
     },
     
     // Rank 2
@@ -313,16 +323,28 @@ const RANKED_CLASS_ABILITIES = {
       summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
     },
     { 
+      name: "Defensive Reflexes I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 Reactive Action Point for Parry/Evade only"
+    },
+    { 
       name: "Extra Turning", 
       rank: 2, 
       prereqs: "Piety 80%; Willpower 80%",
       summary: "Double Turn Undead uses per encounter"
     },
     { 
-      name: "Improved Holy Smite", 
+      name: "Mental Strength II", 
       rank: 2, 
-      prereqs: "Holy Smite; Piety 70%",
-      summary: "+2 steps Damage Modifier vs undead, demons, and devils (replaces Holy Smite)"
+      prereqs: "Mental Strength I; Piety 80%",
+      summary: "2/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Ranged Touch", 
+      rank: 2, 
+      prereqs: "Willpower 80%",
+      summary: "Extend Touch spell to 30ft (counts as 1 Rank higher for memorization)"
     },
     
     // Rank 3
@@ -333,10 +355,16 @@ const RANKED_CLASS_ABILITIES = {
       summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
     },
     { 
-      name: "Greater Holy Smite", 
+      name: "Improved Holy Smite", 
       rank: 3, 
-      prereqs: "Improved Holy Smite; Piety 90%",
-      summary: "+4 steps Damage Modifier vs undead, demons, and devils (replaces Improved Holy Smite)"
+      prereqs: "Holy Smite; Piety 90%; Willpower 90%",
+      summary: "+2 steps Damage Modifier vs undead/demons/devils (replaces Holy Smite)"
+    },
+    { 
+      name: "Mental Strength III", 
+      rank: 3, 
+      prereqs: "Mental Strength II; Piety 100%",
+      summary: "3/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
     },
     
     // Rank 4
@@ -346,6 +374,18 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: null,
       summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
     },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes I",
+      summary: "+1 Reactive AP usable twice per combat (not vs same attack, no Luck combo)"
+    },
+    { 
+      name: "Mental Strength IV", 
+      rank: 4, 
+      prereqs: "Mental Strength III; Piety 120%",
+      summary: "4/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
     
     // Rank 5
     { 
@@ -353,6 +393,18 @@ const RANKED_CLASS_ABILITIES = {
       rank: 5, 
       prereqs: null,
       summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Greater Holy Smite", 
+      rank: 5, 
+      prereqs: "Improved Holy Smite; Piety 130%; Willpower 130%",
+      summary: "+4 steps Damage Modifier vs undead/demons/devils (replaces Improved Holy Smite)"
+    },
+    { 
+      name: "Mental Strength V", 
+      rank: 5, 
+      prereqs: "Mental Strength IV; Piety 140%",
+      summary: "5/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
     },
   ],
   

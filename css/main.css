@@ -1260,10 +1260,26 @@ select:focus {
   color: #2a7a2a !important;
 }
 
+/* Ensure damage-boosted wins for weapon damage fields on Combat page */
+input.weapon-damage.damage-boosted,
+.damage-cell input.weapon-damage.damage-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
 /* Ensure rage-boosted wins over derived-input compound selectors */
 .derived-input.rage-boosted,
 .derived-input.derived-readonly.rage-boosted,
 .wp-damage-row .derived-input.rage-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
+/* Ensure rage-boosted wins for weapon damage fields on Combat page */
+input.weapon-damage.rage-boosted,
+.damage-cell input.weapon-damage.rage-boosted {
   background-color: rgba(0, 150, 0, 0.15) !important;
   border: 1px solid #4a4 !important;
   color: #2a7a2a !important;

@@ -703,6 +703,8 @@ const App = {
         // Update weapon damages when switching to Combat page
         if (targetPage === 'combat' && window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
           window.WeaponData.updateAllWeaponDamage();
+          // Re-apply damage boost styling if any damage-boosting ability is active
+          this.reapplyDamageBoostStyling();
         }
         
         // Sync magic skill values when switching to Magic pages
@@ -13364,11 +13366,12 @@ const App = {
   activateHolySmite() {
     if (this.character.isHolySmiteActive) return;
     
-    const { steps } = this.getHolySmiteTier();
+    const { tier, steps } = this.getHolySmiteTier();
     if (steps === 0) return;
     
     const dmgCurrent = document.getElementById('damage-mod-current');
     const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    const tooltipText = `${tier}: +${steps} step${steps > 1 ? 's' : ''} vs undead/demons/devils`;
     
     // Store original values
     if (dmgCurrent) {
@@ -13376,6 +13379,7 @@ const App = {
       const steppedUp = this.stepDamageModifier(dmgCurrent.value, steps);
       dmgCurrent.value = steppedUp;
       dmgCurrent.classList.add('damage-boosted');
+      dmgCurrent.title = tooltipText;
     }
     
     if (wpDmgCurrent && wpDmgCurrent.value) {
@@ -13383,9 +13387,17 @@ const App = {
       const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, steps);
       wpDmgCurrent.value = steppedUp;
       wpDmgCurrent.classList.add('damage-boosted');
+      wpDmgCurrent.title = tooltipText;
     }
     
     this.character.isHolySmiteActive = true;
+    
+    // Update weapon damage displays and highlight them
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    this.applyDamageBoostToWeapons(tooltipText);
+    
     this.updateHolySmiteDisplay();
     this.scheduleAutoSave();
   },
@@ -13403,16 +13415,24 @@ const App = {
     if (dmgCurrent && this.character.holySmiteOriginalDmg !== undefined) {
       dmgCurrent.value = this.character.holySmiteOriginalDmg;
       dmgCurrent.classList.remove('damage-boosted');
+      dmgCurrent.title = '';
     }
     
     if (wpDmgCurrent && this.character.holySmiteOriginalWpDmg !== undefined) {
       wpDmgCurrent.value = this.character.holySmiteOriginalWpDmg;
       wpDmgCurrent.classList.remove('damage-boosted');
+      wpDmgCurrent.title = '';
     }
     
     this.character.isHolySmiteActive = false;
     delete this.character.holySmiteOriginalDmg;
     delete this.character.holySmiteOriginalWpDmg;
+    
+    // Update weapon damage displays and remove highlighting
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    this.removeDamageBoostFromWeapons();
     
     this.updateHolySmiteDisplay();
     this.scheduleAutoSave();
@@ -13424,12 +13444,24 @@ const App = {
   restoreHolySmiteState() {
     if (!this.character.isHolySmiteActive) return;
     
+    const { tier, steps } = this.getHolySmiteTier();
+    const tooltipText = `${tier}: +${steps} step${steps > 1 ? 's' : ''} vs undead/demons/devils`;
+    
     const dmgCurrent = document.getElementById('damage-mod-current');
     const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
     
-    // Apply visual class
-    if (dmgCurrent) dmgCurrent.classList.add('damage-boosted');
-    if (wpDmgCurrent && wpDmgCurrent.value) wpDmgCurrent.classList.add('damage-boosted');
+    // Apply visual class and tooltip
+    if (dmgCurrent) {
+      dmgCurrent.classList.add('damage-boosted');
+      dmgCurrent.title = tooltipText;
+    }
+    if (wpDmgCurrent && wpDmgCurrent.value) {
+      wpDmgCurrent.classList.add('damage-boosted');
+      wpDmgCurrent.title = tooltipText;
+    }
+    
+    // Apply to weapons
+    this.applyDamageBoostToWeapons(tooltipText);
     
     this.updateHolySmiteDisplay();
   },
@@ -13481,10 +13513,19 @@ const App = {
     
     // Restore Diving Strike visual state if it was active
     if (this.character.isDivingStrikeActive) {
+      const tooltipText = 'Diving Strike: +1 step Damage Modifier';
       const dmgCurrent = document.getElementById('damage-mod-current');
       const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
-      if (dmgCurrent) dmgCurrent.classList.add('damage-boosted');
-      if (wpDmgCurrent && wpDmgCurrent.value) wpDmgCurrent.classList.add('damage-boosted');
+      if (dmgCurrent) {
+        dmgCurrent.classList.add('damage-boosted');
+        dmgCurrent.title = tooltipText;
+      }
+      if (wpDmgCurrent && wpDmgCurrent.value) {
+        wpDmgCurrent.classList.add('damage-boosted');
+        wpDmgCurrent.title = tooltipText;
+      }
+      // Apply to weapons
+      this.applyDamageBoostToWeapons(tooltipText);
     }
   },
   
@@ -13570,6 +13611,7 @@ const App = {
       const steppedUp = this.stepDamageModifier(dmgCurrent.value, 1);
       dmgCurrent.value = steppedUp;
       dmgCurrent.classList.add('damage-boosted');
+      dmgCurrent.title = 'Diving Strike: +1 step Damage Modifier';
     }
     
     if (wpDmgCurrent && wpDmgCurrent.value) {
@@ -13577,10 +13619,17 @@ const App = {
       const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, 1);
       wpDmgCurrent.value = steppedUp;
       wpDmgCurrent.classList.add('damage-boosted');
+      wpDmgCurrent.title = 'Diving Strike: +1 step Damage Modifier';
     }
     
     this.character.isDivingStrikeActive = true;
     this.character.divingStrikeUsesRemaining--;
+    
+    // Update weapon damage displays and highlight them
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    this.applyDamageBoostToWeapons('Diving Strike: +1 step Damage Modifier');
     
     this.updateDivingStrikeDisplay();
     this.scheduleAutoSave();
@@ -13599,19 +13648,78 @@ const App = {
     if (dmgCurrent && this.character.divingStrikeOriginalDmg !== undefined) {
       dmgCurrent.value = this.character.divingStrikeOriginalDmg;
       dmgCurrent.classList.remove('damage-boosted');
+      dmgCurrent.title = '';
     }
     
     if (wpDmgCurrent && this.character.divingStrikeOriginalWpDmg !== undefined) {
       wpDmgCurrent.value = this.character.divingStrikeOriginalWpDmg;
       wpDmgCurrent.classList.remove('damage-boosted');
+      wpDmgCurrent.title = '';
     }
     
     this.character.isDivingStrikeActive = false;
     delete this.character.divingStrikeOriginalDmg;
     delete this.character.divingStrikeOriginalWpDmg;
     
+    // Update weapon damage displays and remove highlighting
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    this.removeDamageBoostFromWeapons();
+    
     this.updateDivingStrikeDisplay();
     this.scheduleAutoSave();
+  },
+  
+  /**
+   * Apply damage boost styling to all weapon damage fields
+   * @param {string} tooltipText - Hover text explaining the boost
+   */
+  applyDamageBoostToWeapons(tooltipText) {
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      if (field.value.trim()) {
+        field.classList.add('damage-boosted');
+        field.title = tooltipText;
+      }
+    });
+  },
+  
+  /**
+   * Remove damage boost styling from all weapon damage fields
+   */
+  removeDamageBoostFromWeapons() {
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    weaponDamageFields.forEach(field => {
+      field.classList.remove('damage-boosted');
+      field.title = '';
+    });
+  },
+  
+  /**
+   * Re-apply damage boost styling if any damage-boosting ability is active
+   * Called when switching to Combat page to ensure weapons are highlighted
+   */
+  reapplyDamageBoostStyling() {
+    // Check for Holy Smite
+    if (this.character.isHolySmiteActive) {
+      const { tier, steps } = this.getHolySmiteTier();
+      const tooltipText = `${tier}: +${steps} step${steps > 1 ? 's' : ''} vs undead/demons/devils`;
+      this.applyDamageBoostToWeapons(tooltipText);
+      return;
+    }
+    
+    // Check for Diving Strike
+    if (this.character.isDivingStrikeActive) {
+      this.applyDamageBoostToWeapons('Diving Strike: +1 step Damage Modifier');
+      return;
+    }
+    
+    // Check for Berserk Rage
+    if (this.character.isRaging) {
+      this.applyDamageBoostToWeapons('Increased damage modifier due to Rage');
+      return;
+    }
   },
   
   /**
@@ -14253,6 +14361,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       // If navigating to magic pages, sync professional skill values
       if (pageId === 'page-magic1' || pageId === 'page-magic2') {
         this.syncProfessionalSkillsToMagicPage();
+      }
+      
+      // If navigating to combat page, update weapon damages and re-apply damage boost styling
+      if (pageId === 'page-combat') {
+        if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+          window.WeaponData.updateAllWeaponDamage();
+        }
+        this.reapplyDamageBoostStyling();
       }
     }
   },
