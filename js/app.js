@@ -9815,6 +9815,53 @@ const App = {
       }
     }
     
+    // Reset Commanding uses if character has the ability
+    if (this.hasAbility('Commanding')) {
+      const maxUses = this.getMaxCommandingUses();
+      const prevUses = this.character.commandingUsesRemaining || 0;
+      this.character.commandingUsesRemaining = maxUses;
+      // End active commanding effect if any
+      if (this.character.isCommanding) {
+        this.endCommanding();
+      }
+      this.updateCommandingDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>Commanding uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>Commanding:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+    
+    // Reset Mental Strength uses if character has the ability
+    const mentalStrengthLevel = this.getMentalStrengthLevel();
+    if (mentalStrengthLevel > 0) {
+      const maxUses = mentalStrengthLevel;
+      const prevUses = this.character.mentalStrengthUsesRemaining || 0;
+      this.character.mentalStrengthUsesRemaining = maxUses;
+      // End active mental strength effect if any
+      if (this.character.isMentalStrengthActive) {
+        this.endMentalStrength();
+      }
+      this.updateMentalStrengthDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>Mental Strength uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>Mental Strength:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+    
+    // Reset Just a Scratch uses if character has the ability
+    if (this.hasAbility('Just a Scratch')) {
+      const prevUses = this.character.scratchUsesRemaining || 0;
+      this.character.scratchUsesRemaining = 1;
+      this.updateJustAScratchDisplay();
+      if (prevUses < 1) {
+        messages.push(`<strong>Just a Scratch uses restored:</strong> ${prevUses} → 1`);
+      } else {
+        messages.push(`<strong>Just a Scratch:</strong> Already at maximum (1 use)`);
+      }
+    }
+    
     // Calculate fatigue recovery
     const newState = longRestOutcome[currentState] || currentState;
     
