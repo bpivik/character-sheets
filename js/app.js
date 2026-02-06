@@ -411,6 +411,9 @@ const App = {
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
     
+    // Check if Turn Undead section should be visible
+    this.checkTurnUndeadVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -4261,6 +4264,8 @@ const App = {
         this.checkCommandingVisibility();
       } else if (normalizedName.startsWith('mental strength')) {
         this.checkMentalStrengthVisibility();
+      } else if (normalizedName === 'turn undead') {
+        this.checkTurnUndeadVisibility();
       }
     }
     
@@ -5392,6 +5397,11 @@ const App = {
           this.checkCommandingVisibility();
         }
         
+        // Check if Turn Undead section should now be visible
+        if (normalizedName === 'turn undead') {
+          this.checkTurnUndeadVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -5424,6 +5434,11 @@ const App = {
     // Check if Commanding section should now be visible
     if (normalizedName === 'commanding') {
       this.checkCommandingVisibility();
+    }
+    
+    // Check if Turn Undead section should now be visible
+    if (normalizedName === 'turn undead') {
+      this.checkTurnUndeadVisibility();
     }
     
     return !!newInput;
@@ -7994,6 +8009,13 @@ const App = {
     activeAbilityClasses.forEach(activeClass => {
       this.populateClassAbilities(activeClass.name, activeClass.rank);
     });
+    
+    // After updating abilities, check visibility of ability-related UI sections
+    this.checkTurnUndeadVisibility();
+    this.checkCommandingVisibility();
+    this.checkMentalStrengthVisibility();
+    this.checkBerserkRageVisibility();
+    this.checkJustAScratchVisibility();
   },
   
   /**
@@ -10151,6 +10173,23 @@ const App = {
         messages.push(`<strong>Mental Strength uses restored:</strong> ${prevUses} → ${maxUses}`);
       } else {
         messages.push(`<strong>Mental Strength:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+    
+    // Reset Turn Undead uses if character has the ability
+    if (this.hasAbility('Turn Undead')) {
+      const maxUses = this.getMaxTurnUndeadUses();
+      const prevUses = this.character.turnUndeadUsesRemaining || 0;
+      this.character.turnUndeadUsesRemaining = maxUses;
+      // End active turn undead effect if any
+      if (this.character.isTurnUndeadActive) {
+        this.endTurnUndead();
+      }
+      this.updateTurnUndeadDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>Turn Undead uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>Turn Undead:</strong> Already at maximum (${maxUses} uses)`);
       }
     }
     
@@ -12730,6 +12769,171 @@ const App = {
     if (rowsToRemove.length > 0) {
       this.syncClassAbilitiesToCharacter();
     }
+  },
+
+  // ========================================
+  // Turn Undead System (Cleric)
+  // ========================================
+  
+  /**
+   * Check if character has Turn Undead ability and show/hide section
+   */
+  checkTurnUndeadVisibility() {
+    const section = document.getElementById('turn-undead-section');
+    if (!section) return;
+    
+    const hasTurnUndead = this.hasAbility('Turn Undead');
+    
+    if (hasTurnUndead) {
+      section.style.display = '';
+      this.initTurnUndead();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Initialize Turn Undead system
+   */
+  initTurnUndead() {
+    this.updateTurnUndeadDisplay();
+    this.setupTurnUndeadListeners();
+    
+    // Restore turn undead state if active
+    if (this.character.isTurnUndeadActive) {
+      this.restoreTurnUndeadState();
+    }
+  },
+  
+  /**
+   * Get maximum Turn Undead uses per day
+   * Based on class rank (Cleric rank) - uses = rank per day
+   */
+  getMaxTurnUndeadUses() {
+    // Check all class slots for Cleric
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    
+    let maxRank = 0;
+    
+    for (const slot of classSlots) {
+      const className = document.getElementById(slot.class)?.value?.toLowerCase().trim() || '';
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      
+      if (className === 'cleric' && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    
+    // Return at least 1 use if character has Turn Undead ability
+    return Math.max(maxRank, 1);
+  },
+  
+  /**
+   * Update Turn Undead display values
+   */
+  updateTurnUndeadDisplay() {
+    const maxUses = this.getMaxTurnUndeadUses();
+    
+    // Initialize uses remaining if not set
+    if (this.character.turnUndeadUsesRemaining === undefined || this.character.turnUndeadUsesRemaining === null) {
+      this.character.turnUndeadUsesRemaining = maxUses;
+    }
+    
+    const usesAvail = document.getElementById('turn-undead-uses-available');
+    const usesMax = document.getElementById('turn-undead-uses-max');
+    
+    if (usesAvail) usesAvail.textContent = this.character.turnUndeadUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+    
+    // Update button state
+    const useBtn = document.getElementById('btn-turn-undead-use');
+    const noUses = this.character.turnUndeadUsesRemaining <= 0;
+    const isActive = this.character.isTurnUndeadActive;
+    
+    if (useBtn) useBtn.disabled = noUses || isActive;
+  },
+  
+  /**
+   * Setup Turn Undead event listeners
+   */
+  setupTurnUndeadListeners() {
+    const useBtn = document.getElementById('btn-turn-undead-use');
+    const endBtn = document.getElementById('btn-end-turn-undead');
+    const resetBtn = document.getElementById('btn-reset-turn-undead-uses');
+    
+    if (useBtn && !useBtn.dataset.listenerAdded) {
+      useBtn.addEventListener('click', () => this.useTurnUndead());
+      useBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (endBtn && !endBtn.dataset.listenerAdded) {
+      endBtn.addEventListener('click', () => this.endTurnUndead());
+      endBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.character.turnUndeadUsesRemaining = this.getMaxTurnUndeadUses();
+        this.updateTurnUndeadDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Use Turn Undead ability
+   */
+  useTurnUndead() {
+    if (this.character.isTurnUndeadActive || this.character.turnUndeadUsesRemaining <= 0) return;
+    
+    this.character.isTurnUndeadActive = true;
+    this.character.turnUndeadUsesRemaining--;
+    
+    // Update UI to show active state
+    const buttonsRow = document.getElementById('turn-undead-buttons');
+    const activeRow = document.getElementById('turn-undead-active');
+    
+    if (buttonsRow) buttonsRow.style.display = 'none';
+    if (activeRow) activeRow.style.display = '';
+    
+    this.updateTurnUndeadDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * End Turn Undead active state
+   */
+  endTurnUndead() {
+    this.character.isTurnUndeadActive = false;
+    
+    // Update UI to show buttons again
+    const buttonsRow = document.getElementById('turn-undead-buttons');
+    const activeRow = document.getElementById('turn-undead-active');
+    
+    if (buttonsRow) buttonsRow.style.display = '';
+    if (activeRow) activeRow.style.display = 'none';
+    
+    this.updateTurnUndeadDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Restore Turn Undead state after page reload
+   */
+  restoreTurnUndeadState() {
+    // Update UI to show active state
+    const buttonsRow = document.getElementById('turn-undead-buttons');
+    const activeRow = document.getElementById('turn-undead-active');
+    
+    if (buttonsRow) buttonsRow.style.display = 'none';
+    if (activeRow) activeRow.style.display = '';
+    
+    this.updateTurnUndeadDisplay();
   },
 
   /**

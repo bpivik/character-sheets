@@ -1324,9 +1324,33 @@
                   </div>
                 </div>
               </section>
+              
+              <!-- Turn Undead Section (only visible if character has Turn Undead ability) -->
+              <section class="turn-undead-section" id="turn-undead-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">☀️ Turn Undead</h3>
+                </div>
+                <div class="turn-undead-content">
+                  <div class="turn-undead-info-row">
+                    <span class="turn-undead-value" id="turn-undead-uses-available">0</span>
+                    <span class="turn-undead-label">/ <span id="turn-undead-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-turn-undead" id="btn-reset-turn-undead-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="turn-undead-button-row" id="turn-undead-buttons">
+                    <button type="button" class="btn btn-turn-undead" id="btn-turn-undead-use" title="Turn Undead: Drive off or destroy undead creatures">
+                      ☀️ Turn Undead
+                    </button>
+                  </div>
+                  <div class="turn-undead-active" id="turn-undead-active" style="display: none;">
+                    <div class="turn-undead-active-label">☀️ Turning Undead ☀️</div>
+                    <div class="turn-undead-effects">
+                      <span>Roll Willpower to determine effect</span>
+                    </div>
+                    <button type="button" class="btn btn-end-turn-undead" id="btn-end-turn-undead">Done</button>
+                  </div>
+                </div>
+              </section>
             </div>
-            
-            <!-- Divider before spell-like abilities -->
             <hr class="ability-cards-divider" id="spell-like-divider" style="display: none;">
 
             <!-- Spell-Like Abilities Section (only visible if character has Spell-Like Abilities) -->

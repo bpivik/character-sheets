@@ -1639,6 +1639,140 @@ select:focus {
   color: #66c !important;
 }
 
+/* ========================================
+   Turn Undead Section (Cleric)
+   ======================================== */
+.turn-undead-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #2a2510 0%, #3d3520 100%);
+  border: 2px solid #d4a840;
+  border-radius: 6px;
+}
+
+.turn-undead-section .section-header {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.turn-undead-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.turn-undead-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.turn-undead-value {
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.turn-undead-label {
+  color: #999;
+}
+
+.btn-reset-turn-undead {
+  background: transparent;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-reset-turn-undead:hover {
+  background: #444;
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.turn-undead-button-row {
+  width: 100%;
+}
+
+.btn-turn-undead {
+  width: 100%;
+  background: linear-gradient(135deg, #5a4a1a 0%, #7a6a2a 50%, #5a4a1a 100%);
+  color: white;
+  border: 1px solid #ffd700;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(212, 168, 64, 0.4);
+}
+
+.btn-turn-undead:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a6a2a 0%, #9a8a3a 50%, #7a6a2a 100%);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+}
+
+.btn-turn-undead:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.turn-undead-active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 4px;
+  border: 1px solid #ffd700;
+}
+
+.turn-undead-active-label {
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+  animation: turn-undead-pulse 2s infinite;
+}
+
+.turn-undead-effects {
+  color: #eec;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+@keyframes turn-undead-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.btn-end-turn-undead {
+  background: linear-gradient(135deg, #5a4a1a 0%, #7a6a2a 50%, #5a4a1a 100%);
+  color: white;
+  border: 1px solid #ffd700;
+  padding: 0.3rem 1rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-end-turn-undead:hover {
+  background: linear-gradient(135deg, #7a6a2a 0%, #9a8a3a 50%, #7a6a2a 100%);
+}
+
 /* ============================================
    BRUTE STRENGTH SECTION
    ============================================ */
