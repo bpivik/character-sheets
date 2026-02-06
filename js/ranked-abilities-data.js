@@ -291,6 +291,12 @@ const RANKED_CLASS_ABILITIES = {
       summary: "May re-roll Turn Undead Channel roll (must use new result)"
     },
     { 
+      name: "Holy Smite", 
+      rank: 1, 
+      prereqs: "Piety 50%",
+      summary: "+1 step Damage Modifier vs undead, demons, and devils"
+    },
+    { 
       name: "Weapon Specialization", 
       rank: 1, 
       prereqs: "Combat Style 60%",
@@ -312,6 +318,12 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Piety 80%; Willpower 80%",
       summary: "Double Turn Undead uses per encounter"
     },
+    { 
+      name: "Improved Holy Smite", 
+      rank: 2, 
+      prereqs: "Holy Smite; Piety 70%",
+      summary: "+2 steps Damage Modifier vs undead, demons, and devils (replaces Holy Smite)"
+    },
     
     // Rank 3
     { 
@@ -319,6 +331,12 @@ const RANKED_CLASS_ABILITIES = {
       rank: 3, 
       prereqs: null,
       summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Greater Holy Smite", 
+      rank: 3, 
+      prereqs: "Improved Holy Smite; Piety 90%",
+      summary: "+4 steps Damage Modifier vs undead, demons, and devils (replaces Improved Holy Smite)"
     },
     
     // Rank 4

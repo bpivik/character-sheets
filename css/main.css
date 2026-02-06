@@ -1243,6 +1243,23 @@ select:focus {
   color: #2a7a2a !important;
 }
 
+/* Generic damage-boosted class for any ability that modifies Damage Modifier */
+.damage-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border-color: #4a4 !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
+/* Ensure damage-boosted wins over derived-input compound selectors */
+.derived-input.damage-boosted,
+.derived-input.derived-readonly.damage-boosted,
+.wp-damage-row .derived-input.damage-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
 /* Ensure rage-boosted wins over derived-input compound selectors */
 .derived-input.rage-boosted,
 .derived-input.derived-readonly.rage-boosted,
@@ -2140,6 +2157,85 @@ select:focus {
 }
 
 /* ============================================
+   HOLY SMITE SECTION
+   ============================================ */
+.holy-smite-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a2a 0%, #2d2045 100%);
+  border: 2px solid #9a6fd4;
+  border-radius: 6px;
+}
+
+.holy-smite-section .section-header {
+  color: #c8a8f8;
+  text-shadow: 0 0 10px rgba(200, 168, 248, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.holy-smite-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.holy-smite-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.holy-smite-label {
+  color: #c8a8f8;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.holy-smite-toggle {
+  width: 100%;
+}
+
+.btn-holy-smite {
+  width: 100%;
+  background: linear-gradient(135deg, #4a2a7a 0%, #6a4a9a 50%, #4a2a7a 100%);
+  color: white;
+  border: 1px solid #9a6fd4;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(154, 111, 212, 0.4);
+}
+
+.btn-holy-smite:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a3a8a 0%, #7a5aaa 50%, #5a3a8a 100%);
+  box-shadow: 0 0 15px rgba(154, 111, 212, 0.6);
+}
+
+.btn-holy-smite:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-holy-smite.active {
+  background: linear-gradient(135deg, #2a6a2a 0%, #3a8a3a 50%, #2a6a2a 100%);
+  border-color: #4a4;
+  box-shadow: 0 0 15px rgba(74, 170, 74, 0.6);
+  animation: holy-smite-pulse 2s infinite;
+}
+
+@keyframes holy-smite-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(74, 170, 74, 0.6); }
+  50% { box-shadow: 0 0 25px rgba(74, 170, 74, 0.8); }
+}
+
+/* ============================================
    BRUTE STRENGTH SECTION
    ============================================ */
 .brute-strength-section {
@@ -2513,79 +2609,69 @@ select:focus {
 /* ============================================
    SYRIN SPECIES ABILITIES SECTION
    ============================================ */
-.syrin-abilities-section {
-  padding: 0.5rem 0.75rem;
-  background: linear-gradient(135deg, #1a2a3a 0%, #2d3a4d 100%);
-  border: 2px solid #6a9fd4;
+.syrin-abilities-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.syrin-ability-section {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.5rem;
   border-radius: 6px;
 }
 
-.syrin-abilities-section .section-header {
+.diving-strike-section {
+  background: linear-gradient(135deg, #1a2a3a 0%, #2d3a4d 100%);
+  border: 2px solid #6a9fd4;
+}
+
+.diving-strike-section .section-header {
   color: #8ec8f8;
   text-shadow: 0 0 10px rgba(142, 200, 248, 0.5);
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
 }
 
-.syrin-abilities-content {
+.radiant-burst-section {
+  background: linear-gradient(135deg, #2a2510 0%, #3d3520 100%);
+  border: 2px solid #d4a840;
+}
+
+.radiant-burst-section .section-header {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.syrin-ability-content {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-
-.syrin-ability-card {
-  background: rgba(106, 159, 212, 0.1);
-  border: 1px solid rgba(106, 159, 212, 0.3);
-  border-radius: 4px;
-  padding: 0.5rem;
-}
-
-.syrin-ability-header {
-  display: flex;
-  justify-content: space-between;
+  gap: 0.35rem;
   align-items: center;
-  margin-bottom: 0.5rem;
 }
 
-.syrin-ability-name {
-  color: #8ec8f8;
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-
-.syrin-ability-uses {
+.syrin-ability-info-row {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-}
-
-.syrin-uses-value {
-  color: #8ec8f8;
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-
-.syrin-uses-label {
   color: #aaa;
   font-size: 0.75rem;
 }
 
+.syrin-ability-value {
+  color: #8ec8f8;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.syrin-ability-label {
+  color: #999;
+}
+
 .syrin-ability-cost {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 200, 100, 0.15);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 200, 100, 0.3);
-}
-
-.syrin-ability-cost .cost-label {
-  color: #cc9;
-  font-size: 0.75rem;
-}
-
-.syrin-ability-cost .cost-value {
   color: #ffd700;
   font-weight: bold;
   font-size: 0.8rem;
@@ -2593,73 +2679,81 @@ select:focus {
 
 .btn-reset-syrin {
   background: transparent;
-  border: 1px solid rgba(106, 159, 212, 0.5);
-  color: #8ec8f8;
-  padding: 0 0.4rem;
-  border-radius: 3px;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  border-radius: 3px;
 }
 
 .btn-reset-syrin:hover {
-  background: rgba(106, 159, 212, 0.2);
-  border-color: #6a9fd4;
+  background: #444;
+  border-color: #8ec8f8;
+  color: #8ec8f8;
 }
 
-.syrin-ability-buttons {
-  display: flex;
-  gap: 0.5rem;
+.syrin-ability-button-row {
+  width: 100%;
 }
 
 .btn-syrin-ability {
-  flex: 1;
-  background: linear-gradient(135deg, #2a4a6a 0%, #4a6a8a 100%);
-  color: #fff;
-  border: 1px solid #6a9fd4;
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
   font-weight: bold;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
-.btn-syrin-ability:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3a5a7a 0%, #5a7a9a 100%);
-  box-shadow: 0 0 10px rgba(106, 159, 212, 0.5);
+.btn-diving-strike {
+  background: linear-gradient(135deg, #2a4a6a 0%, #4a6a8a 50%, #2a4a6a 100%);
+  color: white;
+  border: 1px solid #6a9fd4;
+  box-shadow: 0 2px 8px rgba(106, 159, 212, 0.4);
 }
 
-.btn-syrin-ability:disabled {
+.btn-diving-strike:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a5a7a 0%, #5a7a9a 50%, #3a5a7a 100%);
+  box-shadow: 0 0 15px rgba(106, 159, 212, 0.6);
+}
+
+.btn-diving-strike:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-syrin-ability.btn-radiant {
-  background: linear-gradient(135deg, #5a4a2a 0%, #8a7a4a 100%);
-  border-color: #ffd700;
+.btn-radiant-burst {
+  background: linear-gradient(135deg, #5a4a1a 0%, #7a6a2a 50%, #5a4a1a 100%);
+  color: white;
+  border: 1px solid #ffd700;
+  box-shadow: 0 2px 8px rgba(212, 168, 64, 0.4);
 }
 
-.btn-syrin-ability.btn-radiant:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6a5a3a 0%, #9a8a5a 100%);
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+.btn-radiant-burst:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a6a2a 0%, #9a8a3a 50%, #7a6a2a 100%);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.btn-radiant-burst:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .syrin-ability-active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: linear-gradient(135deg, rgba(106, 159, 212, 0.2), rgba(142, 200, 248, 0.1));
-  border: 1px solid #6a9fd4;
-  border-radius: 4px;
+  gap: 0.3rem;
+  width: 100%;
 }
 
 .syrin-active-label {
   color: #8ec8f8;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   animation: syrin-pulse 2s infinite;
 }
 
@@ -2668,20 +2762,14 @@ select:focus {
   50% { opacity: 0.7; text-shadow: 0 0 5px rgba(142, 200, 248, 0.3); }
 }
 
-.syrin-active-effects {
-  color: #aaa;
-  font-size: 0.8rem;
-  font-style: italic;
-}
-
 .btn-end-syrin {
   background: linear-gradient(135deg, #4a4a4a 0%, #6a6a6a 100%);
   color: #fff;
   border: 1px solid #888;
-  padding: 0.3rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   transition: all 0.2s ease;
 }
 

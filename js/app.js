@@ -417,6 +417,9 @@ const App = {
     // Check if Syrin species abilities section should be visible
     this.checkSyrinAbilitiesVisibility();
     
+    // Check if Holy Smite section should be visible
+    this.checkHolySmiteVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -5345,6 +5348,15 @@ const App = {
       this.removeAbilityFromSheet('Sweeping Strike');
     }
     
+    // Handle Holy Smite upgrades - remove previous tier when upgrading
+    if (normalizedName === 'improved holy smite') {
+      this.removeAbilityFromSheet('Holy Smite');
+    }
+    if (normalizedName === 'greater holy smite') {
+      this.removeAbilityFromSheet('Improved Holy Smite');
+      this.removeAbilityFromSheet('Holy Smite'); // In case they skipped a tier
+    }
+    
     // Check if ability already exists
     const existingInputs = container.querySelectorAll('.class-ability-input');
     for (const input of existingInputs) {
@@ -8020,6 +8032,7 @@ const App = {
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
+    this.checkHolySmiteVisibility();
   },
   
   /**
@@ -13236,6 +13249,192 @@ const App = {
   },
 
   // ========================================
+  // HOLY SMITE SYSTEM
+  // ========================================
+  
+  /**
+   * Check if character has any Holy Smite ability and show/hide section
+   */
+  checkHolySmiteVisibility() {
+    const section = document.getElementById('holy-smite-section');
+    if (!section) return;
+    
+    const hasGreaterHolySmite = this.hasAbility('Greater Holy Smite');
+    const hasImprovedHolySmite = this.hasAbility('Improved Holy Smite');
+    const hasHolySmite = this.hasAbility('Holy Smite');
+    
+    if (hasGreaterHolySmite || hasImprovedHolySmite || hasHolySmite) {
+      section.style.display = '';
+      this.initHolySmite();
+    } else {
+      section.style.display = 'none';
+      // End active effect if ability lost
+      if (this.character.isHolySmiteActive) {
+        this.endHolySmite();
+      }
+    }
+  },
+  
+  /**
+   * Initialize Holy Smite system
+   */
+  initHolySmite() {
+    this.updateHolySmiteDisplay();
+    this.setupHolySmiteListeners();
+    
+    // Restore Holy Smite state if it was active
+    if (this.character.isHolySmiteActive) {
+      this.restoreHolySmiteState();
+    }
+  },
+  
+  /**
+   * Get the current Holy Smite tier and step bonus
+   * @returns {{ tier: string, steps: number }}
+   */
+  getHolySmiteTier() {
+    if (this.hasAbility('Greater Holy Smite')) {
+      return { tier: 'Greater Holy Smite', steps: 4 };
+    }
+    if (this.hasAbility('Improved Holy Smite')) {
+      return { tier: 'Improved Holy Smite', steps: 2 };
+    }
+    if (this.hasAbility('Holy Smite')) {
+      return { tier: 'Holy Smite', steps: 1 };
+    }
+    return { tier: null, steps: 0 };
+  },
+  
+  /**
+   * Update Holy Smite display
+   */
+  updateHolySmiteDisplay() {
+    const { tier, steps } = this.getHolySmiteTier();
+    
+    const headerEl = document.getElementById('holy-smite-header');
+    const bonusEl = document.getElementById('holy-smite-bonus');
+    const btnTextEl = document.getElementById('holy-smite-btn-text');
+    const btn = document.getElementById('btn-holy-smite-toggle');
+    
+    if (headerEl && tier) {
+      headerEl.textContent = `⚔️ ${tier}`;
+    }
+    
+    if (bonusEl) {
+      bonusEl.textContent = `+${steps} step${steps > 1 ? 's' : ''} vs Evil`;
+    }
+    
+    if (btnTextEl && btn) {
+      if (this.character.isHolySmiteActive) {
+        btnTextEl.textContent = 'Deactivate';
+        btn.classList.add('active');
+      } else {
+        btnTextEl.textContent = 'Activate';
+        btn.classList.remove('active');
+      }
+    }
+  },
+  
+  /**
+   * Setup Holy Smite event listeners
+   */
+  setupHolySmiteListeners() {
+    const toggleBtn = document.getElementById('btn-holy-smite-toggle');
+    
+    if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
+      toggleBtn.addEventListener('click', () => this.toggleHolySmite());
+      toggleBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Toggle Holy Smite on/off
+   */
+  toggleHolySmite() {
+    if (this.character.isHolySmiteActive) {
+      this.endHolySmite();
+    } else {
+      this.activateHolySmite();
+    }
+  },
+  
+  /**
+   * Activate Holy Smite - increase damage modifier by tier steps
+   */
+  activateHolySmite() {
+    if (this.character.isHolySmiteActive) return;
+    
+    const { steps } = this.getHolySmiteTier();
+    if (steps === 0) return;
+    
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    
+    // Store original values
+    if (dmgCurrent) {
+      this.character.holySmiteOriginalDmg = dmgCurrent.value;
+      const steppedUp = this.stepDamageModifier(dmgCurrent.value, steps);
+      dmgCurrent.value = steppedUp;
+      dmgCurrent.classList.add('damage-boosted');
+    }
+    
+    if (wpDmgCurrent && wpDmgCurrent.value) {
+      this.character.holySmiteOriginalWpDmg = wpDmgCurrent.value;
+      const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, steps);
+      wpDmgCurrent.value = steppedUp;
+      wpDmgCurrent.classList.add('damage-boosted');
+    }
+    
+    this.character.isHolySmiteActive = true;
+    this.updateHolySmiteDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * End Holy Smite - restore original damage modifiers
+   */
+  endHolySmite() {
+    if (!this.character.isHolySmiteActive) return;
+    
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    
+    // Restore original values
+    if (dmgCurrent && this.character.holySmiteOriginalDmg !== undefined) {
+      dmgCurrent.value = this.character.holySmiteOriginalDmg;
+      dmgCurrent.classList.remove('damage-boosted');
+    }
+    
+    if (wpDmgCurrent && this.character.holySmiteOriginalWpDmg !== undefined) {
+      wpDmgCurrent.value = this.character.holySmiteOriginalWpDmg;
+      wpDmgCurrent.classList.remove('damage-boosted');
+    }
+    
+    this.character.isHolySmiteActive = false;
+    delete this.character.holySmiteOriginalDmg;
+    delete this.character.holySmiteOriginalWpDmg;
+    
+    this.updateHolySmiteDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Restore Holy Smite state on page load
+   */
+  restoreHolySmiteState() {
+    if (!this.character.isHolySmiteActive) return;
+    
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    
+    // Apply visual class
+    if (dmgCurrent) dmgCurrent.classList.add('damage-boosted');
+    if (wpDmgCurrent && wpDmgCurrent.value) wpDmgCurrent.classList.add('damage-boosted');
+    
+    this.updateHolySmiteDisplay();
+  },
+
+  // ========================================
   // SYRIN SPECIES ABILITIES SYSTEM
   // ========================================
   
@@ -13279,6 +13478,14 @@ const App = {
   initSyrinAbilities() {
     this.updateDivingStrikeDisplay();
     this.setupSyrinAbilitiesListeners();
+    
+    // Restore Diving Strike visual state if it was active
+    if (this.character.isDivingStrikeActive) {
+      const dmgCurrent = document.getElementById('damage-mod-current');
+      const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+      if (dmgCurrent) dmgCurrent.classList.add('damage-boosted');
+      if (wpDmgCurrent && wpDmgCurrent.value) wpDmgCurrent.classList.add('damage-boosted');
+    }
   },
   
   /**
@@ -13336,7 +13543,7 @@ const App = {
     if (btn) btn.disabled = noUses || isActive;
     
     // Show/hide active state
-    const buttonsRow = document.querySelector('#diving-strike-card .syrin-ability-buttons');
+    const buttonsRow = document.getElementById('diving-strike-buttons');
     const activeRow = document.getElementById('diving-strike-active');
     
     if (isActive) {
@@ -13362,12 +13569,14 @@ const App = {
       this.character.divingStrikeOriginalDmg = dmgCurrent.value;
       const steppedUp = this.stepDamageModifier(dmgCurrent.value, 1);
       dmgCurrent.value = steppedUp;
+      dmgCurrent.classList.add('damage-boosted');
     }
     
     if (wpDmgCurrent && wpDmgCurrent.value) {
       this.character.divingStrikeOriginalWpDmg = wpDmgCurrent.value;
       const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, 1);
       wpDmgCurrent.value = steppedUp;
+      wpDmgCurrent.classList.add('damage-boosted');
     }
     
     this.character.isDivingStrikeActive = true;
@@ -13389,10 +13598,12 @@ const App = {
     // Restore original values
     if (dmgCurrent && this.character.divingStrikeOriginalDmg !== undefined) {
       dmgCurrent.value = this.character.divingStrikeOriginalDmg;
+      dmgCurrent.classList.remove('damage-boosted');
     }
     
     if (wpDmgCurrent && this.character.divingStrikeOriginalWpDmg !== undefined) {
       wpDmgCurrent.value = this.character.divingStrikeOriginalWpDmg;
+      wpDmgCurrent.classList.remove('damage-boosted');
     }
     
     this.character.isDivingStrikeActive = false;
@@ -19456,6 +19667,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     'defensive reflexes 1': ['defensive reflexes 2', 'defensive reflexes 3'],
     'defensive reflexes ii': ['defensive reflexes iii'],
     'defensive reflexes 2': ['defensive reflexes 3'],
+    'holy smite': ['improved holy smite', 'greater holy smite'],
+    'improved holy smite': ['greater holy smite'],
   },
 
   /**
