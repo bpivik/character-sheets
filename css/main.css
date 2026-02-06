@@ -2364,6 +2364,14 @@ input.weapon-damage.rage-boosted,
   color: #2a7a2a !important;
 }
 
+/* Ensure powerful-concentration-bonus wins over skill-input */
+input.skill-input.powerful-concentration-bonus,
+#willpower-current.powerful-concentration-bonus {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
 /* ============================================
    BRUTE STRENGTH SECTION
    ============================================ */

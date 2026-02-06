@@ -13379,7 +13379,7 @@ const App = {
     }
     
     if (bonusEl) {
-      bonusEl.textContent = `+${steps} step${steps > 1 ? 's' : ''} vs Evil`;
+      bonusEl.textContent = `+${steps} step${steps > 1 ? 's' : ''} damage modifier vs Evil`;
     }
     
     // Update uses display
@@ -13632,7 +13632,7 @@ const App = {
   activatePowerfulConcentration() {
     if (this.character.isPowerfulConcentrationActive) return;
     
-    const willpowerField = document.getElementById('willpower');
+    const willpowerField = document.getElementById('willpower-current');
     if (willpowerField) {
       // Store original value
       this.character.powerfulConcentrationOriginalWillpower = parseInt(willpowerField.value, 10) || 0;
@@ -13655,7 +13655,7 @@ const App = {
   endPowerfulConcentration() {
     if (!this.character.isPowerfulConcentrationActive) return;
     
-    const willpowerField = document.getElementById('willpower');
+    const willpowerField = document.getElementById('willpower-current');
     if (willpowerField && this.character.powerfulConcentrationOriginalWillpower !== undefined) {
       willpowerField.value = this.character.powerfulConcentrationOriginalWillpower;
       willpowerField.classList.remove('powerful-concentration-bonus');
@@ -13675,7 +13675,7 @@ const App = {
   restorePowerfulConcentrationState() {
     if (!this.character.isPowerfulConcentrationActive) return;
     
-    const willpowerField = document.getElementById('willpower');
+    const willpowerField = document.getElementById('willpower-current');
     if (willpowerField) {
       willpowerField.classList.add('powerful-concentration-bonus');
       willpowerField.title = 'Powerful Concentration: +20 Willpower for concentration checks';
