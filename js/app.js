@@ -4405,6 +4405,18 @@ const App = {
     // Store current value as previous for next change
     input.dataset.previousValue = input.value;
     
+    // Special handling for Woodland Languages - show modal
+    const normalizedValue = value.toLowerCase().trim().replace(/[']/g, "'");
+    if (normalizedValue === 'woodland languages') {
+      // Store the input for later reference when modal closes
+      this._woodlandLanguagesInput = input;
+      this.showWoodlandLanguagesModal();
+      // Update tooltip
+      this.updateAbilityTooltip(input);
+      if (infoBtn) infoBtn.style.display = '';
+      return;
+    }
+    
     // Check for duplicates
     const isDuplicate = this.checkAbilityDuplicate(input);
     
@@ -5360,6 +5372,12 @@ const App = {
     if (normalizedName === 'greater holy smite') {
       this.removeAbilityFromSheet('Improved Holy Smite');
       this.removeAbilityFromSheet('Holy Smite'); // In case they skipped a tier
+    }
+    
+    // Handle Woodland Languages - show modal to select language
+    if (normalizedName === 'woodland languages') {
+      this.showWoodlandLanguagesModal();
+      return true; // The modal will handle adding the ability if needed
     }
     
     // Check if ability already exists
@@ -8429,6 +8447,213 @@ const App = {
     this.addAbilityToSheet(abilityName);
     
     this.scheduleAutoSave();
+  },
+  
+  /**
+   * Show modal for selecting Woodland Language
+   */
+  showWoodlandLanguagesModal() {
+    const exampleLanguages = [
+      'Centaur', 'Dryad', 'Elvish', 'Faun', 'Gnome', 'Green Dragon',
+      'Hill Giant', 'Lizardman', 'Manticore', 'Nixie', 'Pixie', 'Sprite', "Tree'nt"
+    ];
+    
+    // Check which languages character already has
+    const existingLanguages = this.getExistingLanguages();
+    
+    // Create modal overlay
+    let overlay = document.getElementById('woodland-languages-modal');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'woodland-languages-modal';
+      overlay.className = 'modal-overlay woodland-languages-modal';
+      document.body.appendChild(overlay);
+    }
+    
+    // Build language options
+    const languageOptions = exampleLanguages.map(lang => {
+      const normalizedLang = lang.toLowerCase().replace(/[']/g, "'");
+      const alreadyHas = existingLanguages.some(el => el.toLowerCase().replace(/[']/g, "'") === normalizedLang);
+      return `
+        <button type="button" class="woodland-lang-btn${alreadyHas ? ' disabled' : ''}" 
+                data-language="${lang}" ${alreadyHas ? 'disabled' : ''}>
+          ${lang}${alreadyHas ? ' ✓' : ''}
+        </button>
+      `;
+    }).join('');
+    
+    overlay.innerHTML = `
+      <div class="woodland-languages-modal-content">
+        <h3>🌳 Woodland Languages</h3>
+        <p class="woodland-modal-description">
+          You are divinely granted the ability to fully comprehend the language of a specific woodland species at <strong>Base Level +40%</strong>.
+        </p>
+        <div class="woodland-custom-input">
+          <label for="woodland-custom-lang">Enter language name:</label>
+          <div class="woodland-input-row">
+            <input type="text" id="woodland-custom-lang" placeholder="e.g., Treant, Satyr, Brownie...">
+            <button type="button" class="btn btn-add-lang" id="woodland-add-custom">Add</button>
+          </div>
+        </div>
+        <p class="woodland-examples-label">Or select from common examples:</p>
+        <div class="woodland-lang-grid">
+          ${languageOptions}
+        </div>
+        <div class="woodland-modal-footer">
+          <button type="button" class="btn btn-cancel" id="woodland-lang-cancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+    
+    // Add event listeners for example buttons
+    const langButtons = overlay.querySelectorAll('.woodland-lang-btn:not(.disabled)');
+    langButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedLang = btn.dataset.language;
+        this.addWoodlandLanguage(selectedLang);
+        this.closeWoodlandLanguagesModal();
+      });
+    });
+    
+    // Add event listener for custom input
+    const customInput = overlay.querySelector('#woodland-custom-lang');
+    const addCustomBtn = overlay.querySelector('#woodland-add-custom');
+    
+    addCustomBtn.addEventListener('click', () => {
+      const customLang = customInput.value.trim();
+      if (customLang) {
+        this.addWoodlandLanguage(this.toTitleCase(customLang));
+        this.closeWoodlandLanguagesModal();
+      }
+    });
+    
+    // Allow Enter key to submit custom input
+    customInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const customLang = customInput.value.trim();
+        if (customLang) {
+          this.addWoodlandLanguage(this.toTitleCase(customLang));
+          this.closeWoodlandLanguagesModal();
+        }
+      }
+    });
+    
+    // Focus the custom input
+    setTimeout(() => customInput.focus(), 100);
+    
+    const cancelBtn = overlay.querySelector('#woodland-lang-cancel');
+    cancelBtn.addEventListener('click', () => this.closeWoodlandLanguagesModal());
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        this.closeWoodlandLanguagesModal();
+      }
+    });
+  },
+  
+  /**
+   * Close Woodland Languages modal
+   */
+  closeWoodlandLanguagesModal() {
+    const overlay = document.getElementById('woodland-languages-modal');
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.classList.add('hidden');
+    }
+    // Clear stored input reference
+    this._woodlandLanguagesInput = null;
+  },
+  
+  /**
+   * Get list of existing languages (names only)
+   */
+  getExistingLanguages() {
+    const languages = [];
+    
+    // Check native tongue
+    const nativeName = document.getElementById('native-tongue-name');
+    if (nativeName && nativeName.value.trim()) {
+      languages.push(nativeName.value.trim());
+    }
+    
+    // Check additional languages
+    const container = document.getElementById('language-container');
+    if (container) {
+      const rows = container.querySelectorAll('.language-row:not(.native)');
+      for (const row of rows) {
+        const nameInput = row.querySelector('.language-name');
+        if (nameInput && nameInput.value.trim()) {
+          languages.push(nameInput.value.trim());
+        }
+      }
+    }
+    
+    return languages;
+  },
+  
+  /**
+   * Add a woodland language to the Languages section
+   */
+  addWoodlandLanguage(languageName) {
+    // Add the language to Languages section with INT+CHA+40
+    this.addLanguageIfNotExists(languageName, 'druid');
+    
+    // Add "Woodland Languages" ability if not already present
+    // Check both the sheet and any pending input
+    if (!this.hasAbility('Woodland Languages')) {
+      // Directly add without triggering the modal again
+      this.addAbilityDirectly('Woodland Languages');
+    }
+    
+    // Clear the stored input reference
+    this._woodlandLanguagesInput = null;
+  },
+  
+  /**
+   * Add ability directly without special handling (for Woodland Languages)
+   */
+  addAbilityDirectly(abilityName) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return false;
+    
+    const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
+    const normalizedName = normalizeApostrophes(abilityName.toLowerCase().trim());
+    
+    // Check if ability already exists
+    const existingInputs = container.querySelectorAll('.class-ability-input');
+    for (const input of existingInputs) {
+      if (input.value.trim()) {
+        const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
+        if (normalizedExisting === normalizedName) {
+          return true; // Already exists
+        }
+      }
+    }
+    
+    // Find first empty slot
+    for (const input of existingInputs) {
+      if (!input.value.trim()) {
+        input.value = this.toTitleCase(abilityName);
+        input.dataset.previousValue = input.value;
+        this.updateAbilityTooltip(input);
+        
+        const infoBtn = input.parentElement?.querySelector('.class-ability-info-btn');
+        if (infoBtn) {
+          infoBtn.style.display = '';
+        }
+        
+        this.scheduleAutoSave();
+        return true;
+      }
+    }
+    
+    // No empty slot - create new row
+    this.addClassAbilityRow(abilityName);
+    return true;
   },
   
   /**

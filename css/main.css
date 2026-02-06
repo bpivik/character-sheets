@@ -6108,6 +6108,171 @@ input.skill-input.powerful-concentration-bonus,
   background: linear-gradient(to bottom, #c8e6c9, #a5d6a7);
 }
 
+/* ============================================
+   WOODLAND LANGUAGES MODAL
+   ============================================ */
+.woodland-languages-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.woodland-languages-modal.hidden {
+  display: none;
+}
+
+.woodland-languages-modal-content {
+  background: linear-gradient(135deg, #1a2a1a 0%, #2d3d2d 100%);
+  border: 2px solid #4a7a4a;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.woodland-languages-modal-content h3 {
+  color: #8fbc8f;
+  text-align: center;
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  text-shadow: 0 0 10px rgba(143, 188, 143, 0.5);
+}
+
+.woodland-modal-description {
+  color: #aaa;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.woodland-modal-description strong {
+  color: #8fbc8f;
+}
+
+.woodland-custom-input {
+  margin-bottom: 1rem;
+}
+
+.woodland-custom-input label {
+  display: block;
+  color: #aaa;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.woodland-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.woodland-input-row input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #4a7a4a;
+  border-radius: 5px;
+  background: #1a2a1a;
+  color: #ddd;
+  font-size: 0.9rem;
+}
+
+.woodland-input-row input:focus {
+  outline: none;
+  border-color: #6a9a6a;
+  box-shadow: 0 0 5px rgba(106, 154, 106, 0.4);
+}
+
+.woodland-input-row input::placeholder {
+  color: #666;
+}
+
+.btn-add-lang {
+  background: linear-gradient(135deg, #2a5a2a 0%, #3a7a3a 100%);
+  border: 1px solid #4a8a4a;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-lang:hover {
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a9a4a 100%);
+  box-shadow: 0 0 10px rgba(74, 138, 74, 0.4);
+}
+
+.woodland-examples-label {
+  color: #888;
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.woodland-lang-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.woodland-lang-btn {
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a5a3a 100%);
+  border: 1px solid #4a7a4a;
+  color: #ccc;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.woodland-lang-btn:hover:not(.disabled) {
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 100%);
+  border-color: #6a9a6a;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(106, 154, 106, 0.4);
+}
+
+.woodland-lang-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #2a3a2a 0%, #3a4a3a 100%);
+  color: #888;
+}
+
+.woodland-modal-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.woodland-modal-footer .btn-cancel {
+  background: linear-gradient(135deg, #4a4a4a 0%, #5a5a5a 100%);
+  border: 1px solid #666;
+  color: #ccc;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.woodland-modal-footer .btn-cancel:hover {
+  background: linear-gradient(135deg, #5a5a5a 0%, #6a6a6a 100%);
+  border-color: #888;
+}
+
 /* Special Abilities & Notes */
 /* Abilities Sections Container - holds abilities in two columns */
 .abilities-sections-container {
