@@ -409,7 +409,195 @@ const RANKED_CLASS_ABILITIES = {
   ],
   
   druid: [
-    // Ranked abilities to be added
+    // Rank 1
+    { 
+      name: "Animal Companion I", 
+      rank: 1, 
+      prereqs: "Survival 50%",
+      summary: "Call/befriend small animal companion (SIZ up to ½ Animal Handling, max 35)"
+    },
+    { 
+      name: "Animal Empathy", 
+      rank: 1, 
+      prereqs: "Piety 50%",
+      summary: "Use Influence vs Willpower to calm/befriend natural animals (up to 1/10th Influence)"
+    },
+    { 
+      name: "Immune to Charm Spells", 
+      rank: 1, 
+      prereqs: "Willpower 60%",
+      summary: "Immune to Charm spells from woodland creatures and bards"
+    },
+    { 
+      name: "Mental Strength I", 
+      rank: 1, 
+      prereqs: "Piety 60%",
+      summary: "1/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Pass Without a Trace", 
+      rank: 1, 
+      prereqs: "Survival 60%",
+      summary: "Move through woods at normal pace, no trail, no damage from natural hazards"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Modifier with finesse weapons (max 2× weapon die)"
+    },
+    { 
+      name: "Woodland Languages", 
+      rank: 1, 
+      prereqs: "Piety 50%",
+      summary: "Gain one woodland language at Base+40% (may take multiple times)"
+    },
+    
+    // Rank 2
+    { 
+      name: "Animal Companion II", 
+      rank: 2, 
+      prereqs: "Survival 70%",
+      summary: "As Animal Companion I, but max SIZ 36-45"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Immunity to Poison", 
+      rank: 2, 
+      prereqs: "Survival 70%",
+      summary: "No negative effects from poison or venom"
+    },
+    { 
+      name: "Mental Strength II", 
+      rank: 2, 
+      prereqs: "Mental Strength I; Piety 80%",
+      summary: "2/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Ranged Touch", 
+      rank: 2, 
+      prereqs: "Willpower 80%",
+      summary: "Extend Touch spell to 30ft (counts as 1 Rank higher for memorization)"
+    },
+    { 
+      name: "Shape Change I", 
+      rank: 2, 
+      prereqs: "Piety 70%",
+      summary: "Transform to reptile/bird/mammal SIZ 3-20; 1/day (+1 per 10% above 70%); lasts 5hrs+5/Rank"
+    },
+    
+    // Rank 3
+    { 
+      name: "Animal Companion III", 
+      rank: 3, 
+      prereqs: "Survival 90%",
+      summary: "As Animal Companion I, but max SIZ 46-55"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 Reactive Action Point for Parry/Evade only"
+    },
+    { 
+      name: "Mental Strength III", 
+      rank: 3, 
+      prereqs: "Mental Strength II; Piety 100%",
+      summary: "3/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Shape Change II", 
+      rank: 3, 
+      prereqs: "Shape Change I; Piety 90%",
+      summary: "Transform to SIZ 1-2 or 21-60; at 100% Piety can become plant creatures"
+    },
+    { 
+      name: "Wild Casting", 
+      rank: 3, 
+      prereqs: "Willpower 90%",
+      summary: "Cast spells while shape changed at 1 Difficulty Grade harder"
+    },
+    
+    // Rank 4
+    { 
+      name: "Agelessness", 
+      rank: 4, 
+      prereqs: "Piety 120%",
+      summary: "No longer subject to Aging penalties; immune to magical aging"
+    },
+    { 
+      name: "Alter Self", 
+      rank: 4, 
+      prereqs: "Piety 110%",
+      summary: "Alter form at will (as Arcane spell); must be in natural form"
+    },
+    { 
+      name: "Animal Companion IV", 
+      rank: 4, 
+      prereqs: "Survival 110%",
+      summary: "As Animal Companion I, but max SIZ 46-65"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength IV", 
+      rank: 4, 
+      prereqs: "Mental Strength III; Piety 120%",
+      summary: "4/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Shape Change III", 
+      rank: 4, 
+      prereqs: "Shape Change II; Piety 110%",
+      summary: "Transform to small/medium/large elemental 1/day (2/day at 120% Piety)"
+    },
+    
+    // Rank 5
+    { 
+      name: "Animal Companion V", 
+      rank: 5, 
+      prereqs: "Survival 130%",
+      summary: "As Animal Companion I, but max SIZ 66-75"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 5, 
+      prereqs: "Defensive Reflexes I",
+      summary: "+1 Reactive AP usable twice per combat (not vs same attack, no Luck combo)"
+    },
+    { 
+      name: "Mental Strength V", 
+      rank: 5, 
+      prereqs: "Mental Strength IV; Piety 140%",
+      summary: "5/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Shape Change IV", 
+      rank: 5, 
+      prereqs: "Shape Change III; Piety 130%",
+      summary: "Transform to Huge elemental 1/day (in addition to other forms)"
+    },
   ],
   
   berserker: [
