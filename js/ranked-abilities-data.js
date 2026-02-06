@@ -235,6 +235,19 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Ride 70%",
       summary: "Shield +1 size for parry; ignore first 2 Difficulty Grades on Ride in combat"
     },
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength III", 
+      rank: 3, 
+      prereqs: "Mental Strength II; Arcane Casting 100% OR Arcane Sorcery 100% OR Oath 100% OR Piety 100%",
+      summary: "3/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
   ],
   
   berserker: [

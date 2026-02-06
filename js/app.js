@@ -8072,6 +8072,11 @@ const App = {
     if (classKey === 'cavalier' && rank >= 2) {
       this.checkCavalierExoticMountsI();
     }
+    
+    // Cavalier Rank 3: Exotic Mounts II (Pegasus) - conditional on skills only
+    if (classKey === 'cavalier' && rank >= 3) {
+      this.checkCavalierExoticMountsII();
+    }
   },
   
   /**
@@ -8128,6 +8133,47 @@ const App = {
     // All prerequisites met - add the ability
     console.log('Exotic Mounts I: All prerequisites met, adding ability');
     this.addSpecialAbility('Exotic Mounts I (Unicorn)', 'cavalier');
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Check and potentially add Exotic Mounts II for Cavalier at Rank 3+
+   * Requirements:
+   * - Ride 90% or higher
+   * - Oath 90% or higher
+   * - No species or gender restrictions (unlike unicorns)
+   */
+  checkCavalierExoticMountsII() {
+    // Check if already has Exotic Mounts II (with or without Pegasus suffix)
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    const hasExoticMountsII = existingAbilities.some(a => 
+      a === 'exotic mounts ii' || 
+      a === 'exotic mounts 2' || 
+      a.startsWith('exotic mounts ii (') ||
+      a.startsWith('exotic mounts 2 (')
+    );
+    
+    if (hasExoticMountsII) {
+      return; // Already has it
+    }
+    
+    // Check Ride skill >= 90%
+    const rideValue = this.getSkillValueByName('ride');
+    if (rideValue < 90) {
+      console.log(`Exotic Mounts II: Ride ${rideValue}% is below required 90%`);
+      return;
+    }
+    
+    // Check Oath >= 90%
+    const oathValue = this.getSkillValueByName('oath');
+    if (oathValue < 90) {
+      console.log(`Exotic Mounts II: Oath ${oathValue}% is below required 90%`);
+      return;
+    }
+    
+    // All prerequisites met - add the ability
+    console.log('Exotic Mounts II: All prerequisites met, adding ability');
+    this.addSpecialAbility('Exotic Mounts II (Pegasus)', 'cavalier');
     this.scheduleAutoSave();
   },
   
@@ -18060,6 +18106,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
               <span class="exp-rolls-label">Available EXP Rolls:</span>
               <span class="exp-rolls-value" id="unlock-abilities-exp-rolls">0</span>
             </div>
+            <div class="pending-automatic-section" id="pending-automatic-section" style="display: none;">
+              <h4>⏳ Pending Automatic Abilities</h4>
+              <p class="pending-automatic-subtitle">These abilities are granted automatically when you meet the prerequisites</p>
+              <div class="pending-automatic-list" id="pending-automatic-list"></div>
+            </div>
             <div class="class-tabs" id="unlock-abilities-class-tabs"></div>
             <div class="rank-tabs" id="unlock-abilities-rank-tabs"></div>
             <div class="abilities-container" id="unlock-abilities-container">
@@ -18134,6 +18185,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Build class tabs
     this.buildClassTabs(classes);
     
+    // Populate pending automatic abilities
+    this.populatePendingAutomaticAbilities(classes);
+    
     // Select first class by default
     if (classes.length > 0) {
       this.selectClassTab(classes[0].name, classes[0].rank);
@@ -18168,6 +18222,145 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
     
     return classes;
+  },
+
+  /**
+   * Automatic abilities data - abilities granted for free at certain ranks if prereqs met
+   */
+  AUTOMATIC_ABILITIES: {
+    cavalier: [
+      {
+        name: 'Exotic Mounts I (Unicorn)',
+        rank: 2,
+        prereqs: [
+          { type: 'species-not', value: 'half-orc', label: 'Species is not Half-orc' },
+          { type: 'skill', name: 'Ride', value: 60 },
+          { type: 'skill-gender', name: 'Oath', male: 80, female: 60 }
+        ]
+      },
+      {
+        name: 'Exotic Mounts II (Pegasus)',
+        rank: 3,
+        prereqs: [
+          { type: 'skill', name: 'Ride', value: 90 },
+          { type: 'skill', name: 'Oath', value: 90 }
+        ]
+      }
+    ]
+    // Add more classes here as needed
+  },
+
+  /**
+   * Populate the pending automatic abilities section
+   */
+  populatePendingAutomaticAbilities(classes) {
+    const section = document.getElementById('pending-automatic-section');
+    const list = document.getElementById('pending-automatic-list');
+    list.innerHTML = '';
+    
+    const pendingAbilities = [];
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    
+    classes.forEach(cls => {
+      const classKey = cls.name.toLowerCase().trim();
+      const autoAbilities = this.AUTOMATIC_ABILITIES[classKey];
+      if (!autoAbilities) return;
+      
+      autoAbilities.forEach(ability => {
+        // Check if character has reached the required rank
+        if (cls.rank < ability.rank) return;
+        
+        // Check if already has this ability
+        const hasAbility = existingAbilities.some(a => 
+          a === ability.name.toLowerCase() ||
+          a.startsWith(ability.name.toLowerCase().split('(')[0].trim())
+        );
+        if (hasAbility) return;
+        
+        // Check prerequisites and collect missing ones
+        const missingPrereqs = this.checkAutomaticAbilityPrereqs(ability.prereqs);
+        
+        // Only show if there are missing prereqs (otherwise they would have gotten it)
+        if (missingPrereqs.length > 0) {
+          pendingAbilities.push({
+            name: ability.name,
+            className: cls.name,
+            rank: ability.rank,
+            missing: missingPrereqs
+          });
+        }
+      });
+    });
+    
+    if (pendingAbilities.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    section.style.display = 'block';
+    
+    pendingAbilities.forEach(ability => {
+      const row = document.createElement('div');
+      row.className = 'pending-automatic-item';
+      
+      let missingHtml = ability.missing.map(m => 
+        `<span class="prereq-missing">❌ ${m}</span>`
+      ).join('');
+      
+      row.innerHTML = `
+        <div class="pending-automatic-name">
+          <strong>${ability.name}</strong>
+          <span class="pending-class-badge">${ability.className} Rank ${ability.rank}</span>
+        </div>
+        <div class="pending-automatic-prereqs">
+          ${missingHtml}
+        </div>
+      `;
+      
+      list.appendChild(row);
+    });
+  },
+
+  /**
+   * Check prerequisites for automatic abilities
+   * Returns array of missing prereq descriptions
+   */
+  checkAutomaticAbilityPrereqs(prereqs) {
+    const missing = [];
+    const species = (document.getElementById('species')?.value || '').toLowerCase().trim();
+    const gender = (document.getElementById('gender')?.value || '').toLowerCase().trim();
+    
+    prereqs.forEach(prereq => {
+      switch (prereq.type) {
+        case 'species-not':
+          const speciesVariants = [prereq.value, prereq.value.replace('-', ''), prereq.value.replace('-', ' ')];
+          if (speciesVariants.includes(species)) {
+            missing.push(prereq.label);
+          }
+          break;
+          
+        case 'skill':
+          const skillValue = this.getSkillValueByName(prereq.name);
+          if (skillValue < prereq.value) {
+            missing.push(`${prereq.name} ${prereq.value}% (currently ${skillValue}%)`);
+          }
+          break;
+          
+        case 'skill-gender':
+          const genderSkillValue = this.getSkillValueByName(prereq.name);
+          let required = prereq.male; // default to male requirement
+          if (gender === 'female' || gender === 'f') {
+            required = prereq.female;
+          }
+          if (genderSkillValue < required) {
+            const genderLabel = (gender === 'female' || gender === 'f') ? 'female' : 'male';
+            missing.push(`${prereq.name} ${required}% for ${genderLabel} (currently ${genderSkillValue}%)`);
+          }
+          break;
+      }
+    });
+    
+    return missing;
   },
 
   /**
