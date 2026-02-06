@@ -165,6 +165,46 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  cavalier: [
+    // Rank 1
+    { 
+      name: "Forceful Strike", 
+      rank: 1, 
+      prereqs: "Brawn 50% OR Mysticism 50%; Combat Style 50%",
+      summary: "-1 grade to attack, +2 grades to Damage Modifier"
+    },
+    { 
+      name: "Just a Scratch", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: Heal one hit location by Healing Rate (not Major Wounds)"
+    },
+    { 
+      name: "Mental Strength I", 
+      rank: 1, 
+      prereqs: "Arcane Casting 60% OR Arcane Sorcery 60% OR Oath 60% OR Piety 60%",
+      summary: "1/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Overrun", 
+      rank: 1, 
+      prereqs: "Forceful Strike; Ride 60%",
+      summary: "On mounted Charge Through, free attack on another target if first drops (1/round)"
+    },
+    { 
+      name: "Second Wind", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: After 1hr rest, recover up to 3 Fatigue levels"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+  ],
+  
   berserker: [
     // Rank 1
     { 
