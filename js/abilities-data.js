@@ -241,7 +241,9 @@ const AbilityDescriptions = {
   "druids' cant": "A secret language known only to druids.\n• Used for private communication between druids\n• Cannot be taught to non-druids\n• Automatically gained at Rank 1 as a Druid",
   "druid's cant": "A secret language known only to druids.\n• Used for private communication between druids\n• Cannot be taught to non-druids\n• Automatically gained at Rank 1 as a Druid",
   "thieves' cant": "A secret language known only to rogues and criminals.\n• Mix of jargon, slang, and coded messages\n• Used to communicate covertly in plain sight\n• Automatically gained at Rank 1 as a Rogue",
-  "thief's cant": "A secret language known only to rogues and criminals.\n• Mix of jargon, slang, and coded messages\n• Used to communicate covertly in plain sight\n• Automatically gained at Rank 1 as a Rogue"
+  "thief's cant": "A secret language known only to rogues and criminals.\n• Mix of jargon, slang, and coded messages\n• Used to communicate covertly in plain sight\n• Automatically gained at Rank 1 as a Rogue",
+  "language (druids' cant)": "A secret language known only to druids.\n• Used for private communication between druids\n• Cannot be taught to non-druids\n• Automatically gained at Rank 1 as a Druid",
+  "language (thieves' cant)": "A secret language known only to rogues and criminals.\n• Mix of jargon, slang, and coded messages\n• Used to communicate covertly in plain sight\n• Automatically gained at Rank 1 as a Rogue"
 };
 
 /**

@@ -22,8 +22,8 @@ const ClassAbilities = {
   },
   
   druid: {
-    rank1: ["Divine Spellcasting", "Identify Plants and Animals", "Identify Pure Water"],
-    // Special: Also adds "Druids' Cant" as a language
+    rank1: ["Cleric Magical Items", "Divine Spellcasting", "Identify Plants and Animals", "Identify Pure Water", "Language (Druids' Cant)"],
+    // Special: Also adds "Druids' Cant" to the Languages section
     specialActions: {
       rank1: { addLanguage: "Druids' Cant" }
     }

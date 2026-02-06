@@ -408,6 +408,10 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  druid: [
+    // Ranked abilities to be added
+  ],
+  
   berserker: [
     // Rank 1
     { 
