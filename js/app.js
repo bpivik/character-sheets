@@ -4887,7 +4887,11 @@ const App = {
       
       let html = '';
       if (intro) {
-        html += `<p class="ability-intro">${intro}</p>`;
+        // Handle paragraph breaks in intro
+        const introParagraphs = intro.split('\n\n').filter(p => p.trim());
+        introParagraphs.forEach(p => {
+          html += `<p class="ability-intro">${p.trim()}</p>`;
+        });
       }
       if (bullets.length > 0) {
         html += '<ul class="ability-bullets">';
@@ -4899,7 +4903,13 @@ const App = {
       return html;
     }
     
-    // No bullets - just return as paragraph
+    // Check for paragraph breaks (\n\n)
+    if (description.includes('\n\n')) {
+      const paragraphs = description.split('\n\n').filter(p => p.trim());
+      return paragraphs.map(p => `<p class="ability-description-text">${p.trim()}</p>`).join('');
+    }
+    
+    // No bullets or paragraph breaks - just return as paragraph
     return `<p class="ability-description-text">${description}</p>`;
   },
 
@@ -9755,6 +9765,69 @@ const App = {
    * Long Rest: 8 hours of rest - restore MP and recover fatigue based on recovery times
    */
   longRest() {
+    // Show sleep animation first, then do the actual rest logic
+    this.showSleepAnimation(() => {
+      this.performLongRestLogic();
+    });
+  },
+  
+  /**
+   * Show sleep animation overlay
+   */
+  showSleepAnimation(callback) {
+    // Create or get the sleep overlay
+    let overlay = document.getElementById('long-rest-sleep-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'long-rest-sleep-overlay';
+      overlay.className = 'long-rest-sleep-overlay';
+      
+      // Generate random stars
+      let starsHtml = '<div class="sleep-stars">';
+      for (let i = 0; i < 30; i++) {
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const delay = Math.random() * 2;
+        const size = 2 + Math.random() * 3;
+        starsHtml += `<div class="sleep-star" style="left:${left}%;top:${top}%;animation-delay:${delay}s;width:${size}px;height:${size}px;"></div>`;
+      }
+      starsHtml += '</div>';
+      
+      overlay.innerHTML = `
+        ${starsHtml}
+        <div class="sleep-content">
+          <div class="sleep-icon">🌙</div>
+          <div class="sleep-text">Resting...</div>
+          <div class="sleep-zzz">
+            <span>z</span>
+            <span>Z</span>
+            <span>Z</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    
+    // Show overlay with fade in
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
+    
+    // After animation, fade out and call callback
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      
+      // Wait for fade out transition
+      setTimeout(() => {
+        if (callback) callback();
+      }, 800);
+    }, 2500);
+  },
+  
+  /**
+   * Perform the actual Long Rest logic (called after animation)
+   */
+  performLongRestLogic() {
     const currentState = this.character.fatigueState || 'fresh';
     const messages = [];
     

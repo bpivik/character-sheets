@@ -4577,6 +4577,120 @@ select:focus {
   border-color: var(--border-medium);
 }
 
+/* Long Rest Sleep Animation */
+.long-rest-sleep-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a1a;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.long-rest-sleep-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.sleep-content {
+  text-align: center;
+  color: #6699cc;
+}
+
+.sleep-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: sleep-bob 2s ease-in-out infinite;
+}
+
+@keyframes sleep-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.sleep-text {
+  font-family: var(--font-header);
+  font-size: 1.5rem;
+  color: #8899bb;
+  margin-bottom: 1.5rem;
+}
+
+.sleep-zzz {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.sleep-zzz span {
+  color: #99aacc;
+  opacity: 0;
+  animation: zzz-float 1.5s ease-in-out infinite;
+}
+
+.sleep-zzz span:nth-child(1) {
+  animation-delay: 0s;
+  font-size: 1.5rem;
+}
+
+.sleep-zzz span:nth-child(2) {
+  animation-delay: 0.3s;
+  font-size: 2rem;
+}
+
+.sleep-zzz span:nth-child(3) {
+  animation-delay: 0.6s;
+  font-size: 2.5rem;
+}
+
+@keyframes zzz-float {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) rotate(-5deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) rotate(5deg);
+  }
+}
+
+.sleep-stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sleep-star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
 /* Long Rest Modal */
 .long-rest-modal-overlay {
   display: none;
