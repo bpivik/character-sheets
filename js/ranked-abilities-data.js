@@ -282,6 +282,62 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  cleric: [
+    // Rank 1
+    { 
+      name: "Greater Turning", 
+      rank: 1, 
+      prereqs: "Willpower 60%",
+      summary: "May re-roll Turn Undead Channel roll (must use new result)"
+    },
+    { 
+      name: "Weapon Specialization", 
+      rank: 1, 
+      prereqs: "Combat Style 60%",
+      summary: "Choose Damage or Defensive: +1 damage modifier OR +1 AP to parrying weapon",
+      repeatable: true,
+      specialType: 'weapon-spec'
+    },
+    
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Extra Turning", 
+      rank: 2, 
+      prereqs: "Piety 80%; Willpower 80%",
+      summary: "Double Turn Undead uses per encounter"
+    },
+    
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+  ],
+  
   berserker: [
     // Rank 1
     { 

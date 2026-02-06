@@ -12797,8 +12797,9 @@ const App = {
   },
   
   /**
-   * Get maximum Turn Undead uses per day
-   * Based on class rank (Cleric rank) - uses = rank per day
+   * Get maximum Turn Undead uses per encounter
+   * Based on class rank (Cleric rank) - uses = rank per encounter
+   * Extra Turning doubles this amount
    */
   getMaxTurnUndeadUses() {
     // Check all class slots for Cleric
@@ -12819,7 +12820,38 @@ const App = {
       }
     }
     
-    // Return at least 1 use if character has Turn Undead ability
+    // Base uses = rank (at least 1 if character has Turn Undead ability)
+    let uses = Math.max(maxRank, 1);
+    
+    // Extra Turning doubles the uses
+    if (this.hasAbility('Extra Turning')) {
+      uses *= 2;
+    }
+    
+    return uses;
+  },
+  
+  /**
+   * Get Cleric rank (for Turn Undead intensity calculation)
+   */
+  getClericRank() {
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    
+    let maxRank = 0;
+    
+    for (const slot of classSlots) {
+      const className = document.getElementById(slot.class)?.value?.toLowerCase().trim() || '';
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      
+      if (className === 'cleric' && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    
     return Math.max(maxRank, 1);
   },
   
@@ -12933,6 +12965,9 @@ const App = {
   openTurnUndeadModal() {
     let modal = document.getElementById('turn-undead-modal');
     
+    // Check if character has Greater Turning ability
+    const hasGreaterTurning = this.hasAbility('Greater Turning');
+    
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'turn-undead-modal';
@@ -12969,6 +13004,10 @@ const App = {
                 <button type="button" class="btn btn-roll-channel" id="btn-roll-channel" disabled>🎲 Roll d100</button>
                 <span class="turn-undead-roll-result" id="turn-undead-channel-result"></span>
               </div>
+              <div class="turn-undead-reroll-row" id="turn-undead-reroll-row" style="display: none;">
+                <button type="button" class="btn btn-reroll-channel" id="btn-reroll-channel">🔄 Reroll (Greater Turning)</button>
+                <span class="reroll-note">Must use new result</span>
+              </div>
             </div>
             
             <div class="turn-undead-outcome" id="turn-undead-outcome" style="display: none;">
@@ -13003,7 +13042,11 @@ const App = {
       });
       
       document.getElementById('btn-roll-channel').addEventListener('click', () => {
-        this.rollTurnUndeadChannel();
+        this.rollTurnUndeadChannel(false);
+      });
+      
+      document.getElementById('btn-reroll-channel').addEventListener('click', () => {
+        this.rollTurnUndeadChannel(true);
       });
     }
     
@@ -13014,14 +13057,16 @@ const App = {
     const channelPercent = parseInt(document.getElementById('channel-percent')?.value, 10) || 0;
     document.getElementById('turn-undead-channel-value').textContent = channelPercent + '%';
     
-    // Update intensity formula based on rank
-    const rank = this.getMaxTurnUndeadUses(); // Uses cleric rank
+    // Update intensity formula based on Cleric rank
+    const rank = this.getClericRank();
     const bonus = rank * 2; // Rank 1 = +2, Rank 2 = +4, etc.
     document.getElementById('turn-undead-intensity-formula').textContent = `1d6+${bonus}`;
     
-    // Store rank for roll calculation
+    // Store values for roll calculation
     modal.dataset.clericRank = rank;
     modal.dataset.channelSkill = channelPercent;
+    modal.dataset.hasGreaterTurning = hasGreaterTurning ? 'true' : 'false';
+    modal.dataset.hasUsedReroll = 'false';
     
     // Show modal
     modal.classList.remove('hidden');
@@ -13037,6 +13082,7 @@ const App = {
     document.getElementById('turn-undead-channel-result').textContent = '';
     document.getElementById('turn-undead-channel-result').className = 'turn-undead-roll-result';
     document.getElementById('turn-undead-outcome').style.display = 'none';
+    document.getElementById('turn-undead-reroll-row').style.display = 'none';
     document.getElementById('btn-roll-intensity').disabled = false;
     document.getElementById('btn-roll-channel').disabled = true;
   },
@@ -13077,11 +13123,18 @@ const App = {
   
   /**
    * Roll Channel skill for Turn Undead
+   * @param {boolean} isReroll - Whether this is a Greater Turning reroll
    */
-  rollTurnUndeadChannel() {
+  rollTurnUndeadChannel(isReroll = false) {
     const modal = document.getElementById('turn-undead-modal');
     const channelSkill = parseInt(modal.dataset.channelSkill, 10) || 0;
     const turningPower = parseInt(modal.dataset.turningPower, 10) || 0;
+    const hasGreaterTurning = modal.dataset.hasGreaterTurning === 'true';
+    
+    // If rerolling, mark that we've used the reroll
+    if (isReroll) {
+      modal.dataset.hasUsedReroll = 'true';
+    }
     
     // Roll d100
     const roll = Math.floor(Math.random() * 100) + 1;
@@ -13122,12 +13175,12 @@ const App = {
     } else if (roll <= channelSkill) {
       resultType = 'Success';
       resultClass = 'success';
-      const halfPower = Math.floor(turningPower / 2);
+      const halfPower = Math.ceil(turningPower / 2); // Round UP
       outcomeHtml = `
         <div class="outcome-success">
           <p><strong>✓ Success!</strong></p>
           <p>You may Turn undead with a total Intensity up to <strong>(${turningPower})</strong> (your Turning Power),</p>
-          <p>OR demons/devils with Intensity up to <strong>(${halfPower})</strong> (half your Turning Power).</p>
+          <p>OR demons/devils with Intensity up to <strong>(${halfPower})</strong> (half your Turning Power, rounded up).</p>
           <p class="outcome-note">Start with those of the lowest Intensity first.</p>
         </div>
       `;
@@ -13157,6 +13210,14 @@ const App = {
       
       // Disable channel roll button
       document.getElementById('btn-roll-channel').disabled = true;
+      
+      // Show reroll option if Greater Turning and haven't used it yet
+      const hasUsedReroll = modal.dataset.hasUsedReroll === 'true';
+      if (hasGreaterTurning && !hasUsedReroll) {
+        document.getElementById('turn-undead-reroll-row').style.display = '';
+      } else {
+        document.getElementById('turn-undead-reroll-row').style.display = 'none';
+      }
     }, 800);
   },
   
