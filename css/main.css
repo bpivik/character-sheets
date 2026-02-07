@@ -6476,24 +6476,28 @@ input.skill-input.powerful-concentration-bonus,
   gap: 0.5rem;
 }
 
-.woodland-input-row input {
+.woodland-input-row input,
+.woodland-languages-modal-content .woodland-input-row input,
+#woodland-custom-lang {
   flex: 1;
   padding: 0.5rem;
   border: 1px solid #4a7a4a;
   border-radius: 5px;
-  background: #1a2a1a;
-  color: #ddd;
+  background: #1a2a1a !important;
+  color: #ddd !important;
   font-size: 0.9rem;
 }
 
-.woodland-input-row input:focus {
+.woodland-input-row input:focus,
+#woodland-custom-lang:focus {
   outline: none;
   border-color: #6a9a6a;
   box-shadow: 0 0 5px rgba(106, 154, 106, 0.4);
 }
 
-.woodland-input-row input::placeholder {
-  color: #666;
+.woodland-input-row input::placeholder,
+#woodland-custom-lang::placeholder {
+  color: #666 !important;
 }
 
 .btn-add-lang {

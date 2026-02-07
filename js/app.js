@@ -8368,9 +8368,9 @@ const App = {
   
   /**
    * Add a language to the first empty language slot
-   * Also adds "Language (X)" to Special Abilities for class-granted languages
+   * Also adds "Language (X)" to Special Abilities for class-granted languages (unless skipAbility is true)
    */
-  addLanguageIfNotExists(languageName, sourceClass = null) {
+  addLanguageIfNotExists(languageName, sourceClass = null, skipAbility = false) {
     // Normalize apostrophes for comparison
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const normalizedLangName = normalizeApostrophes(languageName.toLowerCase().trim());
@@ -8472,9 +8472,11 @@ const App = {
       container.appendChild(row);
     }
     
-    // Also add to Special Abilities as "Language (X)"
-    const abilityName = `Language (${languageName})`;
-    this.addAbilityToSheet(abilityName);
+    // Also add to Special Abilities as "Language (X)" unless skipAbility is true
+    if (!skipAbility) {
+      const abilityName = `Language (${languageName})`;
+      this.addAbilityToSheet(abilityName);
+    }
     
     this.scheduleAutoSave();
   },
@@ -8630,7 +8632,8 @@ const App = {
    */
   addWoodlandLanguage(languageName) {
     // Add the language to Languages section with INT+CHA+40
-    this.addLanguageIfNotExists(languageName, 'druid');
+    // Pass true for skipAbility - we only want "Woodland Languages" ability, not "Language (X)"
+    this.addLanguageIfNotExists(languageName, 'druid', true);
     
     // Add "Woodland Languages" ability if not already present
     // Check both the sheet and any pending input
