@@ -8523,7 +8523,7 @@ const App = {
         <div class="woodland-custom-input">
           <label for="woodland-custom-lang">Enter language name:</label>
           <div class="woodland-input-row">
-            <input type="text" id="woodland-custom-lang" placeholder="e.g., Treant, Satyr, Brownie...">
+            <input type="text" id="woodland-custom-lang" placeholder="e.g., Satyr, Brownie, Dryad...">
             <button type="button" class="btn btn-add-lang" id="woodland-add-custom">Add</button>
           </div>
         </div>
@@ -14084,7 +14084,6 @@ const App = {
    */
   initAnimalCompanion() {
     this.updateAnimalCompanionDisplay();
-    this.setupAnimalCompanionListeners();
     this.renderCompanionList();
   },
   
@@ -14109,18 +14108,6 @@ const App = {
   },
   
   /**
-   * Setup Animal Companion event listeners
-   */
-  setupAnimalCompanionListeners() {
-    const addBtn = document.getElementById('btn-add-companion');
-    
-    if (addBtn && !addBtn.dataset.listenerAdded) {
-      addBtn.addEventListener('click', () => this.showAnimalCompanionModal());
-      addBtn.dataset.listenerAdded = 'true';
-    }
-  },
-  
-  /**
    * Render the list of current companions
    */
   renderCompanionList() {
@@ -14130,7 +14117,7 @@ const App = {
     const companions = this.character.animalCompanions || [];
     
     if (companions.length === 0) {
-      listEl.innerHTML = '<p class="no-companions">No companions yet. Click + to add one.</p>';
+      listEl.innerHTML = '<p class="no-companions">No companions yet. Use Spend XP Rolls to add one.</p>';
       return;
     }
     

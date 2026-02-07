@@ -2579,24 +2579,28 @@ input.skill-input.powerful-concentration-bonus,
   gap: 0.5rem;
 }
 
-.companion-input-row input {
+.companion-input-row input,
+.animal-companion-modal-content .companion-input-row input,
+#companion-name-input {
   flex: 1;
   padding: 0.5rem;
   border: 1px solid #5a8a5a;
   border-radius: 5px;
-  background: #1a2a1a;
-  color: #ddd;
+  background: #1a2a1a !important;
+  color: #ddd !important;
   font-size: 0.9rem;
 }
 
-.companion-input-row input:focus {
+.companion-input-row input:focus,
+#companion-name-input:focus {
   outline: none;
   border-color: #7aaa7a;
   box-shadow: 0 0 5px rgba(122, 170, 122, 0.4);
 }
 
-.companion-input-row input::placeholder {
-  color: #666;
+.companion-input-row input::placeholder,
+#companion-name-input::placeholder {
+  color: #666 !important;
 }
 
 .btn-add-animal {
