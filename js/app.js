@@ -5663,6 +5663,7 @@ const App = {
             <input type="text" id="${rank}-${i}-name" class="spell-name" placeholder="" autocomplete="off">
           </td>
           <td><input type="text" id="${rank}-${i}-cost" class="spell-cost" placeholder=""></td>
+          <td class="spell-cast-cell"><button type="button" class="btn-cast-spell" id="${rank}-${i}-cast" title="Cast this spell">✦</button></td>
         `;
         tbody.appendChild(tr);
         
@@ -5731,6 +5732,14 @@ const App = {
           }
           input.addEventListener('change', () => this.scheduleAutoSave());
         });
+        
+        // Cast spell button
+        const castBtn = tr.querySelector(`#${rank}-${i}-cast`);
+        if (castBtn) {
+          castBtn.addEventListener('click', () => {
+            this.castSpell(rank, i);
+          });
+        }
       }
       
       // Max memorized input
@@ -7992,6 +8001,80 @@ const App = {
     
     // Refresh buttons (Clear All may need to hide)
     this.updateSpellFillButtons();
+  },
+  
+  /**
+   * Cast a spell - deducts magic point cost from current MP
+   */
+  castSpell(rankKey, slotIndex) {
+    const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
+    const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
+    const castBtn = document.getElementById(`${rankKey}-${slotIndex}-cast`);
+    
+    if (!nameInput || !nameInput.value.trim()) return;
+    
+    const spellName = nameInput.value.trim();
+    const costStr = costInput?.value?.trim() || '';
+    
+    // Parse cost - handle values like "1", "2", "1/HIT", "3/Intensity", etc.
+    // Take the first number found
+    const costMatch = costStr.match(/^(\d+)/);
+    if (!costMatch) {
+      this.showCastFeedback(castBtn, 'no-cost');
+      return;
+    }
+    
+    const cost = parseInt(costMatch[1], 10);
+    if (cost <= 0) {
+      this.showCastFeedback(castBtn, 'no-cost');
+      return;
+    }
+    
+    // Get current magic points
+    const mpField = document.getElementById('magic-points-current');
+    if (!mpField) return;
+    
+    const currentMP = parseInt(mpField.value, 10) || 0;
+    
+    if (currentMP < cost) {
+      this.showCastFeedback(castBtn, 'insufficient');
+      this.showMemorizeWarning(`Not enough Magic Points to cast ${spellName}. Need ${cost} MP, have ${currentMP} MP.`);
+      return;
+    }
+    
+    // Deduct cost
+    mpField.value = currentMP - cost;
+    
+    // Update character data
+    this.character.derived = this.character.derived || {};
+    this.character.derived.magicPointsCurrent = mpField.value;
+    
+    // Show success feedback
+    this.showCastFeedback(castBtn, 'success');
+    
+    console.log(`Cast ${spellName} for ${cost} MP (${currentMP} → ${mpField.value})`);
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Show visual feedback on the cast button
+   */
+  showCastFeedback(btn, type) {
+    if (!btn) return;
+    
+    btn.classList.remove('cast-success', 'cast-fail', 'cast-no-cost');
+    
+    if (type === 'success') {
+      btn.classList.add('cast-success');
+    } else if (type === 'insufficient') {
+      btn.classList.add('cast-fail');
+    } else if (type === 'no-cost') {
+      btn.classList.add('cast-no-cost');
+    }
+    
+    setTimeout(() => {
+      btn.classList.remove('cast-success', 'cast-fail', 'cast-no-cost');
+    }, 800);
   },
   
   /**

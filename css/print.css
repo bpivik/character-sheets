@@ -16,7 +16,9 @@
   .sheet-controls,
   .btn-remove-image,
   #btn-sort-abilities,
-  .spell-actions-bar {
+  .spell-actions-bar,
+  .col-cast,
+  .spell-cast-cell {
     display: none !important;
   }
 

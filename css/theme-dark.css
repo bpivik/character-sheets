@@ -667,6 +667,36 @@
   border-color: #c66;
 }
 
+[data-theme="dark"] .btn-cast-spell {
+  background: #3a3a3a;
+  border-color: #555;
+  color: #aaa;
+}
+
+[data-theme="dark"] .btn-cast-spell:hover {
+  background: #4a4a3a;
+  border-color: #888;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .btn-cast-spell.cast-success {
+  background: #1a3a1a;
+  border-color: #28a745;
+  color: #6fcf6f;
+}
+
+[data-theme="dark"] .btn-cast-spell.cast-fail {
+  background: #3a1a1a;
+  border-color: #dc3545;
+  color: #ff6b6b;
+}
+
+[data-theme="dark"] .btn-cast-spell.cast-no-cost {
+  background: #3a3520;
+  border-color: #c9a227;
+  color: #ffc107;
+}
+
 /* Spell widget in dark mode */
 [data-theme="dark"] .widget-content .spell-widget-header {
   color: #888;

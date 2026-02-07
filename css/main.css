@@ -794,8 +794,8 @@ select:focus {
 
 .derived-input {
   width: 100%;
-  padding: 0.3rem;
-  font-size: 0.95rem;
+  padding: 0.4rem;
+  font-size: 1rem;
   text-align: center !important;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -4359,8 +4359,8 @@ input.skill-input.powerful-concentration-bonus,
 
 .hit-location-table input {
   width: 40px;
-  padding: 0.2rem;
-  font-size: 0.85rem;
+  padding: 0.3rem;
+  font-size: 1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -4859,11 +4859,10 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .combat-skill-name {
-  padding: 0.35rem 0.3rem;
+  padding: 0.4rem 0.4rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  font-size: 0.85rem;
-  min-height: 1.8rem;
+  font-size: 1rem;
   box-sizing: border-box;
 }
 
@@ -4879,12 +4878,11 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .combat-skill-percent {
-  padding: 0.35rem 0.3rem;
+  padding: 0.4rem 0.4rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  font-size: 0.85rem;
-  min-height: 1.8rem;
+  font-size: 1rem;
   box-sizing: border-box;
 }
 
@@ -4894,11 +4892,10 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .combat-weapons-known {
-  padding: 0.35rem 0.3rem;
+  padding: 0.4rem 0.4rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  font-size: 0.85rem;
-  min-height: 1.8rem;
+  font-size: 1rem;
   box-sizing: border-box;
 }
 
@@ -4945,11 +4942,10 @@ input.skill-input.powerful-concentration-bonus,
 
 .weapons-table input {
   width: 100%;
-  padding: 0.35rem 0.3rem;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.4rem;
+  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  min-height: 1.8rem;
   box-sizing: border-box;
 }
 
@@ -7478,7 +7474,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .magic-skills-table td {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--text-secondary);
 }
 
@@ -7489,19 +7485,18 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .base-calc {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   text-align: center;
 }
 
 .magic-skill-input {
   width: 100%;
-  padding: 0.35rem 0.3rem;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.4rem;
+  font-size: 1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  min-height: 1.8rem;
   box-sizing: border-box;
 }
 
@@ -7529,11 +7524,10 @@ input.skill-input.powerful-concentration-bonus,
 
 .deity-input {
   width: 100%;
-  padding: 0.35rem 0.3rem;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.4rem;
+  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  min-height: 1.8rem;
   box-sizing: border-box;
 }
 
@@ -7686,7 +7680,7 @@ input.skill-input.powerful-concentration-bonus,
 .spell-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .spell-table th,
@@ -7724,11 +7718,10 @@ input.skill-input.powerful-concentration-bonus,
 
 .spell-table input[type="text"] {
   width: 100%;
-  padding: 0.35rem 0.3rem;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.4rem;
+  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  min-height: 1.8rem;
   box-sizing: border-box;
 }
 
@@ -7739,6 +7732,55 @@ input.skill-input.powerful-concentration-bonus,
 
 .spell-table input.spell-cost {
   text-align: center;
+}
+
+/* Cast Spell Button */
+.col-cast {
+  width: 36px;
+  text-align: center;
+}
+
+.spell-cast-cell {
+  text-align: center;
+  padding: 0.1rem !important;
+}
+
+.btn-cast-spell {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  background: var(--input-bg);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-cast-spell:hover {
+  background: #e8e0d0;
+  border-color: var(--border-gold);
+  color: var(--text-header);
+}
+
+.btn-cast-spell.cast-success {
+  background: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+
+.btn-cast-spell.cast-fail {
+  background: #f8d7da;
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+.btn-cast-spell.cast-no-cost {
+  background: #fff3cd;
+  border-color: #ffc107;
+  color: #856404;
 }
 
 /* Magic skill reference (page 5) */
@@ -10377,14 +10419,14 @@ input.skill-input.powerful-concentration-bonus,
 
 /* ===== PALADIN - Radiant Gold/Silver ===== */
 [data-class-theme="paladin"] {
-  --class-primary: #ffd700;
-  --class-secondary: #daa520;
+  --class-primary: #b8860b;
+  --class-secondary: #8b6914;
   --class-accent: #f5f5f5;
-  --class-glow: rgba(255, 215, 0, 0.5);
-  --class-border: #ffd700;
+  --class-glow: rgba(184, 134, 11, 0.5);
+  --class-border: #b8860b;
   --class-bg-gradient-start: #2a2820;
   --class-bg-gradient-end: #1a1a18;
-  --class-tab-text: #1a1a1a;
+  --class-tab-text: #fff;
 }
 
 /* ===== RANGER - Forest Brown/Green ===== */
@@ -10557,127 +10599,4 @@ body.dark-mode[data-class-theme] .subsection-header {
   font-size: 0.7rem;
   opacity: 0.8;
   margin-left: 4px;
-}
-
-/* ============================================
-   CLASS THEME DECORATIVE ELEMENTS
-   ============================================ */
-
-/* Base decorative container */
-[data-class-theme]::before,
-[data-class-theme]::after {
-  content: "";
-  position: fixed;
-  top: 60px;
-  bottom: 0;
-  width: 40px;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.3;
-  background-repeat: repeat-y;
-  background-size: 40px auto;
-}
-
-[data-class-theme]::before {
-  left: 0;
-}
-
-[data-class-theme]::after {
-  right: 0;
-  transform: scaleX(-1);
-}
-
-/* ===== DRUID - Vines ===== */
-[data-class-theme="druid"]::before,
-[data-class-theme="druid"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 0 Q30 25 20 50 Q10 75 20 100 Q30 125 20 150 Q10 175 20 200' stroke='%23228b22' stroke-width='3' fill='none'/%3E%3Ccircle cx='25' cy='25' r='8' fill='%2390ee90' opacity='0.6'/%3E%3Ccircle cx='15' cy='75' r='6' fill='%2390ee90' opacity='0.5'/%3E%3Ccircle cx='28' cy='125' r='7' fill='%2390ee90' opacity='0.6'/%3E%3Ccircle cx='12' cy='175' r='5' fill='%2390ee90' opacity='0.5'/%3E%3Cpath d='M22 20 Q35 15 30 30 Q25 20 22 20' fill='%23228b22' opacity='0.7'/%3E%3Cpath d='M18 70 Q5 65 10 80 Q15 70 18 70' fill='%23228b22' opacity='0.7'/%3E%3Cpath d='M25 120 Q38 115 33 130 Q28 120 25 120' fill='%23228b22' opacity='0.7'/%3E%3Cpath d='M15 170 Q2 165 7 180 Q12 170 15 170' fill='%23228b22' opacity='0.7'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== RANGER - Trees/Arrows ===== */
-[data-class-theme="ranger"]::before,
-[data-class-theme="ranger"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 30 L10 50 L15 50 L5 70 L12 70 L0 95 L20 95 L20 110 L25 110 L25 95 L40 95 L28 70 L35 70 L25 50 L30 50 Z' fill='%23556b2f' opacity='0.5'/%3E%3Cpath d='M20 130 L10 150 L15 150 L5 170 L12 170 L0 195 L20 195 L20 200 L25 200 L25 195 L40 195 L28 170 L35 170 L25 150 L30 150 Z' fill='%23556b2f' opacity='0.4'/%3E%3C/svg%3E");
-  opacity: 0.35;
-}
-
-/* ===== BERSERKER - Blood splatters/axes ===== */
-[data-class-theme="berserker"]::before,
-[data-class-theme="berserker"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Ccircle cx='20' cy='30' r='15' fill='%23b22222' opacity='0.3'/%3E%3Ccircle cx='10' cy='25' r='8' fill='%238b0000' opacity='0.4'/%3E%3Ccircle cx='30' cy='35' r='6' fill='%23dc143c' opacity='0.3'/%3E%3Ccircle cx='15' cy='100' r='12' fill='%23b22222' opacity='0.25'/%3E%3Ccircle cx='25' cy='95' r='7' fill='%238b0000' opacity='0.35'/%3E%3Ccircle cx='20' cy='170' r='14' fill='%23b22222' opacity='0.3'/%3E%3Ccircle cx='8' cy='165' r='6' fill='%23dc143c' opacity='0.25'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== MAGE/MAGIC-USER - Arcane symbols ===== */
-[data-class-theme="mage"]::before,
-[data-class-theme="mage"]::after,
-[data-class-theme="magic-user"]::before,
-[data-class-theme="magic-user"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Ccircle cx='20' cy='40' r='15' stroke='%236a5acd' stroke-width='2' fill='none' opacity='0.5'/%3E%3Cpath d='M20 25 L20 55 M5 40 L35 40' stroke='%2300bfff' stroke-width='1' opacity='0.4'/%3E%3Cpolygon points='20,20 25,35 35,35 27,45 30,60 20,50 10,60 13,45 5,35 15,35' fill='none' stroke='%236a5acd' stroke-width='1' opacity='0.4'/%3E%3Ccircle cx='20' cy='120' r='12' stroke='%236a5acd' stroke-width='2' fill='none' opacity='0.4'/%3E%3Cpath d='M12 112 L28 128 M28 112 L12 128' stroke='%2300bfff' stroke-width='1' opacity='0.3'/%3E%3Ccircle cx='20' cy='180' r='10' stroke='%236a5acd' stroke-width='2' fill='none' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== CLERIC - Holy symbols ===== */
-[data-class-theme="cleric"]::before,
-[data-class-theme="cleric"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 10 L20 50 M10 25 L30 25' stroke='%23daa520' stroke-width='3' opacity='0.5'/%3E%3Ccircle cx='20' cy='30' r='18' stroke='%23daa520' stroke-width='1' fill='none' opacity='0.3'/%3E%3Cpath d='M20 80 L20 120 M10 95 L30 95' stroke='%23daa520' stroke-width='3' opacity='0.4'/%3E%3Cpath d='M20 150 L20 190 M10 165 L30 165' stroke='%23daa520' stroke-width='3' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== PALADIN - Radiant crosses ===== */
-[data-class-theme="paladin"]::before,
-[data-class-theme="paladin"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 5 L20 55 M8 20 L32 20' stroke='%23ffd700' stroke-width='4' opacity='0.5'/%3E%3Ccircle cx='20' cy='20' r='22' stroke='%23ffd700' stroke-width='1' fill='none' opacity='0.3'/%3E%3Cpath d='M20 85 L20 135 M8 100 L32 100' stroke='%23ffd700' stroke-width='4' opacity='0.4'/%3E%3Cpath d='M20 165 L20 195 M12 175 L28 175' stroke='%23ffd700' stroke-width='3' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.45;
-}
-
-/* ===== ROGUE/THIEF - Daggers/shadows ===== */
-[data-class-theme="rogue"]::before,
-[data-class-theme="rogue"]::after,
-[data-class-theme="thief"]::before,
-[data-class-theme="thief"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 10 L25 50 L20 45 L15 50 Z' fill='%236a4c93' opacity='0.5'/%3E%3Cpath d='M18 50 L22 50 L22 60 L18 60 Z' fill='%234a3070' opacity='0.4'/%3E%3Cpath d='M15 90 L20 130 L25 90 L20 95 Z' fill='%236a4c93' opacity='0.4'/%3E%3Cpath d='M20 160 L25 190 L20 185 L15 190 Z' fill='%236a4c93' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== FIGHTER - Swords/shields ===== */
-[data-class-theme="fighter"]::before,
-[data-class-theme="fighter"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 5 L22 45 L25 42 L20 55 L15 42 L18 45 Z' fill='%23708090' opacity='0.5'/%3E%3Crect x='15' y='55' width='10' height='8' fill='%238b7355' opacity='0.4'/%3E%3Cpath d='M20 100 L30 115 L30 140 L20 155 L10 140 L10 115 Z' fill='none' stroke='%23708090' stroke-width='2' opacity='0.4'/%3E%3C/svg%3E");
-  opacity: 0.35;
-}
-
-/* ===== BARD - Musical notes ===== */
-[data-class-theme="bard"]::before,
-[data-class-theme="bard"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cellipse cx='15' cy='35' rx='8' ry='6' fill='%23daa520' opacity='0.5'/%3E%3Cpath d='M23 35 L23 10 L30 15' stroke='%23daa520' stroke-width='2' fill='none' opacity='0.5'/%3E%3Cellipse cx='25' cy='100' rx='7' ry='5' fill='%239370db' opacity='0.4'/%3E%3Cpath d='M32 100 L32 78' stroke='%239370db' stroke-width='2' fill='none' opacity='0.4'/%3E%3Cellipse cx='12' cy='165' rx='8' ry='6' fill='%23daa520' opacity='0.4'/%3E%3Cpath d='M20 165 L20 140 L27 145' stroke='%23daa520' stroke-width='2' fill='none' opacity='0.4'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== CAVALIER - Heraldic shields ===== */
-[data-class-theme="cavalier"]::before,
-[data-class-theme="cavalier"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 10 L35 15 L35 40 L20 55 L5 40 L5 15 Z' fill='none' stroke='%234682b4' stroke-width='2' opacity='0.5'/%3E%3Cpath d='M20 18 L28 22 L28 36 L20 46 L12 36 L12 22 Z' fill='%234682b4' opacity='0.3'/%3E%3Cpath d='M20 100 L32 104 L32 125 L20 138 L8 125 L8 104 Z' fill='none' stroke='%23c0c0c0' stroke-width='2' opacity='0.4'/%3E%3Cpath d='M20 170 L30 173 L30 190 L20 200 L10 190 L10 173 Z' fill='none' stroke='%234682b4' stroke-width='2' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== MONK - Zen circles ===== */
-[data-class-theme="monk"]::before,
-[data-class-theme="monk"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Ccircle cx='20' cy='35' r='18' stroke='%23ff8c00' stroke-width='3' fill='none' opacity='0.4' stroke-dasharray='80 20'/%3E%3Ccircle cx='20' cy='35' r='8' fill='%23ffd700' opacity='0.3'/%3E%3Ccircle cx='20' cy='115' r='15' stroke='%23ff8c00' stroke-width='2' fill='none' opacity='0.35' stroke-dasharray='70 20'/%3E%3Ccircle cx='20' cy='180' r='12' stroke='%23ff8c00' stroke-width='2' fill='none' opacity='0.3' stroke-dasharray='60 15'/%3E%3C/svg%3E");
-  opacity: 0.45;
-}
-
-/* ===== SORCERER - Wild magic ===== */
-[data-class-theme="sorcerer"]::before,
-[data-class-theme="sorcerer"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M5 20 Q20 10 35 25 Q25 40 10 35 Q20 25 5 20' stroke='%238b008b' stroke-width='2' fill='none' opacity='0.5'/%3E%3Ccircle cx='20' cy='30' r='5' fill='%23ff1493' opacity='0.4'/%3E%3Cpath d='M10 90 Q25 80 30 100 Q15 110 10 90' stroke='%238b008b' stroke-width='2' fill='none' opacity='0.4'/%3E%3Cpath d='M15 160 Q30 150 35 170 Q20 180 15 160' stroke='%238b008b' stroke-width='2' fill='none' opacity='0.35'/%3E%3Ccircle cx='25' cy='165' r='4' fill='%23ff1493' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.4;
-}
-
-/* ===== ANTI-PALADIN - Dark symbols ===== */
-[data-class-theme="anti-paladin"]::before,
-[data-class-theme="anti-paladin"]::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='200' viewBox='0 0 40 200'%3E%3Cpath d='M20 55 L20 5 M8 20 L32 20' stroke='%238b0000' stroke-width='4' opacity='0.5'/%3E%3Cpath d='M12 10 L28 30 M28 10 L12 30' stroke='%23ff4444' stroke-width='1' opacity='0.3'/%3E%3Cpath d='M20 135 L20 85 M8 100 L32 100' stroke='%238b0000' stroke-width='4' opacity='0.4'/%3E%3Cpath d='M20 195 L20 155 M10 170 L30 170' stroke='%238b0000' stroke-width='3' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.4;
 }
