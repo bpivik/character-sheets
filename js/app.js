@@ -8631,14 +8631,16 @@ const App = {
    * Add a woodland language to the Languages section
    */
   addWoodlandLanguage(languageName) {
+    console.log('addWoodlandLanguage called with:', languageName);
+    
     // Add the language to Languages section with INT+CHA+40
     // Pass true for skipAbility - we only want "Woodland Languages" ability, not "Language (X)"
     this.addLanguageIfNotExists(languageName, 'druid', true);
     
-    // Add "Woodland Languages" ability if not already present
-    // Check both the sheet and any pending input
+    // Always add "Woodland Languages" ability
+    console.log('Checking if Woodland Languages ability exists:', this.hasAbility('Woodland Languages'));
     if (!this.hasAbility('Woodland Languages')) {
-      // Directly add without triggering the modal again
+      console.log('Adding Woodland Languages ability');
       this.addAbilityDirectly('Woodland Languages');
     }
     
@@ -8647,11 +8649,14 @@ const App = {
   },
   
   /**
-   * Add ability directly without special handling (for Woodland Languages)
+   * Add ability directly without special handling (for Woodland Languages, Animal Companion)
    */
   addAbilityDirectly(abilityName) {
     const container = document.getElementById('class-abilities-list');
-    if (!container) return false;
+    if (!container) {
+      console.error('addAbilityDirectly: class-abilities-list not found');
+      return false;
+    }
     
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const normalizedName = normalizeApostrophes(abilityName.toLowerCase().trim());
@@ -8662,12 +8667,14 @@ const App = {
       if (input.value.trim()) {
         const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
         if (normalizedExisting === normalizedName) {
+          console.log('addAbilityDirectly: ability already exists:', abilityName);
           return true; // Already exists
         }
       }
     }
     
     // Find first empty slot
+    let added = false;
     for (const input of existingInputs) {
       if (!input.value.trim()) {
         input.value = this.toTitleCase(abilityName);
@@ -8679,13 +8686,21 @@ const App = {
           infoBtn.style.display = '';
         }
         
-        this.scheduleAutoSave();
-        return true;
+        console.log('addAbilityDirectly: added to empty slot:', abilityName);
+        added = true;
+        break;
       }
     }
     
-    // No empty slot - create new row
-    this.addClassAbilityRow(abilityName);
+    // No empty slot found - create new row
+    if (!added) {
+      console.log('addAbilityDirectly: creating new row for:', abilityName);
+      this.addClassAbilityRow(abilityName);
+    }
+    
+    // Sync to character data
+    this.syncClassAbilitiesToCharacter();
+    this.scheduleAutoSave();
     return true;
   },
   
@@ -14282,6 +14297,8 @@ const App = {
    * Add an animal companion
    */
   addAnimalCompanion(name, maxSIZ) {
+    console.log('addAnimalCompanion called:', name, 'maxSIZ:', maxSIZ, 'pendingTier:', this._pendingCompanionTier);
+    
     if (!this.character.animalCompanions) {
       this.character.animalCompanions = [];
     }
@@ -14306,20 +14323,21 @@ const App = {
       addedAt: new Date().toISOString()
     });
     
-    // If this was triggered from Spend XP Rolls, add the ability to the sheet
-    if (this._pendingCompanionTier) {
-      const tierNames = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
-      const abilityName = `Animal Companion ${tierNames[this._pendingCompanionTier]}`;
-      
-      // Check if they already have this tier ability
-      if (!this.hasAbility(abilityName)) {
-        // Add the ability without triggering the modal again
-        this.addAbilityDirectly(abilityName);
-      }
-      
-      // Clear the pending tier
-      this._pendingCompanionTier = null;
+    // Always add the ability to the sheet when a companion is added
+    // Since the + button was removed, companions can only be added via Spend XP Rolls
+    const tier = this._pendingCompanionTier || 1; // Default to tier 1
+    const tierNames = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
+    const abilityName = `Animal Companion ${tierNames[tier]}`;
+    
+    console.log('Adding ability:', abilityName, 'hasAbility:', this.hasAbility(abilityName));
+    
+    // Add the ability if not already present
+    if (!this.hasAbility(abilityName)) {
+      this.addAbilityDirectly(abilityName);
     }
+    
+    // Clear the pending tier
+    this._pendingCompanionTier = null;
     
     this.renderCompanionList();
     this.checkAnimalCompanionVisibility();
