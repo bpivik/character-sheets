@@ -8637,12 +8637,10 @@ const App = {
     // Pass true for skipAbility - we only want "Woodland Languages" ability, not "Language (X)"
     this.addLanguageIfNotExists(languageName, 'druid', true);
     
-    // Always add "Woodland Languages" ability
-    console.log('Checking if Woodland Languages ability exists:', this.hasAbility('Woodland Languages'));
-    if (!this.hasAbility('Woodland Languages')) {
-      console.log('Adding Woodland Languages ability');
-      this.addAbilityDirectly('Woodland Languages');
-    }
+    // Always try to add "Woodland Languages" ability
+    // addAbilityDirectly will check if it's already in the DOM
+    console.log('Adding Woodland Languages ability');
+    this.addAbilityDirectly('Woodland Languages');
     
     // Clear the stored input reference
     this._woodlandLanguagesInput = null;
@@ -8650,6 +8648,7 @@ const App = {
   
   /**
    * Add ability directly without special handling (for Woodland Languages, Animal Companion)
+   * This only checks DOM elements, not acquiredAbilities array
    */
   addAbilityDirectly(abilityName) {
     const container = document.getElementById('class-abilities-list');
@@ -8661,14 +8660,14 @@ const App = {
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
     const normalizedName = normalizeApostrophes(abilityName.toLowerCase().trim());
     
-    // Check if ability already exists
+    // Check if ability already exists IN THE DOM ONLY (not acquiredAbilities)
     const existingInputs = container.querySelectorAll('.class-ability-input');
     for (const input of existingInputs) {
       if (input.value.trim()) {
         const normalizedExisting = normalizeApostrophes(input.value.trim().toLowerCase());
         if (normalizedExisting === normalizedName) {
-          console.log('addAbilityDirectly: ability already exists:', abilityName);
-          return true; // Already exists
+          console.log('addAbilityDirectly: ability already in DOM:', abilityName);
+          return true; // Already exists in DOM
         }
       }
     }
@@ -14329,12 +14328,10 @@ const App = {
     const tierNames = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
     const abilityName = `Animal Companion ${tierNames[tier]}`;
     
-    console.log('Adding ability:', abilityName, 'hasAbility:', this.hasAbility(abilityName));
+    console.log('Adding ability:', abilityName);
     
-    // Add the ability if not already present
-    if (!this.hasAbility(abilityName)) {
-      this.addAbilityDirectly(abilityName);
-    }
+    // Always try to add the ability - addAbilityDirectly will check if it's already in the DOM
+    this.addAbilityDirectly(abilityName);
     
     // Clear the pending tier
     this._pendingCompanionTier = null;
