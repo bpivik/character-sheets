@@ -43,7 +43,8 @@ input[type="text"],
 input[type="number"],
 select {
   padding: 0.4rem 0.5rem;
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   border-radius: 4px;
@@ -795,7 +796,7 @@ select:focus {
 .derived-input {
   width: 100%;
   padding: 0.4rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
   text-align: center !important;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -4360,7 +4361,6 @@ input.skill-input.powerful-concentration-bonus,
 .hit-location-table input {
   width: 40px;
   padding: 0.3rem;
-  font-size: 1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -4862,7 +4862,6 @@ input.skill-input.powerful-concentration-bonus,
   padding: 0.4rem 0.4rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  font-size: 1rem;
   box-sizing: border-box;
 }
 
@@ -4882,7 +4881,6 @@ input.skill-input.powerful-concentration-bonus,
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  font-size: 1rem;
   box-sizing: border-box;
 }
 
@@ -4895,7 +4893,6 @@ input.skill-input.powerful-concentration-bonus,
   padding: 0.4rem 0.4rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
-  font-size: 1rem;
   box-sizing: border-box;
 }
 
@@ -4943,7 +4940,6 @@ input.skill-input.powerful-concentration-bonus,
 .weapons-table input {
   width: 100%;
   padding: 0.4rem 0.4rem;
-  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   box-sizing: border-box;
@@ -7474,7 +7470,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .magic-skills-table td {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--text-secondary);
 }
 
@@ -7493,7 +7489,6 @@ input.skill-input.powerful-concentration-bonus,
 .magic-skill-input {
   width: 100%;
   padding: 0.4rem 0.4rem;
-  font-size: 1rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -7525,7 +7520,6 @@ input.skill-input.powerful-concentration-bonus,
 .deity-input {
   width: 100%;
   padding: 0.4rem 0.4rem;
-  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   box-sizing: border-box;
@@ -7680,7 +7674,7 @@ input.skill-input.powerful-concentration-bonus,
 .spell-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .spell-table th,
@@ -7719,7 +7713,6 @@ input.skill-input.powerful-concentration-bonus,
 .spell-table input[type="text"] {
   width: 100%;
   padding: 0.4rem 0.4rem;
-  font-size: 1rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   box-sizing: border-box;
