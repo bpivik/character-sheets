@@ -7783,6 +7783,54 @@ input.skill-input.powerful-concentration-bonus,
   color: #856404;
 }
 
+/* Add Spell Button */
+.btn-add-spell {
+  background: #e8f5e9;
+  border: 1px solid #81c784;
+  color: #2e7d32;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  transition: all 0.15s ease;
+}
+
+.btn-add-spell:hover {
+  background: #c8e6c9;
+  border-color: #4caf50;
+}
+
+/* Remove Spell Button */
+.col-remove-spell {
+  width: 28px;
+  text-align: center;
+}
+
+.spell-remove-cell {
+  text-align: center;
+  padding: 0.1rem !important;
+}
+
+.btn-remove-spell {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  background: var(--input-bg);
+  color: #999;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-remove-spell:hover {
+  background: #f8d7da;
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
 /* Magic skill reference (page 5) */
 .magic-skill-ref {
   font-weight: 500;

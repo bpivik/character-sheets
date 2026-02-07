@@ -18,7 +18,9 @@
   #btn-sort-abilities,
   .spell-actions-bar,
   .col-cast,
-  .spell-cast-cell {
+  .spell-cast-cell,
+  .col-remove-spell,
+  .spell-remove-cell {
     display: none !important;
   }
 

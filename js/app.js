@@ -5636,117 +5636,164 @@ const App = {
   },
 
   /**
-   * Generate spell rows for all ranks
+   * Generate spell rows for all ranks - starts empty, rows added dynamically
    */
   generateSpellRows() {
     const ranks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
-    const rankLabels = {
-      'cantrips': 'Cantrip',
-      'rank1': 'Rank 1',
-      'rank2': 'Rank 2',
-      'rank3': 'Rank 3',
-      'rank4': 'Rank 4',
-      'rank5': 'Rank 5'
-    };
     
     ranks.forEach(rank => {
       const tbody = document.getElementById(`${rank}-body`);
       if (!tbody) return;
-      
       tbody.innerHTML = '';
       
-      for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input type="checkbox" id="${rank}-${i}-mem" class="spell-memorized"></td>
-          <td class="spell-name-cell">
-            <input type="text" id="${rank}-${i}-name" class="spell-name" placeholder="" autocomplete="off">
-          </td>
-          <td><input type="text" id="${rank}-${i}-cost" class="spell-cost" placeholder=""></td>
-          <td class="spell-cast-cell"><button type="button" class="btn-cast-spell" id="${rank}-${i}-cast" title="Cast this spell">✦</button></td>
-        `;
-        tbody.appendChild(tr);
-        
-        const nameInput = tr.querySelector(`#${rank}-${i}-name`);
-        const costInput = tr.querySelector(`#${rank}-${i}-cost`);
-        const memCheck = tr.querySelector(`#${rank}-${i}-mem`);
-        
-        // Check memorize limit when checkbox is clicked
-        if (memCheck) {
-          memCheck.addEventListener('change', (e) => {
-            if (e.target.checked) {
-              const maxInput = document.getElementById(`${rank}-max`);
-              const maxAllowed = parseInt(maxInput?.value, 10) || 0;
-              
-              // Count currently checked boxes in this rank
-              const currentlyMemorized = tbody.querySelectorAll('.spell-memorized:checked').length;
-              
-              if (currentlyMemorized > maxAllowed) {
-                e.target.checked = false;
-                const label = rankLabels[rank];
-                this.showMemorizeWarning(`You may only memorize ${maxAllowed} ${label} spell${maxAllowed !== 1 ? 's' : ''}. Forget one before you memorize another.`);
-                return;
-              }
-            }
-            this.scheduleAutoSave();
-          });
-        }
-        
-        // Auto-fill cost when spell name is selected/entered
-        if (nameInput && costInput) {
-          nameInput.addEventListener('change', () => {
-            const spellName = nameInput.value.trim();
-            if (spellName && window.SpellData) {
-              // Convert to title case
-              nameInput.value = this.toTitleCase(spellName);
-              
-              // Convert rank key to number for getSpellCost
-              const rankNum = rank === 'cantrips' ? 0 : parseInt(rank.replace('rank', ''), 10);
-              const cost = window.SpellData.getSpellCost(spellName, rankNum);
-              if (cost) {
-                costInput.value = cost;
-              }
-              // Update tooltip with spell description
-              const description = window.SpellData.getSpellDescription(spellName);
-              if (description) {
-                nameInput.title = description;
-              } else {
-                nameInput.title = '';
-              }
-            } else {
-              // Spell name was cleared - also clear the cost and tooltip
-              costInput.value = '';
-              nameInput.title = '';
-              // Also clear classSpell marker if present
-              delete nameInput.dataset.classSpell;
-            }
-            this.scheduleAutoSave();
-          });
-          
-          nameInput.addEventListener('input', () => this.scheduleAutoSave());
-        }
-        
-        tr.querySelectorAll('input').forEach(input => {
-          if (input !== nameInput && input !== memCheck) {
-            input.addEventListener('input', () => this.scheduleAutoSave());
-          }
-          input.addEventListener('change', () => this.scheduleAutoSave());
-        });
-        
-        // Cast spell button
-        const castBtn = tr.querySelector(`#${rank}-${i}-cast`);
-        if (castBtn) {
-          castBtn.addEventListener('click', () => {
-            this.castSpell(rank, i);
-          });
-        }
-      }
-      
-      // Max memorized input
+      // Max memorized input listener
       const maxInput = document.getElementById(`${rank}-max`);
       if (maxInput) {
         maxInput.addEventListener('input', () => this.scheduleAutoSave());
       }
+    });
+  },
+  
+  /**
+   * Rank labels for display
+   */
+  spellRankLabels: {
+    'cantrips': 'Cantrip',
+    'rank1': 'Rank 1',
+    'rank2': 'Rank 2',
+    'rank3': 'Rank 3',
+    'rank4': 'Rank 4',
+    'rank5': 'Rank 5'
+  },
+  
+  /**
+   * Add a single spell row to a rank
+   * @param {string} rankKey - The rank key (cantrips, rank1, etc.)
+   * @param {Object} data - Optional spell data {name, cost, memorized, classSpell}
+   * @returns {HTMLElement} The created row element
+   */
+  addSpellRow(rankKey, data = null) {
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody) return null;
+    
+    const index = tbody.rows.length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" id="${rankKey}-${index}-mem" class="spell-memorized"></td>
+      <td class="spell-name-cell">
+        <input type="text" id="${rankKey}-${index}-name" class="spell-name" placeholder="" autocomplete="off">
+      </td>
+      <td><input type="text" id="${rankKey}-${index}-cost" class="spell-cost" placeholder=""></td>
+      <td class="spell-cast-cell"><button type="button" class="btn-cast-spell" id="${rankKey}-${index}-cast" title="Cast this spell">✦</button></td>
+      <td class="spell-remove-cell"><button type="button" class="btn-remove-spell" title="Remove this spell">−</button></td>
+    `;
+    tbody.appendChild(tr);
+    
+    const nameInput = tr.querySelector('.spell-name');
+    const costInput = tr.querySelector('.spell-cost');
+    const memCheck = tr.querySelector('.spell-memorized');
+    
+    // Populate data if provided
+    if (data) {
+      if (data.name) {
+        nameInput.value = this.toTitleCase(data.name);
+        if (data.classSpell) {
+          nameInput.dataset.classSpell = data.classSpell;
+        }
+        if (window.SpellData) {
+          const description = window.SpellData.getSpellDescription(data.name);
+          if (description) nameInput.title = description;
+        }
+      }
+      if (data.cost) costInput.value = data.cost;
+      if (data.memorized) memCheck.checked = true;
+    }
+    
+    // Memorize limit check
+    memCheck.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        const maxInput = document.getElementById(`${rankKey}-max`);
+        const maxAllowed = parseInt(maxInput?.value, 10) || 0;
+        const currentlyMemorized = tbody.querySelectorAll('.spell-memorized:checked').length;
+        
+        if (currentlyMemorized > maxAllowed) {
+          e.target.checked = false;
+          const label = this.spellRankLabels[rankKey];
+          this.showMemorizeWarning(`You may only memorize ${maxAllowed} ${label} spell${maxAllowed !== 1 ? 's' : ''}. Forget one before you memorize another.`);
+          return;
+        }
+      }
+      this.scheduleAutoSave();
+    });
+    
+    // Auto-fill cost on spell name change
+    nameInput.addEventListener('change', () => {
+      const spellName = nameInput.value.trim();
+      if (spellName && window.SpellData) {
+        nameInput.value = this.toTitleCase(spellName);
+        const rankNum = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10);
+        const cost = window.SpellData.getSpellCost(spellName, rankNum);
+        if (cost) costInput.value = cost;
+        const description = window.SpellData.getSpellDescription(spellName);
+        nameInput.title = description || '';
+      } else {
+        costInput.value = '';
+        nameInput.title = '';
+        delete nameInput.dataset.classSpell;
+      }
+      this.scheduleAutoSave();
+    });
+    
+    nameInput.addEventListener('input', () => this.scheduleAutoSave());
+    costInput.addEventListener('input', () => this.scheduleAutoSave());
+    costInput.addEventListener('change', () => this.scheduleAutoSave());
+    
+    // Cast button
+    const castBtn = tr.querySelector('.btn-cast-spell');
+    castBtn.addEventListener('click', () => {
+      const idx = Array.from(tbody.rows).indexOf(tr);
+      this.castSpell(rankKey, idx);
+    });
+    
+    // Remove button
+    const removeBtn = tr.querySelector('.btn-remove-spell');
+    removeBtn.addEventListener('click', () => {
+      this.removeSpellRow(rankKey, tr);
+    });
+    
+    return tr;
+  },
+  
+  /**
+   * Remove a spell row and re-index remaining rows
+   */
+  removeSpellRow(rankKey, tr) {
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody || !tr) return;
+    
+    tr.remove();
+    this.reindexSpellRows(rankKey);
+    this.scheduleAutoSave();
+    this.updateSpellFillButtons();
+  },
+  
+  /**
+   * Re-index all spell row IDs in a rank to be sequential
+   */
+  reindexSpellRows(rankKey) {
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody) return;
+    
+    Array.from(tbody.rows).forEach((tr, i) => {
+      const mem = tr.querySelector('.spell-memorized');
+      const name = tr.querySelector('.spell-name');
+      const cost = tr.querySelector('.spell-cost');
+      const cast = tr.querySelector('.btn-cast-spell');
+      
+      if (mem) mem.id = `${rankKey}-${i}-mem`;
+      if (name) name.id = `${rankKey}-${i}-name`;
+      if (cost) cost.id = `${rankKey}-${i}-cost`;
+      if (cast) cast.id = `${rankKey}-${i}-cast`;
     });
   },
 
@@ -6124,28 +6171,12 @@ const App = {
           if (maxInput && this.character.magic.spells[rank].max) {
             maxInput.value = this.character.magic.spells[rank].max;
           }
-          // Individual spells
+          // Individual spells - create a row for each saved spell
           if (this.character.magic.spells[rank].spells) {
-            this.character.magic.spells[rank].spells.forEach((spell, i) => {
-              const nameInput = document.getElementById(`${rank}-${i}-name`);
-              const costInput = document.getElementById(`${rank}-${i}-cost`);
-              const memCheck = document.getElementById(`${rank}-${i}-mem`);
-              if (nameInput && spell.name) {
-                nameInput.value = this.toTitleCase(spell.name);
-                // Restore classSpell marker if present
-                if (spell.classSpell) {
-                  nameInput.dataset.classSpell = spell.classSpell;
-                }
-                // Set tooltip with spell description
-                if (window.SpellData) {
-                  const description = window.SpellData.getSpellDescription(spell.name);
-                  if (description) {
-                    nameInput.title = description;
-                  }
-                }
+            this.character.magic.spells[rank].spells.forEach(spell => {
+              if (spell.name) {
+                this.addSpellRow(rank, spell);
               }
-              if (costInput && spell.cost) costInput.value = spell.cost;
-              if (memCheck && spell.memorized) memCheck.checked = spell.memorized;
             });
           }
         }
@@ -6438,20 +6469,23 @@ const App = {
       if (maxInput) {
         this.character.magic.spells[rank].max = maxInput.value;
       }
-      // Individual spells
+      // Individual spells - iterate actual rows
       this.character.magic.spells[rank].spells = [];
-      for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
-        const nameInput = document.getElementById(`${rank}-${i}-name`);
-        const costInput = document.getElementById(`${rank}-${i}-cost`);
-        const memCheck = document.getElementById(`${rank}-${i}-mem`);
-        if (nameInput) {
-          this.character.magic.spells[rank].spells.push({
-            name: nameInput?.value || '',
-            cost: costInput?.value || '',
-            memorized: memCheck?.checked || false,
-            classSpell: nameInput.dataset.classSpell || null
-          });
-        }
+      const tbody = document.getElementById(`${rank}-body`);
+      if (tbody) {
+        Array.from(tbody.rows).forEach((tr, i) => {
+          const nameInput = tr.querySelector('.spell-name');
+          const costInput = tr.querySelector('.spell-cost');
+          const memCheck = tr.querySelector('.spell-memorized');
+          if (nameInput && nameInput.value.trim()) {
+            this.character.magic.spells[rank].spells.push({
+              name: nameInput.value || '',
+              cost: costInput?.value || '',
+              memorized: memCheck?.checked || false,
+              classSpell: nameInput.dataset.classSpell || null
+            });
+          }
+        });
       }
     });
     
@@ -7872,26 +7906,33 @@ const App = {
         return classList && classList[rankKey] && classList[rankKey].length > 0;
       });
       
-      // Build button HTML
-      let buttonsHTML = '';
+      // Build button HTML - always start with Add Spell button
+      let buttonsHTML = `<button type="button" class="btn btn-small btn-add-spell" data-rank="${rankKey}" title="Add an empty spell row">+ Add Spell</button>`;
       
       classesWithSpells.forEach(c => {
         const display = classDisplay[c.name] || { label: this.toTitleCase(c.name), icon: '📖' };
-        buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Fill empty slots with ${display.label} spells">${display.icon} Fill ${display.label}</button>`;
+        buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Fill with ${display.label} spells">${display.icon} Fill ${display.label}</button>`;
       });
       
-      // Always show Clear All if there are any fill buttons OR existing spells
-      const hasSpells = this.getExistingSpellsInRank(rankKey).length > 0;
-      if (classesWithSpells.length > 0 || hasSpells) {
+      // Show Clear All if there are any rows
+      const tbody = document.getElementById(`${rankKey}-body`);
+      const hasRows = tbody && tbody.rows.length > 0;
+      if (hasRows) {
         buttonsHTML += `<button type="button" class="btn btn-small btn-clear-spells" data-rank="${rankKey}" title="Clear all spells in this rank">🗑️ Clear All</button>`;
       }
       
       actionsBar.innerHTML = buttonsHTML;
       
-      // Show/hide the bar
-      actionsBar.style.display = buttonsHTML ? '' : 'none';
+      // Bar is always visible (always has at least the + button)
+      actionsBar.style.display = '';
       
       // Attach event listeners
+      actionsBar.querySelector('.btn-add-spell').addEventListener('click', () => {
+        this.addSpellRow(rankKey);
+        this.scheduleAutoSave();
+        this.updateSpellFillButtons();
+      });
+      
       actionsBar.querySelectorAll('.btn-fill-spells').forEach(btn => {
         btn.addEventListener('click', () => {
           const className = btn.dataset.class;
@@ -7900,12 +7941,13 @@ const App = {
         });
       });
       
-      actionsBar.querySelectorAll('.btn-clear-spells').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const rank = btn.dataset.rank;
+      const clearBtn = actionsBar.querySelector('.btn-clear-spells');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          const rank = clearBtn.dataset.rank;
           this.clearSpellsInRank(rank);
         });
-      });
+      }
     });
   },
   
@@ -7923,7 +7965,6 @@ const App = {
     const existingSpells = this.getExistingSpellsInRank(rankKey);
     
     let addedCount = 0;
-    let slotIndex = 0;
     
     spellsToAdd.forEach(spellName => {
       // Skip if spell already exists in this rank
@@ -7931,33 +7972,17 @@ const App = {
         return;
       }
       
-      // Find next empty slot
-      while (slotIndex < SPELL_SLOTS_PER_RANK) {
-        const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
-        if (nameInput && !nameInput.value.trim()) {
-          // Found empty slot - add the spell
-          nameInput.value = this.toTitleCase(spellName);
-          nameInput.dataset.classSpell = className.toLowerCase();
-          
-          // Auto-fill cost
-          const cost = window.SpellData.getSpellCost(spellName);
-          const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
-          if (costInput && cost) {
-            costInput.value = cost;
-          }
-          
-          // Set tooltip
-          const description = window.SpellData.getSpellDescription(spellName);
-          if (description) {
-            nameInput.title = description;
-          }
-          
-          addedCount++;
-          slotIndex++;
-          break;
-        }
-        slotIndex++;
-      }
+      // Get cost for the spell
+      const cost = window.SpellData.getSpellCost(spellName);
+      
+      this.addSpellRow(rankKey, {
+        name: spellName,
+        cost: cost || '',
+        memorized: false,
+        classSpell: className.toLowerCase()
+      });
+      
+      addedCount++;
     });
     
     if (addedCount > 0) {
@@ -7965,7 +7990,7 @@ const App = {
       this.scheduleAutoSave();
     }
     
-    // Refresh buttons (to update Clear All visibility)
+    // Refresh buttons
     this.updateSpellFillButtons();
   },
   
@@ -7973,28 +7998,16 @@ const App = {
    * Clear all spells in a specific rank with confirmation
    */
   clearSpellsInRank(rankKey) {
-    const existingSpells = this.getExistingSpellsInRank(rankKey);
-    if (existingSpells.length === 0) return;
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody || tbody.rows.length === 0) return;
     
+    const spellCount = tbody.rows.length;
     const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')} Spells`;
-    if (!confirm(`Clear all ${existingSpells.length} spell(s) from ${rankLabel}?\n\nThis will remove all spells, costs, and memorized flags in this rank.`)) {
+    if (!confirm(`Clear all ${spellCount} spell(s) from ${rankLabel}?\n\nThis will remove all spells, costs, and memorized flags in this rank.`)) {
       return;
     }
     
-    for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
-      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-      if (nameInput && nameInput.value.trim()) {
-        nameInput.value = '';
-        nameInput.title = '';
-        delete nameInput.dataset.classSpell;
-        
-        const costInput = document.getElementById(`${rankKey}-${i}-cost`);
-        if (costInput) costInput.value = '';
-        
-        const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
-        if (memCheck) memCheck.checked = false;
-      }
-    }
+    tbody.innerHTML = '';
     
     console.log(`Cleared all spells from ${rankKey}`);
     this.scheduleAutoSave();
@@ -8100,11 +8113,14 @@ const App = {
    */
   getExistingSpellsInRank(rankKey) {
     const spells = [];
-    for (let i = 0; i < 60; i++) {
-      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-      if (nameInput && nameInput.value.trim()) {
-        spells.push(nameInput.value.trim());
-      }
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (tbody) {
+      Array.from(tbody.rows).forEach(tr => {
+        const nameInput = tr.querySelector('.spell-name');
+        if (nameInput && nameInput.value.trim()) {
+          spells.push(nameInput.value.trim());
+        }
+      });
     }
     return spells;
   },
@@ -8126,57 +8142,37 @@ const App = {
    * Alphabetize spells within a single rank
    */
   alphabetizeSpellsInRank(rankKey) {
-    // Collect all spell data from this rank
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody) return;
+    
+    // Collect all spell data from actual rows
     const spells = [];
-    for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
-      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-      const costInput = document.getElementById(`${rankKey}-${i}-cost`);
-      const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
+    Array.from(tbody.rows).forEach(tr => {
+      const nameInput = tr.querySelector('.spell-name');
+      const costInput = tr.querySelector('.spell-cost');
+      const memCheck = tr.querySelector('.spell-memorized');
       
       if (nameInput && nameInput.value.trim()) {
         spells.push({
           name: nameInput.value.trim(),
           cost: costInput ? costInput.value : '',
           memorized: memCheck ? memCheck.checked : false,
-          classSpell: nameInput.dataset.classSpell || null,
-          title: nameInput.title || ''
+          classSpell: nameInput.dataset.classSpell || null
         });
       }
-    }
+    });
     
-    // Sort alphabetically by name (case-insensitive)
+    if (spells.length === 0) return;
+    
+    // Sort alphabetically
     spells.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     
-    // Clear all slots first
-    for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
-      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-      const costInput = document.getElementById(`${rankKey}-${i}-cost`);
-      const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
-      
-      if (nameInput) {
-        nameInput.value = '';
-        nameInput.title = '';
-        delete nameInput.dataset.classSpell;
-      }
-      if (costInput) costInput.value = '';
-      if (memCheck) memCheck.checked = false;
-    }
+    // Clear all rows
+    tbody.innerHTML = '';
     
-    // Repopulate in sorted order
-    spells.forEach((spell, i) => {
-      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-      const costInput = document.getElementById(`${rankKey}-${i}-cost`);
-      const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
-      
-      if (nameInput) {
-        nameInput.value = spell.name;
-        nameInput.title = spell.title;
-        if (spell.classSpell) {
-          nameInput.dataset.classSpell = spell.classSpell;
-        }
-      }
-      if (costInput) costInput.value = spell.cost;
-      if (memCheck) memCheck.checked = spell.memorized;
+    // Re-add in sorted order
+    spells.forEach(spell => {
+      this.addSpellRow(rankKey, spell);
     });
   },
   
@@ -8933,26 +8929,14 @@ const App = {
       return; // Already exists
     }
     
-    // Find first empty slot
-    for (let i = 0; i < 60; i++) {
-      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-      if (nameInput && !nameInput.value.trim()) {
-        nameInput.value = this.toTitleCase(spellName);
-        nameInput.dataset.classSpell = 'sorcerer';
-        
-        // Set tooltip and cost
-        if (window.SpellData) {
-          const desc = window.SpellData.getSpellDescription(spellName);
-          if (desc) nameInput.title = desc;
-          
-          const cost = window.SpellData.getSpellCost(spellName);
-          const costInput = document.getElementById(`${rankKey}-${i}-cost`);
-          if (costInput && cost) costInput.value = cost;
-        }
-        
-        return;
-      }
-    }
+    const cost = window.SpellData ? window.SpellData.getSpellCost(spellName) : '';
+    
+    this.addSpellRow(rankKey, {
+      name: spellName,
+      cost: cost || '',
+      memorized: false,
+      classSpell: 'sorcerer'
+    });
   },
   
   /**
@@ -9220,17 +9204,16 @@ const App = {
     
     // Remove Sorcerer's Familiar spell
     if (classKey === 'sorcerer') {
-      for (let i = 0; i < 60; i++) {
-        const nameInput = document.getElementById(`rank1-${i}-name`);
-        if (nameInput && nameInput.value.toLowerCase().trim() === 'familiar' && 
-            nameInput.dataset.classSpell === 'sorcerer') {
-          nameInput.value = '';
-          nameInput.title = '';
-          delete nameInput.dataset.classSpell;
-          
-          const costInput = document.getElementById(`rank1-${i}-cost`);
-          if (costInput) costInput.value = '';
-        }
+      const tbody = document.getElementById('rank1-body');
+      if (tbody) {
+        Array.from(tbody.rows).forEach(tr => {
+          const nameInput = tr.querySelector('.spell-name');
+          if (nameInput && nameInput.value.toLowerCase().trim() === 'familiar' && 
+              nameInput.dataset.classSpell === 'sorcerer') {
+            tr.remove();
+          }
+        });
+        this.reindexSpellRows('rank1');
       }
     }
   },
@@ -14158,7 +14141,7 @@ const App = {
     1: ['Hamster', 'Parakeet', 'Gecko', 'Ferret', 'Hedgehog', 'Squirrel', 'Box Turtle', 'Hummingbird'],
     2: ['Raccoon', 'Otter', 'Swan', 'Bald Eagle', 'Armadillo', 'Wild Turkey', 'Barn Owl', 'Porcupine'],
     3: ['Coyote', 'Bobcat', 'Beaver', 'Red Fox', 'Badger', 'Wolverine', 'Sloth', 'Snowy Owl'],
-    4: ['Gray Wolf', 'Capybara', 'Caracal', 'Sea Otter', 'Tasmanian Devil', 'Javelina', 'African Wild Dog', 'Emperor Penguin'],
+    4: ['Capybara', 'Caracal', 'Sea Otter', 'Tasmanian Devil', 'Javelina', 'African Wild Dog', 'Emperor Penguin'],
     5: ['Serval', 'Giant Armadillo', 'Muntjac Deer', "Thomson's Gazelle", 'Ibex Kid', 'Coypu'],
     6: ['Cheetah (juvenile)', 'Roe Deer', 'Springbok', 'Pronghorn Fawn', 'Large Beaver'],
     7: ['Dingo', 'Jackal', 'Small Wolf', 'Duiker'],
