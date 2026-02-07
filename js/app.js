@@ -4837,6 +4837,9 @@ const App = {
       }
     }
     
+    // Replace dynamic placeholders in description
+    description = this.replaceDynamicPlaceholders(description);
+    
     // Check if it's a species ability
     const speciesName = document.getElementById('species')?.value || '';
     if (speciesName && window.SpeciesData) {
@@ -4977,6 +4980,22 @@ const App = {
     if (overlay) {
       overlay.classList.remove('active');
     }
+  },
+
+  /**
+   * Replace dynamic placeholders in ability descriptions with calculated values
+   */
+  replaceDynamicPlaceholders(description) {
+    // Replace {INFLUENCE_10TH} with 1/10th of Influence, rounded up
+    if (description.includes('{INFLUENCE_10TH}')) {
+      const influenceValue = this.getSkillValueByName('Influence') || 0;
+      const influence10th = Math.ceil(influenceValue / 10);
+      description = description.replace('{INFLUENCE_10TH}', influence10th);
+    }
+    
+    // Add more placeholder replacements here as needed
+    
+    return description;
   },
 
   /**
