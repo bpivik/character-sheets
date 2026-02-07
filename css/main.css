@@ -10204,3 +10204,298 @@ input.skill-input.powerful-concentration-bonus,
   padding: 4px 10px;
   min-width: auto;
 }
+
+/* ============================================
+   CLASS THEME SYSTEM
+   ============================================ */
+
+/* Class Theme Toggle Button */
+#btn-class-theme {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  min-width: auto;
+  transition: all 0.3s ease;
+}
+
+#btn-class-theme.active {
+  background: linear-gradient(135deg, #4a7c59 0%, #2d5a3d 100%);
+  border-color: #5a9a6a;
+  color: #fff;
+}
+
+/* Base class theme variables */
+[data-class-theme] {
+  --class-primary: #8b7355;
+  --class-secondary: #6b5344;
+  --class-accent: #a08060;
+  --class-glow: rgba(139, 115, 85, 0.3);
+  --class-border: #8b7355;
+  --class-bg-gradient-start: #2a2520;
+  --class-bg-gradient-end: #1a1815;
+}
+
+/* ===== BERSERKER - Blood Red ===== */
+[data-class-theme="berserker"] {
+  --class-primary: #b22222;
+  --class-secondary: #8b0000;
+  --class-accent: #dc143c;
+  --class-glow: rgba(178, 34, 34, 0.4);
+  --class-border: #b22222;
+  --class-bg-gradient-start: #2a1515;
+  --class-bg-gradient-end: #1a0a0a;
+}
+
+/* ===== BARD - Warm Gold/Purple ===== */
+[data-class-theme="bard"] {
+  --class-primary: #daa520;
+  --class-secondary: #b8860b;
+  --class-accent: #9370db;
+  --class-glow: rgba(218, 165, 32, 0.4);
+  --class-border: #daa520;
+  --class-bg-gradient-start: #2a2515;
+  --class-bg-gradient-end: #1a1810;
+}
+
+/* ===== CAVALIER - Noble Silver/Blue ===== */
+[data-class-theme="cavalier"] {
+  --class-primary: #4682b4;
+  --class-secondary: #36648b;
+  --class-accent: #c0c0c0;
+  --class-glow: rgba(70, 130, 180, 0.4);
+  --class-border: #4682b4;
+  --class-bg-gradient-start: #1a2530;
+  --class-bg-gradient-end: #101820;
+}
+
+/* ===== CLERIC - Holy Gold/White ===== */
+[data-class-theme="cleric"] {
+  --class-primary: #daa520;
+  --class-secondary: #cd950c;
+  --class-accent: #fffaf0;
+  --class-glow: rgba(218, 165, 32, 0.5);
+  --class-border: #daa520;
+  --class-bg-gradient-start: #2a2820;
+  --class-bg-gradient-end: #1a1a15;
+}
+
+/* ===== DRUID - Forest Green ===== */
+[data-class-theme="druid"] {
+  --class-primary: #228b22;
+  --class-secondary: #006400;
+  --class-accent: #90ee90;
+  --class-glow: rgba(34, 139, 34, 0.4);
+  --class-border: #228b22;
+  --class-bg-gradient-start: #1a2a1a;
+  --class-bg-gradient-end: #101810;
+}
+
+/* ===== FIGHTER - Steel Gray/Brown ===== */
+[data-class-theme="fighter"] {
+  --class-primary: #708090;
+  --class-secondary: #556b6f;
+  --class-accent: #8b7355;
+  --class-glow: rgba(112, 128, 144, 0.4);
+  --class-border: #708090;
+  --class-bg-gradient-start: #252525;
+  --class-bg-gradient-end: #181818;
+}
+
+/* ===== MAGE / MAGIC-USER - Arcane Blue/Purple ===== */
+[data-class-theme="mage"],
+[data-class-theme="magic-user"] {
+  --class-primary: #6a5acd;
+  --class-secondary: #483d8b;
+  --class-accent: #00bfff;
+  --class-glow: rgba(106, 90, 205, 0.5);
+  --class-border: #6a5acd;
+  --class-bg-gradient-start: #1a1a2e;
+  --class-bg-gradient-end: #101018;
+}
+
+/* ===== MONK - Saffron Orange ===== */
+[data-class-theme="monk"] {
+  --class-primary: #ff8c00;
+  --class-secondary: #cd6600;
+  --class-accent: #ffd700;
+  --class-glow: rgba(255, 140, 0, 0.4);
+  --class-border: #ff8c00;
+  --class-bg-gradient-start: #2a2015;
+  --class-bg-gradient-end: #1a1510;
+}
+
+/* ===== PALADIN - Radiant Gold/Silver ===== */
+[data-class-theme="paladin"] {
+  --class-primary: #ffd700;
+  --class-secondary: #daa520;
+  --class-accent: #f5f5f5;
+  --class-glow: rgba(255, 215, 0, 0.5);
+  --class-border: #ffd700;
+  --class-bg-gradient-start: #2a2820;
+  --class-bg-gradient-end: #1a1a18;
+}
+
+/* ===== RANGER - Forest Brown/Green ===== */
+[data-class-theme="ranger"] {
+  --class-primary: #556b2f;
+  --class-secondary: #3d4f22;
+  --class-accent: #8fbc8f;
+  --class-glow: rgba(85, 107, 47, 0.4);
+  --class-border: #556b2f;
+  --class-bg-gradient-start: #1f2518;
+  --class-bg-gradient-end: #151810;
+}
+
+/* ===== ROGUE / THIEF - Shadow Purple ===== */
+[data-class-theme="rogue"],
+[data-class-theme="thief"] {
+  --class-primary: #4b0082;
+  --class-secondary: #36005f;
+  --class-accent: #9400d3;
+  --class-glow: rgba(75, 0, 130, 0.5);
+  --class-border: #4b0082;
+  --class-bg-gradient-start: #1a1525;
+  --class-bg-gradient-end: #100d18;
+}
+
+/* ===== SORCERER - Wild Magic Red/Purple ===== */
+[data-class-theme="sorcerer"] {
+  --class-primary: #8b008b;
+  --class-secondary: #660066;
+  --class-accent: #ff1493;
+  --class-glow: rgba(139, 0, 139, 0.5);
+  --class-border: #8b008b;
+  --class-bg-gradient-start: #251525;
+  --class-bg-gradient-end: #180d18;
+}
+
+/* ===== ANTI-PALADIN - Dark Crimson ===== */
+[data-class-theme="anti-paladin"] {
+  --class-primary: #8b0000;
+  --class-secondary: #5c0000;
+  --class-accent: #2f0000;
+  --class-glow: rgba(139, 0, 0, 0.5);
+  --class-border: #8b0000;
+  --class-bg-gradient-start: #200808;
+  --class-bg-gradient-end: #100404;
+}
+
+/* ============================================
+   CLASS THEME APPLICATION - LIGHT MODE
+   ============================================ */
+
+/* Apply class theme to major UI elements */
+[data-class-theme] .sheet-navigation {
+  background: linear-gradient(135deg, var(--class-bg-gradient-start) 0%, var(--class-bg-gradient-end) 100%);
+  border-bottom: 2px solid var(--class-border);
+}
+
+[data-class-theme] .tab-btn.active {
+  background: var(--class-primary);
+  border-color: var(--class-border);
+  box-shadow: 0 0 10px var(--class-glow);
+}
+
+[data-class-theme] .tab-btn:hover:not(.active) {
+  background: var(--class-secondary);
+  border-color: var(--class-border);
+}
+
+[data-class-theme] .section-header {
+  color: var(--class-primary);
+  text-shadow: 0 0 8px var(--class-glow);
+}
+
+[data-class-theme] .ornate-border {
+  border-color: var(--class-border);
+  box-shadow: 0 0 15px var(--class-glow);
+}
+
+[data-class-theme] .btn-primary {
+  background: linear-gradient(135deg, var(--class-primary) 0%, var(--class-secondary) 100%);
+  border-color: var(--class-border);
+}
+
+[data-class-theme] .btn-primary:hover {
+  box-shadow: 0 0 12px var(--class-glow);
+}
+
+[data-class-theme] .section-title {
+  color: var(--class-primary);
+  border-bottom-color: var(--class-border);
+}
+
+[data-class-theme] .page-header h1 {
+  color: var(--class-primary);
+  text-shadow: 0 0 15px var(--class-glow);
+}
+
+[data-class-theme] input:focus,
+[data-class-theme] select:focus,
+[data-class-theme] textarea:focus {
+  border-color: var(--class-primary);
+  box-shadow: 0 0 5px var(--class-glow);
+}
+
+[data-class-theme] .subsection-header {
+  color: var(--class-primary);
+  border-bottom-color: var(--class-border);
+}
+
+[data-class-theme] .ability-cards-divider {
+  border-color: var(--class-border);
+}
+
+[data-class-theme] .xp-section {
+  border-color: var(--class-border);
+}
+
+[data-class-theme] .notes-tab-btn.active {
+  background: var(--class-primary);
+  border-color: var(--class-border);
+}
+
+/* ============================================
+   CLASS THEME APPLICATION - DARK MODE
+   ============================================ */
+
+body.dark-mode[data-class-theme] {
+  background: linear-gradient(135deg, var(--class-bg-gradient-start) 0%, var(--class-bg-gradient-end) 100%);
+}
+
+body.dark-mode[data-class-theme] .sheet-navigation {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--class-bg-gradient-start) 80%, black) 0%, 
+    color-mix(in srgb, var(--class-bg-gradient-end) 80%, black) 100%);
+}
+
+body.dark-mode[data-class-theme] .ornate-border {
+  background: linear-gradient(135deg, var(--class-bg-gradient-start) 0%, var(--class-bg-gradient-end) 100%);
+}
+
+body.dark-mode[data-class-theme] .section-header {
+  color: var(--class-accent);
+}
+
+body.dark-mode[data-class-theme] .tab-btn.active {
+  background: var(--class-secondary);
+  color: var(--class-accent);
+}
+
+body.dark-mode[data-class-theme] .page-header h1 {
+  color: var(--class-accent);
+}
+
+body.dark-mode[data-class-theme] .section-title {
+  color: var(--class-accent);
+}
+
+body.dark-mode[data-class-theme] .subsection-header {
+  color: var(--class-accent);
+}
+
+/* Class theme indicator in header */
+.class-theme-indicator {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  margin-left: 4px;
+}

@@ -455,6 +455,11 @@ const App = {
     // Save calculated values (like Resilient HP) after initialization
     this.scheduleAutoSave();
     
+    // Update class theme if enabled
+    if (typeof window.updateClassThemeAfterLoad === 'function') {
+      window.updateClassThemeAfterLoad();
+    }
+    
     console.log('Initialization complete!');
   },
   

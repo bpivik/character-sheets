@@ -51,6 +51,7 @@
         <li><button class="tab-btn" data-page="notes">Notes</button></li>
       </ul>
       <div class="sheet-controls">
+        <button id="btn-class-theme" class="btn btn-secondary" title="Use Class Display">🎭 Class Theme</button>
         <button id="btn-theme" class="btn btn-secondary" title="Toggle Dark Mode">🌙</button>
         <select id="sheet-type-select" class="sheet-type-selector">
           <option value="human">Human / Demihuman</option>
@@ -1897,6 +1898,85 @@
           localStorage.setItem('mythras-theme', 'dark');
         }
       });
+    })();
+    
+    // Class Theme toggle handler
+    (function() {
+      const classThemeBtn = document.getElementById('btn-class-theme');
+      const body = document.body;
+      
+      // Function to get primary class
+      function getPrimaryClass() {
+        const classSelect = document.getElementById('class-primary');
+        if (classSelect && classSelect.value) {
+          return classSelect.value.toLowerCase().trim();
+        }
+        return null;
+      }
+      
+      // Function to apply class theme
+      function applyClassTheme() {
+        const primaryClass = getPrimaryClass();
+        if (primaryClass) {
+          body.setAttribute('data-class-theme', primaryClass);
+          classThemeBtn.classList.add('active');
+          classThemeBtn.innerHTML = '🎭 ' + primaryClass.charAt(0).toUpperCase() + primaryClass.slice(1);
+          localStorage.setItem('mythras-class-theme-enabled', 'true');
+        }
+      }
+      
+      // Function to remove class theme
+      function removeClassTheme() {
+        body.removeAttribute('data-class-theme');
+        classThemeBtn.classList.remove('active');
+        classThemeBtn.innerHTML = '🎭 Class Theme';
+        localStorage.setItem('mythras-class-theme-enabled', 'false');
+      }
+      
+      // Function to update class theme if enabled
+      function updateClassThemeIfEnabled() {
+        const isEnabled = localStorage.getItem('mythras-class-theme-enabled') === 'true';
+        if (isEnabled) {
+          applyClassTheme();
+        }
+      }
+      
+      // Load saved preference
+      const savedPref = localStorage.getItem('mythras-class-theme-enabled');
+      if (savedPref === 'true') {
+        // Wait for character data to load, then apply
+        setTimeout(function() {
+          applyClassTheme();
+        }, 500);
+      }
+      
+      // Toggle button click handler
+      classThemeBtn.addEventListener('click', function() {
+        const isActive = classThemeBtn.classList.contains('active');
+        if (isActive) {
+          removeClassTheme();
+        } else {
+          const primaryClass = getPrimaryClass();
+          if (primaryClass) {
+            applyClassTheme();
+          } else {
+            alert('Please select a primary class first.');
+          }
+        }
+      });
+      
+      // Listen for class changes to update theme
+      const classSelect = document.getElementById('class-primary');
+      if (classSelect) {
+        classSelect.addEventListener('change', function() {
+          if (classThemeBtn.classList.contains('active')) {
+            applyClassTheme();
+          }
+        });
+      }
+      
+      // Expose function to update theme after character load
+      window.updateClassThemeAfterLoad = updateClassThemeIfEnabled;
     })();
   </script>
   
