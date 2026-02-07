@@ -7641,6 +7641,48 @@ input.skill-input.powerful-concentration-bonus,
   border-color: var(--input-focus);
 }
 
+/* Spell Fill/Clear Action Buttons */
+.spell-actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+  padding: 0.25rem 0;
+}
+
+.spell-actions-bar .btn-fill-spells,
+.spell-actions-bar .btn-clear-spells {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid var(--border-light);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.spell-actions-bar .btn-fill-spells {
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.spell-actions-bar .btn-fill-spells:hover {
+  background: var(--highlight-bg, #e8f0fe);
+  border-color: var(--input-focus);
+}
+
+.spell-actions-bar .btn-clear-spells {
+  background: var(--input-bg);
+  color: #a33;
+  border-color: #d8a0a0;
+  margin-left: auto;
+}
+
+.spell-actions-bar .btn-clear-spells:hover {
+  background: #fde8e8;
+  border-color: #c66;
+}
+
 .spell-table {
   width: 100%;
   border-collapse: collapse;

@@ -15,7 +15,8 @@
   .sheet-navigation,
   .sheet-controls,
   .btn-remove-image,
-  #btn-sort-abilities {
+  #btn-sort-abilities,
+  .spell-actions-bar {
     display: none !important;
   }
 

@@ -6701,9 +6701,8 @@ const App = {
     // Update spell memorization limits (depends on INT)
     this.updateSpellMemorization();
     
-    // Populate class spells (for spell-granting classes like Cleric)
-    // Don't remove any spells on init - just add missing ones
-    this.updateClassSpells(null);
+    // Update spell fill/clear buttons (no longer auto-populates)
+    this.updateSpellFillButtons();
     
     // Populate class abilities
     this.updateClassAbilities(null);
@@ -7791,13 +7790,24 @@ const App = {
   },
   
   /**
-   * Update class spell lists when class or rank changes
-   * Auto-populates spells for classes like Cleric, Druid, Paladin, Ranger based on their rank
+   * Update spell fill/clear buttons when class or rank changes
+   * Instead of auto-populating, we show buttons that let the user choose when to fill
    */
   updateClassSpells(previousClasses = null) {
+    this.updateSpellFillButtons();
+  },
+  
+  /**
+   * Update the spell fill/clear buttons for each spell rank
+   * Shows "Fill [Class] Spells" buttons for each spell-granting class that has access to that rank
+   * Shows "Clear All" button if any spells exist in that rank
+   */
+  updateSpellFillButtons() {
     if (!window.ClassSpellLists) return;
     
-    // Get current classes and ranks
+    const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
+    // Get current spell-granting classes and their max spell ranks
     const currentClasses = [
       {
         name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
@@ -7811,127 +7821,195 @@ const App = {
         name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '',
         rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
       }
-    ].filter(c => c.name);
+    ].filter(c => c.name && window.ClassSpellLists.isSpellGrantingClass(c.name));
     
-    // Use ClassSpellLists to determine which classes grant spells
-    const activeSpellClasses = currentClasses.filter(c => 
-      window.ClassSpellLists.isSpellGrantingClass(c.name)
-    );
+    // Class display names and icons for buttons
+    const classDisplay = {
+      cleric: { label: 'Cleric', icon: '✝️' },
+      druid: { label: 'Druid', icon: '🌿' },
+      paladin: { label: 'Paladin', icon: '🛡️' },
+      ranger: { label: 'Ranger', icon: '🏹' }
+    };
     
-    // Check if previous classes had any spell-granting classes that are now gone
-    const previousSpellClasses = previousClasses ? 
-      previousClasses.filter(c => window.ClassSpellLists.isSpellGrantingClass(c.name)) : [];
+    rankKeys.forEach((rankKey, rankIndex) => {
+      // Find or create the actions bar for this rank
+      const spellColumn = document.querySelector(`.spell-column.${rankKey === 'cantrips' ? 'cantrips' : rankKey}`);
+      if (!spellColumn) return;
+      
+      let actionsBar = spellColumn.querySelector('.spell-actions-bar');
+      if (!actionsBar) {
+        actionsBar = document.createElement('div');
+        actionsBar.className = 'spell-actions-bar';
+        // Insert after memorize-count
+        const memorizeCount = spellColumn.querySelector('.memorize-count');
+        if (memorizeCount) {
+          memorizeCount.after(actionsBar);
+        } else {
+          // Fallback: insert before the table
+          const table = spellColumn.querySelector('.spell-table');
+          if (table) table.before(actionsBar);
+        }
+      }
+      
+      // Determine which classes have access to this spell rank
+      const availableClasses = currentClasses.filter(c => {
+        const maxSpellRank = window.ClassSpellLists.getMaxSpellRank(c.name, c.rank);
+        return maxSpellRank >= rankIndex;
+      });
+      
+      // Check if there's class spell data for this rank
+      const classesWithSpells = availableClasses.filter(c => {
+        const classList = window.ClassSpellLists[c.name];
+        return classList && classList[rankKey] && classList[rankKey].length > 0;
+      });
+      
+      // Build button HTML
+      let buttonsHTML = '';
+      
+      classesWithSpells.forEach(c => {
+        const display = classDisplay[c.name] || { label: this.toTitleCase(c.name), icon: '📖' };
+        buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Fill empty slots with ${display.label} spells">${display.icon} Fill ${display.label}</button>`;
+      });
+      
+      // Always show Clear All if there are any fill buttons OR existing spells
+      const hasSpells = this.getExistingSpellsInRank(rankKey).length > 0;
+      if (classesWithSpells.length > 0 || hasSpells) {
+        buttonsHTML += `<button type="button" class="btn btn-small btn-clear-spells" data-rank="${rankKey}" title="Clear all spells in this rank">🗑️ Clear All</button>`;
+      }
+      
+      actionsBar.innerHTML = buttonsHTML;
+      
+      // Show/hide the bar
+      actionsBar.style.display = buttonsHTML ? '' : 'none';
+      
+      // Attach event listeners
+      actionsBar.querySelectorAll('.btn-fill-spells').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const className = btn.dataset.class;
+          const rank = btn.dataset.rank;
+          this.fillClassSpellsForRank(className, rank);
+        });
+      });
+      
+      actionsBar.querySelectorAll('.btn-clear-spells').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const rank = btn.dataset.rank;
+          this.clearSpellsInRank(rank);
+        });
+      });
+    });
+  },
+  
+  /**
+   * Fill a specific spell rank with spells from a specific class
+   * Only fills empty slots; skips duplicates
+   */
+  fillClassSpellsForRank(className, rankKey) {
+    if (!window.ClassSpellLists || !window.SpellData) return;
     
-    // Classes that were removed
-    const removedClasses = previousSpellClasses.filter(prev => 
-      !activeSpellClasses.some(curr => curr.name === prev.name)
-    );
+    const classList = window.ClassSpellLists[className.toLowerCase()];
+    if (!classList || !classList[rankKey]) return;
     
-    // Remove spells for classes that are no longer present
-    removedClasses.forEach(removedClass => {
-      this.removeClassSpells(removedClass.name);
+    const spellsToAdd = classList[rankKey];
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    
+    let addedCount = 0;
+    let slotIndex = 0;
+    
+    spellsToAdd.forEach(spellName => {
+      // Skip if spell already exists in this rank
+      if (existingSpells.some(s => s.toLowerCase() === spellName.toLowerCase())) {
+        return;
+      }
+      
+      // Find next empty slot
+      while (slotIndex < SPELL_SLOTS_PER_RANK) {
+        const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
+        if (nameInput && !nameInput.value.trim()) {
+          // Found empty slot - add the spell
+          nameInput.value = this.toTitleCase(spellName);
+          nameInput.dataset.classSpell = className.toLowerCase();
+          
+          // Auto-fill cost
+          const cost = window.SpellData.getSpellCost(spellName);
+          const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
+          if (costInput && cost) {
+            costInput.value = cost;
+          }
+          
+          // Set tooltip
+          const description = window.SpellData.getSpellDescription(spellName);
+          if (description) {
+            nameInput.title = description;
+          }
+          
+          addedCount++;
+          slotIndex++;
+          break;
+        }
+        slotIndex++;
+      }
     });
     
-    // Add/update spells for active spell-granting classes
-    activeSpellClasses.forEach(activeClass => {
-      this.populateClassSpells(activeClass.name, activeClass.rank);
-    });
+    if (addedCount > 0) {
+      console.log(`Filled ${addedCount} ${this.toTitleCase(className)} spells into ${rankKey}`);
+      this.scheduleAutoSave();
+    }
+    
+    // Refresh buttons (to update Clear All visibility)
+    this.updateSpellFillButtons();
+  },
+  
+  /**
+   * Clear all spells in a specific rank with confirmation
+   */
+  clearSpellsInRank(rankKey) {
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    if (existingSpells.length === 0) return;
+    
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')} Spells`;
+    if (!confirm(`Clear all ${existingSpells.length} spell(s) from ${rankLabel}?\n\nThis will remove all spells, costs, and memorized flags in this rank.`)) {
+      return;
+    }
+    
+    for (let i = 0; i < SPELL_SLOTS_PER_RANK; i++) {
+      const nameInput = document.getElementById(`${rankKey}-${i}-name`);
+      if (nameInput && nameInput.value.trim()) {
+        nameInput.value = '';
+        nameInput.title = '';
+        delete nameInput.dataset.classSpell;
+        
+        const costInput = document.getElementById(`${rankKey}-${i}-cost`);
+        if (costInput) costInput.value = '';
+        
+        const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
+        if (memCheck) memCheck.checked = false;
+      }
+    }
+    
+    console.log(`Cleared all spells from ${rankKey}`);
+    this.scheduleAutoSave();
+    
+    // Refresh buttons (Clear All may need to hide)
+    this.updateSpellFillButtons();
   },
   
   /**
    * Populate spells for a specific class up to the given rank
+   * @deprecated Use fillClassSpellsForRank() instead - this is kept for backwards compatibility
    */
   populateClassSpells(className, maxRank) {
-    if (!window.ClassSpellLists || !window.SpellData) return;
-    
-    const classSpells = window.ClassSpellLists.getSpellsForClassAndRank(className, maxRank);
-    if (!classSpells) {
-      console.log('No class spells found for', className, 'maxRank', maxRank);
-      return;
-    }
-    
-    const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
-    
-    rankKeys.forEach(rankKey => {
-      const spellsForRank = classSpells[rankKey];
-      if (!spellsForRank || spellsForRank.length === 0) return;
-      
-      // Get current spells in this rank (to avoid duplicates)
-      const existingSpells = this.getExistingSpellsInRank(rankKey);
-      
-      // Find available slots and add spells - reset slot index for each rank
-      let slotIndex = 0;
-      spellsForRank.forEach(spellName => {
-        // Skip if spell already exists in this rank
-        if (existingSpells.some(s => s.toLowerCase() === spellName.toLowerCase())) {
-          return;
-        }
-        
-        // Find next empty slot
-        while (slotIndex < SPELL_SLOTS_PER_RANK) {
-          const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
-          if (nameInput && !nameInput.value.trim()) {
-            // Found empty slot - add the spell with proper title case
-            nameInput.value = this.toTitleCase(spellName);
-            
-            // Mark as class spell for later removal
-            nameInput.dataset.classSpell = className;
-            
-            // Auto-fill cost
-            const cost = window.SpellData.getSpellCost(spellName);
-            const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
-            if (costInput && cost) {
-              costInput.value = cost;
-            }
-            
-            // Set tooltip
-            const description = window.SpellData.getSpellDescription(spellName);
-            if (description) {
-              nameInput.title = description;
-            }
-            
-            slotIndex++;
-            break;
-          }
-          slotIndex++;
-        }
-      });
-    });
-    
-    this.scheduleAutoSave();
+    // No longer auto-populates - buttons handle this now
+    this.updateSpellFillButtons();
   },
   
   /**
    * Remove all spells granted by a specific class
+   * @deprecated Class spell removal is now manual via Clear All buttons
    */
   removeClassSpells(className) {
-    const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
-    
-    rankKeys.forEach(rankKey => {
-      for (let i = 0; i < 60; i++) {
-        const nameInput = document.getElementById(`${rankKey}-${i}-name`);
-        if (nameInput && nameInput.dataset.classSpell === className) {
-          // Clear this spell
-          nameInput.value = '';
-          nameInput.title = '';
-          delete nameInput.dataset.classSpell;
-          
-          // Clear cost too
-          const costInput = document.getElementById(`${rankKey}-${i}-cost`);
-          if (costInput) {
-            costInput.value = '';
-          }
-          
-          // Clear memorized checkbox
-          const memCheck = document.getElementById(`${rankKey}-${i}-mem`);
-          if (memCheck) {
-            memCheck.checked = false;
-          }
-        }
-      }
-    });
-    
-    this.scheduleAutoSave();
+    // No longer auto-removes - user controls this via Clear All buttons
+    this.updateSpellFillButtons();
   },
   
   /**
