@@ -8485,7 +8485,7 @@ const App = {
    * Show modal for selecting Woodland Language
    */
   showWoodlandLanguagesModal() {
-    const exampleLanguages = [
+    const woodlandLanguages = [
       'Centaur', 'Dryad', 'Elvish', 'Faun', 'Gnome', 'Green Dragon',
       'Hill Giant', 'Lizardman', 'Manticore', 'Nixie', 'Pixie', 'Sprite', "Tree'nt"
     ];
@@ -8503,7 +8503,7 @@ const App = {
     }
     
     // Build language options
-    const languageOptions = exampleLanguages.map(lang => {
+    const languageOptions = woodlandLanguages.map(lang => {
       const normalizedLang = lang.toLowerCase().replace(/[']/g, "'");
       const alreadyHas = existingLanguages.some(el => el.toLowerCase().replace(/[']/g, "'") === normalizedLang);
       return `
@@ -8519,15 +8519,8 @@ const App = {
         <h3>🌳 Woodland Languages</h3>
         <p class="woodland-modal-description">
           You are divinely granted the ability to fully comprehend the language of a specific woodland species at <strong>Base Level +40%</strong>.
+          <br><br>Select a language to learn:
         </p>
-        <div class="woodland-custom-input">
-          <label for="woodland-custom-lang">Enter language name:</label>
-          <div class="woodland-input-row">
-            <input type="text" id="woodland-custom-lang" placeholder="e.g., Satyr, Brownie, Dryad...">
-            <button type="button" class="btn btn-add-lang" id="woodland-add-custom">Add</button>
-          </div>
-        </div>
-        <p class="woodland-examples-label">Or select from common examples:</p>
         <div class="woodland-lang-grid">
           ${languageOptions}
         </div>
@@ -8540,7 +8533,7 @@ const App = {
     overlay.classList.remove('hidden');
     overlay.style.display = 'flex';
     
-    // Add event listeners for example buttons
+    // Add event listeners for language buttons
     const langButtons = overlay.querySelectorAll('.woodland-lang-btn:not(.disabled)');
     langButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -8549,32 +8542,6 @@ const App = {
         this.closeWoodlandLanguagesModal();
       });
     });
-    
-    // Add event listener for custom input
-    const customInput = overlay.querySelector('#woodland-custom-lang');
-    const addCustomBtn = overlay.querySelector('#woodland-add-custom');
-    
-    addCustomBtn.addEventListener('click', () => {
-      const customLang = customInput.value.trim();
-      if (customLang) {
-        this.addWoodlandLanguage(this.toTitleCase(customLang));
-        this.closeWoodlandLanguagesModal();
-      }
-    });
-    
-    // Allow Enter key to submit custom input
-    customInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const customLang = customInput.value.trim();
-        if (customLang) {
-          this.addWoodlandLanguage(this.toTitleCase(customLang));
-          this.closeWoodlandLanguagesModal();
-        }
-      }
-    });
-    
-    // Focus the custom input
-    setTimeout(() => customInput.focus(), 100);
     
     const cancelBtn = overlay.querySelector('#woodland-lang-cancel');
     cancelBtn.addEventListener('click', () => this.closeWoodlandLanguagesModal());
