@@ -2211,7 +2211,7 @@ const App = {
       
       nameInput.addEventListener('input', () => this.scheduleAutoSave());
       formulaInput.addEventListener('input', () => {
-        this.recalculateBeliefBases();
+        this.recalculateAll();
         this.scheduleAutoSave();
       });
       currentInput.addEventListener('input', () => this.scheduleAutoSave());
@@ -3874,7 +3874,7 @@ const App = {
     this.closeFinishGameModal();
     
     // Save the character sheet
-    this.saveCharacter();
+    this.scheduleAutoSave();
     
     // Show confirmation (could be a toast in the future)
     console.log(`Game session finished! Added ${earned} EXP Rolls. Total: ${currentExp + earned}`);
@@ -17555,7 +17555,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const layoutItem = {
       id: sectionId,
       wide: sectionDef?.defaultWide || false,
-      height: 'medium'
+      height: 180
     };
     
     this.renderNotesSection(layoutItem, grid);
@@ -17607,7 +17607,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const layoutItem = {
       id: customId,
       wide: false,
-      height: 'medium',
+      height: 180,
       custom: true,
       customTitle: title.trim(),
       customIcon: icon
@@ -18466,10 +18466,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     rows.forEach(row => {
       const nameInput = row.querySelector('.belief-name');
       const currentInput = row.querySelector('.belief-input');
+      const formulaInput = row.querySelector('.belief-formula-input');
       if (nameInput && nameInput.value.trim()) {
         beliefs.push({
           name: nameInput.value.trim(),
-          current: currentInput?.value || ''
+          current: currentInput?.value || '',
+          formula: formulaInput?.value || ''
         });
       }
     });
@@ -18481,15 +18483,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     rows.forEach((row, i) => {
       const nameInput = row.querySelector('.belief-name');
       const currentInput = row.querySelector('.belief-input');
+      const formulaInput = row.querySelector('.belief-formula-input');
       if (i < beliefs.length) {
         nameInput.value = beliefs[i].name;
         currentInput.value = beliefs[i].current;
+        if (formulaInput && beliefs[i].formula) {
+          formulaInput.value = beliefs[i].formula;
+        }
       } else {
         nameInput.value = '';
         currentInput.value = '';
+        if (formulaInput) formulaInput.value = 'POW+INT+50';
       }
     });
     
+    this.recalculateAll();
     this.scheduleAutoSave();
   },
 
@@ -18843,7 +18851,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
     
     lastRow.remove();
-    this.recalculateEncumbrance();
+    this.updateTotalEnc();
     this.scheduleAutoSave();
   },
 
