@@ -729,6 +729,14 @@ const REPEATABLE_ABILITIES = {
     grantsAbilities: {
       'Ranged': ['Quick Shot', 'Improved Aim', 'Reduced Reload Time']
     }
+  },
+  'Woodland Languages': {
+    // Can be taken multiple times to learn different woodland languages
+    description: 'Select a different woodland language each time'
+  },
+  'Animal Companion I': {
+    // Can be taken multiple times for different companions
+    description: 'Call and befriend another animal companion'
   }
 };
 
