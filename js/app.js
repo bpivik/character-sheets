@@ -423,6 +423,9 @@ const App = {
     // Check if Powerful Concentration section should be visible
     this.checkPowerfulConcentrationVisibility();
     
+    // Check if Animal Companion section should be visible
+    this.checkAnimalCompanionVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -4278,6 +4281,8 @@ const App = {
         this.checkMentalStrengthVisibility();
       } else if (normalizedName === 'turn undead') {
         this.checkTurnUndeadVisibility();
+      } else if (normalizedName.startsWith('animal companion')) {
+        this.checkAnimalCompanionVisibility();
       }
     }
     
@@ -5380,6 +5385,20 @@ const App = {
       return true; // The modal will handle adding the ability if needed
     }
     
+    // Handle Animal Companion abilities - show modal to select companion
+    if (normalizedName.startsWith('animal companion')) {
+      // Determine the tier from the ability name
+      let tier = 1;
+      if (normalizedName.includes('v') || normalizedName.includes('5')) tier = 5;
+      else if (normalizedName.includes('iv') || normalizedName.includes('4')) tier = 4;
+      else if (normalizedName.includes('iii') || normalizedName.includes('3')) tier = 3;
+      else if (normalizedName.includes('ii') || normalizedName.includes('2')) tier = 2;
+      
+      // Show the modal to select a companion
+      this.showAnimalCompanionModal(tier);
+      return true; // The modal will handle adding the ability if needed
+    }
+    
     // Check if ability already exists
     const existingInputs = container.querySelectorAll('.class-ability-input');
     for (const input of existingInputs) {
@@ -5441,6 +5460,11 @@ const App = {
           this.checkTurnUndeadVisibility();
         }
         
+        // Check if Animal Companion section should now be visible
+        if (normalizedName.startsWith('animal companion')) {
+          this.checkAnimalCompanionVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -5478,6 +5502,11 @@ const App = {
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
       this.checkTurnUndeadVisibility();
+    }
+    
+    // Check if Animal Companion section should now be visible
+    if (normalizedName.startsWith('animal companion')) {
+      this.checkAnimalCompanionVisibility();
     }
     
     return !!newInput;
@@ -8057,6 +8086,7 @@ const App = {
     this.checkJustAScratchVisibility();
     this.checkHolySmiteVisibility();
     this.checkPowerfulConcentrationVisibility();
+    this.checkAnimalCompanionVisibility();
   },
   
   /**
@@ -13946,6 +13976,376 @@ const App = {
     }
     
     this.updatePowerfulConcentrationDisplay();
+  },
+
+  // ========================================
+  // ANIMAL COMPANION SYSTEM
+  // ========================================
+  
+  /**
+   * Animal examples by SIZ
+   */
+  ANIMAL_EXAMPLES_BY_SIZ: {
+    1: ['Hamster', 'Parakeet', 'Gecko', 'Ferret', 'Hedgehog', 'Squirrel', 'Box Turtle', 'Hummingbird'],
+    2: ['Raccoon', 'Otter', 'Swan', 'Bald Eagle', 'Armadillo', 'Wild Turkey', 'Barn Owl', 'Porcupine'],
+    3: ['Coyote', 'Bobcat', 'Beaver', 'Red Fox', 'Badger', 'Wolverine', 'Sloth', 'Snowy Owl'],
+    4: ['Gray Wolf', 'Capybara', 'Caracal', 'Sea Otter', 'Tasmanian Devil', 'Javelina', 'African Wild Dog', 'Emperor Penguin'],
+    5: ['Serval', 'Giant Armadillo', 'Muntjac Deer', "Thomson's Gazelle", 'Ibex Kid', 'Coypu'],
+    6: ['Cheetah (juvenile)', 'Roe Deer', 'Springbok', 'Pronghorn Fawn', 'Large Beaver'],
+    7: ['Dingo', 'Jackal', 'Small Wolf', 'Duiker'],
+    8: ['Wolf'],
+    9: ['Snow Leopard', 'Warthog', 'Giant Anteater', 'Common Seal'],
+    10: ['Baboon', 'Hyena'],
+    11: ['Chimpanzee', 'Mountain Lion/Cougar', 'Tufted Deer'],
+    12: ['Leopard', 'White-tailed Deer', 'Wild Goat', 'Gray Seal'],
+    13: ['Gorilla', 'Mule Deer', 'Fallow Deer', 'Impala'],
+    14: ['Red Deer', 'Blackbuck', 'Hartebeest'],
+    15: ['Jaguar', 'Sika Deer', 'Pronghorn'],
+    16: ['Dire Wolf'],
+    17: ['Boar'],
+    18: ['Giant Panda', 'Reindeer', 'Kudu'],
+    19: ['Wapiti/Elk (smaller)', 'Gemsbok'],
+    20: ['Tapir', 'Wildebeest', 'Zebra'],
+    21: ['Siberian Tiger (juvenile)', 'Bongo', 'Eland Calf'],
+    22: ['Lion'],
+    25: ['Tiger'],
+    26: ['Bonacon'],
+    28: ['Giant Spider'],
+    29: ['Alligator'],
+    31: ['Camel', 'Riding Horse', 'Smilodon', 'Giant Vulture'],
+    34: ['Bear'],
+    35: ['War Horse'],
+    37: ['Crocodile'],
+    38: ['Auroch', 'Owl Bear'],
+    39: ['Heavy Work Horse'],
+    41: ['Giant Snake'],
+    42: ['Shark'],
+    44: ['Short-faced Bear'],
+    53: ['Elephant'],
+    63: ['Mammoth'],
+    67: ['Sea Serpent'],
+    75: ['Colossal Squid']
+  },
+  
+  /**
+   * Check if character has Animal Companion ability and show/hide section
+   */
+  checkAnimalCompanionVisibility() {
+    const section = document.getElementById('animal-companion-section');
+    if (!section) return;
+    
+    const tier = this.getAnimalCompanionTier();
+    
+    if (tier > 0) {
+      section.style.display = '';
+      this.initAnimalCompanion();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Get the current Animal Companion tier (1-5)
+   */
+  getAnimalCompanionTier() {
+    if (this.hasAbility('Animal Companion V') || this.hasAbility('Animal Companion 5')) return 5;
+    if (this.hasAbility('Animal Companion IV') || this.hasAbility('Animal Companion 4')) return 4;
+    if (this.hasAbility('Animal Companion III') || this.hasAbility('Animal Companion 3')) return 3;
+    if (this.hasAbility('Animal Companion II') || this.hasAbility('Animal Companion 2')) return 2;
+    if (this.hasAbility('Animal Companion I') || this.hasAbility('Animal Companion 1')) return 1;
+    return 0;
+  },
+  
+  /**
+   * Get max SIZ for current Animal Companion tier
+   */
+  getAnimalCompanionMaxSIZ() {
+    const tier = this.getAnimalCompanionTier();
+    const tierMax = { 1: 35, 2: 45, 3: 55, 4: 65, 5: 75 }[tier] || 35;
+    
+    // Also limited by 1/2 Animal Handling (rounded up)
+    const animalHandling = this.getSkillValueByName('Animal Handling') || 0;
+    const halfAnimalHandling = Math.ceil(animalHandling / 2);
+    
+    // If they don't have Animal Handling, small animals only (SIZ up to ~10 from Small Animal table)
+    // But if they have Animal Handling, use the calculated limit
+    if (animalHandling === 0) {
+      return Math.min(10, tierMax); // Small animals only without Animal Handling
+    }
+    
+    return Math.min(halfAnimalHandling, tierMax);
+  },
+  
+  /**
+   * Initialize Animal Companion system
+   */
+  initAnimalCompanion() {
+    this.updateAnimalCompanionDisplay();
+    this.setupAnimalCompanionListeners();
+    this.renderCompanionList();
+  },
+  
+  /**
+   * Update Animal Companion display
+   */
+  updateAnimalCompanionDisplay() {
+    const tier = this.getAnimalCompanionTier();
+    const maxSIZ = this.getAnimalCompanionMaxSIZ();
+    
+    const tierLabel = document.getElementById('companion-tier-label');
+    const sizLimit = document.getElementById('companion-siz-limit');
+    
+    if (tierLabel) {
+      const tierNames = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
+      tierLabel.textContent = `Tier ${tierNames[tier] || 'I'}`;
+    }
+    
+    if (sizLimit) {
+      sizLimit.textContent = `Max SIZ: ${maxSIZ}`;
+    }
+  },
+  
+  /**
+   * Setup Animal Companion event listeners
+   */
+  setupAnimalCompanionListeners() {
+    const addBtn = document.getElementById('btn-add-companion');
+    
+    if (addBtn && !addBtn.dataset.listenerAdded) {
+      addBtn.addEventListener('click', () => this.showAnimalCompanionModal());
+      addBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Render the list of current companions
+   */
+  renderCompanionList() {
+    const listEl = document.getElementById('companion-list');
+    if (!listEl) return;
+    
+    const companions = this.character.animalCompanions || [];
+    
+    if (companions.length === 0) {
+      listEl.innerHTML = '<p class="no-companions">No companions yet. Click + to add one.</p>';
+      return;
+    }
+    
+    listEl.innerHTML = companions.map((companion, index) => `
+      <div class="companion-item" data-index="${index}">
+        <span class="companion-name">${companion.name}</span>
+        <span class="companion-siz">SIZ ${companion.siz || '?'}</span>
+        <button type="button" class="btn-remove-companion" data-index="${index}" title="Remove companion">✕</button>
+      </div>
+    `).join('');
+    
+    // Add remove listeners
+    listEl.querySelectorAll('.btn-remove-companion').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(e.target.dataset.index, 10);
+        this.removeAnimalCompanion(index);
+      });
+    });
+  },
+  
+  /**
+   * Show Animal Companion modal
+   * @param {number} selectedTier - Optional tier when selecting from Spend XP Rolls
+   */
+  showAnimalCompanionModal(selectedTier = null) {
+    // If a specific tier was selected (from Spend XP Rolls), use that
+    // Otherwise use the current tier (from clicking + button)
+    const tier = selectedTier || this.getAnimalCompanionTier();
+    const isNewAbility = selectedTier !== null;
+    
+    // Store selected tier for later use when adding companion
+    this._pendingCompanionTier = selectedTier;
+    
+    // Calculate max SIZ based on tier and Animal Handling
+    const tierMax = { 1: 35, 2: 45, 3: 55, 4: 65, 5: 75 }[tier] || 35;
+    const animalHandling = this.getSkillValueByName('Animal Handling') || 0;
+    const halfAnimalHandling = Math.ceil(animalHandling / 2);
+    
+    // If no Animal Handling, small animals only (SIZ up to ~10)
+    let maxSIZ;
+    if (animalHandling === 0) {
+      maxSIZ = Math.min(10, tierMax);
+    } else {
+      maxSIZ = Math.min(halfAnimalHandling, tierMax);
+    }
+    
+    // Build examples list (only animals up to maxSIZ)
+    const examples = [];
+    for (const [siz, animals] of Object.entries(this.ANIMAL_EXAMPLES_BY_SIZ)) {
+      if (parseInt(siz, 10) <= maxSIZ) {
+        animals.forEach(animal => {
+          examples.push({ name: animal, siz: parseInt(siz, 10) });
+        });
+      }
+    }
+    
+    // Create modal
+    let overlay = document.getElementById('animal-companion-modal');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'animal-companion-modal';
+      overlay.className = 'modal-overlay animal-companion-modal';
+      document.body.appendChild(overlay);
+    }
+    
+    // Build examples HTML
+    const examplesHtml = examples.map(ex => 
+      `<span class="companion-example"><span class="example-siz">${ex.siz}</span> ${ex.name}</span>`
+    ).join('');
+    
+    // Build description based on Animal Handling skill
+    let description = '';
+    if (animalHandling === 0) {
+      description = `Without Animal Handling skill, you can only befriend <strong>small animals</strong>.`;
+    } else {
+      description = `With Animal Handling at ${animalHandling}%, you can choose animals up to <strong>SIZ ${halfAnimalHandling}</strong> (half your skill, rounded up). Your tier maximum is ${tierMax}.`;
+    }
+    
+    const tierNames = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
+    
+    overlay.innerHTML = `
+      <div class="animal-companion-modal-content">
+        <h3>🐾 Animal Companion ${tierNames[tier] || 'I'}</h3>
+        <p class="companion-modal-description">
+          ${description}
+        </p>
+        <div class="companion-siz-info">
+          <span class="siz-value">${maxSIZ}</span>
+          <span class="siz-label">Maximum SIZ</span>
+        </div>
+        <div class="companion-input-section">
+          <label for="companion-name-input">Enter your companion's name/type:</label>
+          <div class="companion-input-row">
+            <input type="text" id="companion-name-input" placeholder="e.g., Wolf, Hawk, Bear...">
+            <button type="button" class="btn btn-add-animal" id="btn-confirm-companion">Add</button>
+          </div>
+        </div>
+        <div class="companion-examples-section">
+          <span class="companion-examples-label">Sample animals by SIZ (up to ${maxSIZ}):</span>
+          <div class="companion-examples-grid">
+            ${examplesHtml}
+          </div>
+        </div>
+        <div class="companion-modal-footer">
+          <button type="button" class="btn btn-cancel" id="companion-modal-cancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+    
+    // Focus input
+    const input = overlay.querySelector('#companion-name-input');
+    setTimeout(() => input.focus(), 100);
+    
+    // Add event listeners
+    const addBtn = overlay.querySelector('#btn-confirm-companion');
+    addBtn.addEventListener('click', () => {
+      const name = input.value.trim();
+      if (name) {
+        this.addAnimalCompanion(name, maxSIZ);
+        this.closeAnimalCompanionModal();
+      }
+    });
+    
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const name = input.value.trim();
+        if (name) {
+          this.addAnimalCompanion(name, maxSIZ);
+          this.closeAnimalCompanionModal();
+        }
+      }
+    });
+    
+    const cancelBtn = overlay.querySelector('#companion-modal-cancel');
+    cancelBtn.addEventListener('click', () => this.closeAnimalCompanionModal());
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        this.closeAnimalCompanionModal();
+      }
+    });
+  },
+  
+  /**
+   * Close Animal Companion modal
+   */
+  closeAnimalCompanionModal() {
+    const overlay = document.getElementById('animal-companion-modal');
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.classList.add('hidden');
+    }
+    // Clear pending tier
+    this._pendingCompanionTier = null;
+  },
+  
+  /**
+   * Add an animal companion
+   */
+  addAnimalCompanion(name, maxSIZ) {
+    if (!this.character.animalCompanions) {
+      this.character.animalCompanions = [];
+    }
+    
+    // Try to find the SIZ from our examples
+    let estimatedSIZ = null;
+    const normalizedName = name.toLowerCase().trim();
+    
+    for (const [siz, animals] of Object.entries(this.ANIMAL_EXAMPLES_BY_SIZ)) {
+      for (const animal of animals) {
+        if (animal.toLowerCase().includes(normalizedName) || normalizedName.includes(animal.toLowerCase())) {
+          estimatedSIZ = parseInt(siz, 10);
+          break;
+        }
+      }
+      if (estimatedSIZ) break;
+    }
+    
+    this.character.animalCompanions.push({
+      name: this.toTitleCase(name),
+      siz: estimatedSIZ || `≤${maxSIZ}`,
+      addedAt: new Date().toISOString()
+    });
+    
+    // If this was triggered from Spend XP Rolls, add the ability to the sheet
+    if (this._pendingCompanionTier) {
+      const tierNames = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
+      const abilityName = `Animal Companion ${tierNames[this._pendingCompanionTier]}`;
+      
+      // Check if they already have this tier ability
+      if (!this.hasAbility(abilityName)) {
+        // Add the ability without triggering the modal again
+        this.addAbilityDirectly(abilityName);
+      }
+      
+      // Clear the pending tier
+      this._pendingCompanionTier = null;
+    }
+    
+    this.renderCompanionList();
+    this.checkAnimalCompanionVisibility();
+    this.updateAnimalCompanionDisplay();
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Remove an animal companion
+   */
+  removeAnimalCompanion(index) {
+    if (!this.character.animalCompanions) return;
+    
+    this.character.animalCompanions.splice(index, 1);
+    this.renderCompanionList();
+    this.scheduleAutoSave();
   },
 
   // ========================================

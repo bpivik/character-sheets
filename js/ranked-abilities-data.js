@@ -737,6 +737,18 @@ const REPEATABLE_ABILITIES = {
   'Animal Companion I': {
     // Can be taken multiple times for different companions
     description: 'Call and befriend another animal companion'
+  },
+  'Animal Companion II': {
+    description: 'Call and befriend another animal companion'
+  },
+  'Animal Companion III': {
+    description: 'Call and befriend another animal companion'
+  },
+  'Animal Companion IV': {
+    description: 'Call and befriend another animal companion'
+  },
+  'Animal Companion V': {
+    description: 'Call and befriend another animal companion'
   }
 };
 
