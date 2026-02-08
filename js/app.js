@@ -1265,7 +1265,7 @@ const App = {
               { name: document.getElementById('class-primary')?.value?.trim().toLowerCase() || '', rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0 },
               { name: document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '', rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0 },
               { name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '', rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0 }
-            ].filter(c => c.name));
+            ]);
           });
           
           field.addEventListener('blur', () => {
@@ -8183,40 +8183,54 @@ const App = {
    * Open the casting modal for a spell (replaces old castSpell)
    */
   castSpell(rankKey, slotIndex) {
-    try {
+    console.log(`castSpell called: ${rankKey}, ${slotIndex}`);
     const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
-    if (!nameInput || !nameInput.value.trim()) return;
+    if (!nameInput || !nameInput.value.trim()) {
+      console.log('castSpell: no name found, aborting');
+      return;
+    }
 
-    const spellName = nameInput.value.trim();
-    const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
-    const costStr = costInput?.value?.trim() || '';
-    const classSpell = nameInput.dataset.classSpell || '';
+    try {
+      const spellName = nameInput.value.trim();
+      const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
+      const costStr = costInput?.value?.trim() || '';
+      const classSpell = nameInput.dataset.classSpell || '';
+      console.log(`castSpell: ${spellName}, cost=${costStr}, class=${classSpell}`);
 
-    // Reset modal state
-    const m = this._castModal;
-    m.rankKey = rankKey;
-    m.slotIndex = slotIndex;
-    m.spellName = spellName;
-    m.hasRolled = false;
-    m.rollResult = null;
-    m.intensity = 1;
+      // Reset modal state
+      const m = this._castModal;
+      m.rankKey = rankKey;
+      m.slotIndex = slotIndex;
+      m.spellName = spellName;
+      m.hasRolled = false;
+      m.rollResult = null;
+      m.intensity = 1;
 
-    // Determine spell rank number
-    m.spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
+      // Determine spell rank number
+      m.spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
 
-    // Look up spell details
-    const L = window.SpellDetailsLookup;
-    m.spellDetails = L ? L.get(spellName) : null;
+      // Look up spell details
+      const L = window.SpellDetailsLookup;
+      m.spellDetails = L ? L.get(spellName) : null;
+      console.log(`castSpell: SpellDetailsLookup=${!!L}, details found=${!!m.spellDetails}`);
 
-    // Determine casting class and skill
-    this._determineCastingInfo(m, classSpell, costStr);
+      // Determine casting class and skill
+      this._determineCastingInfo(m, classSpell, costStr);
+      console.log(`castSpell: class=${m.classSource}, type=${m.castingType}, skill=${m.effectiveSkill}%`);
 
-    // Populate and show modal
-    this._populateCastModal(m, costStr);
-    this._showCastModal();
-    } catch (e) {
-      console.error('castSpell error:', e);
-      alert('Cast error: ' + e.message);
+      // Populate and show modal
+      this._populateCastModal(m, costStr);
+      this._showCastModal();
+      console.log('castSpell: modal shown');
+    } catch (err) {
+      console.error('castSpell ERROR:', err);
+      // Show visual error on the cast button
+      const castBtn = document.getElementById(`${rankKey}-${slotIndex}-cast`);
+      if (castBtn) {
+        castBtn.classList.add('cast-fail');
+        castBtn.title = 'Error: ' + err.message;
+        setTimeout(() => castBtn.classList.remove('cast-fail'), 2000);
+      }
     }
   },
 
@@ -8227,13 +8241,14 @@ const App = {
     const L = window.SpellDetailsLookup;
 
     // Find the casting class from: classSpell dataset, or guess from spell details, or from character classes
-    const classCandidates = [
+    // Keep positional alignment between class names and rank values
+    const rawClasses = [
       document.getElementById('class-primary')?.value?.trim() || '',
       document.getElementById('class-secondary')?.value?.trim() || '',
       document.getElementById('class-tertiary')?.value?.trim() || ''
-    ].filter(c => c);
+    ];
 
-    const rankValues = [
+    const rawRanks = [
       parseInt(document.getElementById('rank-primary')?.value, 10) || 0,
       parseInt(document.getElementById('rank-secondary')?.value, 10) || 0,
       parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
@@ -8243,24 +8258,26 @@ const App = {
     let bestClass = classSpell || '';
     let bestRank = 1;
 
-    if (bestClass && L) {
-      // Find the rank of the class that matches
-      for (let i = 0; i < classCandidates.length; i++) {
-        if (classCandidates[i].toLowerCase().includes(bestClass.toLowerCase()) ||
-            bestClass.toLowerCase().includes(classCandidates[i].toLowerCase())) {
-          bestRank = rankValues[i] || 1;
-          bestClass = classCandidates[i];
+    if (bestClass) {
+      // Find the rank of the class that matches (search all 3 slots)
+      for (let i = 0; i < 3; i++) {
+        if (!rawClasses[i]) continue;
+        if (rawClasses[i].toLowerCase().includes(bestClass.toLowerCase()) ||
+            bestClass.toLowerCase().includes(rawClasses[i].toLowerCase())) {
+          bestRank = rawRanks[i] || 1;
+          bestClass = rawClasses[i];
           break;
         }
       }
     } else {
       // No classSpell data — find first spellcasting class
       const casterClasses = ['cleric', 'mage', 'sorcerer', 'bard', 'druid', 'paladin', 'ranger', 'anti-paladin'];
-      for (let i = 0; i < classCandidates.length; i++) {
-        const norm = classCandidates[i].toLowerCase();
+      for (let i = 0; i < 3; i++) {
+        if (!rawClasses[i]) continue;
+        const norm = rawClasses[i].toLowerCase();
         if (casterClasses.some(cc => norm.includes(cc))) {
-          bestClass = classCandidates[i];
-          bestRank = rankValues[i] || 1;
+          bestClass = rawClasses[i];
+          bestRank = rawRanks[i] || 1;
           break;
         }
       }
@@ -8708,13 +8725,8 @@ const App = {
       document.getElementById('cast-luck-count').textContent = luckCount;
       document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
 
-      // Adjust force explanation for cantrips vs memorized spells
       const forceExplain = document.getElementById('cast-force-section').querySelector('.cast-force-explain');
-      if (m.spellRank === 0) {
-        forceExplain.textContent = 'The spell fizzled. You may force it to succeed (cantrips are not expunged from memory).';
-      } else {
-        forceExplain.textContent = 'The spell fizzled. You may force it to succeed, but it will be expunged from memory and must be re-memorized.';
-      }
+      forceExplain.textContent = 'The spell fizzled. You may force it to succeed, but it will be expunged from memory and must be re-memorized.';
     }
 
     // Play animation
@@ -8741,14 +8753,10 @@ const App = {
     const newMP = parseInt(mpField?.value, 10) || 0;
 
     const details = document.getElementById('cast-result-details');
-    if (m.spellRank === 0) {
-      details.textContent = `Spell forced! ${m.cost} MP spent. Remaining: ${newMP} MP. Cantrip casts successfully.`;
-    } else {
-      details.textContent = `Spell forced! ${m.cost} MP spent. Remaining: ${newMP} MP. Spell is expunged from memory \u2014 must be re-memorized before casting again.`;
-      // Uncheck the memorized checkbox for this spell
-      const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
-      if (memCheck) memCheck.checked = false;
-    }
+    details.textContent = `Spell forced! ${m.cost} MP spent. Remaining: ${newMP} MP. Spell is expunged from memory \u2014 must be re-memorized before casting again.`;
+    // Uncheck the memorized checkbox for this spell
+    const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
+    if (memCheck) memCheck.checked = false;
 
     // Hide force section
     document.getElementById('cast-force-section').classList.add('hidden');
@@ -23874,6 +23882,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }, 100);
   }
 };
+
+console.log('app.js loaded fully — castSpell available:', typeof App.castSpell);
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
