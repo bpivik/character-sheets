@@ -6529,7 +6529,8 @@ const App = {
     for (const [fieldId, key] of Object.entries(magicFields)) {
       const input = document.getElementById(fieldId);
       if (input) {
-        this.character.magic[key] = input.value;
+        // Use original (unpenalized) value if available to prevent double-penalizing on reload
+        this.character.magic[key] = input.dataset.originalValue || input.value;
       }
     }
     
@@ -11039,6 +11040,30 @@ const App = {
           this.syncMagicToProfSkill(config.magicId, e.target.value);
         });
       }
+    });
+
+    // Also setup originalValue tracking for all magic skill inputs
+    // so ENC/Fatigue penalty system works correctly on user edits
+    const magicSkillIds = [
+      'channel-percent', 'piety-percent',
+      'arcane-casting-percent', 'arcane-knowledge-percent',
+      'arcane-sorcery-percent', 'sorcerous-wisdom-percent',
+      'musicianship-percent', 'lyrical-magic-percent'
+    ];
+    magicSkillIds.forEach(id => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.addEventListener('input', (e) => {
+        if (e.target.classList.contains('enc-penalized-value') || e.target.classList.contains('fatigue-penalized')) {
+          // User editing a penalized field — treat as new original
+          e.target.dataset.originalValue = e.target.value;
+          setTimeout(() => this.applyAllPenalties(), 10);
+        } else {
+          if (e.target.dataset.originalValue !== undefined) {
+            e.target.dataset.originalValue = e.target.value;
+          }
+        }
+      });
     });
   },
   
@@ -17360,7 +17385,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
     });
     
-    // --- Magic Skills (no ENC penalty, only fatigue) ---
+    // --- Magic Skills (ENC + Fatigue penalties apply) ---
     const magicSkillIds = [
       'channel-percent', 'piety-percent', 
       'arcane-casting-percent', 'arcane-knowledge-percent',
@@ -17377,7 +17402,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
       
       const originalValue = parseInt(input.dataset.originalValue) || 0;
-      const totalPenalty = fatigueSkillPenalty; // No ENC penalty for magic skills
+      const encPenalty = encHasPenalty ? encPenaltyPercent : 0;
+      const totalPenalty = encPenalty + fatigueSkillPenalty;
       const hasPenalty = totalPenalty > 0 && originalValue > 0;
       
       input.classList.remove('enc-penalized-value', 'enc-burdened-penalty', 'fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated');
@@ -17387,10 +17413,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         input.value = penalizedValue;
         
         let tooltipParts = [`Original: ${originalValue}%`];
+        if (encPenalty > 0) tooltipParts.push(`ENC: -${encPenalty}%`);
         if (fatigueSkillPenalty > 0) tooltipParts.push(`Fatigue (${fatigue.skillGrade}): -${fatigueSkillPenalty}%`);
         tooltipParts.push(`Effective: ${penalizedValue}%`);
         input.title = tooltipParts.join(', ');
         
+        if (encPenalty > 0) {
+          input.classList.add('enc-penalized-value');
+          if (encIsBurdened) input.classList.add('enc-burdened-penalty');
+        }
         if (fatigueActive) {
           input.classList.add('fatigue-penalized');
           if (fatigueSevere) input.classList.add('fatigue-severe');
