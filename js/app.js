@@ -2381,9 +2381,17 @@ const App = {
         const previousName = e.target.dataset.previousName || '';
         
         if (newName) {
-          // Check for duplicate magic skill
+          // Check for duplicate magic skill — silently handle instead of alerting
           if (this.checkForDuplicateMagicSkill(newName, i)) {
-            alert(`${this.toTitleCase(newName)} already exists in Professional Skills. Please remove the duplicate.`);
+            console.warn(`[MAGIC SKILL] "${this.toTitleCase(newName)}" already exists in Professional Skills at another slot. Clearing this duplicate.`);
+            // Clear this slot since the skill already exists elsewhere
+            e.target.value = '';
+            e.target.dataset.previousName = '';
+            if (baseInput) baseInput.value = '';
+            if (currentInput) currentInput.value = '';
+            this.updateProfessionalSkillData(i);
+            this.scheduleAutoSave();
+            return;
           }
           
           e.target.value = this.toTitleCase(newName);
@@ -11377,9 +11385,11 @@ const App = {
   syncMagicToProfSkill(magicFieldId, value) {
     // Find which skill this magic field represents
     let targetSkillName = null;
+    let targetConfig = null;
     for (const [skillName, config] of Object.entries(this.MAGIC_SKILL_CONFIG)) {
       if (config.magicId === magicFieldId) {
         targetSkillName = skillName;
+        targetConfig = config;
         break;
       }
     }
@@ -11397,12 +11407,70 @@ const App = {
         if (profSkillName === targetSkillName) {
           if (currentInput.value !== value) {
             currentInput.value = value;
-            currentInput.dispatchEvent(new Event('input', { bubbles: true }));
+            // Update original value for penalty tracking
+            if (currentInput.dataset.originalValue !== undefined) {
+              currentInput.dataset.originalValue = value;
+            }
+            this.updateProfessionalSkillData(i);
           }
           return; // Found and updated
         }
       }
     }
+    
+    // Skill not found in professional skills — auto-add it
+    if (value && value.trim()) {
+      this._addMagicSkillToProfessional(targetSkillName, targetConfig, value);
+    }
+  },
+  
+  /**
+   * Add a magic skill to professional skills (creates a new row if needed)
+   */
+  _addMagicSkillToProfessional(skillName, config, value) {
+    const titleName = this.toTitleCase(skillName);
+    
+    // First try to find an existing empty slot
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    const existingRows = container.querySelectorAll('.professional-skill-row');
+    
+    for (let i = 0; i < existingRows.length; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      if (nameInput && !nameInput.value.trim()) {
+        // Found empty slot
+        nameInput.value = titleName;
+        nameInput.dataset.previousName = titleName;
+        const baseInput = document.getElementById(`prof-skill-${i}-base`);
+        const currentInput = document.getElementById(`prof-skill-${i}-current`);
+        if (baseInput) this.autoFillProfessionalSkillFormula(nameInput, baseInput);
+        if (currentInput) currentInput.value = value;
+        this.updateProfessionalSkillData(i);
+        this.calculateProfessionalSkillBase(i);
+        this.updateProfSkillEncIndicator(i);
+        return;
+      }
+    }
+    
+    // No empty slot — add a new row (without stealing focus)
+    this.addProfessionalSkillRow(false);
+    
+    // The new row is now the last row
+    const rows = container.querySelectorAll('.professional-skill-row');
+    const newIndex = rows.length - 1;
+    const nameInput = document.getElementById(`prof-skill-${newIndex}-name`);
+    const baseInput = document.getElementById(`prof-skill-${newIndex}-base`);
+    const currentInput = document.getElementById(`prof-skill-${newIndex}-current`);
+    
+    if (nameInput) {
+      nameInput.value = titleName;
+      nameInput.dataset.previousName = titleName;
+    }
+    if (baseInput) this.autoFillProfessionalSkillFormula(nameInput, baseInput);
+    if (currentInput) currentInput.value = value;
+    this.updateProfessionalSkillData(newIndex);
+    this.calculateProfessionalSkillBase(newIndex);
+    this.updateProfSkillEncIndicator(newIndex);
   },
   
   /**
@@ -11542,8 +11610,9 @@ const App = {
     for (const [skillName, config] of Object.entries(this.MAGIC_SKILL_CONFIG)) {
       if (config.classes.some(cls => currentClasses.includes(cls))) {
         requiredSkills.push({
-          name: this.toTitleCase(skillName),
-          magicId: config.magicId
+          name: skillName,
+          titleName: this.toTitleCase(skillName),
+          config: config
         });
       }
     }
@@ -11551,64 +11620,38 @@ const App = {
     if (requiredSkills.length === 0) return;
     
     // Check which skills are already in professional skills
-    const existingSkills = new Set();
-    for (let i = 0; i < 22; i++) {
+    const existingSkills = new Map(); // normalizedName -> { index, nameInput, currentInput }
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    const rows = container.querySelectorAll('.professional-skill-row');
+    
+    for (let i = 0; i < rows.length; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       if (nameInput && nameInput.value.trim()) {
-        existingSkills.add(nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim());
+        const normalized = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
+        existingSkills.set(normalized, {
+          index: i,
+          nameInput: nameInput,
+          currentInput: document.getElementById(`prof-skill-${i}-current`)
+        });
       }
     }
     
-    // Add missing skills
+    // Add missing skills or sync existing ones
     for (const skill of requiredSkills) {
-      const normalizedName = skill.name.toLowerCase();
-      if (!existingSkills.has(normalizedName)) {
-        // Find empty slot
-        for (let i = 0; i < 22; i++) {
-          const nameInput = document.getElementById(`prof-skill-${i}-name`);
-          const baseInput = document.getElementById(`prof-skill-${i}-base`);
-          const currentInput = document.getElementById(`prof-skill-${i}-current`);
-          
-          if (nameInput && !nameInput.value.trim()) {
-            // Found empty slot - add the skill
-            nameInput.value = skill.name;
-            nameInput.dataset.previousName = skill.name;
-            
-            // Auto-fill formula
-            if (baseInput) {
-              this.autoFillProfessionalSkillFormula(nameInput, baseInput);
-            }
-            
-            // Copy value from magic page
-            const magicInput = document.getElementById(skill.magicId);
-            if (magicInput && magicInput.value && currentInput) {
-              currentInput.value = magicInput.value;
-            }
-            
-            // Update data
-            this.updateProfessionalSkillData(i);
-            this.calculateProfessionalSkillBase(i);
-            this.updateProfSkillEncIndicator(i);
-            
-            break; // Move to next required skill
-          }
-        }
+      const existing = existingSkills.get(skill.name);
+      
+      if (!existing) {
+        // Skill not found — add it
+        const magicInput = document.getElementById(skill.config.magicId);
+        const magicValue = magicInput?.value || '';
+        this._addMagicSkillToProfessional(skill.name, skill.config, magicValue);
       } else {
-        // Skill exists - sync values from magic page
-        for (let i = 0; i < 22; i++) {
-          const nameInput = document.getElementById(`prof-skill-${i}-name`);
-          if (nameInput) {
-            const existingName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
-            if (existingName === normalizedName) {
-              const currentInput = document.getElementById(`prof-skill-${i}-current`);
-              const magicInput = document.getElementById(skill.magicId);
-              if (currentInput && magicInput && magicInput.value) {
-                if (currentInput.value !== magicInput.value) {
-                  currentInput.value = magicInput.value;
-                }
-              }
-              break;
-            }
+        // Skill exists — sync values from magic page
+        const magicInput = document.getElementById(skill.config.magicId);
+        if (existing.currentInput && magicInput && magicInput.value) {
+          if (existing.currentInput.value !== magicInput.value) {
+            existing.currentInput.value = magicInput.value;
           }
         }
       }
@@ -21242,7 +21285,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   /**
    * Add a new professional skill row
    */
-  addProfessionalSkillRow() {
+  addProfessionalSkillRow(autoFocus = true) {
     const container = document.getElementById('professional-skills-container');
     if (!container) return;
     
@@ -21311,9 +21354,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this.scheduleAutoSave();
     });
     
-    // Scroll to show new row
-    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    nameInput.focus();
+    // Scroll to show new row (only when user-initiated)
+    if (autoFocus) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      nameInput.focus();
+    }
     
     this.scheduleAutoSave();
     this.addSkillDiceButtons();
