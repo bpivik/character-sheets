@@ -7912,19 +7912,37 @@ const App = {
    * Instead of auto-populating, we show buttons that let the user choose when to fill
    */
   updateClassSpells(previousClasses = null) {
-    // If classes changed, clear all spells so user starts fresh
+    // Only clear spells when an existing spellcasting class was CHANGED or REMOVED.
+    // Adding a new spellcasting class to a previously empty slot does NOT clear spells.
     if (previousClasses) {
       const currentClasses = [
         document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
         document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
         document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
       ];
-      const prevNames = previousClasses.map(c => c.name.toLowerCase());
-      
-      // Check if any class actually changed (not just rank)
-      const classChanged = currentClasses.some((c, i) => c !== prevNames[i]);
-      
-      if (classChanged) {
+      const prevNames = previousClasses.map(c => (c.name || '').toLowerCase());
+
+      // Check if an existing spellcasting class was replaced or removed
+      // "Replaced" means: a slot that previously had a spellcasting class now has a DIFFERENT value
+      // "Added" means: a slot that was empty now has a value — this should NOT trigger clearing
+      const casterClasses = ['cleric', 'mage', 'sorcerer', 'bard', 'druid', 'paladin', 'ranger', 'anti-paladin', 'magic-user'];
+      let existingCasterChanged = false;
+
+      for (let i = 0; i < 3; i++) {
+        const prev = prevNames[i] || '';
+        const curr = currentClasses[i] || '';
+        // Only counts as a "change" if the slot was previously occupied by a spellcasting class
+        // AND the new value is different (including empty = class was removed)
+        if (prev && prev !== curr) {
+          const wasCaster = casterClasses.some(cc => prev.includes(cc));
+          if (wasCaster) {
+            existingCasterChanged = true;
+            break;
+          }
+        }
+      }
+
+      if (existingCasterChanged) {
         const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
         rankKeys.forEach(rankKey => {
           const tbody = document.getElementById(`${rankKey}-body`);
@@ -7946,7 +7964,9 @@ const App = {
             }
           });
         }
-        console.log('Class changed — cleared all spells and memorization');
+        console.log('Spellcasting class changed — cleared all spells and memorization');
+      } else {
+        console.log('New spellcasting class added or non-caster changed — spells preserved');
       }
     }
     
@@ -8163,6 +8183,7 @@ const App = {
    * Open the casting modal for a spell (replaces old castSpell)
    */
   castSpell(rankKey, slotIndex) {
+    try {
     const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
     if (!nameInput || !nameInput.value.trim()) return;
 
@@ -8193,6 +8214,10 @@ const App = {
     // Populate and show modal
     this._populateCastModal(m, costStr);
     this._showCastModal();
+    } catch (e) {
+      console.error('castSpell error:', e);
+      alert('Cast error: ' + e.message);
+    }
   },
 
   /**
