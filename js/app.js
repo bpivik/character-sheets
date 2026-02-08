@@ -2748,6 +2748,11 @@ const App = {
           this.updateContainerButtons();
           this.scheduleAutoSave();
         }
+        
+        // Sync weapon to combat page
+        if (nameInput.value.trim()) {
+          this.syncEquipmentToCombat(nameInput.value.trim());
+        }
       });
       
       nameInput.addEventListener('input', () => {
@@ -3163,6 +3168,19 @@ const App = {
     nameInput.addEventListener('blur', () => {
       if (nameInput.value.trim()) {
         nameInput.value = this.toTitleCase(nameInput.value.trim());
+        
+        // Block weapons from containers
+        if (this.isWeaponItem(nameInput.value.trim())) {
+          nameInput.value = '';
+          encInput.value = '';
+          // Show brief notification
+          this._showContainerWeaponWarning();
+          row.remove();
+          this._reindexContainerRows();
+          this.updateContainerCapacity();
+          return;
+        }
+        
         if (window.EncumbranceData) {
           window.EncumbranceData.autofillEquipmentEnc('container', Array.from(container.querySelectorAll('.equipment-row')).indexOf(row), nameInput.value);
         }
@@ -4010,6 +4028,7 @@ const App = {
             if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
               window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
+              this.syncCombatToEquipment(nameInput.value.trim());
               this.scheduleAutoSave();
             }
           });
@@ -4069,6 +4088,7 @@ const App = {
             if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
               window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
+              this.syncCombatToEquipment(nameInput.value.trim());
               this.scheduleAutoSave();
             }
           });
@@ -4123,6 +4143,7 @@ const App = {
         }
         if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
           window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
+          this.syncCombatToEquipment(nameInput.value.trim());
           this.scheduleAutoSave();
         }
       });
@@ -4208,6 +4229,7 @@ const App = {
         if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
           window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
+          this.syncCombatToEquipment(nameInput.value.trim());
           this.scheduleAutoSave();
         }
       });
@@ -17948,6 +17970,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkWeaponSpecVisibility();
     this.highlightSpecializedWeapons();
     this.syncClassAbilitiesToCharacter();
+    
+    // Sync weapon to equipment and combat page
+    this.syncWeaponSpecToAll(weapon, type);
+    
     this.scheduleAutoSave();
   },
 
@@ -18175,6 +18201,290 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (combatName === baseSpec || stripped === baseSpec) return true;
 
     return false;
+  },
+
+  // ============================================
+  // WEAPON ↔ EQUIPMENT BIDIRECTIONAL SYNC
+  // ============================================
+
+  /** Flag to prevent recursive sync loops */
+  _weaponSyncing: false,
+
+  /**
+   * Determine if an item name is a weapon and what type it is.
+   * Returns { isWeapon: true, type: 'melee'|'ranged'|'shield', lookupKey: '...' } or { isWeapon: false }
+   */
+  classifyWeaponByName(itemName) {
+    if (!itemName) return { isWeapon: false };
+    const lower = itemName.toLowerCase().trim();
+    if (!lower || lower === 'unarmed') return { isWeapon: false };
+
+    // Shield names
+    const shieldNames = new Set([
+      'buckler', 'buckler shield', 'heater', 'heater shield',
+      'hoplite', 'hoplite shield', 'kite', 'kite shield',
+      'peltast', 'peltast shield', 'round', 'round shield',
+      'scutum', 'scutum shield', 'target', 'target shield',
+      'tower', 'tower shield', 'viking', 'viking shield',
+      'wooden shield'
+    ]);
+
+    // Check shields first (shields are melee weapons on the combat sheet)
+    if (shieldNames.has(lower)) {
+      return { isWeapon: true, type: 'shield', lookupKey: lower };
+    }
+
+    // Check melee weapon database
+    if (window.WeaponData && window.WeaponData.MELEE_WEAPON_DATA) {
+      const key = window.WeaponData.findWeaponKey ? window.WeaponData.findWeaponKey(lower) : null;
+      if (key) {
+        // Double-check it's not a shield we missed
+        if (shieldNames.has(key)) {
+          return { isWeapon: true, type: 'shield', lookupKey: key };
+        }
+        return { isWeapon: true, type: 'melee', lookupKey: key };
+      }
+    }
+
+    // Check ranged weapon database
+    if (window.WeaponData && window.WeaponData.RANGED_WEAPON_DATA) {
+      const key = window.WeaponData.findRangedWeaponKey ? window.WeaponData.findRangedWeaponKey(lower) : null;
+      if (key) {
+        return { isWeapon: true, type: 'ranged', lookupKey: key };
+      }
+    }
+
+    return { isWeapon: false };
+  },
+
+  /**
+   * Check if a weapon already exists on the combat page
+   * @param {string} weaponName - Name to check
+   * @param {string} type - 'melee' or 'ranged' (shields count as melee)
+   * @returns {boolean}
+   */
+  weaponExistsOnCombatPage(weaponName, type) {
+    const lower = weaponName.toLowerCase().trim();
+    const bodyId = (type === 'melee' || type === 'shield') ? 'melee-weapons-body' : 'ranged-weapons-body';
+    const body = document.getElementById(bodyId);
+    if (!body) return false;
+
+    const rows = body.querySelectorAll('tr');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.weapon-name');
+      if (nameInput && nameInput.value.trim()) {
+        const existing = nameInput.value.toLowerCase().trim();
+        if (existing === lower) return true;
+        // Also match without 1H/2H prefix
+        if (existing.replace(/^[12]h\s+/i, '') === lower) return true;
+        if (lower.replace(/^[12]h\s+/i, '') === existing) return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Check if an item already exists in equipment
+   * @param {string} itemName - Name to check
+   * @returns {boolean}
+   */
+  itemExistsInEquipment(itemName) {
+    const lower = itemName.toLowerCase().trim();
+    const container = document.getElementById('equipment-container');
+    if (!container) return false;
+
+    const rows = container.querySelectorAll('.equipment-row');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.equipment-name');
+      if (nameInput && nameInput.value.trim()) {
+        const existing = nameInput.value.toLowerCase().trim();
+        if (existing === lower) return true;
+        // Match with/without "shield" suffix
+        if (existing.replace(/\s*shield$/i, '') === lower.replace(/\s*shield$/i, '')) return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Add a weapon to the combat page (melee or ranged) with autofill
+   * @param {string} weaponName - Display name of the weapon
+   * @param {string} type - 'melee', 'ranged', or 'shield'
+   */
+  addWeaponToCombatPage(weaponName, type) {
+    if (!weaponName) return;
+    const combatType = (type === 'shield') ? 'melee' : type;
+
+    // Check if already exists
+    if (this.weaponExistsOnCombatPage(weaponName, type)) return;
+
+    if (combatType === 'melee') {
+      this.addMeleeWeaponRow();
+      const meleeBody = document.getElementById('melee-weapons-body');
+      if (!meleeBody) return;
+      const newIndex = meleeBody.querySelectorAll('tr').length - 1;
+      const nameInput = document.getElementById(`melee-${newIndex}-name`);
+      if (nameInput) {
+        nameInput.value = this.toTitleCase(weaponName);
+        if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
+          window.WeaponData.autofillMeleeWeapon(newIndex, nameInput.value);
+        }
+      }
+    } else {
+      this.addRangedWeaponRow();
+      const rangedBody = document.getElementById('ranged-weapons-body');
+      if (!rangedBody) return;
+      const newIndex = rangedBody.querySelectorAll('tr').length - 1;
+      const nameInput = document.getElementById(`ranged-${newIndex}-name`);
+      if (nameInput) {
+        nameInput.value = this.toTitleCase(weaponName);
+        if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
+          window.WeaponData.autofillRangedWeapon(newIndex, nameInput.value);
+        }
+      }
+    }
+
+    this.highlightSpecializedWeapons();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Add a weapon to the equipment list with ENC autofill
+   * @param {string} weaponName - Display name of the weapon
+   */
+  addWeaponToEquipment(weaponName) {
+    if (!weaponName) return;
+
+    // Check if already exists
+    if (this.itemExistsInEquipment(weaponName)) return;
+
+    // Add new equipment row
+    this.addEquipmentRow();
+    const container = document.getElementById('equipment-container');
+    if (!container) return;
+
+    const rows = container.querySelectorAll('.equipment-row');
+    const lastRow = rows[rows.length - 1];
+    const nameInput = lastRow?.querySelector('.equipment-name');
+    const rowIndex = rows.length - 1;
+
+    if (nameInput) {
+      nameInput.value = this.toTitleCase(weaponName);
+      nameInput.dataset.previousValue = weaponName.toLowerCase();
+      // Autofill ENC
+      if (window.EncumbranceData) {
+        window.EncumbranceData.autofillEquipmentEnc('equip', rowIndex, nameInput.value);
+      }
+      this.updateTotalEnc();
+      this.updateContainerButtons();
+    }
+
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Sync: Equipment → Combat page
+   * Called when an equipment item is finalized (blur)
+   * @param {string} itemName - The equipment item name
+   */
+  syncEquipmentToCombat(itemName) {
+    if (this._weaponSyncing || this.isInitializing) return;
+    this._weaponSyncing = true;
+
+    try {
+      const classification = this.classifyWeaponByName(itemName);
+      if (classification.isWeapon) {
+        this.addWeaponToCombatPage(itemName, classification.type);
+      }
+    } finally {
+      this._weaponSyncing = false;
+    }
+  },
+
+  /**
+   * Sync: Combat page → Equipment
+   * Called when a weapon name is finalized on the combat page (blur)
+   * @param {string} weaponName - The weapon name
+   */
+  syncCombatToEquipment(weaponName) {
+    if (this._weaponSyncing || this.isInitializing) return;
+    if (!weaponName || weaponName.toLowerCase().trim() === 'unarmed') return;
+
+    this._weaponSyncing = true;
+    try {
+      this.addWeaponToEquipment(weaponName);
+    } finally {
+      this._weaponSyncing = false;
+    }
+  },
+
+  /**
+   * Sync: Weapon Specialization → Equipment + Combat
+   * Called when a weapon spec is finalized
+   * @param {string} weaponName - The weapon name chosen
+   * @param {string} type - 'Melee', 'Ranged', or 'Shield'
+   */
+  syncWeaponSpecToAll(weaponName, type) {
+    if (type === 'Shield') return; // Shield spec applies to ALL shields, don't add a generic "shield"
+
+    this._weaponSyncing = true;
+    try {
+      const combatType = type.toLowerCase();
+      // Strip "(Thrown)" for equipment name
+      const equipName = weaponName.replace(/\s*\(thrown\)/i, '');
+
+      this.addWeaponToCombatPage(equipName, combatType);
+      this.addWeaponToEquipment(equipName);
+    } finally {
+      this._weaponSyncing = false;
+    }
+  },
+
+  /**
+   * Check if an item name is a weapon (used to block weapons from containers)
+   */
+  isWeaponItem(itemName) {
+    if (!itemName) return false;
+    return this.classifyWeaponByName(itemName).isWeapon;
+  },
+
+  /**
+   * Show a brief warning when trying to put a weapon in a container
+   */
+  _showContainerWeaponWarning() {
+    // Remove any existing warning
+    const existing = document.querySelector('.container-weapon-warning');
+    if (existing) existing.remove();
+
+    const warning = document.createElement('div');
+    warning.className = 'container-weapon-warning';
+    warning.textContent = '⚔️ Weapons cannot be stored in containers — add them to Equipment instead.';
+    warning.style.cssText = `
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #5a2d0c, #8b4513); color: #f5e6d3;
+      padding: 10px 20px; border-radius: 8px; border: 1px solid #d4a574;
+      font-family: 'Palatino Linotype', 'Book Antiqua', serif;
+      font-size: 14px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      animation: fadeInOut 3s ease-in-out forwards;
+    `;
+
+    // Add animation if not present
+    if (!document.getElementById('container-weapon-warning-style')) {
+      const style = document.createElement('style');
+      style.id = 'container-weapon-warning-style';
+      style.textContent = `
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+          15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          75% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(warning);
+    setTimeout(() => warning.remove(), 3000);
   },
 
   /**
@@ -22169,6 +22479,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         this.updateTotalEnc();
         this.updateContainerButtons();
         this.scheduleAutoSave();
+      }
+      
+      // Sync weapon to combat page
+      if (nameInput.value.trim()) {
+        this.syncEquipmentToCombat(nameInput.value.trim());
       }
     });
     
