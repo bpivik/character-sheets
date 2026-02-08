@@ -1194,6 +1194,8 @@ const App = {
       // Store initial value for change detection
       speciesField.dataset.previousValue = speciesField.value || '';
       
+      let pendingBlurSpeciesChange = false;
+      
       const handleSpeciesChange = (isBlurEvent = false) => {
         const previousSpecies = speciesField.dataset.previousValue || '';
         const currentSpecies = speciesField.value || '';
@@ -1202,6 +1204,24 @@ const App = {
         if (previousSpecies.toLowerCase().trim() !== currentSpecies.toLowerCase().trim()) {
           this.updateSheetTypeFromSpecies(previousSpecies, isBlurEvent);
           speciesField.dataset.previousValue = currentSpecies;
+          // If this was from input (not blur), mark that we need blur-specific actions later
+          if (!isBlurEvent) {
+            pendingBlurSpeciesChange = true;
+          }
+        } else if (isBlurEvent && pendingBlurSpeciesChange) {
+          // The input event already processed the species change, but blur-specific 
+          // actions (like the Abyssar spell-like ability modal) still need to run
+          pendingBlurSpeciesChange = false;
+          const speciesLower = currentSpecies.toLowerCase().trim();
+          const speciesData = window.SpeciesData ? window.SpeciesData.getSpecies(speciesLower) : null;
+          if (speciesData && speciesData.abilities) {
+            const hasSpellLike = speciesData.abilities.some(a => 
+              a.toLowerCase().includes('spell-like abilities')
+            );
+            if (hasSpellLike) {
+              setTimeout(() => this.promptSpellLikeAbilitySelection(), 100);
+            }
+          }
         }
         
         this.recalculateAll();
