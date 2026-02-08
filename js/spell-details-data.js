@@ -2752,7 +2752,9 @@ const SpellDetailsLookup = {
           flavorText: canonical.reverse.flavorText,
           description: canonical.reverse.description,
           isReverse: true,
-          canonicalName: canonical.name
+          canonicalName: canonical.name,
+          _originalName: canonical.name,
+          _originalDescription: canonical.description
         };
       }
       // Primary version — return the canonical entry as-is
@@ -2858,31 +2860,28 @@ const SpellDetailsLookup = {
   calculateCost(costObj, intensity, spellRank, casterRank) {
     if (!costObj) return 1;
 
-    let rawCost = 0;
+    let cost = 0;
 
     switch (costObj.type) {
       case 'fixed':
-        rawCost = costObj.base;
+        cost = costObj.base;
         break;
       case 'perIntensity':
-        rawCost = (costObj.perIntensity || costObj.base) * intensity;
+        cost = (costObj.perIntensity || costObj.base) * intensity;
         break;
       case 'plusPerAdditional':
-        rawCost = costObj.base + (costObj.perAdditional || 1) * Math.max(0, intensity - 1);
+        // Base cost covers first 2 intensities, +perAdditional for each beyond that
+        // e.g., "3, +1/add'l": Int 1=3, Int 2=3, Int 3=4, Int 4=5
+        cost = costObj.base + (costObj.perAdditional || 1) * Math.max(0, intensity - 2);
         break;
       case 'special':
-        rawCost = costObj.base || 1;
+        cost = costObj.base || 1;
         break;
       default:
-        rawCost = costObj.base || 1;
+        cost = costObj.base || 1;
     }
 
-    // Apply rank-based cost reduction (2 MP per rank difference, min 1)
-    const rankDiff = Math.max(0, casterRank - spellRank);
-    const reduction = rankDiff * 2;
-    const finalCost = Math.max(1, rawCost - reduction);
-
-    return finalCost;
+    return Math.max(1, cost);
   },
 
   /**

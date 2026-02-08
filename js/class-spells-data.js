@@ -14,28 +14,29 @@ const ClassSpellLists = {
     ],
     rank1: [
       "Animal Friendship", "Change Appearance", "Charm Being",
-      "Cure Minor Wounds", "Dancing Lights", "Detect Magic",
+      "Cure Minor Wounds (Cause Minor Wounds)", "Faerie Lights", "Detect Magic",
       "Erase Writing", "Feather Fall", "Hypnotism", "Identify",
-      "Illusion", "Knock (Lock)", "Know Languages (Confuse Languages)",
+      "Illusion, Lesser", "Know Languages (Confuse Languages)",
       "Light (Darkness)", "Mage Lock", "Magic Aura", "Magic Mouth",
       "Monster Summoning, Lesser", "Read Magic", "Snake Charm",
-      "Sleep", "Ventriloquism"
+      "Sleep", "Lock (Unlock)", "Ventriloquism"
     ],
     rank2: [
-      "Blink", "Charm Monster", "Clairaudience/Clairvoyance",
-      "Confusion", "Continual Light", "Cure Serious Wounds",
-      "Darkness", "Detect Invisibility", "Dispel Magic", "Fear",
-      "Haste", "Hold Person", "Invisibility",
+      "Blink", "Charm Monster", "Clairaudience (Clairvoyance)",
+      "Confusion", "Continual Light (Continual Darkness)",
+      "Cure Serious Wounds (Cause Serious Wounds)", "Darkness",
+      "Detect Invisibility", "Dispel Magic", "Fear",
+      "Haste", "Hold Person", "Invisibility (10ft)",
       "Leonard's Tiny Magic Hut", "Locate Object (Obscure Object)",
-      "Mirror Image", "Monster Summoning", "Read Thoughts",
-      "Remove Curse", "Slow", "Slow Poison",
+      "Mirror Images", "Monster Summoning", "Read Thoughts",
+      "Remove Curse (Bestow Curse)", "Slow", "Slow Poison",
       "Speak with Animals", "Suggestion", "Summon Insects",
       "Tongues (Confuse Tongues)"
     ],
     rank3: [
-      "Cure Major Wounds", "Dimension Door", "Fumble",
+      "Cure Major Wounds (Cause Major Wounds)", "Dimension Door", "Fumble",
       "Illusionary Terrain", "Invisibility, Greater",
-      "Monster Summoning, Greater", "Neutralize Poison",
+      "Monster Summoning, Greater", "Neutralize Poison (Inflict Poison)",
       "Speak with Plants"
     ]
   },

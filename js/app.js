@@ -8378,6 +8378,11 @@ const App = {
 
     if (L) {
       m.maxIntensity = L.getMaxIntensity(m.castingSkillPercent, m.spellRank);
+      // Fixed-cost spells cannot increase intensity
+      const spellCost = m.spellDetails?.cost;
+      if (spellCost && spellCost.type === 'fixed') {
+        m.maxIntensity = 1;
+      }
       const armorCat = this._detectArmorCategory();
       const species = document.getElementById('species')?.value || '';
       m.armorRestriction = L.checkArmorRestriction(sel.name, armorCat, species);
@@ -8681,7 +8686,16 @@ const App = {
     // Description
     if (d) {
       document.getElementById('cast-flavor-text').textContent = d.flavorText || '';
-      document.getElementById('cast-full-desc').textContent = d.description || '';
+      // Build full description — include reverse if available
+      let fullDesc = d.description || '';
+      if (d.reverse && d.reverse.description && !d.isReverse) {
+        // Primary spell with a reverse: show both
+        fullDesc += `\n\n— ${d.reverse.name} (Reversed) —\n${d.reverse.description}`;
+      } else if (d.isReverse && d._originalDescription) {
+        // Viewing the reverse: also show the primary
+        fullDesc += `\n\n— ${d._originalName || 'Primary'} —\n${d._originalDescription}`;
+      }
+      document.getElementById('cast-full-desc').textContent = fullDesc;
       document.getElementById('cast-flavor-text').style.display = d.flavorText ? '' : 'none';
     } else {
       // Fallback: use tooltip from SpellData
@@ -8779,13 +8793,19 @@ const App = {
 
     // Update intensity-scaling stat values
     const d = m.spellDetails;
-    if (d?.intensityScaling && m.intensity > 1) {
+    if (d?.intensityScaling) {
       d.intensityScaling.forEach(s => {
         const el = document.getElementById(`cast-stat-${s.field}`);
         if (!el) return;
-        const val = s.base + s.per * (m.intensity - 1);
-        el.textContent = val + (s.unit || '');
-        el.classList.add('scaled');
+        if (m.intensity > 1) {
+          const val = s.base + s.per * (m.intensity - 1);
+          el.textContent = val + (s.unit || '');
+          el.classList.add('scaled');
+        } else {
+          // Reset to base value at intensity 1
+          el.textContent = s.base + (s.unit || '');
+          el.classList.remove('scaled');
+        }
       });
     }
 
