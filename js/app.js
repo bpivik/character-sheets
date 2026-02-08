@@ -1271,7 +1271,12 @@ const App = {
           field.addEventListener('blur', () => {
             const previousValue = field.dataset.previousValue || '';
             const currentValue = field.value.trim();
-            const previousClasses = field.dataset.previousClasses ? JSON.parse(field.dataset.previousClasses) : null;
+            let previousClasses = null;
+            try {
+              previousClasses = field.dataset.previousClasses ? JSON.parse(field.dataset.previousClasses) : null;
+            } catch (e) {
+              console.warn('[CLASS BLUR] Error parsing previousClasses:', e);
+            }
             
             // Determine corresponding rank field
             const rankFieldId = fieldId.replace('class-', 'rank-');
@@ -1286,29 +1291,35 @@ const App = {
               }
             }
             
-            // If class was added (new value entered), prompt for rank
-            if (currentValue && !previousValue) {
+            // If class was added or changed, prompt for rank
+            console.log(`%c[CLASS BLUR] field=${fieldId}, prev="${previousValue}", cur="${currentValue}", willPrompt=${!!(currentValue && currentValue !== previousValue)}`, 'color: #2a9d8f; font-weight: bold');
+            if (currentValue && currentValue !== previousValue) {
               this.promptForRank(currentValue, rankFieldId);
             }
             
-            // Validate multiclass restrictions
-            this.validateAndUpdateClasses(fieldId);
-            this.updateCombatSkillName(true);
-            this.updateWeaponsKnown(true);
-            this.updateRankName();
-            this.updatePrereqKeys();
-            this.updateMagicVisibility();
-            this.updateSpellMemorization();
-            
-            // Handle magic skills - remove obsolete ones first, then add new ones
-            this.removeObsoleteMagicSkills();
-            this.autoAddMagicSkillsToProfessional();
-            
-            // Update class spells after a brief delay to ensure rank is set
-            setTimeout(() => {
-              this.updateClassSpells(previousClasses);
-              this.updateClassAbilities(previousClasses);
-            }, 50);
+            // Wrap remaining handlers in try-catch to ensure prompt isn't affected by errors
+            try {
+              // Validate multiclass restrictions
+              this.validateAndUpdateClasses(fieldId);
+              this.updateCombatSkillName(true);
+              this.updateWeaponsKnown(true);
+              this.updateRankName();
+              this.updatePrereqKeys();
+              this.updateMagicVisibility();
+              this.updateSpellMemorization();
+              
+              // Handle magic skills - remove obsolete ones first, then add new ones
+              this.removeObsoleteMagicSkills();
+              this.autoAddMagicSkillsToProfessional();
+              
+              // Update class spells after a brief delay to ensure rank is set
+              setTimeout(() => {
+                this.updateClassSpells(previousClasses);
+                this.updateClassAbilities(previousClasses);
+              }, 50);
+            } catch (e) {
+              console.error('[CLASS BLUR] Error in post-class-change handlers:', e);
+            }
             
             this.scheduleAutoSave();
           });
@@ -2382,7 +2393,8 @@ const App = {
         
         if (newName) {
           // Check for duplicate magic skill — silently handle instead of alerting
-          if (this.checkForDuplicateMagicSkill(newName, i)) {
+          // Skip during alphabetization (all values are being shuffled)
+          if (!this._alphabetizing && this.checkForDuplicateMagicSkill(newName, i)) {
             console.warn(`[MAGIC SKILL] "${this.toTitleCase(newName)}" already exists in Professional Skills at another slot. Clearing this duplicate.`);
             // Clear this slot since the skill already exists elsewhere
             e.target.value = '';
@@ -11292,7 +11304,7 @@ const App = {
    */
   syncProfessionalSkillsToMagicPage() {
     // Iterate through all professional skill slots
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
       
@@ -11322,6 +11334,11 @@ const App = {
   /**
    * Magic skills configuration - maps skill names to magic page field IDs and class requirements
    */
+  _profSkillRowCount() {
+    const container = document.getElementById('professional-skills-container');
+    return container ? container.querySelectorAll('.professional-skill-row').length : 0;
+  },
+
   MAGIC_SKILL_CONFIG: {
     'channel': { magicId: 'channel-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'monk'] },
     'piety': { magicId: 'piety-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'monk'] },
@@ -11398,7 +11415,7 @@ const App = {
     if (!this.isMagicSkillRelevant(targetSkillName)) return;
     
     // Find this skill in professional skills
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
       
@@ -11503,7 +11520,7 @@ const App = {
     if (!this.MAGIC_SKILL_CONFIG[normalizedName]) return false;
     
     // Check other professional skill slots
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       if (i === excludeIndex) continue;
       
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
@@ -11562,7 +11579,7 @@ const App = {
     const currentClasses = this.getCurrentClasses();
     
     // Check each professional skill slot
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const baseInput = document.getElementById(`prof-skill-${i}-base`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
@@ -11741,6 +11758,7 @@ const App = {
    * Prompt user to enter a rank for a newly entered class
    */
   promptForRank(className, rankFieldId) {
+    console.log(`%c[RANK PROMPT] Showing rank prompt for "${className}" (field: ${rankFieldId})`, 'color: #b8860b; font-weight: bold');
     // Remove any existing prompt
     const existingPrompt = document.getElementById('rank-prompt');
     if (existingPrompt) existingPrompt.remove();
@@ -13781,7 +13799,7 @@ const App = {
     if (evadeVal >= 50) return true;
     
     // Check Acrobatics in professional skills
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       const nameField = document.getElementById(`prof-skill-${i}-name`);
       const currentField = document.getElementById(`prof-skill-${i}-current`);
       if (nameField && currentField) {
@@ -21567,9 +21585,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Alphabetize professional skills
    */
   alphabetizeProfessionalSkills() {
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    const rows = container.querySelectorAll('.professional-skill-row');
+    const totalRows = rows.length;
+    
     // Gather all professional skills with their data
     const skills = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < totalRows; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const baseInput = document.getElementById(`prof-skill-${i}-base`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
@@ -21578,7 +21601,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         skills.push({
           name: nameInput.value.trim(),
           base: baseInput?.value || '',
-          current: currentInput?.value || ''
+          current: currentInput?.value || '',
+          originalValue: currentInput?.dataset?.originalValue || ''
         });
       }
     }
@@ -21586,26 +21610,48 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Sort alphabetically
     skills.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Clear all rows and re-populate
-    for (let i = 0; i < 20; i++) {
+    // Suppress duplicate checks during reorder
+    this._alphabetizing = true;
+    
+    // Write ALL values first without triggering events
+    for (let i = 0; i < totalRows; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
       const baseInput = document.getElementById(`prof-skill-${i}-base`);
       const currentInput = document.getElementById(`prof-skill-${i}-current`);
       
+      if (!nameInput) continue;
+      
       if (i < skills.length) {
         nameInput.value = skills[i].name;
-        baseInput.value = skills[i].base;
-        currentInput.value = skills[i].current;
+        nameInput.dataset.previousName = skills[i].name;
+        if (baseInput) baseInput.value = skills[i].base;
+        if (currentInput) {
+          currentInput.value = skills[i].current;
+          if (skills[i].originalValue) {
+            currentInput.dataset.originalValue = skills[i].originalValue;
+          }
+        }
       } else {
         nameInput.value = '';
-        baseInput.value = '';
-        currentInput.value = '';
+        nameInput.dataset.previousName = '';
+        if (baseInput) baseInput.value = '';
+        if (currentInput) currentInput.value = '';
       }
-      
-      // Trigger base value calculation
-      nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
     }
     
+    // Now trigger recalculations (after all values are in place)
+    for (let i = 0; i < totalRows; i++) {
+      const nameInput = document.getElementById(`prof-skill-${i}-name`);
+      if (!nameInput) continue;
+      this.autoFillProfessionalSkillFormula(nameInput, document.getElementById(`prof-skill-${i}-base`));
+      this.calculateProfessionalSkillBase(i);
+      this.updateProfessionalSkillData(i);
+      this.updateProfSkillEncIndicator(i);
+    }
+    
+    this._alphabetizing = false;
+    
+    this.updatePrereqKeys();
     this.scheduleAutoSave();
   },
 
@@ -23812,7 +23858,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // Professional skills - check each one (uses prof-skill-X-name and prof-skill-X-current)
     // PROFESSIONAL_SKILL_SLOTS is 22, loop 0-21
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       const skillNameEl = document.getElementById(`prof-skill-${i}-name`);
       const skillPctEl = document.getElementById(`prof-skill-${i}-current`);
       
