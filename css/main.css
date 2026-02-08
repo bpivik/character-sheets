@@ -8833,6 +8833,60 @@ input.skill-input.powerful-concentration-bonus,
   overflow-y: auto;
 }
 
+/* Spell description HTML tables */
+.cast-full-desc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.7rem;
+}
+.cast-full-desc table caption {
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #5a4a3a;
+  padding-bottom: 0.2rem;
+}
+.cast-full-desc th,
+.cast-full-desc td {
+  border: 1px solid rgba(139, 115, 85, 0.3);
+  padding: 0.15rem 0.35rem;
+  text-align: left;
+  vertical-align: top;
+}
+.cast-full-desc th {
+  background: rgba(139, 115, 85, 0.12);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cast-full-desc p { margin: 0.3rem 0; }
+.cast-full-desc strong { font-weight: 700; }
+.cast-full-desc .desc-continue {
+  font-style: italic;
+  color: #6b5344;
+  font-size: 0.68rem;
+  padding-top: 0.1rem;
+}
+
+/* EXP cost display in casting modal */
+.cast-exp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+.cast-exp-label { color: #5a4a3a; font-weight: 600; }
+.cast-exp-current { font-weight: 700; color: #3a3025; }
+.cast-exp-arrow { color: #8b7355; }
+.cast-exp-after { font-weight: 700; }
+.cast-exp-after.insufficient { color: #dc3545; }
+.cast-exp-cost-note {
+  font-size: 0.68rem;
+  color: #8b7355;
+  font-style: italic;
+}
+
 /* Casting Controls */
 .cast-modal-casting {
   padding: 0.6rem 1rem 0.75rem;

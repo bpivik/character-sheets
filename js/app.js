@@ -8716,7 +8716,7 @@ const App = {
         // Viewing the reverse: also show the primary
         fullDesc += `\n\n— ${d._originalName || 'Primary'} —\n${d._originalDescription}`;
       }
-      document.getElementById('cast-full-desc').textContent = fullDesc;
+      document.getElementById('cast-full-desc').innerHTML = this._formatSpellDescription(fullDesc);
       document.getElementById('cast-flavor-text').style.display = d.flavorText ? '' : 'none';
     } else {
       // Fallback: use tooltip from SpellData
@@ -8762,13 +8762,17 @@ const App = {
     // Cast button state
     const castBtn = document.getElementById('cast-modal-cast-btn');
     const canCast = m.armorRestriction?.canCast !== false;
-    const canAfford = m.cost <= (parseInt(document.getElementById('magic-points-current')?.value, 10) || 0);
-    castBtn.disabled = !canCast || !canAfford;
+    const canAffordMP = m.cost <= (parseInt(document.getElementById('magic-points-current')?.value, 10) || 0);
+    const currentExp = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    const canAffordEXP = (m.expCost || 0) <= 0 || currentExp >= (m.expCost || 0);
+    castBtn.disabled = !canCast || !canAffordMP || !canAffordEXP;
 
     if (!canCast) {
       document.getElementById('cast-btn-text').textContent = 'Cannot Cast (Armor)';
-    } else if (!canAfford) {
+    } else if (!canAffordMP) {
       document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
+    } else if (!canAffordEXP) {
+      document.getElementById('cast-btn-text').textContent = 'Insufficient EXP';
     } else if (m.isNonMemorized) {
       const classNorm = m.classSource.toLowerCase();
       if (classNorm.includes('cleric') || classNorm.includes('druid') || classNorm.includes('paladin') || classNorm.includes('ranger')) {
@@ -8839,13 +8843,291 @@ const App = {
   },
 
   /**
+   * Format spell description text into HTML with proper tables
+   * Converts inline **Table:** patterns into HTML <table> elements
+   */
+  _formatSpellDescription(text) {
+    if (!text) return '';
+    // Escape HTML entities
+    const esc = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // Table-header keywords that signal tabular data
+    const tableKW = /(?:Table|Effects|Modifiers|Expenditure|Examples?\s+and\s+Costs?|Summoning\s+Table|Color\s+Effects|Gem\s+Cost|Cost\s+Table)\s*(?:\([^)]*\))?\s*:/i;
+
+    // Split on **bold** markers while keeping them
+    // Strategy: process the text in segments
+    const result = [];
+    // Split into paragraphs on double-newline
+    const paragraphs = text.split(/\n\n+/);
+
+    for (const para of paragraphs) {
+      // Check if this paragraph contains a table header
+      const tableHeaderRe = /\*\*([^*]+?)\*\*:?\s*/g;
+      let remaining = para;
+      let hasTable = false;
+
+      // Find bold headers that match table keywords
+      const tableMatches = [];
+      let tm;
+      const testStr = para;
+      const boldRe = /\*\*([^*]+?)\*\*:?\s*/g;
+      while ((tm = boldRe.exec(testStr)) !== null) {
+        if (tableKW.test(tm[1] + ':')) {
+          tableMatches.push({ index: tm.index, fullMatch: tm[0], title: tm[1].replace(/:$/, '').trim() });
+        }
+      }
+
+      if (tableMatches.length > 0) {
+        for (let ti = 0; ti < tableMatches.length; ti++) {
+          const tmatch = tableMatches[ti];
+          // Text before this table
+          const beforeText = ti === 0 ? para.substring(0, tmatch.index) :
+            para.substring(tableMatches[ti-1].index + tableMatches[ti-1].fullMatch.length, tmatch.index);
+          // Get the data range for this table
+          const dataStart = tmatch.index + tmatch.fullMatch.length;
+          let dataEnd;
+          if (ti + 1 < tableMatches.length) {
+            // Data ends where the pre-text of the next table starts
+            // Look backwards from the next table match for paragraph text
+            dataEnd = tableMatches[ti + 1].index;
+          } else {
+            dataEnd = para.length;
+          }
+          let dataText = para.substring(dataStart, dataEnd).trim();
+
+          // Strip a trailing **...** that's just the closing bold of a wrapper
+          dataText = dataText.replace(/\*\*\s*$/, '').trim();
+
+          // Add preceding text as paragraph
+          if (ti === 0 && beforeText.trim()) {
+            result.push('<p>' + this._formatBoldText(esc(beforeText.trim())) + '</p>');
+          }
+
+          // Parse the table data
+          const tableHtml = this._buildTable(tmatch.title, dataText, esc);
+          if (tableHtml) {
+            result.push(tableHtml);
+            hasTable = true;
+          } else {
+            // Fallback: just show as bold header + text
+            result.push('<p>' + this._formatBoldText(esc('**' + tmatch.title + ':** ' + dataText)) + '</p>');
+          }
+
+          // If this is the last table match and there's trailing text after the table data
+          // (The table data extraction already accounts for this)
+        }
+      } else {
+        // No table in this paragraph - format as regular text
+        const formatted = this._formatBoldText(esc(para.trim()));
+        if (formatted) result.push('<p>' + formatted + '</p>');
+      }
+    }
+
+    return result.join('');
+  },
+
+  /**
+   * Convert **bold** markers in already-escaped text to <strong> tags
+   */
+  _formatBoldText(text) {
+    return text.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+  },
+
+  /**
+   * Build an HTML table from a table title and data string
+   */
+  _buildTable(title, data, esc) {
+    if (!data || data.length < 5) return null;
+
+    // Strip dice notation prefix (e.g., "1d10: 01-40: 10'..." → "01-40: 10'...")
+    let dicePrefix = '';
+    const dicePfx = data.match(/^(\d+d\d+):\s*/i);
+    if (dicePfx) {
+      dicePrefix = dicePfx[1];
+      data = data.substring(dicePfx[0].length);
+    }
+
+    // Detect row pattern and split
+    let rows = [];
+
+    // Pattern 1: Rank/SIZ rows — "Rank X / SIZ Y: Effect" (also handles SIZ-only and "Each" rows)
+    if (/^Rank\s/i.test(data)) {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=(?:Rank|SIZ|Each)\s)/i);
+    }
+    // Pattern 2: Intensity rows — "Intensity N: data"
+    else if (/^Intensity\s/i.test(data)) {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=Intensity\s)/i);
+    }
+    // Pattern 3: d100 roll table — "01 – Item. 02 – Item"
+    else if (/^\d{1,2}\s*[–-]\s/.test(data)) {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=\d{1,3}\s*[–-])/);
+    }
+    // Pattern 4: d100 range roll — "01-10: Effect. 11-20: Effect"
+    else if (/^\d{2}-\d{2}:/.test(data)) {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=\d{2}-\d{2}:)/);
+    }
+    // Pattern 5: Numbered list — "1 Red: Effect. 2 Orange: Effect"
+    else if (/^\d+\s+[A-Z]/.test(data)) {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=\d+\s+[A-Z])/);
+    }
+    // Pattern 6: Color/label — "Red (Outer): stuff. Orange: stuff"
+    else if (/^[A-Z][a-z]+(?:\s*\([^)]*\))?:/.test(data)) {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=[A-Z][a-z]+(?:\s*\([^)]*\))?:)/);
+    }
+    // Pattern 7: Generic "Label: Value." separated by periods
+    else {
+      rows = this._splitTableRows(data, /(?<=\.)\s+(?=[A-Z])/);
+    }
+
+    if (rows.length < 2) return null; // Need at least 2 rows for a table
+
+    // Clean trailing periods and empty rows
+    rows = rows.map(r => r.replace(/\.\s*$/, '').trim()).filter(r => r.length > 0);
+    if (rows.length < 2) return null;
+
+    // Detect if first row has Rank/SIZ columns (table may also contain SIZ-only trailing rows)
+    const isRankSiz = rows[0] && /Rank\s/i.test(rows[0]) && /SIZ\s/i.test(rows[0]);
+
+    // Build table HTML
+    const captionText = dicePrefix ? title + ' (' + dicePrefix + ')' : title;
+    let html = '<table><caption>' + esc(captionText) + '</caption>';
+
+    if (isRankSiz) {
+      html += '<thead><tr><th>Rank</th><th>SIZ</th><th>Effect</th></tr></thead><tbody>';
+      for (const row of rows) {
+        const m = row.match(/Rank\s+([\d+-]+)\s*\/\s*SIZ\s+([\d+,\-]+)\s*:\s*(.*)/i);
+        if (m) {
+          html += '<tr><td>' + esc(m[1]) + '</td><td>' + esc(m[2]) + '</td><td>' + esc(m[3]) + '</td></tr>';
+        } else {
+          // SIZ-only rows (e.g., "SIZ 61-70: 25,000 GP") or "Each +20 SIZ: ..."
+          const sizOnly = row.match(/(?:SIZ|Each[^:]*)\s*([\d+,\-]+)?\s*:\s*(.*)/i);
+          if (sizOnly) {
+            const label = row.substring(0, row.indexOf(':')).trim();
+            html += '<tr><td colspan="2">' + esc(label) + '</td><td>' + esc(sizOnly[2]) + '</td></tr>';
+          } else {
+            html += '<tr><td colspan="3">' + esc(row) + '</td></tr>';
+          }
+        }
+      }
+    }
+    // Intensity rows with comma-separated columns
+    else if (rows[0] && /^Intensity\s/i.test(rows[0])) {
+      // Parse first row to detect columns
+      const firstMatch = rows[0].match(/Intensity\s+\d+:\s*(.*)/i);
+      if (firstMatch) {
+        const firstCols = firstMatch[1].split(/,\s*/);
+        // Build headers from column pattern
+        const headers = ['Intensity'];
+        for (const col of firstCols) {
+          // Extract header from value pattern
+          const hm = col.match(/^([\d']+(?:d\d+)?)\s*(.*)/);
+          if (hm && hm[2]) headers.push(hm[2].replace(/^\s*/, '') || col);
+          else headers.push(col);
+        }
+        // Actually, for intensity tables just use 2 columns: Intensity and Details
+        html += '<thead><tr><th>Intensity</th><th>Details</th></tr></thead><tbody>';
+        for (const row of rows) {
+          const rm = row.match(/Intensity\s+(\d+):\s*(.*)/i);
+          if (rm) {
+            html += '<tr><td>' + esc(rm[1]) + '</td><td>' + esc(rm[2]) + '</td></tr>';
+          } else {
+            // "Continue progression" or similar
+            html += '<tr><td colspan="2" class="desc-continue">' + esc(row) + '</td></tr>';
+          }
+        }
+      }
+    }
+    // d100 table "NN – Monster"
+    else if (/^\d{1,3}\s*[–-]/.test(rows[0])) {
+      html += '<thead><tr><th>Roll</th><th>Result</th></tr></thead><tbody>';
+      for (const row of rows) {
+        const rm = row.match(/^(\d{1,3}(?:\s*[-–]\s*\d{1,3})?)\s*[–-]\s*(.*)/);
+        if (rm) {
+          html += '<tr><td>' + esc(rm[1]) + '</td><td>' + esc(rm[2]) + '</td></tr>';
+        } else {
+          html += '<tr><td colspan="2">' + esc(row) + '</td></tr>';
+        }
+      }
+    }
+    // Roll range "01-10: Effect"
+    else if (/^\d{2}-\d{2}:/.test(rows[0])) {
+      html += '<thead><tr><th>Roll</th><th>Effect</th></tr></thead><tbody>';
+      for (const row of rows) {
+        const rm = row.match(/^(\d{2}-\d{2}):\s*(.*)/);
+        if (rm) {
+          html += '<tr><td>' + esc(rm[1]) + '</td><td>' + esc(rm[2]) + '</td></tr>';
+        } else {
+          html += '<tr><td colspan="2">' + esc(row) + '</td></tr>';
+        }
+      }
+    }
+    // Numbered color table "1 Red: effect"
+    else if (/^\d+\s+[A-Z]/.test(rows[0])) {
+      html += '<thead><tr><th>#</th><th>Color</th><th>Effect</th></tr></thead><tbody>';
+      for (const row of rows) {
+        const rm = row.match(/^(\d+)\s+([^:]+):\s*(.*)/);
+        if (rm) {
+          html += '<tr><td>' + esc(rm[1]) + '</td><td>' + esc(rm[2]) + '</td><td>' + esc(rm[3]) + '</td></tr>';
+        } else {
+          html += '<tr><td colspan="3">' + esc(row) + '</td></tr>';
+        }
+      }
+    }
+    // Generic "Label: Value" two-column
+    else {
+      html += '<tbody>';
+      for (const row of rows) {
+        const colonIdx = row.indexOf(':');
+        if (colonIdx > 0 && colonIdx < row.length - 1) {
+          html += '<tr><td><strong>' + esc(row.substring(0, colonIdx).trim()) + '</strong></td><td>' + esc(row.substring(colonIdx + 1).trim()) + '</td></tr>';
+        } else {
+          html += '<tr><td colspan="2">' + esc(row) + '</td></tr>';
+        }
+      }
+    }
+
+    html += '</tbody></table>';
+    return html;
+  },
+
+  /**
+   * Split table data into rows using the given separator pattern
+   */
+  _splitTableRows(data, separator) {
+    // First strip any trailing text that isn't part of the table
+    // Table data ends at double-newline or when we hit non-table prose
+    const endMatch = data.match(/\n\n/);
+    let tableData = endMatch ? data.substring(0, endMatch.index) : data;
+
+    return tableData.split(separator).map(r => r.trim()).filter(r => r.length > 0);
+  },
+
+  /**
+   * Parse EXP cost from a spell's costDisplay string
+   * Returns { exp: number, variable: boolean }
+   */
+  _parseExpCost(costDisplay) {
+    if (!costDisplay || !costDisplay.includes('EXP')) return { exp: 0, variable: false };
+    // Variable: "+1 or more EXP"
+    let m = costDisplay.match(/\+?(\d+)\s+or\s+more\s+EXP/i);
+    if (m) return { exp: parseInt(m[1]), variable: true };
+    // Conditional in parens: "(+1 EXP)" or "(Death +2 EXP)"
+    m = costDisplay.match(/\([^)]*?(\d+)\s*EXP\)/i);
+    if (m) return { exp: parseInt(m[1]), variable: true };
+    // Fixed: "+N EXP"
+    m = costDisplay.match(/\+?(\d+)\s*EXP/i);
+    if (m) return { exp: parseInt(m[1]), variable: false };
+    return { exp: 0, variable: false };
+  },
+
+  /**
    * Calculate and display the MP cost at current intensity
    */
   _updateCostDisplay(m, costStr) {
     const L = window.SpellDetailsLookup;
     const d = m.spellDetails;
 
-    // Calculate cost
+    // Calculate MP cost
     if (d?.cost && L) {
       m.cost = L.calculateCost(d.cost, m.intensity, m.spellRank, m.casterRank);
     } else {
@@ -8853,6 +9135,11 @@ const App = {
       const costMatch = (costStr || '').match(/^(\d+)/);
       m.cost = costMatch ? parseInt(costMatch[1], 10) : 1;
     }
+
+    // Calculate EXP cost
+    const expInfo = this._parseExpCost(d?.costDisplay || costStr || '');
+    m.expCost = expInfo.exp;
+    m.expVariable = expInfo.variable;
 
     const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
     const mpAfter = currentMP - m.cost;
@@ -8873,14 +9160,46 @@ const App = {
       mpAfterEl.classList.remove('insufficient');
     }
 
-    // Update cast button if needed (but don't override non-memorized button text)
+    // EXP display
+    const expRow = document.getElementById('cast-exp-row');
+    if (expRow) {
+      if (m.expCost > 0) {
+        expRow.classList.remove('hidden');
+        const currentExp = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+        const expAfter = currentExp - m.expCost;
+        document.getElementById('cast-exp-current').textContent = currentExp;
+        document.getElementById('cast-exp-after').textContent = expAfter;
+        const expAfterEl = document.getElementById('cast-exp-after');
+        if (expAfter < 0) {
+          expAfterEl.classList.add('insufficient');
+        } else {
+          expAfterEl.classList.remove('insufficient');
+        }
+        // Note for variable costs
+        const noteEl = document.getElementById('cast-exp-note');
+        if (m.expVariable) {
+          noteEl.textContent = `(${m.expCost}+ EXP — see description)`;
+        } else {
+          noteEl.textContent = '';
+        }
+      } else {
+        expRow.classList.add('hidden');
+      }
+    }
+
+    // Update cast button — check both MP and EXP
     const castBtn = document.getElementById('cast-modal-cast-btn');
     if (castBtn && m.armorRestriction?.canCast !== false) {
-      castBtn.disabled = mpAfter < 0;
-      if (mpAfter < 0) {
+      const currentExp = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+      const canAffordMP = mpAfter >= 0;
+      const canAffordEXP = m.expCost <= 0 || currentExp >= m.expCost;
+      castBtn.disabled = !canAffordMP || !canAffordEXP;
+      if (!canAffordMP) {
         document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
+      } else if (!canAffordEXP) {
+        document.getElementById('cast-btn-text').textContent = 'Insufficient EXP';
       }
-      // Don't override button text here — _populateCastModal handles it
+      // Don't override button text here — _populateCastModal handles normal state
     }
   },
 
@@ -8975,13 +9294,25 @@ const App = {
     const currentMP = parseInt(mpField?.value, 10) || 0;
     if (currentMP < m.cost) return;
 
-    // For NORMAL casting: deduct MP upfront (Mythras RAW)
+    // Check EXP availability
+    const expField = document.getElementById('exp-rolls');
+    const currentExp = parseInt(expField?.value, 10) || 0;
+    if ((m.expCost || 0) > 0 && currentExp < m.expCost) return;
+
+    // For NORMAL casting: deduct MP and EXP upfront (Mythras RAW)
     // For NON-MEMORIZED: don't deduct yet (depends on result)
     if (!m.isNonMemorized) {
       mpField.value = currentMP - m.cost;
       this.character.derived = this.character.derived || {};
       this.character.derived.magicPointsCurrent = mpField.value;
       this.updateMagicMPDisplay();
+      // Deduct EXP
+      if ((m.expCost || 0) > 0 && expField) {
+        expField.value = currentExp - m.expCost;
+        if (this.character.expRolls !== undefined) {
+          this.character.expRolls = parseInt(expField.value, 10);
+        }
+      }
     }
 
     // Hide casting controls, show result area
@@ -9074,21 +9405,36 @@ const App = {
       // === NON-MEMORIZED CASTING RESULTS ===
       const currentMP = parseInt(mpField?.value, 10) || 0;
       const classNorm = m.classSource.toLowerCase();
+      const expField = document.getElementById('exp-rolls');
+
+      // Helper: deduct EXP on spell success (critical or normal)
+      const deductExp = () => {
+        if ((m.expCost || 0) > 0 && expField) {
+          const curExp = parseInt(expField.value, 10) || 0;
+          expField.value = curExp - m.expCost;
+          if (this.character.expRolls !== undefined) {
+            this.character.expRolls = parseInt(expField.value, 10);
+          }
+        }
+      };
+      const expStr = (m.expCost || 0) > 0 ? ` ${m.expCost} EXP spent.` : '';
 
       if (resultClass === 'critical') {
-        // Critical: spell succeeds, NO MP cost
-        details.textContent = `Critical! The spell takes effect with exceptional potency \u2014 no Magic Points expended.`;
+        // Critical: spell succeeds, NO MP cost, but EXP still spent
+        deductExp();
+        details.textContent = `Critical! The spell takes effect with exceptional potency \u2014 no Magic Points expended.${expStr}`;
       } else if (resultClass === 'success') {
-        // Success: deduct MP now
+        // Success: deduct MP and EXP now
         mpField.value = currentMP - m.cost;
         this.character.derived = this.character.derived || {};
         this.character.derived.magicPointsCurrent = mpField.value;
         this.updateMagicMPDisplay();
+        deductExp();
         const newMP = parseInt(mpField.value, 10) || 0;
         if (classNorm.includes('sorcerer')) {
-          details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect. No Weaving allowed. Requires 3 Long Rests to return to memory.`;
+          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect. No Weaving allowed. Requires 3 Long Rests to return to memory.`;
         } else {
-          details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect normally.`;
+          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect normally.`;
         }
       } else if (resultClass === 'fumble') {
         // Fumble: class-specific consequences, no MP spent
@@ -9144,15 +9490,16 @@ const App = {
     } else {
       // === NORMAL (MEMORIZED) CASTING RESULTS ===
       const newMP = parseInt(mpField?.value, 10) || 0;
+      const expStr = (m.expCost || 0) > 0 ? ` ${m.expCost} EXP spent.` : '';
 
       if (resultClass === 'critical') {
-        details.textContent = `Critical! ${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect with exceptional potency.`;
+        details.textContent = `Critical! ${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect with exceptional potency.`;
       } else if (resultClass === 'success') {
-        details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect normally.`;
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect normally.`;
       } else if (resultClass === 'fumble') {
-        details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
       } else {
-        details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fizzles and fails.`;
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell fizzles and fails.`;
       }
 
       // Show force section on failure
@@ -9196,7 +9543,8 @@ const App = {
     const newMP = parseInt(mpField?.value, 10) || 0;
 
     const details = document.getElementById('cast-result-details');
-    details.textContent = `Spell forced! ${m.cost} MP spent. Remaining: ${newMP} MP. Spell is expunged from memory \u2014 must be re-memorized before casting again.`;
+    const expStr = (m.expCost || 0) > 0 ? ` ${m.expCost} EXP spent.` : '';
+    details.textContent = `Spell forced! ${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. Spell is expunged from memory \u2014 must be re-memorized before casting again.`;
     // Uncheck the memorized checkbox for this spell
     const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
     if (memCheck) memCheck.checked = false;
