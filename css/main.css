@@ -8152,11 +8152,20 @@ input.skill-input.powerful-concentration-bonus,
   width: 94%;
   min-height: auto;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
   border: none;
   border-radius: 10px;
   box-shadow: 0 12px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.cast-modal-scroll {
+  overflow-y: auto;
+  flex: 1;
+  position: relative;
+  z-index: 2;
 }
 
 .cast-modal-theme-border {
@@ -8642,88 +8651,94 @@ input.skill-input.powerful-concentration-bonus,
   top: 0; left: 0; right: 0; bottom: 0;
   border-radius: 10px;
   pointer-events: none;
-  z-index: 3;
+  z-index: 10;
   overflow: hidden;
 }
 
 /* Success animations per casting type */
 @keyframes divineGlow {
   0% { opacity: 0; }
-  30% { opacity: 1; }
+  20% { opacity: 1; }
+  50% { opacity: 0.8; }
   100% { opacity: 0; }
 }
 @keyframes arcaneRunes {
   0% { opacity: 0; transform: rotate(0deg) scale(0.8); }
-  40% { opacity: 0.9; transform: rotate(10deg) scale(1.05); }
-  100% { opacity: 0; transform: rotate(20deg) scale(1.1); }
+  25% { opacity: 1; transform: rotate(5deg) scale(1.02); }
+  50% { opacity: 0.85; transform: rotate(10deg) scale(1.05); }
+  100% { opacity: 0; transform: rotate(15deg) scale(1.08); }
 }
 @keyframes sorceryPulse {
-  0% { opacity: 0; box-shadow: inset 0 0 20px rgba(178, 34, 34, 0); }
-  40% { opacity: 1; box-shadow: inset 0 0 40px rgba(178, 34, 34, 0.3); }
-  100% { opacity: 0; box-shadow: inset 0 0 20px rgba(178, 34, 34, 0); }
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0; }
 }
 @keyframes bardicWave {
   0% { opacity: 0; background-position: 0% 50%; }
-  40% { opacity: 0.8; }
+  25% { opacity: 1; }
+  60% { opacity: 0.7; }
   100% { opacity: 0; background-position: 200% 50%; }
 }
 
 .cast-animation-overlay.anim-divine-success {
-  background: radial-gradient(ellipse at center top, rgba(255, 215, 0, 0.25), rgba(255, 255, 200, 0.1), transparent 70%);
-  animation: divineGlow 1.5s ease-out forwards;
+  background: radial-gradient(ellipse at center top, rgba(255, 215, 0, 0.5), rgba(255, 255, 200, 0.3), rgba(255, 200, 50, 0.1), transparent 75%);
+  animation: divineGlow 2s ease-out forwards;
 }
 .cast-animation-overlay.anim-arcane-success {
-  background: radial-gradient(circle at center, rgba(106, 90, 205, 0.2), rgba(138, 43, 226, 0.1), transparent 70%);
-  animation: arcaneRunes 1.5s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(106, 90, 205, 0.45), rgba(138, 43, 226, 0.25), rgba(75, 0, 130, 0.1), transparent 75%);
+  animation: arcaneRunes 2s ease-out forwards;
 }
 .cast-animation-overlay.anim-sorcery-success {
-  background: radial-gradient(circle at center, rgba(178, 34, 34, 0.15), rgba(139, 0, 0, 0.08), transparent 65%);
-  animation: sorceryPulse 1.5s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(178, 34, 34, 0.4), rgba(220, 20, 60, 0.2), rgba(139, 0, 0, 0.1), transparent 70%);
+  animation: sorceryPulse 2s ease-out forwards;
 }
 .cast-animation-overlay.anim-bardic-success {
-  background: linear-gradient(90deg, transparent, rgba(46, 139, 87, 0.15), rgba(60, 179, 113, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(46, 139, 87, 0.35), rgba(60, 179, 113, 0.25), rgba(34, 139, 34, 0.15), transparent);
   background-size: 200% 100%;
-  animation: bardicWave 1.5s ease-out forwards;
+  animation: bardicWave 2s ease-out forwards;
 }
 
 /* Fizzle animation for failures */
 @keyframes fizzle {
   0% { opacity: 0; }
-  20% { opacity: 0.4; }
-  40% { opacity: 0.2; }
-  60% { opacity: 0.35; }
-  80% { opacity: 0.1; }
+  15% { opacity: 0.7; }
+  30% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+  70% { opacity: 0.15; }
   100% { opacity: 0; }
 }
 .cast-animation-overlay.anim-fizzle {
-  background: radial-gradient(circle at center, rgba(128, 128, 128, 0.2), transparent 60%);
-  animation: fizzle 1s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(128, 128, 128, 0.4), rgba(80, 80, 80, 0.2), transparent 65%);
+  animation: fizzle 1.2s ease-out forwards;
 }
 
 /* Fumble animation */
 @keyframes fumbleFlash {
   0% { opacity: 0; }
-  15% { opacity: 0.7; }
-  30% { opacity: 0.2; }
-  50% { opacity: 0.6; }
-  70% { opacity: 0.1; }
+  10% { opacity: 0.9; }
+  25% { opacity: 0.3; }
+  40% { opacity: 0.8; }
+  60% { opacity: 0.2; }
+  80% { opacity: 0.5; }
   100% { opacity: 0; }
 }
 .cast-animation-overlay.anim-fumble {
-  background: radial-gradient(circle at center, rgba(200, 30, 30, 0.3), rgba(100, 0, 0, 0.15), transparent 65%);
-  animation: fumbleFlash 1.2s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(200, 30, 30, 0.5), rgba(139, 0, 0, 0.3), rgba(80, 0, 0, 0.15), transparent 70%);
+  animation: fumbleFlash 1.5s ease-out forwards;
 }
 
 /* Critical animation */
 @keyframes criticalBurst {
   0% { opacity: 0; transform: scale(0.5); }
-  30% { opacity: 1; transform: scale(1.05); }
-  60% { opacity: 0.8; }
-  100% { opacity: 0; transform: scale(1.1); }
+  20% { opacity: 1; transform: scale(1.02); }
+  40% { opacity: 0.9; transform: scale(1.05); }
+  60% { opacity: 0.7; }
+  100% { opacity: 0; transform: scale(1.08); }
 }
 .cast-animation-overlay.anim-critical {
-  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.35), rgba(255, 255, 150, 0.15), transparent 65%);
-  animation: criticalBurst 1.8s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.6), rgba(255, 255, 100, 0.35), rgba(255, 200, 0, 0.15), transparent 70%);
+  animation: criticalBurst 2.2s ease-out forwards;
 }
 
 /* Add Spell Button */
