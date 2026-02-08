@@ -7961,6 +7961,8 @@ const SpellDetailsLookup = {
 
   ELVEN_CHAIN: ['elven chain', 'elven chainmail', 'elven chain mail'],
 
+  NOT_ARMOR: ['robes', 'robe', 'clothing', 'clothes', 'cloth', 'vestments', 'garb', 'tunic', 'cloak', 'cape', 'tabard', 'toga', 'gown'],
+
   /**
    * Classify an armor name as 'none', 'light', 'heavy', or 'elven-chain'.
    * @param {string} armorName
@@ -7970,6 +7972,9 @@ const SpellDetailsLookup = {
     if (!armorName) return 'none';
     const lower = armorName.trim().toLowerCase();
     if (!lower || lower === 'none' || lower === 'unarmored') return 'none';
+
+    // Robes, clothing, etc. are not armor
+    if (this.NOT_ARMOR.some(na => lower.includes(na))) return 'none';
 
     if (this.ELVEN_CHAIN.some(ec => lower.includes(ec))) return 'elven-chain';
     if (this.HEAVY_ARMOR.some(h => lower.includes(h))) return 'heavy';

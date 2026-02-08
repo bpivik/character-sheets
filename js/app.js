@@ -3361,19 +3361,24 @@ const App = {
           const currentArmor = armorInput.value.trim();
           const previousArmor = armorInput.dataset.previousArmor || '';
           
-          // Only auto-fill if armor name changed and AP hasn't been manually set
-          // or if AP is empty/zero
-          if (currentArmor !== previousArmor && window.ArmorData) {
-            const ap = window.ArmorData.getAP(currentArmor);
-            if (ap !== null) {
-              // Only set if AP is empty or was auto-filled (not manually changed)
-              const currentAP = apInput.value.trim();
-              const wasAutoFilled = apInput.dataset.autoFilled === 'true';
-              
-              if (!currentAP || currentAP === '0' || wasAutoFilled) {
-                apInput.value = ap;
-                apInput.dataset.autoFilled = 'true';
-                this.scheduleAutoSave();
+          if (currentArmor !== previousArmor) {
+            // If armor was removed (field cleared), reset AP to 0
+            if (!currentArmor) {
+              apInput.value = 0;
+              apInput.dataset.autoFilled = 'true';
+              this.scheduleAutoSave();
+            } else if (window.ArmorData) {
+              const ap = window.ArmorData.getAP(currentArmor);
+              if (ap !== null) {
+                // Set AP for recognized armor (including 0 for robes/clothing)
+                const currentAP = apInput.value.trim();
+                const wasAutoFilled = apInput.dataset.autoFilled === 'true';
+                
+                if (!currentAP || currentAP === '0' || wasAutoFilled) {
+                  apInput.value = ap;
+                  apInput.dataset.autoFilled = 'true';
+                  this.scheduleAutoSave();
+                }
               }
             }
           }
@@ -5135,7 +5140,7 @@ const App = {
         <ul>
           <li><strong>Magic Points:</strong> Equal to the character's POW.</li>
           <li><strong>Usage:</strong> Points are spent based on spell type and replenished after depletion.</li>
-          <li><strong>Exhaustion:</strong> A caster without Magic Points cannot cast spells until they recover. See Short and Long Rests.</li>
+          <li><strong>Exhaustion:</strong> A caster at 0 MP may still cast, but each MP of deficit causes one Level of Fatigue.</li>
         </ul>
       `
     },
@@ -8762,15 +8767,33 @@ const App = {
     // Cast button state
     const castBtn = document.getElementById('cast-modal-cast-btn');
     const canCast = m.armorRestriction?.canCast !== false;
-    const canAffordMP = m.cost <= (parseInt(document.getElementById('magic-points-current')?.value, 10) || 0);
+    const currentMPForBtn = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
+    const mpDeficit = m.cost - currentMPForBtn;
+    const willOvercast = mpDeficit > 0;
     const currentExp = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
     const canAffordEXP = (m.expCost || 0) <= 0 || currentExp >= (m.expCost || 0);
-    castBtn.disabled = !canCast || !canAffordMP || !canAffordEXP;
+    castBtn.disabled = !canCast || !canAffordEXP;
+
+    // Show/hide MP overcasting warning
+    const mpWarning = document.getElementById('cast-mp-warning');
+    if (mpWarning) {
+      if (willOvercast && canCast && canAffordEXP) {
+        mpWarning.classList.remove('hidden');
+        const fatigueOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
+        const currentState = this.character.fatigueState || 'fresh';
+        const currentIdx = fatigueOrder.indexOf(currentState);
+        const levelsToGain = mpDeficit;
+        const targetIdx = Math.min(currentIdx + levelsToGain, fatigueOrder.length - 1);
+        const targetState = fatigueOrder[targetIdx];
+        document.getElementById('cast-mp-warning-text').textContent =
+          `Insufficient MP \u2014 ${mpDeficit} MP overdrawn = ${levelsToGain} Fatigue level${levelsToGain > 1 ? 's' : ''} (${currentState} \u2192 ${targetState})`;
+      } else {
+        mpWarning.classList.add('hidden');
+      }
+    }
 
     if (!canCast) {
       document.getElementById('cast-btn-text').textContent = 'Cannot Cast (Armor)';
-    } else if (!canAffordMP) {
-      document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
     } else if (!canAffordEXP) {
       document.getElementById('cast-btn-text').textContent = 'Insufficient EXP';
     } else if (m.isNonMemorized) {
@@ -9187,17 +9210,31 @@ const App = {
       }
     }
 
-    // Update cast button — check both MP and EXP
+    // Update cast button — check EXP (MP overcasting is allowed with fatigue)
     const castBtn = document.getElementById('cast-modal-cast-btn');
     if (castBtn && m.armorRestriction?.canCast !== false) {
       const currentExp = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
-      const canAffordMP = mpAfter >= 0;
       const canAffordEXP = m.expCost <= 0 || currentExp >= m.expCost;
-      castBtn.disabled = !canAffordMP || !canAffordEXP;
-      if (!canAffordMP) {
-        document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
-      } else if (!canAffordEXP) {
+      castBtn.disabled = !canAffordEXP;
+      if (!canAffordEXP) {
         document.getElementById('cast-btn-text').textContent = 'Insufficient EXP';
+      }
+
+      // Show/hide MP overcasting warning
+      const mpWarn = document.getElementById('cast-mp-warning');
+      if (mpWarn) {
+        if (mpAfter < 0 && canAffordEXP) {
+          mpWarn.classList.remove('hidden');
+          const deficit = Math.abs(mpAfter);
+          const fatigueOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
+          const curState = this.character.fatigueState || 'fresh';
+          const curIdx = fatigueOrder.indexOf(curState);
+          const tgtIdx = Math.min(curIdx + deficit, fatigueOrder.length - 1);
+          document.getElementById('cast-mp-warning-text').textContent =
+            `Insufficient MP \u2014 ${deficit} MP overdrawn = ${deficit} Fatigue level${deficit > 1 ? 's' : ''} (${curState} \u2192 ${fatigueOrder[tgtIdx]})`;
+        } else {
+          mpWarn.classList.add('hidden');
+        }
       }
       // Don't override button text here — _populateCastModal handles normal state
     }
@@ -9289,10 +9326,12 @@ const App = {
     const m = this._castModal;
     if (m.hasRolled) return;
 
-    // Check MP availability
+    // Check MP — allow overcasting with fatigue penalty
     const mpField = document.getElementById('magic-points-current');
     const currentMP = parseInt(mpField?.value, 10) || 0;
-    if (currentMP < m.cost) return;
+    const mpDeficit = Math.max(0, m.cost - currentMP);
+    // Store for result display
+    m._overcastFatigue = mpDeficit;
 
     // Check EXP availability
     const expField = document.getElementById('exp-rolls');
@@ -9302,10 +9341,17 @@ const App = {
     // For NORMAL casting: deduct MP and EXP upfront (Mythras RAW)
     // For NON-MEMORIZED: don't deduct yet (depends on result)
     if (!m.isNonMemorized) {
-      mpField.value = currentMP - m.cost;
+      // MP goes to 0 minimum (deficit becomes fatigue)
+      mpField.value = Math.max(0, currentMP - m.cost);
       this.character.derived = this.character.derived || {};
       this.character.derived.magicPointsCurrent = mpField.value;
       this.updateMagicMPDisplay();
+
+      // Apply fatigue for overcast deficit
+      if (mpDeficit > 0) {
+        this._applyOvercastFatigue(mpDeficit);
+      }
+
       // Deduct EXP
       if ((m.expCost || 0) > 0 && expField) {
         expField.value = currentExp - m.expCost;
@@ -9424,17 +9470,22 @@ const App = {
         deductExp();
         details.textContent = `Critical! The spell takes effect with exceptional potency \u2014 no Magic Points expended.${expStr}`;
       } else if (resultClass === 'success') {
-        // Success: deduct MP and EXP now
-        mpField.value = currentMP - m.cost;
+        // Success: deduct MP and EXP now (MP floors at 0, deficit becomes fatigue)
+        const nonMemDeficit = Math.max(0, m.cost - currentMP);
+        mpField.value = Math.max(0, currentMP - m.cost);
         this.character.derived = this.character.derived || {};
         this.character.derived.magicPointsCurrent = mpField.value;
         this.updateMagicMPDisplay();
+        if (nonMemDeficit > 0) {
+          this._applyOvercastFatigue(nonMemDeficit);
+        }
         deductExp();
         const newMP = parseInt(mpField.value, 10) || 0;
+        const fatigueNote = nonMemDeficit > 0 ? ` \u26A0 ${nonMemDeficit} Fatigue level${nonMemDeficit > 1 ? 's' : ''} gained from MP overdraft!` : '';
         if (classNorm.includes('sorcerer')) {
-          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect. No Weaving allowed. Requires 3 Long Rests to return to memory.`;
+          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect. No Weaving allowed. Requires 3 Long Rests to return to memory.`;
         } else {
-          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect normally.`;
+          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect normally.`;
         }
       } else if (resultClass === 'fumble') {
         // Fumble: class-specific consequences, no MP spent
@@ -9491,15 +9542,16 @@ const App = {
       // === NORMAL (MEMORIZED) CASTING RESULTS ===
       const newMP = parseInt(mpField?.value, 10) || 0;
       const expStr = (m.expCost || 0) > 0 ? ` ${m.expCost} EXP spent.` : '';
+      const fatigueNote = (m._overcastFatigue || 0) > 0 ? ` \u26A0 ${m._overcastFatigue} Fatigue level${m._overcastFatigue > 1 ? 's' : ''} gained from MP overdraft!` : '';
 
       if (resultClass === 'critical') {
-        details.textContent = `Critical! ${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect with exceptional potency.`;
+        details.textContent = `Critical! ${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect with exceptional potency.`;
       } else if (resultClass === 'success') {
-        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell takes effect normally.`;
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect normally.`;
       } else if (resultClass === 'fumble') {
-        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
       } else {
-        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP. The spell fizzles and fails.`;
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell fizzles and fails.`;
       }
 
       // Show force section on failure
@@ -12222,6 +12274,25 @@ const App = {
         }
       });
     });
+  },
+
+  /**
+   * Apply fatigue levels from overcasting (casting with insufficient MP).
+   * Each MP of deficit = 1 fatigue level gained.
+   * @param {number} deficit - Number of MP overdrawn beyond 0
+   */
+  _applyOvercastFatigue(deficit) {
+    if (deficit <= 0) return;
+    const fatigueOrder = ['fresh', 'winded', 'tired', 'wearied', 'exhausted', 'debilitated', 'incapacitated', 'semiconscious', 'coma'];
+    const currentState = this.character.fatigueState || 'fresh';
+    const currentIndex = fatigueOrder.indexOf(currentState);
+    const targetIndex = Math.min(currentIndex + deficit, fatigueOrder.length - 1);
+    const targetState = fatigueOrder[targetIndex];
+
+    if (targetIndex > currentIndex) {
+      console.log(`%c[OVERCAST FATIGUE] ${deficit} MP overdrawn: ${currentState} → ${targetState}`, 'color: #e8a0a0; font-weight: bold');
+      this.setFatigueState(targetState, true);
+    }
   },
 
   /**
