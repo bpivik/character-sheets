@@ -8178,7 +8178,14 @@ const App = {
     hasRolled: false,
     rollResult: null,
     matchingClasses: [],
-    selectedClassIndex: 0
+    selectedClassIndex: 0,
+    // Non-memorized casting
+    isNonMemorized: false,
+    nonMemDifficulty: '',      // 'hard', 'formidable', 'herculean'
+    nonMemPenalty: 0,          // -20, -40, -60
+    nonMemSkillName: '',       // Override skill name (e.g. 'Piety' for divine)
+    nonMemSkillId: '',         // Override skill ID
+    nonMemSkillPercent: 0      // Override skill value
   },
 
   /**
@@ -8208,6 +8215,10 @@ const App = {
       m.rollResult = null;
       m.intensity = 1;
       m.costStr = costStr;
+
+      // Check memorized state
+      const memCheck = document.getElementById(`${rankKey}-${slotIndex}-mem`);
+      m.isNonMemorized = memCheck ? !memCheck.checked : false;
 
       // Determine spell rank number
       m.spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
@@ -8374,6 +8385,52 @@ const App = {
     if (m.armorRestriction?.penalty) {
       m.effectiveSkill -= 20;
     }
+
+    // Non-memorized casting: override skill and apply difficulty
+    m.nonMemDifficulty = '';
+    m.nonMemPenalty = 0;
+    m.nonMemSkillName = '';
+    m.nonMemSkillId = '';
+    m.nonMemSkillPercent = 0;
+
+    if (m.isNonMemorized) {
+      const classNorm = sel.name.toLowerCase();
+      if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
+        // Mage: Hard Arcane Casting — cast directly from spellbook
+        m.nonMemDifficulty = 'Hard';
+        m.nonMemPenalty = -20;
+        m.nonMemSkillName = '';  // uses normal casting skill
+      } else if (classNorm.includes('bard')) {
+        // Bard: Hard Musicianship — perform directly from instrument
+        m.nonMemDifficulty = 'Hard';
+        m.nonMemPenalty = -20;
+        m.nonMemSkillName = '';  // uses normal casting skill (Musicianship)
+      } else if (classNorm.includes('sorcerer')) {
+        // Sorcerer: Formidable Arcane Casting — only for spells lost from Weaving
+        m.nonMemDifficulty = 'Formidable';
+        m.nonMemPenalty = -40;
+        m.nonMemSkillName = '';  // uses normal casting skill
+      } else {
+        // Divine (Cleric/Druid/Paladin/Ranger): Piety roll
+        // Formidable if known but not memorized (spell is on sheet)
+        // Herculean if not currently known (not on sheet — unlikely in this UI)
+        m.nonMemDifficulty = 'Formidable';
+        m.nonMemPenalty = -40;
+        // Override skill to Piety
+        m.nonMemSkillName = 'Piety';
+        m.nonMemSkillId = 'piety-percent';
+        const pietyEl = document.getElementById('piety-percent');
+        m.nonMemSkillPercent = parseInt(pietyEl?.value, 10) || 0;
+        // Use Piety instead of Channel for effective skill
+        m.effectiveSkill = m.nonMemSkillPercent;
+        // Re-apply cantrip bonus to piety if applicable
+        if (m.spellRank === 0) {
+          m.effectiveSkill += (m.casterRank * 20);
+        }
+      }
+      m.effectiveSkill += m.nonMemPenalty;
+    }
+
     m.effectiveSkill = Math.max(0, Math.min(m.effectiveSkill, 200));
   },
 
@@ -8390,6 +8447,30 @@ const App = {
     m.intensity = 1;
     this._applySelectedClass(m);
     this._populateCastModal(m, costStr || m.costStr || '');
+  },
+
+  /**
+   * Step casting time up one level for non-memorized casting
+   * Instant → 1 Round; Rounds → Minutes; Minutes → Hours
+   */
+  _stepCastingTime(timeStr) {
+    if (!timeStr) return '1 Round';
+    const lower = timeStr.toLowerCase().trim();
+    if (lower.includes('instant') || lower === '1 action' || lower === 'action') {
+      return '1 Round';
+    } else if (lower.includes('round')) {
+      // Extract number if present: "2 Rounds" → "2 Minutes"
+      const match = lower.match(/(\d+)/);
+      const n = match ? match[1] : '1';
+      return `${n} Minute${n !== '1' ? 's' : ''}`;
+    } else if (lower.includes('minute')) {
+      const match = lower.match(/(\d+)/);
+      const n = match ? match[1] : '1';
+      return `${n} Hour${n !== '1' ? 's' : ''}`;
+    } else if (lower.includes('hour')) {
+      return 'Too slow — memorize and cast normally';
+    }
+    return '1 Round';
   },
 
   /**
@@ -8497,6 +8578,36 @@ const App = {
       armorWarn.classList.add('hidden');
     }
 
+    // Non-memorized casting info
+    const nonmemSection = document.getElementById('cast-nonmem-section');
+    if (m.isNonMemorized) {
+      nonmemSection.classList.remove('hidden');
+      const skillLabel = m.nonMemSkillName || (L ? L.getCastingSkillName(m.classSource) : 'Casting');
+      document.getElementById('cast-nonmem-difficulty').textContent =
+        `${m.nonMemDifficulty} ${skillLabel} roll (${m.nonMemPenalty >= 0 ? '+' : ''}${m.nonMemPenalty}%)`;
+
+      // Casting time step increase
+      const baseTime = d?.castingTime || '1 Action';
+      const steppedTime = this._stepCastingTime(baseTime);
+      document.getElementById('cast-nonmem-time').textContent = `Casting Time: ${steppedTime}`;
+
+      // Class-specific rules summary
+      const classNorm = m.classSource.toLowerCase();
+      let rules = '';
+      if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
+        rules = 'Cast from spellbook · Crit: no MP cost · Failure: no MP spent · Fumble: spell lost from spellbook pages';
+      } else if (classNorm.includes('bard')) {
+        rules = 'Performed directly · Crit: no MP cost · Failure: no MP spent · Fumble: spell lost from known spells';
+      } else if (classNorm.includes('sorcerer')) {
+        rules = 'Lost from Weaving · Crit: no MP cost · Failure: no MP spent · Fumble: Arcane Casting reduced 1d4+1% · No Weaving allowed · 3 Long Rests to recover spell';
+      } else {
+        rules = 'Praying for spell · Crit: no MP cost · Failure: no MP spent · Fumble: Piety reduced 1d4+1%';
+      }
+      document.getElementById('cast-nonmem-rules').textContent = rules;
+    } else {
+      nonmemSection.classList.add('hidden');
+    }
+
     // Description
     if (d) {
       document.getElementById('cast-flavor-text').textContent = d.flavorText || '';
@@ -8512,14 +8623,22 @@ const App = {
     document.getElementById('cast-full-desc').classList.add('hidden');
     document.getElementById('cast-toggle-desc').textContent = 'Show Full Description \u25BC';
 
-    // Casting skill
-    const skillName = L ? L.getCastingSkillName(m.classSource) : 'Casting Skill';
-    document.getElementById('cast-skill-name').textContent = skillName;
+    // Casting skill — show override for non-memorized divine
+    let displaySkillName;
+    if (m.isNonMemorized && m.nonMemSkillName) {
+      displaySkillName = m.nonMemSkillName;
+    } else {
+      displaySkillName = L ? L.getCastingSkillName(m.classSource) : 'Casting Skill';
+    }
+    document.getElementById('cast-skill-name').textContent = displaySkillName;
     document.getElementById('cast-skill-percent').textContent = m.effectiveSkill + '%';
 
     // Difficulty note
     const diffNote = document.getElementById('cast-difficulty-note');
-    if (m.spellRank === 0 && m.casterRank >= 1) {
+    if (m.isNonMemorized) {
+      diffNote.textContent = `(${m.nonMemDifficulty})`;
+      diffNote.classList.add('penalty');
+    } else if (m.spellRank === 0 && m.casterRank >= 1) {
       const bonus = L ? L.getCantripDifficultyAdjustment(m.casterRank) : '';
       diffNote.textContent = `(${bonus})`;
       diffNote.classList.remove('penalty');
@@ -8543,6 +8662,19 @@ const App = {
       document.getElementById('cast-btn-text').textContent = 'Cannot Cast (Armor)';
     } else if (!canAfford) {
       document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
+    } else if (m.isNonMemorized) {
+      const classNorm = m.classSource.toLowerCase();
+      if (classNorm.includes('cleric') || classNorm.includes('druid') || classNorm.includes('paladin') || classNorm.includes('ranger')) {
+        document.getElementById('cast-btn-text').textContent = 'Pray for ' + (d?.name || m.spellName);
+      } else if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
+        document.getElementById('cast-btn-text').textContent = 'Cast from Spellbook';
+      } else if (classNorm.includes('bard')) {
+        document.getElementById('cast-btn-text').textContent = 'Perform ' + (d?.name || m.spellName);
+      } else if (classNorm.includes('sorcerer')) {
+        document.getElementById('cast-btn-text').textContent = 'Channel ' + (d?.name || m.spellName);
+      } else {
+        document.getElementById('cast-btn-text').textContent = 'Attempt ' + (d?.name || m.spellName);
+      }
     } else {
       document.getElementById('cast-btn-text').textContent = 'Cast ' + (d?.name || m.spellName);
     }
@@ -8613,7 +8745,13 @@ const App = {
     const mpAfter = currentMP - m.cost;
 
     document.getElementById('cast-mp-current').textContent = currentMP;
-    document.getElementById('cast-mp-after').textContent = mpAfter >= 0 ? mpAfter : mpAfter;
+
+    if (m.isNonMemorized) {
+      // Non-memorized: show conditional cost
+      document.getElementById('cast-mp-after').textContent = mpAfter >= 0 ? `${mpAfter} (if success)` : mpAfter;
+    } else {
+      document.getElementById('cast-mp-after').textContent = mpAfter >= 0 ? mpAfter : mpAfter;
+    }
 
     const mpAfterEl = document.getElementById('cast-mp-after');
     if (mpAfter < 0) {
@@ -8622,15 +8760,14 @@ const App = {
       mpAfterEl.classList.remove('insufficient');
     }
 
-    // Update cast button if needed
+    // Update cast button if needed (but don't override non-memorized button text)
     const castBtn = document.getElementById('cast-modal-cast-btn');
     if (castBtn && m.armorRestriction?.canCast !== false) {
       castBtn.disabled = mpAfter < 0;
       if (mpAfter < 0) {
         document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
-      } else {
-        document.getElementById('cast-btn-text').textContent = 'Cast ' + (d?.name || m.spellName);
       }
+      // Don't override button text here — _populateCastModal handles it
     }
   },
 
@@ -8720,15 +8857,19 @@ const App = {
     const m = this._castModal;
     if (m.hasRolled) return;
 
-    // Deduct MP
+    // Check MP availability
     const mpField = document.getElementById('magic-points-current');
     const currentMP = parseInt(mpField?.value, 10) || 0;
     if (currentMP < m.cost) return;
 
-    mpField.value = currentMP - m.cost;
-    this.character.derived = this.character.derived || {};
-    this.character.derived.magicPointsCurrent = mpField.value;
-    this.updateMagicMPDisplay();
+    // For NORMAL casting: deduct MP upfront (Mythras RAW)
+    // For NON-MEMORIZED: don't deduct yet (depends on result)
+    if (!m.isNonMemorized) {
+      mpField.value = currentMP - m.cost;
+      this.character.derived = this.character.derived || {};
+      this.character.derived.magicPointsCurrent = mpField.value;
+      this.updateMagicMPDisplay();
+    }
 
     // Hide casting controls, show result area
     document.getElementById('cast-modal-casting').style.display = 'none';
@@ -8812,31 +8953,101 @@ const App = {
     // Result details
     const details = document.getElementById('cast-result-details');
     const mpField = document.getElementById('magic-points-current');
-    const newMP = parseInt(mpField?.value, 10) || 0;
 
-    if (resultClass === 'critical') {
-      details.textContent = `Critical! ${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect with exceptional potency.`;
-    } else if (resultClass === 'success') {
-      details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect normally.`;
-    } else if (resultClass === 'fumble') {
-      details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
+    if (m.isNonMemorized) {
+      // === NON-MEMORIZED CASTING RESULTS ===
+      const currentMP = parseInt(mpField?.value, 10) || 0;
+      const classNorm = m.classSource.toLowerCase();
+
+      if (resultClass === 'critical') {
+        // Critical: spell succeeds, NO MP cost
+        details.textContent = `Critical! The spell takes effect with exceptional potency \u2014 no Magic Points expended.`;
+      } else if (resultClass === 'success') {
+        // Success: deduct MP now
+        mpField.value = currentMP - m.cost;
+        this.character.derived = this.character.derived || {};
+        this.character.derived.magicPointsCurrent = mpField.value;
+        this.updateMagicMPDisplay();
+        const newMP = parseInt(mpField.value, 10) || 0;
+        if (classNorm.includes('sorcerer')) {
+          details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect. No Weaving allowed. Requires 3 Long Rests to return to memory.`;
+        } else {
+          details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect normally.`;
+        }
+      } else if (resultClass === 'fumble') {
+        // Fumble: class-specific consequences, no MP spent
+        if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
+          details.textContent = `Fumble! No MP spent. The spell fades from the spellbook\u2019s pages and is permanently lost.`;
+        } else if (classNorm.includes('bard')) {
+          details.textContent = `Fumble! No MP spent. The spell fades from the bard\u2019s known spells and is lost.`;
+        } else if (classNorm.includes('sorcerer')) {
+          const skillLoss = Math.floor(Math.random() * 4) + 2; // 1d4+1
+          details.textContent = `Fumble! No MP spent. Arcane Casting skill reduced by ${skillLoss}%. Apply this penalty manually.`;
+        } else {
+          // Divine
+          const skillLoss = Math.floor(Math.random() * 4) + 2; // 1d4+1
+          details.textContent = `Fumble! No MP spent. The deity is displeased \u2014 Piety skill reduced by ${skillLoss}%. Apply this penalty manually.`;
+        }
+      } else {
+        // Failure: no MP spent — class-flavored messages
+        if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
+          details.textContent = `The words on the page blur and resist reading. No Magic Points are expended.`;
+        } else if (classNorm.includes('bard')) {
+          details.textContent = `The melody falls flat and the magic doesn\u2019t take hold. No Magic Points are expended.`;
+        } else if (classNorm.includes('sorcerer')) {
+          details.textContent = `The spell cannot be summoned from the sorcerer\u2019s mind. No Magic Points are expended.`;
+        } else {
+          details.textContent = `The spell is not granted. No Magic Points are expended.`;
+        }
+      }
+
+      // Non-memorized: NO force spell option
+      // But still allow Luck Point reroll on failure
+      if (resultClass === 'failure') {
+        const forceSection = document.getElementById('cast-force-section');
+        forceSection.classList.remove('hidden');
+        // Hide the Force Spell button — not available for non-memorized
+        document.getElementById('cast-force-btn').style.display = 'none';
+        const forceExplain = forceSection.querySelector('.cast-force-explain');
+        if (classNorm.includes('cleric') || classNorm.includes('druid') || classNorm.includes('paladin') || classNorm.includes('ranger')) {
+          forceExplain.textContent = 'Your prayer was not answered. You may spend a Luck Point to beseech again.';
+        } else {
+          forceExplain.textContent = 'The casting attempt failed. You may spend a Luck Point to try again.';
+        }
+        const luckEl = document.getElementById('luck-current');
+        const luckCount = parseInt(luckEl?.value, 10) || 0;
+        document.getElementById('cast-luck-count').textContent = luckCount;
+        document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
+      }
+
     } else {
-      details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fizzles and fails.`;
-    }
+      // === NORMAL (MEMORIZED) CASTING RESULTS ===
+      const newMP = parseInt(mpField?.value, 10) || 0;
 
-    // Show force section on failure (not fumble, not cantrip for memory expunge)
-    if (resultClass === 'failure') {
-      const forceSection = document.getElementById('cast-force-section');
-      forceSection.classList.remove('hidden');
+      if (resultClass === 'critical') {
+        details.textContent = `Critical! ${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect with exceptional potency.`;
+      } else if (resultClass === 'success') {
+        details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect normally.`;
+      } else if (resultClass === 'fumble') {
+        details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
+      } else {
+        details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fizzles and fails.`;
+      }
 
-      // Update luck points display
-      const luckEl = document.getElementById('luck-current');
-      const luckCount = parseInt(luckEl?.value, 10) || 0;
-      document.getElementById('cast-luck-count').textContent = luckCount;
-      document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
+      // Show force section on failure
+      if (resultClass === 'failure') {
+        const forceSection = document.getElementById('cast-force-section');
+        forceSection.classList.remove('hidden');
+        document.getElementById('cast-force-btn').style.display = '';  // Show Force button for normal casting
 
-      const forceExplain = document.getElementById('cast-force-section').querySelector('.cast-force-explain');
-      forceExplain.textContent = 'The spell fizzled. You may force it to succeed, but it will be expunged from memory and must be re-memorized.';
+        const luckEl = document.getElementById('luck-current');
+        const luckCount = parseInt(luckEl?.value, 10) || 0;
+        document.getElementById('cast-luck-count').textContent = luckCount;
+        document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
+
+        const forceExplain = forceSection.querySelector('.cast-force-explain');
+        forceExplain.textContent = 'The spell fizzled. You may force it to succeed, but it will be expunged from memory and must be re-memorized.';
+      }
     }
 
     // Play animation
@@ -8853,6 +9064,7 @@ const App = {
   _forceSpell() {
     const m = this._castModal;
     if (!m.rollResult || m.rollResult.resultClass !== 'failure') return;
+    if (m.isNonMemorized) return; // Force not available for non-memorized casting
 
     // Update result display
     const banner = document.getElementById('cast-result-banner');
