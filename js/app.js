@@ -8681,8 +8681,16 @@ const App = {
     // Cast button
     document.getElementById('cast-modal-cast-btn').onclick = () => this._executeCast();
 
-    // Done button
-    document.getElementById('cast-done-btn').onclick = () => this._closeCastModal();
+    // Done button — play fullscreen success animation then close
+    document.getElementById('cast-done-btn').onclick = () => {
+      const m = this._castModal;
+      const rc = m.rollResult?.resultClass;
+      if (rc === 'success' || rc === 'critical' || rc === 'forced') {
+        this._playFullscreenCastAnimation(m.castingType, rc, () => this._closeCastModal());
+      } else {
+        this._closeCastModal();
+      }
+    };
 
     // Force spell button
     document.getElementById('cast-force-btn').onclick = () => this._forceSpell();
@@ -8962,6 +8970,75 @@ const App = {
       dialog.classList.remove(animClass);
       overlay.className = 'cast-animation-overlay hidden';
     }, 2500);
+  },
+
+  /**
+   * Play a fullscreen success animation when Done is pressed (like Turn Undead)
+   * @param {string} castingType - divine, arcane, sorcery, bardic
+   * @param {string} resultClass - success, critical, forced
+   * @param {Function} callback - called after animation completes
+   */
+  _playFullscreenCastAnimation(castingType, resultClass, callback) {
+    const isCrit = (resultClass === 'critical');
+
+    // Build animation content per casting type
+    const configs = {
+      divine: {
+        icon: '✦',
+        particles: Array.from({length: 8}, (_, i) => `<div class="spell-particle sp-divine" style="--i:${i}"></div>`).join(''),
+        text: isCrit ? 'Divine Power Surges!' : 'The Gods Answer!',
+        cssClass: 'spell-anim-divine'
+      },
+      arcane: {
+        icon: '◆',
+        particles: Array.from({length: 12}, (_, i) => `<div class="spell-particle sp-arcane" style="--i:${i}"></div>`).join(''),
+        text: isCrit ? 'Arcane Mastery!' : 'Spell Woven!',
+        cssClass: 'spell-anim-arcane'
+      },
+      sorcery: {
+        icon: '🔥',
+        particles: Array.from({length: 10}, (_, i) => `<div class="spell-particle sp-sorcery" style="--i:${i}"></div>`).join(''),
+        text: isCrit ? 'Raw Power Unleashed!' : 'Sorcery Unleashed!',
+        cssClass: 'spell-anim-sorcery'
+      },
+      bardic: {
+        icon: '♪',
+        particles: Array.from({length: 8}, (_, i) => `<div class="spell-particle sp-bardic" style="--i:${i}"></div>`).join(''),
+        text: isCrit ? 'A Masterwork Performance!' : 'The Song Takes Hold!',
+        cssClass: 'spell-anim-bardic'
+      }
+    };
+
+    const cfg = configs[castingType] || configs.arcane;
+    const critClass = isCrit ? ' spell-anim-critical' : '';
+
+    const overlay = document.createElement('div');
+    overlay.className = `spell-success-overlay ${cfg.cssClass}${critClass}`;
+    overlay.innerHTML = `
+      <div class="spell-success-content">
+        <div class="spell-burst"></div>
+        <div class="spell-ring"></div>
+        <div class="spell-particles-container">${cfg.particles}</div>
+        <div class="spell-success-icon">${cfg.icon}</div>
+        <div class="spell-success-text">${cfg.text}</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Trigger entrance
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
+
+    // Fade out and remove
+    const duration = isCrit ? 1800 : 1400;
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => {
+        overlay.remove();
+        if (callback) callback();
+      }, 350);
+    }, duration);
   },
 
   /**
