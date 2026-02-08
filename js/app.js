@@ -1604,9 +1604,7 @@ const App = {
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
         this.collectFormData();
-        if (StorageManager.save(this.character)) {
-          alert('Character saved!');
-        } else {
+        if (!StorageManager.save(this.character)) {
           alert('Error saving character.');
         }
       });
@@ -2683,7 +2681,7 @@ const App = {
           // Add "(see below)" for container items if not already present
           const containerId = this.getContainerIdFromItemName(itemName);
           if (containerId && !itemName.toLowerCase().includes('see below')) {
-            itemName = itemName + ' (see below)';
+            itemName = itemName + ' (See Below)';
           }
           
           nameInput.value = itemName;
@@ -19752,7 +19750,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         let itemName = this.toTitleCase(nameInput.value.trim());
         const containerId = this.getContainerIdFromItemName(itemName);
         if (containerId && !itemName.toLowerCase().includes('see below')) {
-          itemName = itemName + ' (see below)';
+          itemName = itemName + ' (See Below)';
         }
         nameInput.value = itemName;
       }
