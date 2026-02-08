@@ -387,6 +387,36 @@ function composeDamage(baseDamage, weaponName = null) {
 }
 
 /**
+ * Extract baseDamage from a user-edited total damage string by stripping
+ * the current damage modifier suffix. This allows manual edits to the
+ * weapon's base damage (e.g., adding "+1" for a magic weapon) to survive
+ * save/load cycles.
+ * @param {string} displayValue - The full damage string the user typed (e.g., "2d8+1+1d2")
+ * @param {string} weaponName - Optional weapon name for WP mod check
+ * @returns {string} The base damage without the modifier suffix
+ */
+function extractBaseDamage(displayValue, weaponName) {
+  if (!displayValue) return '';
+  const val = displayValue.replace(/\s+/g, '');
+
+  // Determine which mod is currently appended
+  let mod = '';
+  if (weaponName && isWPEligibleWeapon(weaponName)) {
+    mod = getWPDamageMod() || getDamageMod();
+  } else {
+    mod = getDamageMod();
+  }
+
+  // If there's a mod and the value ends with it, strip it
+  if (mod && val.endsWith(mod)) {
+    return val.slice(0, val.length - mod.length);
+  }
+
+  // Otherwise the full value IS the baseDamage (user removed/changed the mod portion)
+  return val;
+}
+
+/**
  * Autofill melee weapon fields based on weapon name
  * @param {number} index - The weapon row index (0-5)
  * @param {string} weaponName - The name entered by user
@@ -876,6 +906,7 @@ window.WeaponData = {
   clearMeleeWeaponFields,
   clearRangedWeaponFields,
   composeDamage,
+  extractBaseDamage,
   getClassWeapons,
   combineClassWeapons,
   updateAllWeaponDamage,

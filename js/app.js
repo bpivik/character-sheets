@@ -3967,6 +3967,11 @@ const App = {
             if (!input.id.endsWith('-name')) {
               const nameInput = tr.querySelector(`#melee-${rowIndex}-name`);
               if (nameInput) nameInput.dataset.userModified = 'true';
+              // Update baseDamage when user edits the damage field
+              if (input.id.endsWith('-damage') && input.dataset.baseDamage !== undefined) {
+                const wName = nameInput ? nameInput.value : '';
+                input.dataset.baseDamage = window.WeaponData.extractBaseDamage(input.value, wName);
+              }
             }
             this.scheduleAutoSave();
           });
@@ -4020,6 +4025,11 @@ const App = {
             if (!input.id.endsWith('-name')) {
               const nameInput = tr.querySelector(`#ranged-${rowIndex}-name`);
               if (nameInput) nameInput.dataset.userModified = 'true';
+              // Update baseDamage when user edits the damage field
+              if (input.id.endsWith('-damage') && input.dataset.baseDamage !== undefined) {
+                const wName = nameInput ? nameInput.value : '';
+                input.dataset.baseDamage = window.WeaponData.extractBaseDamage(input.value, wName);
+              }
             }
             this.scheduleAutoSave();
           });
@@ -4067,6 +4077,11 @@ const App = {
         if (!input.id.endsWith('-name')) {
           const nameInput = tr.querySelector(`#melee-${rowIndex}-name`);
           if (nameInput) nameInput.dataset.userModified = 'true';
+          // Update baseDamage when user edits the damage field
+          if (input.id.endsWith('-damage') && input.dataset.baseDamage !== undefined) {
+            const wName = nameInput ? nameInput.value : '';
+            input.dataset.baseDamage = window.WeaponData.extractBaseDamage(input.value, wName);
+          }
         }
         this.scheduleAutoSave();
       });
@@ -4146,6 +4161,11 @@ const App = {
         if (!input.id.endsWith('-name')) {
           const nameInput = tr.querySelector(`#ranged-${rowIndex}-name`);
           if (nameInput) nameInput.dataset.userModified = 'true';
+          // Update baseDamage when user edits the damage field
+          if (input.id.endsWith('-damage') && input.dataset.baseDamage !== undefined) {
+            const wName = nameInput ? nameInput.value : '';
+            input.dataset.baseDamage = window.WeaponData.extractBaseDamage(input.value, wName);
+          }
         }
         this.scheduleAutoSave();
       });
