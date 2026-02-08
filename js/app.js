@@ -6217,7 +6217,7 @@ const App = {
     // Magic Skills
     if (this.character.magic) {
       const magicFields = {
-        'deity': 'deity',
+        'deity-name': 'deity',
         'channel-percent': 'channelPercent',
         'piety-percent': 'pietyPercent',
         'arcane-casting-percent': 'arcaneCastingPercent',
@@ -6516,7 +6516,7 @@ const App = {
     
     // Magic Skills
     const magicFields = {
-      'deity': 'deity',
+      'deity-name': 'deity',
       'channel-percent': 'channelPercent',
       'piety-percent': 'pietyPercent',
       'arcane-casting-percent': 'arcaneCastingPercent',

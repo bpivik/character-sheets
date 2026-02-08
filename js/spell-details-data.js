@@ -2617,6 +2617,31 @@ const SpellDetails = {
     description: "Move along vertical surfaces and ceilings at 10' Movement Rate, even upside down. All hand/footwear must be removed. Objects with negligible ENC stick to hands, preventing handling and typically blocking spellcasting. To remove the subject from a surface or pull an object free requires Formidable Brawn."
   },
 
+  "unlock (lock)": {
+    name: "Unlock (Lock)",
+    school: "Alteration",
+    classes: [
+      { class: "Bard", rank: 1 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: 'perIntensity' },
+    costDisplay: "1/Intensity",
+    area: "1 Object",
+    castingTime: "1 Action",
+    duration: "Instant",
+    range: "Touch",
+    resist: "None",
+    intensityScaling: null,
+    flavorText: "You press your palm against the lock and speak a word of opening. Tumblers click, bars slide, and the way is clear.",
+    description: "Magically opens a single locked door, chest, gate, shackle, or similar mechanism without the key, even if it has been secured by the Lock spell or a mundane lock. The caster must touch the object to be unlocked. The Intensity of the Unlock must equal or exceed the Intensity of any Lock spell upon it. Mundane locks are automatically opened. Magical locks (such as Mage Lock or Secure Portal) are suppressed for 1 Round, allowing the door to be opened during that time.",
+    reverse: {
+      name: "Lock",
+      flavorText: "You trace a sigil over the mechanism, and it seals shut with a resonant click — no key can turn it, no hand can pry it open.",
+      description: "When reversed, Lock magically secures a single door, chest, gate, or similar mechanism. The locked object can only be opened by the caster, by a successful Unlock spell of equal or greater Intensity, or by Dispel Magic. The lock persists until dispelled or opened by the caster. Physical force can break through, but the mechanism itself cannot be picked or forced by mundane means."
+    }
+  },
+
   "unseen servant": {
     name: "Unseen Servant",
     school: "Conjuration",
@@ -2710,7 +2735,12 @@ const SpellDetails = {
   "endure heat": { name: "Endure Heat", aliasOf: "endure heat/cold", version: "primary" },
   "endure cold": { name: "Endure Cold", aliasOf: "endure heat/cold", version: "primary" },
   "leonard's trap": { name: "Leonard's Trap", aliasOf: "leonard's false trap", version: "primary" },
-  "false trap": { name: "False Trap", aliasOf: "leonard's false trap", version: "primary" }
+  "false trap": { name: "False Trap", aliasOf: "leonard's false trap", version: "primary" },
+
+  // Unlock (Lock) aliases
+  "unlock": { name: "Unlock", aliasOf: "unlock (lock)", version: "primary" },
+  "lock": { name: "Lock", aliasOf: "unlock (lock)", version: "reverse" },
+  "lock (unlock)": { name: "Lock (Unlock)", aliasOf: "unlock (lock)", version: "reverse" }
 
 };
 

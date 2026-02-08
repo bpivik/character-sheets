@@ -19,7 +19,7 @@ const ClassSpellLists = {
       "Illusion, Lesser", "Know Languages (Confuse Languages)",
       "Light (Darkness)", "Mage Lock", "Magic Aura", "Magic Mouth",
       "Monster Summoning, Lesser", "Read Magic", "Snake Charm",
-      "Sleep", "Lock (Unlock)", "Ventriloquism"
+      "Sleep", "Unlock (Lock)", "Ventriloquism"
     ],
     rank2: [
       "Blink", "Charm Monster", "Clairaudience (Clairvoyance)",
