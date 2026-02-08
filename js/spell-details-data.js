@@ -2686,6 +2686,9 @@ const SpellDetails = {
     description: "Make the caster\u2019s voice (or any producible sound) seem to come from another location \u2014 behind a door, down a hallway, inside a chest, or from another creature. A Formidable Perception test is required to identify the caster as the true source."
   },
 
+
+
+
   // =========================================================================
   //  RANK 1 REVERSE / ALIAS ENTRIES
   // =========================================================================
@@ -2740,7 +2743,1651 @@ const SpellDetails = {
   // Unlock (Lock) aliases
   "unlock": { name: "Unlock", aliasOf: "unlock (lock)", version: "primary" },
   "lock": { name: "Lock", aliasOf: "unlock (lock)", version: "reverse" },
-  "lock (unlock)": { name: "Lock (Unlock)", aliasOf: "unlock (lock)", version: "reverse" }
+  "lock (unlock)": { name: "Lock (Unlock)", aliasOf: "unlock (lock)", version: "reverse" },
+
+  // =========================================================================
+  //  RANK 2 SPELL ENTRIES
+  // =========================================================================
+
+  "aid": {
+    name: "Aid",
+    school: "Necromancy, Conjuration",
+    classes: [
+      { class: "Cleric", rank: 2 }
+    ],
+    sphere: "Healing",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "4 Rounds, +2 Rounds/additional Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You speak a holy word of encouragement, and warm energy flows into your ally -- bolstering their strength and resolve.",
+    description: "When cast, the subject gains a +5% bonus to all skill rolls. This stacks with the +5% bonus from Bless (see page XX). Each Hit Location also gains 2 temporary Hit Points, which may exceed the character\u2019s normal maximum. These bonus Hit Points are lost first when taking damage and cannot be healed by any means. Any remaining at the end of the Duration disappear."
+  },
+
+  "alter self": {
+    name: "Alter Self",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "Caster",
+    castingTime: "1 Round",
+    duration: "3d4 Minutes/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your features ripple and reshape, becoming an entirely new form. Height, build, and even voice shift to match your will.",
+    description: "When cast, the mage alters their form to that of any humanoid-shaped biped. They may increase or reduce their SIZ by up to 50%, choosing to appear fat, thin, tall, short, or to change biological sex. Hair, clothing, equipment, and facial features can all be changed -- including perfect mimicry of an existing person -- though the caster\u2019s scent remains unchanged. Only one form may be assumed per casting. Forms with gills allow the caster to breathe underwater for the Duration. Winged forms allow flight at half the speed of the actual creature; if the caster lacks the Fly skill, they gain it at Base Level (STR+DEX). Alter Self does not grant supernatural abilities. The caster may end the spell at will and reverts to their normal form upon death."
+  },
+
+  "augury": {
+    name: "Augury",
+    school: "Divination",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Divination",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "Caster",
+    castingTime: "2 Minutes",
+    duration: "Instant",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Casting bones or tokens, you peer through the veil of fate. A vague omen of success, danger, or both floods your mind.",
+    description: "This spell allows the caster to determine whether a specific action, to be taken within the next 30 minutes, will benefit or harm an individual or group. A focal object is required to read the omens -- typically the claws or small bones of a dragon, or a pearl or pure gold worth at least 100 GP, which must be crushed or melted. The Channel skill roll is Hard and may be increased by +5% per additional Intensity, up to a maximum of 95%. Magic Points spent to boost the chance are lost regardless of the roll\u2019s outcome. This roll should be made secretly by the Games Master, as the caster should never be entirely certain whether the results were interpreted correctly. If Successful, the spell provides one of four outcomes:"
+  },
+
+  "blink": {
+    name: "Blink",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "Caster",
+    castingTime: "1 Action",
+    duration: "1 Round/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You vanish in the space of a blink, stepping between planes. A heartbeat later, you reappear nearby -- unpredictable and elusive.",
+    description: "When cast, this spell causes the mage to randomly teleport -- or \"blink\" -- between locations, making them difficult to target. Each point of Intensity grants a cumulative 20% chance (to a maximum of 80%) that the spell will trigger just as an attack is about to hit, teleporting the caster to a random location 10 feet away. Roll 1d8 for direction on a square grid, or 1d12 using clock-face orientation. The caster may choose their Facing after blinking. If the triggering attack is an area-effect (e.g., a breath weapon or Fireball), and the caster doesn\u2019t blink fully out of range, they take only half damage. The caster cannot blink into solid objects. If they arrive in a space occupied by a movable object of equal or lesser SIZ, it\u2019s shoved aside. If the object is immovable or too large, the caster blinks to a different random location. If no safe location is available, the caster becomes trapped on the Ethereal Plane. Blinking is disorienting. After each blink, the caster must make a Willpower roll. On Success, they regain their bearings and may defend normally. On Failure, they are confused for 1 Turn and cannot act, though they may still defend themselves. The caster may also attempt to blink deliberately through objects, such as doors or people. This requires the same blink chance roll. On Success, the caster teleports up to 10 feet in the chosen direction. On Failure, the blink still occurs, but the direction and Facing must be determined randomly as above."
+  },
+
+  "breathe water": {
+    name: "Breathe Water (Breathe Air)",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Mage", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Elemental Water; Elemental Air",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 or more Targets",
+    castingTime: "2 Actions",
+    duration: "1 Hour/Intensity, +1d4 Hours",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Gills shimmer into being as you inhale deeply. Water fills your lungs, but you feel no fear -- only breath.",
+    description: "This spell allows the caster -- or any touched recipients -- to breathe water for the Duration. Multiple subjects may be affected during casting, but the Duration is divided evenly among them. The exact Duration should be rolled secretly by the Games Master, keeping its length unknown to those affected.",
+    reverse: {
+      name: "Breathe Air",
+      flavorText: "You exhale the magic into your lungs, letting you breathe freely where no air should exist.",
+      description: "The reverse, Breathe Air, enables a creature that cannot normally breathe oxygen to do so. In either case, the subject retains the ability to breathe their natural element. The Divine version has a Casting Time of 1 Round and a Duration of 1 hour per point of Intensity."
+    }
+  },
+
+  "call lightning": {
+    name: "Call Lightning",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 2 }
+    ],
+    sphere: "Weather",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 Radius",
+    castingTime: "1 Round",
+    duration: "1 Round/Intensity",
+    range: "1,000\u2019",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "You raise your hands skyward as storm clouds gather. Bolts crash down with thunderous wrath at your command.",
+    description: "This spell requires appropriate weather conditions in the area -- such as rain, strong winds, heat with overcast skies, or a storm. Weather effects produced by creatures (e.g., air elementals) may also serve as a valid source. See the *Games Master\u2019s Guide*, page XX for more information on Weather. Once cast, the druid may summon one lightning bolt per Round for the Duration. No additional Action Points are required, but the caster must remain stationary and take no other Actions except defensive ones on any Turn in which a bolt is summoned. The caster may choose to skip Rounds to perform other Actions, including casting other spells, though this does not extend the spell\u2019s Duration. Each bolt strikes a target within 1,000 feet, affecting a 10-foot radius and dealing damage to 1d3 Hit Locations as shown on the Spell Damage Table (see page XX). Natural and worn armor provide no protection; only magical armor applies, equal to its Magic Bonus. A successful Resistance roll halves the damage. Lightning may ignite flammable materials (see Fires in the *Games Master\u2019s Guide,* page XX) and can shatter or destroy inanimate objects through force. Call Lightning cannot be cast indoors, underground, or underwater."
+  },
+
+  "chant": {
+    name: "Chant",
+    school: "Conjuration",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Combat",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "30\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "4 Rounds/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "A rhythmic, droning hymn fills the air. Your voice empowers allies and weakens the will of nearby foes.",
+    description: "When casting is complete, all allies within 30 feet gain +5% to all skill rolls and +1 to damage per point of Intensity. Enemies in the same area suffer the inverse: --5% to skill rolls and --1 to damage per Intensity. The caster must maintain the Chant for the entire Duration; otherwise, the effects end immediately. Because the chanting is non-magical, Dispel Magic has no effect, but Silence nullifies all benefits. Chant stacks with both Bless and Curse, but the caster cannot cast other spells while maintaining it."
+  },
+
+  "charm being or mammal": {
+    name: "Charm Being or Mammal",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Druid", rank: 2 }
+    ],
+    sphere: "Animal",
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "1 Week/Intensity",
+    range: "250\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You lock eyes with your target and murmur enchantment. Their stance softens -- they see you as a trusted companion.",
+    description: "Except as noted below, this spell is identical to the Rank 1 Arcane spell Charm Being (see page XX). In addition to sapient humanoids, it also affects natural mammalian animals. Large animals (SIZ 21-40) resist with an Easy roll, while Huge animals (SIZ 41+) use a Very Easy roll. Elves and half-elves are naturally resistant to charm effects."
+  },
+
+  "clairaudience/clairvoyance": {
+    name: "Clairaudience/Clairvoyance",
+    school: "Divination",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 0, type: "special" },
+    costDisplay: "See Below",
+    area: "See Below",
+    castingTime: "1 Round",
+    duration: "1 Minute/Intensity",
+    range: "See Below",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your senses reach beyond the physical, letting you see or hear across distance as if you stood there yourself.",
+    description: "When cast, the mage chooses either Clairaudience or Clairvoyance for 1 Magic Point per Intensity. Both effects may be used simultaneously for 3 Magic Points, +1 per additional Intensity. - **Clairaudience**: This effect allows the caster, while concentrating, to hear sounds within a 60-foot radius of a fixed location as if standing there. The point must be on the same plane of existence and personally known to the caster -- either a distant location or an obvious spot within the caster\u2019s line of sight (e.g., beyond a door, inside a nearby building, or atop a distant tower). The area is immobile. The spell requires a small horn worth at least 100 GP, which is consumed on a successful casting. - **Clairvoyance**: This effect lets the caster see, using normal vision, from a fixed location as if physically present. The chosen point must be on the same plane and either personally known or clearly visible. Magical sight such as Darkvision does not apply -- darkness limits visibility. In total darkness, the caster sees dimly within 10 feet; magical darkness blocks vision entirely. The spell requires a cat\u2019s eye gem worth at least 100 GP, which is consumed on a successful casting. In either case, Dispel Magic can end the effect early, and even a thin sheet of lead blocks the spell completely."
+  },
+
+  "commune with nature": {
+    name: "Commune with Nature",
+    school: "Divination",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Animal, Divination, Plant",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1, expCost: 1 },
+    costDisplay: "3, +1/additional Intensity, +1 EXP",
+    area: "See Below",
+    castingTime: "10 Minutes",
+    duration: "See Below",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You touch the earth or close your eyes to the wind. Nature answers in feelings, whispers, and signs that surround you.",
+    description: "This spell allows the caster to merge their spirit with the natural world, gaining insight into the surrounding area. For outdoor environments, the caster learns one piece of information per point of Intensity within a radius of 1 mile per Intensity. For example, at Intensity 4, the caster gains four pieces of information about an area within a 4-mile radius. The knowledge gained must relate to the natural world -- such as sources of water, vegetation, caves, minerals, animals, people, ruins, monsters, or dragons. In natural subterranean areas, the range is reduced to 30 feet per Intensity. The spell has no effect in constructed areas like buildings, dungeons, or tombs. Each additional use within the same 30-day period increases the Difficulty Grade by one step (e.g., second use is Formidable, third is Herculean). This applies whether previous uses were Successful or not. A Difficulty of Hopeless prevents further casting until a full 30 days have passed, as each attempt resets the count. 1 3 One piece of info about a 1 mile Radius, or 30\u2019 Radius in natural subterranean areas 2 4 Two pieces of info about a 2 mile Radius, or 60\u2019 Radius in natural subterranean areas 3 5 Three pieces of info about a 3 mile Radius, or 90\u2019 Radius in natural subterranean areas 4 6 Four pieces of info about a 4 mile Radius, or 120\u2019 Radius in natural subterranean areas 5 7 Five pieces of info about a 5 mile Radius, or 150\u2019 Radius in natural subterranean areas"
+  },
+
+  "continual light": {
+    name: "Continual Light (Continual Darkness)",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: "Sun",
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "60\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "Semi-Permanent (See Below)",
+    range: "180\u2019",
+    resist: "See below",
+    intensityScaling: null,
+    flavorText: "You call forth lasting radiance that clings to an object -- banishing shadow for days with a steady, unwavering glow.",
+    description: "This spell creates a globe of light equal in brightness to full daylight at a chosen point -- either on an object or in midair. The light is semi-permanent but may be dismissed at will by the caster. It is temporarily negated in areas of magical darkness, and permanently ended by Dispel Magic or Darkness cast at a higher Intensity than the spell\u2019s Magnitude. Creatures sensitive to daylight suffer normal penalties within the Area of Effect. If cast on a creature, a Willpower roll allows the target to shift the effect to the area behind them. If centered on the eyes, a Failed roll causes partial blindness, increasing the Difficulty Grade of all sight-based skill and Resistance Rolls by one. This condition can be removed only by Cure Blindness and Deafness or Dispel Magic at a higher Intensity than the Continual Light spell. The light is immobile unless cast on a movable object.",
+    reverse: {
+      name: "Continual Darkness",
+      flavorText: "A bubble of magical blackness forms, cloaking the area in shadow no torch or daylight can pierce.",
+      description: "The cleric version is reversible as Continual Darkness, which creates an inky blackness that negates Continual Light and otherwise functions as the Darkness spell, except for its longer Duration."
+    }
+  },
+
+  "create food and water": {
+    name: "Create Food and Water",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 }
+    ],
+    sphere: "Creation",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "1 Minute",
+    duration: "See Below",
+    range: "30\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You lift your hands in prayer or purpose, and a humble meal with clean water appears -- nourishment shaped by will.",
+    description: "This spell creates enough food to feed three creatures of SIZ 20 or less, or one creature of SIZ 21-40, for one full day per point of Intensity. Creatures larger than SIZ 40 require 1 Intensity per meal. The food appears from thin air, resembles normal food, and can be of any type the caster chooses. While bland, it provides full nourishment. Once created, it lasts for 24 hours, regardless of storage. After spoiling, it may be made edible again for another 24 hours with Purify Food and Water. The spell also produces a sufficient amount of clean drinking water, functioning as the Rank 1 spell Create Water (see page XX)."
+  },
+
+  "cure blindness or deafness": {
+    name: "Cure Blindness or Deafness (Cause Blindness of Deafness)",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 }
+    ],
+    sphere: "Healing/Necromantic",
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "1 Target",
+    castingTime: "1 Round",
+    duration: "Permanent",
+    range: "Touch",
+    resist: "N/A (Willpower)",
+    intensityScaling: null,
+    flavorText: "With a gentle holy word and touch, you lift the veil from eyes or unstop muffled ears -- restoring lost senses.",
+    description: "When cast, this spell restores sight or hearing to a subject suffering from blindness or deafness caused by a magical effect or similar non-physical malady. It does not cure sensory loss caused by disease or physical injury -- such cases require the Rank 4 Divine spell Heal (see page XX).",
+    reverse: {
+      name: "Cause Blindness of Deafness",
+      flavorText: "You whisper a curse and make a sharp gesture. Sight or hearing vanishes as your target reels in sudden darkness or silence.",
+      description: "The spell may be reversed to inflict either blindness or deafness on a touched target. A Successful Resistance roll negates the effect. On a Failed roll, the target is affected by the chosen condition. **Blindness**: The subject cannot make sight-based Perception rolls and suffers a three-Difficulty Grade penalty on all skills requiring vision. They cannot defend against attacks they cannot hear, and those they can hear are defended against with the same penalty. **Deafness**: The subject cannot make hearing-based Perception rolls and takes a one Difficulty Grade penalty to spellcasting due to being unable to hear the verbal components. They cannot defend against unseen or out-of-view attacks. Suffering from either condition reduces Initiative by 2; suffering from both reduces it by 5."
+    }
+  },
+
+  "cure disease": {
+    name: "Cure Disease (Cause Disease)",
+    school: "Necromancy",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Healing/Necromantic",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Target",
+    castingTime: "1 Round",
+    duration: "Permanent",
+    range: "Touch",
+    resist: "N/A (Endurance)",
+    intensityScaling: null,
+    flavorText: "Your touch pulses with warmth, driving out infection and decay -- restoring balance before sickness can return.",
+    description: "This spell cures any mundane or magical disease with a Potency less than the caster\u2019s Intensity x20. Once cured, the target begins recovery as described in the disease\u2019s write-up. Afflictions caused by parasitic creatures (e.g., green slime, rot grubs, or lycanthropy) may also be cured. In the case of lycanthropy, Cure Disease must be cast within 72 hours and at Intensity 12 or higher. All other parasitic conditions require Intensity 3 or more. The spell does not grant immunity to future infection.",
+    reverse: {
+      name: "Cause Disease",
+      flavorText: "You speak an infectious curse. Your target pales as fever blooms and illness burrows deep into their flesh.",
+      description: "The reverse, Cause Disease, inflicts a magical illness. If the target Fails their Resistance Roll, the caster may select any known disease with a Potency equal to or less than the spell\u2019s Intensity x20. Once inflicted, the disease follows normal rules for Resistance, Onset Time, and Duration. The only cure is magical (casting Cure Disease), as the Healing skill has no effect on magically inflicted diseases."
+    }
+  },
+
+  "cure serious wounds": {
+    name: "Cure Serious Wounds (Cause Serious Wounds)",
+    school: "Necromancy",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Healing/Necromantic",
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "1 Target",
+    castingTime: "1 Round",
+    duration: "Permanent",
+    range: "Touch",
+    resist: "N/A (Endurance)",
+    intensityScaling: null,
+    flavorText: "You channel potent healing energy. Deep cuts knit closed, bruises fade, and strength floods aching limbs.",
+    description: "This spell functions like the Rank 1 Divine spell Cure Minor Wounds (see page XX), with the following differences: Cure Serious Wounds fully heals one Hit Location, provided the injury is no worse than a Serious Wound. It cannot heal Major Wounds, but it does stabilize them and prevent death. While it can be used on Minor Wounds, it is less efficient unless the caster is at least Rank 3.",
+    reverse: {
+      name: "Cause Serious Wounds",
+      flavorText: "With grim focus, your magic tears through flesh -- leaving blood, bruises, and pain where healing could have been.",
+      description: "When reversed, Cause Serious Wounds reduces a single Hit Location to 0 Hit Points, plus 1d3+1 additional damage. This damage cannot cause a Major Wound -- any excess is lost -- and armor offers no protection. Large creatures (SIZ 21-40) resist more easily, rolling at Easy Difficulty. Huge creatures (SIZ 41+) roll at Very Easy."
+    }
+  },
+
+  "darkness": {
+    name: "Darkness",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "10\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "10 Minutes/ Intensity",
+    range: "30\u2019/Intensity",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You summon a smothering shroud that chokes the light. Vision fails, and even fire flickers out in the gloom.",
+    description: "This spell creates an area of total magical darkness in a 10-foot radius, blocking all normal vision and racial sight abilities such as Darkvision. All mundane light sources -- sunlight, torches, candles -- are nullified. Darkness may be countered by the spell Light, and vice versa. However, other magical light sources, including Faerie Lights, Faerie Fire, and the glow from detection spells, are also suppressed. If either Light or Darkness is already active, the other has no effect until the original spell ends."
+  },
+
+  "darkvision": {
+    name: "Darkvision",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Target",
+    castingTime: "1 Minute",
+    duration: "2 Hours/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your eyes shimmer after the last magic word, letting you see through darkness as clearly as daylight.",
+    description: "This spell grants the recipient Darkvision out to 60 feet as per the Class Ability (see page XX of the *Player\u2019s Handbook*). They can see in dim light as if it were bright light, using Standard Perception rolls. In complete darkness, they see as if in dim light, but Perception rolls are Hard. In darkness, only shades of gray are visible. Darkvision does not function in magical darkness."
+  },
+
+  "detect evil (arcane)": {
+    name: "Detect Evil (Detect Good) (Arcane)",
+    school: "Divination",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "10\u2019 x 180\u2019 Path",
+    castingTime: "1 Action",
+    duration: "5 Minutes/ Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your senses tingle with divine judgment -- malice and corruption glow like hot coals in your mind\u2019s eye.",
+    description: "When cast, this spell allows the mage to detect emanations of Evil within a 10-foot-wide path extending to the spell\u2019s full range. It reveals the presence of creatures with the Evil Alignment but does not detect traps, poison, cursed items, or similar threats. Emanations can be sensed through up to 3 feet of wood, 1 foot of stone or dirt, or 1 inch of solid metal. Because magical auras take time to register, only one 60\u00B0 arc may be scanned per minute.",
+    reverse: {
+      name: "Detect Good",
+      flavorText: "You feel warmth and intent -- selfless acts, good beings, and divine blessings shine gently before your inner vision.",
+      description: "The reverse, Detect Good, functions identically, revealing creatures with the Good Alignment. *Note that this spell differs from the Rank 1 Divine spell. See page XX*"
+    }
+  },
+
+  "detect invisibility": {
+    name: "Detect Invisibility",
+    school: "Divination",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "Field of Vision",
+    castingTime: "1 Action",
+    duration: "5 Minutes/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "The veil lifts as you speak the words. Invisible creatures and objects shimmer faintly, outlined by magic in your sight.",
+    description: "When cast, this spell allows the mage to see invisible objects or beings, including those that are hidden, ethereal, astral, or out of phase. It also reveals targets concealed by mundane means. Unlike most Detect spells, Detect Invisibility is limited to the caster\u2019s line of sight, but it does not require a minute to scan an arc of vision."
+  },
+
+  "dispel magic": {
+    name: "Dispel Magic",
+    school: "Abjuration",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 3 },
+      { class: "Mage", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "15\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "Instant",
+    range: "360\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You release a ripple of pure arcane force, unraveling spells and magical effects in its path.",
+    description: "This spell may target a specific object, creature, or area. When cast, all magic within a 15-foot radius of the target point is subject to dismissal. Dispel Magic removes all magical effects in the area with a Magnitude less than the spell\u2019s Intensity. Magic items and effects like Charm Being must be targeted individually. A spell\u2019s effects cannot be partially removed. The spell begins with the most powerful effect in the area -- if it fails to dispel it due to insufficient Intensity, no further spells are affected. Dispel Magic may also be used defensively as a Counter Spell to neutralize incoming offensive spells. The Divine version has a range of 180 feet but functions identically in all other respects. Sphere: Protection"
+  },
+
+  "enfeeblement": {
+    name: "Enfeeblement",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "1 Round/Intensity",
+    range: "30\u2019/Intensity",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You gesture sharply, and your target staggers. Their strength drains as their muscles forget how to act.",
+    description: "This magical ray weakens a single target that Fails a Resistance Roll, imposing a two Difficulty Grade penalty to all skill rolls and to their Damage Modifier. Creatures of SIZ 20 or larger suffer only half the penalty. The ray must remain focused on the same target for the effect to persist. If the Duration ends or the ray shifts to a new target, the original victim immediately regains full strength. The mage must Concentrate to maintain the ray; taking any other Action disrupts the effect and requires another Cast Action to reacquire the target."
+  },
+
+  "feign death": {
+    name: "Feign Death",
+    school: "Necromancy",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "1 Action",
+    duration: "30 Minutes/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You drop into perfect stillness -- no breath, no pulse -- undetectable to both sight and spell.",
+    description: "This spell places a willing creature (including the caster) into a death-like state indistinguishable from actual death. While under its effects, the subject remains fully aware of their surroundings through hearing, smell, and sight (if their eyes are open), but they feel no pain, regardless of injury or mistreatment. All damage suffered is real and can still result in death. While the spell is active, the subject is immune to paralysis, poisoning, and Energy Drain. However, any poison introduced during this time takes effect once the spell ends, at which point the subject may make a normal Resistance Roll. Only willing targets may be affected. The caster may end the spell at will, but the subject requires 1 minute to fully recover. The Divine version of this spell has a Duration of 10 minutes per point of Intensity. Sphere: Necromancy"
+  },
+
+  "fire trap": {
+    name: "Fire Trap",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Mage", rank: 3 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Object",
+    castingTime: "10 Minutes",
+    duration: "Permanent until Discharged",
+    range: "Touch",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "You trace a rune on an object\u2019s surface. When opened, a blast of fire lashes out, searing the unwary.",
+    description: "This spell may be cast on any item that can be opened and closed -- such as a book, chest, bottle, or box. It cannot be combined with other locking spells like Secure Portal or Mage Lock. An Unlock spell cast on a Fire Trap-protected item has a 50% chance of negating the trap. Touching the enchanted item triggers a fiery explosion in a 5-foot radius. All creatures in the area take 1d4 damage, plus 1 per level of Intensity, to each Hit Location. Armor Points count as half normal, while magic armor applies its full Magic Bonus. A successful Resistance roll halves the damage. Fire Trap may ignite flammable materials. See \"Fires\" in the *Games Master\u2019s Guide* for more information."
+  },
+
+  "fireball": {
+    name: "Fireball",
+    school: "Evocation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "20\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "Instant",
+    range: "30\u2019/Intensity",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "A blazing ball of flame streaks from your hand and explodes, engulfing your foes in roaring flame and concussive heat.",
+    description: "On the first Turn of casting, the mage begins the incantation and gestures, forming a small cinder of flame in their hand. By the second Turn, the incantation is complete, and the mage hurls the growing fireball, which explodes with a low roar into a massive blast of flame. All creatures in the Area of Effect take damage based on the Spell Damage Table, applied to each Hit Location. Worn armor provides only half its normal Armor Points, though magical armor applies its full Magic Bonus. A successful Resistance roll halves the total damage taken. Fireball may ignite flammable materials. See \"Fires\" in the *Games Master\u2019s Guide*, page XX, for more details."
+  },
+
+  "flame arrow": {
+    name: "Flame Arrow",
+    school: "Conjuration",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "1 Minute",
+    range: "50\u2019/Intensity",
+    resist: "Evade or Shield Parry",
+    intensityScaling: null,
+    flavorText: "You whisper to the missile, and it blazes to life -- trailing fire as it streaks toward its target.",
+    description: "This spell may be used in two ways: **Primary Use -- Flame Bolt**s: The mage creates one bolt of searing flame per Rank (minimum of two). All targets must be within the caster\u2019s field of view and no more than 60 feet apart. Bolts may be hurled immediately as part of the casting roll, or held and thrown later. Throwing held bolts requires a single Action and a separate Combat Skill or Athletics roll (whichever is higher). Any unthrown bolts vanish after 1 minute. Each bolt deals 2d6 fire damage to a single Hit Location. Worn armor offers only half protection; natural armor and magical Armor Points apply in full. A Successful Evade or Shield Parry negates the damage. **Secondary Use -- Igniting Ammunition**: The caster may ignite mundane arrows or bolts, up to 10 per Rank. These remain lit for the spell\u2019s 1-minute Duration and must be nocked and fired during that time -- otherwise, they are consumed. Flaming arrows and bolts deal normal damage, plus 1 point of fire damage. With either version, Flame Arrow has a 5% chance per point of damage dealt to ignite flammable materials. See Fires on page XX of the *Games Master\u2019s Guide*."
+  },
+
+  "flame strike": {
+    name: "Flame Strike",
+    school: "Evocation",
+    classes: [
+      { class: "Cleric", rank: 2 }
+    ],
+    sphere: "Combat, Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "5\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "Instantaneous",
+    range: "100\u2019, +20\u2019/additional Intensity",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "You call down a pillar of holy fire, burning your foes from above with searing wrath.",
+    description: "Upon successful casting, a 30-foot column of flame descends from above, striking a designated area. The column deals 1d8 damage per 2 points of Intensity (round up) to all creatures within the Area of Effect. Roll once for damage and apply it to each of the target\u2019s Hit Locations. Worn armor provides only half protection; magical Armor Points and natural armor reduce damage normally. A Successful Evade roll -- requiring the target to roll or throw themselves clear and end prone -- negates all damage. Characters with the Artful Dodger ability may Evade without falling prone. Flame Strike has a 5% chance per point of damage rolled to ignite flammable materials. See Fires in Chapter XX of the *Games Master\u2019s Guide* for more details."
+  },
+
+  "flame walk": {
+    name: "Flame Walk",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 or more Targets",
+    castingTime: "2 Actions",
+    duration: "1 Minute/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Flames bend away from your steps. You move through fire or across burning ground without harm.",
+    description: "When cast, this spell allows one creature per point of Intensity to endure temperatures up to 2,000\u00BAF. Affected targets can walk through non-magical fire or across molten lava at normal Movement Rate without harm. Against magical flame (e.g., Fireball, red dragon breath), a Successful Resistance roll reduces damage to one-quarter; a Failed roll reduces it to half. Unlike Protection from Fire, this spell does not provide additional Damage Resistance. Each level of Intensity allows a single creature to gain the benefits of Flame Walk. The spell is not cumulative with other fire protection spells."
+  },
+
+  "fly": {
+    name: "Fly",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "10 Minutes/Intensity, +1d6x10 Minutes",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "The wind lifts you gently. With focus, you take to the sky -- gliding and soaring with ease.",
+    description: "This spell grants flight to one creature of up to 3 SIZ per point of Intensity (including the caster). The affected creature gains a flying Movement Rate of 30 feet -- halved while climbing, doubled when diving. Ground-based skill penalties affecting Movement Rate also apply to flying, including those related to spellcasting and combat. The exact Duration is unknown to the subject and should be secretly rolled by the Games Master. If a fly skill roll is required, Athletics or Acrobatics may be used instead at two Difficulty Grades higher. Frequent users of this spell may develop the Fly skill, which begins at a Base Level of STR+DEX."
+  },
+
+  "forget": {
+    name: "Forget",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "10\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "Permanent",
+    range: "100\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You lock eyes and murmur the spell. Moments (or hours) slip away like mist from your target\u2019s mind.",
+    description: "When cast, this spell causes 1-4 creatures within the Area of Effect to forget events from the 5 minutes prior to casting. Each additional point of Intensity adds 5 more minutes to the memory loss (e.g., Intensity 6 erases the last 30 minutes). Each target may make a Willpower roll to resist. The target\u2019s Difficulty Grade depends on the number of targets: 1 target -- Formidable; 2 targets -- Hard; 3-4 targets -- Standard. Lost memories are permanent unless recovered by Alter Reality, Heal, Restoration, Limited Wish, or Wish."
+  },
+
+  "gust of wind": {
+    name: "Gust of Wind",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 x 30\u2019/Intensity",
+    castingTime: "1 Round",
+    duration: "1 Round",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You exhale the final word, and a powerful blast erupts -- toppling creatures and scattering smoke and fog.",
+    description: "This spell creates a Moderate Gale with 40 mph winds (STR 60+1d12) along a path 10 feet wide and 30 feet long per point of Intensity. All STR- or DEX-based physical skill rolls within the area are Hard, and Base Movement Rate is halved when moving against the wind. Ground-based creatures of SIZ 20 or less are affected unless they succeed on a Brawn roll. Flying creatures of SIZ 20 are automatically pushed back 1d6 x30 feet. Larger flying creatures may make a Brawn roll to resist; a Success allows Movement Rate into the wind at half speed, while a Failure holds them stationary. Moving with the wind grants a 25% bonus to Movement Rate regardless of SIZ. The gale tears loose items like open scrolls or maps from those who fail a Hard Athletics roll. It extinguishes flames of Intensity 1-2 and fans those of Intensity 3+ an additional 5 feet in the wind\u2019s direction. See Fires in the *Games Master\u2019s Guide* for additional information. Gases, vapors, and levitating creatures are swept along the wind path unless properly secured. Continue progression"
+  },
+
+  "haste": {
+    name: "Haste",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "20\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "3 Rounds/Intensity",
+    range: "180\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your body surges with unnatural speed. Every movement sharpens -- faster, cleaner, unstoppable.",
+    description: "This spell affects one creature (including the caster) per point of Intensity within the Area of Effect. Each target gains double their normal Movement Rate, +4 Initiative (or to current Initiative if combat is already underway), and 2 extra Action Points for defensive Actions such as Parry and Evade for the Duration. As a side effect of the accelerated metabolism, each casting ages the target by 1% of their normal life expectancy (e.g., about 1 year for humans). See Aging on page XX for life expectancy details by species. Haste cancels the effects of Slow, and when used in this way, the target does not age. The spell does not stack with itself or similar magical effects."
+  },
+
+  "heat metal": {
+    name: "Heat Metal (Chill Metal)",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "7 Rounds",
+    range: "120\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Metal glows red-hot -- armor scorches, weapons sear, and pain drives your foes into a frenzy.",
+    description: "This spell causes 5 ENC per point of Intensity worth of ferrous metal (iron, copper, steel) worn or carried by a man-sized target to heat up painfully. Targets may be affected individually or shared in groups of at least 5 ENC. On the first Round, affected items grow warm. By the second Round, they begin to burn, and by Rounds 3-5, they become red-hot, causing severe damage. The metal then cools, returning to normal temperature by Round 8.",
+    reverse: {
+      name: "Chill Metal",
+      flavorText: "A creeping frost clings to metal -- blades crack, armor bites, and numbness spreads with each breath.",
+      description: "The reverse, Chill Metal, causes the same amount of metal to become painfully cold, leading to frostbite and similar damage. Items may freeze to skin and become difficult to release. **Heat Metal Effects:** - **Round 1**: Discomfort only - **Round 2**: 1 HP damage to the location in contact (minor burns/blistering) - **Rounds 3-5**: 1d3 HP damage to the location in contact (severe burns) - **Round 6**: 1 HP damage to the location in contact (minor burns) - **Round 7**: Discomfort only, no damage **Chill Metal Effects:** - **Round 1**: Discomfort only - **Round 2**: 1 HP damage to the location in contact - **Rounds 3-5**: 1d2 HP damage (severe frostbite) to the location in contact; by Round 4, the target must pass an Endurance roll or drop a frozen held item - **Round 6**: 1 HP damage to the location in contact - **Round 7**: Discomfort only Leather, cloth, or wood may ignite when in contact with Heat Metal effects (see Fires on page XX of the *Games Master\u2019s Guide*). A Ring of Fire Resistance or similar item grants total immunity to Heat Metal. It can also be cancelled by immersion in water/snow or exposure to spells like Cone of Cold or Ice Storm. Chill Metal can be nullified by significant heat sources such as a Wall of Fire, campfire, or flaming sword (a torch is insufficient). The Endure Heat/Endure Cold spells offer complete protection from both versions."
+    }
+  },
+
+  "hold animal": {
+    name: "Hold Animal",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Animal",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "20\u2019 Radius",
+    castingTime: "1 Round",
+    duration: "2 Minutes/Intensity",
+    range: "250\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You lock eyes with the beast, and it freezes mid-step -- caught in unseen chains.",
+    description: "This spell immobilizes 1 mundane mammal per point of Intensity, or 1 non-mammal (e.g., reptile, bird, fish) per 2 points of Intensity, within the Area of Effect. It affects normal animals such as apes, eagles, snakes, sharks, and giant versions of these creatures. It does not affect monsters like harpies, dragons, naga, or gorgons; however, it will affect giant versions of normal animals (such as giant bats or giant frogs). Targets may resist with a Willpower roll. Large animals (SIZ 21-40) resist with an Easy roll; Huge animals (SIZ 41+) resist with a Very Easy roll. A Successful roll negates the effect entirely. Held creatures are completely helpless. Only Dispel Magic can end the effect before the spell\u2019s Duration expires."
+  },
+
+  "hold person": {
+    name: "Hold Person",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "20\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "2 Rounds/Intensity",
+    range: "360\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "With a word and a gesture, your foe goes rigid, their eyes wide, limbs frozen by magic.",
+    description: "This spell immobilizes 1 humanoid creature per point of Intensity. A Successful Willpower roll negates the effect. Large humanoids (SIZ 21-40) resist with an Easy roll, while Huge humanoids (SIZ 41+) resist with a Very Easy roll. Held creatures are completely helpless. Only Dispel Magic can end the effect before the Duration expires. The Divine version of this spell functions identically, except its Area of Effect affects all valid targets within a 10-foot radius. Sphere: Charm"
+  },
+
+  "hold undead": {
+    name: "Hold Undead",
+    school: "Necromancy",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1d3 Undead",
+    castingTime: "2 Actions",
+    duration: "2 Rounds/Intensity",
+    range: "60\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You speak the final words of the spell. The undead shudder and freeze in place, bound by arcane power.",
+    description: "This spell freezes in place 1d3 undead -- corporeal or non-corporeal -- that fail a Willpower roll to resist. A Successful roll negates the effect entirely. The caster targets a visible point within range; the closest undead to that point is affected first. If multiple undead are present, the weakest are affected first. The number and strength of undead the caster can affect depend on their Rank and the spell\u2019s Intensity, as detailed on the table below. 2 1-3 3 4-6 4 7-9 5 10+ The spell automatically affects non-sentient undead -- those with INS instead of INT -- such as skeletons and zombies, without requiring a Resistance Roll. While held, affected undead are completely helpless. Only Dispel Magic can end the effect before the spell\u2019s Duration expires."
+  },
+
+  "illusion, greater": {
+    name: "Illusion, Greater",
+    school: "Illusion",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "50\u2019 Radius/Intensity",
+    castingTime: "2 Actions",
+    duration: "Concentration; See Below",
+    range: "50\u2019/Intensity",
+    resist: "Disbelieve",
+    intensityScaling: null,
+    flavorText: "You conjure a complex falsehood -- sight, simple sounds, and motion woven into a seamless deception.",
+    description: "This spell functions as the Rank 1 Lesser Illusion, except as noted above and here. Greater Illusion requires less Concentration, allowing the caster to move at a jog (Movement Rate x2) and make skill rolls without penalty. The caster may not cast other spells or make attacks while maintaining the illusion. The spell also allows simple sounds to accompany the visual illusion, though not complex enough to form recognizable speech. Due to its tighter focus and clarity, attempts to Disbelieve are 2 Difficulty Grades harder than for Lesser Illusion. Once Concentration ends, the illusion persists for an additional 2 minutes. See Lesser Illusion (page XX) and Illusions and Phantasms (page XX of the *Player\u2019s Handbook*) for more details."
+  },
+
+  "invisibility (10ft)": {
+    name: "Invisibility (10ft)",
+    school: "Illusion",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "6 Hours/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You and your nearby companions shimmer and vanish, cloaked from sight in a field of silence and shadow.",
+    description: "This spell functions as the Rank 1 Lesser Invisibility, with the following differences: All individuals within 10 feet of the original recipient when the spell is cast are rendered invisible. They can see each other but do not gain the ability to see other invisible creatures. If a subject moves outside the 10-foot radius, their invisibility ends. Re-entering the area or arriving after casting does not restore or grant the effect. Attacks or offensive spellcasting by anyone other than the original recipient only end invisibility for that individual. However, if the original target attacks or casts an offensive spell, all affected creatures become visible. See Lesser Invisibility for additional details (page XX)"
+  },
+
+  "know passions": {
+    name: "Know Passions (Obscure Passions)",
+    school: "Divination",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Target",
+    castingTime: "1 Action",
+    duration: "1 Round/Intensity",
+    range: "30\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You peer into your target\u2019s heart and see their strongest emotions -- love, hatred, fear -- laid bare.",
+    description: "This spell allows the caster to discern the Passions and Alignment of one creature. The target may make a Willpower Resistance Roll to negate the effect. On a Failed roll, the caster immediately learns the target\u2019s Alignment (Good, Neutral, or Evil). Each additional Round of Concentration reveals one more random Passion or defining trait. The strength of any revealed Passion is determined by the Games Master using the following scale: *Example: Rengarth casts Know Passions on a rival wizard. The rival\u2019s Alignment is Evil (Cruel and Spiteful) at 37%. The spell succeeds, and the rival Fails their Resistance Roll. Rengarth learns she has an Average tendency toward Evil.*",
+    reverse: {
+      name: "Obscure Passions",
+      flavorText: "You cloud the heart and mask the soul. No spell can sense what stirs within.",
+      description: "The reverse of this spell, Obscure Passions, makes a single target\u2019s Passions unreadable for 24 hours. This blocks Know Passions, Detect Evil/Good, and similar abilities, including a paladin\u2019s detection powers. **When used as a level 1 Divine spell**, use the following description: Rank: Cleric 1, Druid 1, Paladin 1, Ranger 1 Sphere: Divination Cost: 1/Intensity Area: 1 or more Targets Casting Time: 1 Round Duration: 2 Minutes/Intensity Range: 30\u2019 Resist: Willpower"
+    }
+  },
+
+  "leonard's tiny magic hut": {
+    name: "Leonard\u2019s Tiny Magic Hut",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "15\u2019 Diameter Sphere",
+    castingTime: "2 Actions",
+    duration: "4 Hours, +2 Hours/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "A dome of force rises around you -- warm, dry, and safe. An invisible haven amid wilds or weather.",
+    description: "When cast, an unmoving, opaque globe of force forms around the caster, half above and half below ground. The globe may be any color the caster chooses at the time of casting. Up to 100 points of SIZ worth of creatures (e.g., seven creatures of SIZ 14) may occupy the hut and freely enter or exit without disrupting the effect. If the caster leaves the area, the hut immediately dispels. It is also subject to Dispel Magic. The interior is a hemisphere with a flat floor at ground level. The caster may darken or illuminate it at will. From outside, the globe is fully opaque, but from inside, it remains fully transparent. It offers complete protection from the elements, including rain, snow, dust, gas, and winds up to STR 90. Stronger winds will dispel it. The temperature inside remains a constant 68 \u00BAF as long as the external temperature is between 0 and 100 \u00BAF. For each degree outside this range, the interior adjusts by 1 \u00BAF to maintain balance."
+  },
+
+  "lightning bolt": {
+    name: "Lightning Bolt",
+    school: "Evocation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 wide Path",
+    castingTime: "2 Actions",
+    duration: "Instant",
+    range: "50\u2019/Intensity",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "A crackling arc erupts from your hands, blasting through everything in its path with furious, forked energy.",
+    description: "On the first Turn of casting, the mage begins the incantation and gestures, generating electrical arcs between their fingers. On the second Turn, the spell is released, sending a bolt of lightning in a straight line from the caster\u2019s fingertip. The bolt strikes all targets in a 10-foot-wide path to the spell\u2019s maximum range, dealing damage as per the Spell Damage Table (see page XX) to 1d6 random Hit Locations per victim. Natural and worn armor offer no protection; only magical armor applies, and only up to its Magic Bonus. A successful Resistance roll halves the damage. Lightning Bolt has a chance to ignite flammable materials equal to damage rolled x5%. It may also shatter or destroy inanimate objects through sheer force. See Fires on page XX of the *Games Master\u2019s Guide* for more information."
+  },
+
+  "locate object": {
+    name: "Locate Object (Obscure Object)",
+    school: "Divination",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Mage", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "60\u2019/Intensity",
+    castingTime: "1 Action",
+    duration: "1 Minute/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You close your eyes and focus. The item you seek tugs at your mind like a thread pulled through space.",
+    description: "This spell directs the caster toward a known or familiar object within the spell\u2019s Area of Effect. While slowly turning in place, the caster senses the direction to the item. The object may be specific (e.g., Tashana\u2019s longsword) only if the caster has a clear mental image of it, either from firsthand experience or magical observation. Generic items -- such as a bed, chest, gold, stairwell, or ladder -- do not require prior familiarity. The spell cannot locate living creatures.",
+    reverse: {
+      name: "Obscure Object",
+      flavorText: "You shroud the item in protective magic. Scrying and seeking spells slide off like water on stone.",
+      description: "The reverse, Obscure Object, hides one item from magical detection (e.g., Detect Magic, crystal balls) for the same Duration. **The Divine version of this spell** has an Area of 100\u2019/Intensity"
+    }
+  },
+
+  "mage lock": {
+    name: "Mage Lock",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 1 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Portal",
+    castingTime: "1 Action",
+    duration: "Permanent",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "An arcane shimmer seals the object, locking it tight against intrusion -- both physical and magical.",
+    description: "This spell may be cast on any lockable object, such as a door, chest, portal, or lockable tome. The object (up to 30 Hit Points per point of Intensity) is permanently sealed unless physically broken or opened via a Successful Dispel Magic. The Unlock spell can temporarily open a Mage Locked object for 10 minutes, after which the original enchantment resumes. A mage of higher Rank than the original caster may pass through a Mage Locked portal freely without dispelling it and may hold it open for others. Unlike Secure Portal, a Mage Locked object is not disrupted by extraplanar creatures (e.g., demons, devils, angels, elementals) or bypassed by spells like Blink or Read Thoughts."
+  },
+
+  "magic mouth": {
+    name: "Magic Mouth",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 1 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Object",
+    castingTime: "1 Minute",
+    duration: "See Below",
+    range: "30\u2019/Intensity",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You enchant an object to speak aloud on command. Its voice echoes with your words, delivered in eerie clarity.",
+    description: "This spell causes a mouth to appear on an inanimate object, triggered by a specific event or condition set by the caster at the time of casting. When activated, the mouth speaks a predetermined phrase -- up to 5 words per point of Intensity -- at a rate of 1 word per second (e.g., 12 words require 3 full Rounds to speak). The mouth cannot speak words of power or cast spells. The spell may be cast on any non-living object, such as a wall, tree, chest, or statue. It cannot be cast on living or once-living creatures with INT or INS. Casting it on a statue is especially effective, as it appears the statue itself is speaking. The trigger condition can be broad (\"when the next person enters this room\") or specific (\"when a female Cleric of Mithras comes within 10 feet of the statue on a Saturday\"). However, the trigger must be based on observable, non-magical criteria -- e.g., presence, sound, or visible clothing -- not things like invisibility, Passions, or Class. The maximum trigger range is 25 feet per point of Intensity. The spell\u2019s Duration is Permanent until triggered, after which it ends."
+  },
+
+  "minute meteors": {
+    name: "Minute Meteors",
+    school: "",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target per Meteor",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "60\u2019/Intensity",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "Tiny flaming spheres orbit your hand -- each one ready to launch and detonate at the flick of a thought.",
+    description: "When cast, this spell creates many small fiery spheres that burst into 1-foot balls of flame on impact. The caster gains 5 meteors per Rank above 1 (e.g., 5 at Rank 2, 10 at Rank 3, etc.). Each meteor deals 1d6 damage to a random Hit Location. Multiple meteors striking a single target are rolled and applied separately. Worn armor provides half protection; magical Armor Points and natural armor apply in full. A Successful Evade or Shield Parry negates damage from a single meteor. Each sphere may target a separate opponent within the caster\u2019s field of view, if desired, and does 1d6 points of damage to the target struck. Apply the damage from each sphere to one random Hit Location. Meteors have a 5% x damage rolled chance of igniting flammable materials. See Fires on page XX of the *Games Master\u2019s Guide*. The caster chooses one of two modes at the time of casting: - **Volley Mode**: Hurl 5 meteors per Cast Action, beginning with the final Cast Action that completes the spell. The Duration ends when the final 5 are thrown. - **Single-Shot Mode**: Hurl 1 meteor per Cast Action, starting with the final Cast Action. The caster may perform other actions between throws, including attacks or spellcasting. However, Concentration spells cancel any unused meteors. The spell\u2019s Duration ends when all meteors are used, the current Scene ends, or the caster voluntarily ends it. The spell is subject to Dispel Magic as normal."
+  },
+
+  "mirror images": {
+    name: "Mirror Images",
+    school: "Illusion",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "5\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "3 Rounds/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your form fractures into duplicates. Illusory copies move with you, confusing every eye and blade.",
+    description: "When cast, 2d4 illusory duplicates of the caster appear within a 5-foot radius, perfectly mimicking the mage\u2019s movements. The area shimmers and distorts, making it nearly impossible to pinpoint the real caster\u2019s location. Each time a target strikes an image, that image vanishes. Striking the real caster does not affect the remaining illusions. The caster\u2019s movements and any injuries are mirrored across all images, keeping their identity hidden. The images continue to shift, so even repeated attacks offer no advantage in identifying the caster. The Games Master may determine if the real caster is struck using one of the following methods: - Roll a die equal to the total number of targets (caster + images). For example, with 4 images and the caster, roll 1d5. A result of 1 hits the real caster. - Use markers equal to the number of targets, with one marked as the caster. Draw a marker for each attack. If the caster is hit, apply damage; otherwise, remove an image and its marker. All remaining images vanish when the spell\u2019s Duration ends. *For example, with 4 images and the caster, the attacker should roll 1d6, rerolling a result of 6, with the caster being hit on a roll of 1. Another would be to have a number of markers equal to the number of potential targets, marking one as being the caster. A marker is drawn each time an attack is made and if the target is hit damage is applied; otherwise, an image disappears removing one of the markers.*"
+  },
+
+  "monster summoning, lesser": {
+    name: "Monster Summoning, Lesser",
+    school: "Conjuration",
+    classes: [
+      { class: "Bard", rank: 1 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "100\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "2 Minutes/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You tear a hole in space, and a lesser creature steps forth -- bound to your cause until dismissed.",
+    description: "When cast, this spell conjures a small group of creatures that appear at a point designated by the caster within the Area of Effect. Roll on the Lesser Monster Summoning table to determine the type and number of creatures. The caster may command the summoned creatures if able to communicate with them. Otherwise, they act on instinct, attacking any obvious enemies of the caster or their allies, regardless of Alignment. If slain, the creatures vanish, returning to their place of origin -- usually unharmed. If no enemies are present, the caster may direct the summoned creatures to perform another task. This also requires some form of communication. Rarely, this spell has unintentionally summoned actual adventurers, briefly pulling them from their parties. The chance of this happening to the characters is very small -- about 1% per session. If there\u2019s not enough room for the summoned creatures to appear, the spell fails automatically. For this reason, using higher Rank versions of this spell in tight spaces (like dungeon corridors) may result in impractical or wasted summons -- e.g., calling forth a young dragon in a 10-foot hallway. *\\* See Flocks, Hordes, Packs, and Shoals in the Monster Manual, page XX.* *\\*\\* 01-25 Earth, 26-50 Air, 51-75 Fire, 76-00 Water.*"
+  },
+
+  "obscurement": {
+    name: "Obscurement",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 2 }
+    ],
+    sphere: "Weather",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "5\u2019 Radius/Intensity",
+    castingTime: "2 Actions",
+    duration: "4 Minutes/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Mist coils outward, cloaking you and your allies in shifting concealment.",
+    description: "When cast, a thick mist rises around the druid, reducing all forms of vision to 5 feet. A Successful Perception roll allows faint shapes or movement to be detected up to 10 feet away, or entirely through the fog if its radius is smaller than 10 feet. Due to the fog\u2019s constant shifting, this roll must be repeated each Round when attempting to see through it. If exposed to a moderately strong wind, the spell\u2019s Duration is reduced by 75%."
+  },
+
+  "plant growth": {
+    name: "Plant Growth",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Plant",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "See Below",
+    castingTime: "1 Minute",
+    duration: "Permanent",
+    range: "150 m (500 ft)",
+    resist: "NA",
+    intensityScaling: null,
+    flavorText: "You call to the earth, and nature erupts. Trees stretch, vines twist, and wild growth surges unnaturally fast.",
+    description: "The Divine version of Plant Growth also allows for the blessing of crops (see the Arcane version on page XX for additional abilities). When cast in this way, all vegetation in a 1/2 mile radius becomes hardier and more fruitful, increasing yields by 10% per Intensity to a maximum of 50% greater than that of a normal growing season. The spell\u2019s duration lasts only as long as required to see the crop to the end of the season. It does not prevent any crop from suffering the effects of natural disasters such as flood, drought, insects, etc. However, it does improve their chance to survive a disaster by the increased yield percentage noted above. This version is typically used by druids in farming communities during the spring festival and cast at planting time."
+  },
+
+  "produce flame": {
+    name: "Produce Flame",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "1 Round/Intensity",
+    range: "See Below",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "You cup your hand, and fire dances within -- ready to light a torch, scorch a foe, or fly as a blazing dart.",
+    description: "When cast, a bright flame appears in the caster\u2019s palm, equal in brightness to a torch. It does not harm the caster but produces heat and can ignite combustible materials such as cloth, paper, oil, and wood. At any point during the Duration, the caster may hurl the flame up to 40 feet. On impact, it bursts, igniting flammable materials within a 5-foot diameter. If the Duration continues, a new flame forms in the caster\u2019s hand. The caster may also end the Duration at will. Any fires started by the spell continue to burn naturally (see Fires in the *Games Master\u2019s Guide*, page XX). Throwing the flame requires a Successful Throw (Athletics) skill roll, and the attack may be Evaded. If the attack misses, determine the landing point using the \"Missing with a Thrown Weapon\" rules (see *Games Master\u2019s Guide*, page XX). Damage depends on the target\u2019s SIZ: - **SIZ ≤ 20:** 1d6 damage to 1d3+1 random Hit Locations. - **SIZ 21--40:** 1d6 damage to 1d2+1 contiguous Hit Locations. - **SIZ \\> 40:** 1d6 damage to a single Hit Location. A successful Resistance roll halves the damage. Armor Points count as half, but magical armor applies its full Magic Bonus. The flame may ignite flammable materials. See Fires in the *Games Master\u2019s Guide* page XX for more details."
+  },
+
+  "protection from cold": {
+    name: "Protection from Cold",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "1 Round",
+    duration: "15 Minutes/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "A layer of warmth surrounds you. Frost cracks, and icy winds brush past like gentle breezes.",
+    description: "When cast, this spell creates an invisible field that offers complete protection from natural cold. When cast on oneself, the field also absorbs 12 points of magical cold damage per point of Intensity (e.g., white dragon breath, Cone of Cold, Chill Metal). Once the absorption is depleted, any remaining damage from that attack is halved before being applied. When cast on another, the target gains full protection from natural cold and takes only half damage from magical cold sources. No damage absorption applies."
+  },
+
+  "protection from evil 10 foot radius": {
+    name: "Protection from Evil 10' Radius (Protection from Good 10' Radius)",
+    school: "Abjuration",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "2 Minutes/Intensity",
+    range: "Touch",
+    resist: "N/A (Willpower)",
+    intensityScaling: null,
+    flavorText: "You form a protective barrier. Malicious spirits and dark forces recoil from its unseen edge.",
+    description: "This spell functions as [Protection from Evil (see page XX),]{.mark} with the following changes: The touched creature (including the caster) is surrounded by a protective sphere with a 10-foot radius, which moves with the subject. All creatures within the radius benefit from the protection. If any protected individual attacks an affected creature -- typically summoned or enchanted entities -- the spell ends immediately for everyone. The spell\u2019s radius is proportionate to the size of the caster, with creatures of SIZ 31-60 producing a 20\u2019 radius, and creatures of SIZ 61+ producing a radius of 30\u2019.",
+    reverse: {
+      name: "Protection from Good 10' Radius",
+      flavorText: "You radiate warding power, shielding against radiant interference and benevolent influence.",
+      description: "The reverse, Protection from Good (10\u2019 Radius), offers identical protection against creatures of Good Alignment. **When using the Divine version of this spell, make the following changes:** Rank: Cleric 3 Sphere: Protection Cost: 3, +1/additional Intensity Area: 10\u2019 Radius Casting Time: 1 Round Duration: 10 Minutes/Intensity Range: Touch Resist: N/A (Willpower)"
+    }
+  },
+
+  "protection from fire": {
+    name: "Protection from Fire",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "1 Round",
+    duration: "15 Minutes/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your skin glows faintly red, and flame bends away -- searing heat reduced to a dull warmth.",
+    description: "When cast, this spell creates an invisible field that offers complete protection from natural fire. When cast on oneself, the field also absorbs 12 points of magical fire damage per point of Intensity (e.g., red dragon breath). Once the absorption is depleted, any remaining damage from that attack is halved before being applied. When cast on another, the target gains full protection from natural fire and takes only half damage from magical fire sources. No damage absorption applies."
+  },
+
+  "protection from mundane missiles": {
+    name: "Protection from Mundane Missiles",
+    school: "Abjuration",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "10 Minutes/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "A field of force whirls around you. Arrows and stones slow mid-flight, dropping harmlessly to the ground.",
+    description: "This spell grants the touched subject complete immunity to non-magical ranged weapons, including arrows, bolts, throwing knives, darts, spears, and hurled objects smaller than SIZ 3. Against magical ranged weapons (e.g., enchanted arrows or a thrown magic axe), or mundane projectiles larger than SIZ 3, the spell reduces the damage by one die type (e.g., 2d8 becomes 1d8+1d6, 1d10 becomes 1d8, 1d8 becomes 1d6, etc. See the Damage Modifier Table in the *Player\u2019s Handbook*, page XX). The spell does not protect against magical attacks such as Magic Missile or Fireball."
+  },
+
+  "pyrotechnics": {
+    name: "Pyrotechnics",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Mage", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Source of Fire",
+    castingTime: "1 Action",
+    duration: "See Below",
+    range: "360\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You wave your hand through the flame, twisting it into blinding fireworks or clouds of thick, choking smoke.",
+    description: "When cast in the presence of an existing flame, this spell allows the caster to create one of two effects: - **Cloud of Choking Smoke**: Thick, black smoke billows from the source, lasting 1 minute per point of Intensity. The smoke fills a radius equal to 100 times that of the original flame source. *Example: A campfire with a 3-foot radius produces a 300-foot-radius smoke cloud.* Natural vision, including Darkvision, is reduced to 2 feet. Creatures within the cloud are subject to Asphyxiation (see the Games Master\u2019s Book, page XX). The smoke rises freely unless confined and may be visible from far away. - **Blinding Fireworks**: Colorful fireworks explode overhead, blinding those within 120 feet who fail an Evade roll. Affected creatures are blinded for 1d4+1 Rounds. The effect covers a radius equal to 10 times the original flame\u2019s radius. The spell typically consumes the original fire source. Larger flames may be partially extinguished (see Fires in the *Games Master\u2019s Guide*, page XX); magical fires are unaffected. Flame-based entities (e.g., fire elementals) take 2d6 x Intensity damage and must pass a Willpower Resistance Roll or flee the caster for 2d4 minutes. Elemental Protection offers no defense. Pyrotechnics has no effect underwater."
+  },
+
+  "read thoughts": {
+    name: "Read Thoughts",
+    school: "Divination",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "15\u2019/Intensity Radius",
+    castingTime: "2 Actions",
+    duration: "1 Round/Intensity",
+    range: "0",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You brush against their mind, and stray thoughts drift into yours -- secrets, desires, and intentions laid bare.",
+    description: "This spell allows the caster to read the surface thoughts of one creature per Round of Concentration. Language is not required, but the caster cannot decipher the minds of undead or beings with alien mental structures. The level of detail depends on the target\u2019s intelligence. Sapient creatures yield specific, nuanced thoughts, while non-sapient animals reveal simple urges (e.g., hunger, fear, mating). The caster may scan the area instead of selecting a specific target, detecting the presence of minds within range -- but not their exact type. Read Thoughts can penetrate up to 2 feet of stone or dirt and 2 inches of non-lead metal. Even a thin sheet of lead blocks the spell entirely, while wood provides no resistance. As such, the spell is useful for detecting minds behind a door or within a wooden structure, but ineffective through typical dungeon walls, which are usually over 5 feet thick."
+  },
+
+  "remove curse (divine)": {
+    name: "Remove Curse (Bestow Curse) (Divine)",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Protection",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "1 Round",
+    duration: "See below",
+    range: "Touch",
+    resist: "See below",
+    intensityScaling: null,
+    flavorText: "You place your hand on the cursed victim or item. Magic fractures, and the burden lifts.",
+    description: "When cast, Remove Curse typically eliminates the effects of a curse afflicting a creature or item. While it does not remove the cursed nature of an item (such as a weapon, shield, or armor), it does allow a creature bound to such an item to discard it safely. Some powerful curses may only be lifted if Remove Curse is cast at a minimum Intensity, which will be noted in the curse\u2019s description. *For example, curing lycanthropy requires either Cure Disease or Remove Curse at a minimum Intensity of 12 within 3 days of its acquisition.*",
+    reverse: {
+      name: "Bestow Curse",
+      flavorText: "You speak a word of doom, and misfortune takes hold -- sapping strength, clouding clarity, or dimming hope.",
+      description: "When reversed, Bestow Curse inflicts one of several debilitating effects on a chosen enemy. The curse lasts for 1 minute per point of Intensity, and the target may resist with an Opposed Willpower roll. Roll 1d100 to determine the nature of the curse inflicted: - 01-25: All skills based on STR, DEX, or CON are 1 Grade more Difficult. Initiative -4, Damage Modifier reduced by 2 steps. - 26-50: All skills based on INT, POW, or CHA are 1 Grade more Difficult. Initiative -4. - 51-75: All Combat Skills and Resistance Rolls are 2 Grades more Difficult. - 76-00: All Failed skill rolls are treated as Fumbles. Note that this differs slightly from the Arcane version on page XX."
+    }
+  },
+
+  "remove paralysis": {
+    name: "Remove Paralysis",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Protection",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 to 4 Targets in a 10\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "Permanent",
+    range: "30\u2019/Intensity",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You grasp the person\u2019s frozen limb or frame, and warmth floods through -- freeing muscles locked in magical stasis.",
+    description: "This spell frees one or more creatures from any form of paralysis, whether magical or mundane. This includes effects caused by spells like Hold or Slow, as well as paralyzing attacks such as a ghoul\u2019s touch, or paralysis gas used in traps. - **One target**: The paralysis is automatically removed. - **Two targets**: Each makes a Resistance Roll against the original attack\u2019s skill roll, but at two Difficulty Grades easier. - **Three or four targets**: Each makes a Resistance Roll, one Difficulty Grade easier than normal. The spell automatically fails if any physical or magical barrier exists between the caster and the target(s), even if the spell is successfully cast."
+  },
+
+  "scare": {
+    name: "Scare",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "15\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "1d4 Rounds, +1 Round/Intensity",
+    range: "100\u2019, +30\u2019/Intensity",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "Your shadow stretches unnaturally, your voice echoes with menace -- planting fear deep in your target\u2019s mind.",
+    description: "When cast, this spell overwhelms several creatures with an intense sense of fear, causing them to tremble and shake uncontrollably. Even those of elven blood are affected, although their Willpower Resistance Rolls are one Difficulty Grade easier. This reduced Difficulty also applies to clerics and druids. Large humanoids (SIZ 21-40) are less susceptible and roll at Easy Difficulty, while Huge humanoids (SIZ 41+) resist at Very Easy Difficulty. The spell has no effect on undead or beings from other planes of existence. Creatures that fail their Resistance Roll are frozen in place for the Duration, paralyzed by terror. If a target Fumbles their roll, they drop any held equipment. If a terrified creature is forced into combat, it may still act, but all skill and Resistance Rolls suffer a --5% penalty. Ranged attacks are one Difficulty Grade harder, and melee attacks deal 1 less point of damage than normal."
+  },
+
+  "sigil of warding": {
+    name: "Sigil of Warding",
+    school: "Abjuration",
+    classes: [
+      { class: "Cleric", rank: 2 }
+    ],
+    sphere: "Guardian",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "5\u2019 Radius/Intensity",
+    castingTime: "1 Minute/Intensity",
+    duration: "Permanent until Discharged",
+    range: "Touch",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You draw a glowing rune with your trigger. The next to disturb it unleashes the magical wrath sealed within.",
+    description: "This spell creates a magical, invisible inscription on an object or location, designed to prevent entry or access by harmful or unauthorized entities. The cleric sets the specific conditions at the time of casting. Common triggers include attempting to pass without speaking the sigil\u2019s name, or entry by creatures of a certain Alignment, species, religion, gender, size, or type. Only one sigil may be placed on a given area, and it may take any shape, provided it fits within the spell\u2019s radius. For containers such as cabinets or dressers, each drawer or door may have its own separate ward. To cast the spell, the cleric traces glowing lines using an index finger, accompanied by incense and other components. This process takes one minute per point of Intensity. Once completed, the sigil vanishes. If the Intensity exceeds 6, the cleric must also sacrifice one Experience Roll in addition to the normal Magic Point Cost. Common sigil effects include fire or lightning damage (as per the Spell Damage Table on page XX), or afflictions such as blindness, deafness, or paralysis. In most cases, any harmful Divine spell the cleric knows may serve as the sigil\u2019s effect, and Resistance Rolls are made according to the rules of that spell. Sigils can be detected with Detect Magic and removed with Dispel Magic, assuming sufficient Intensity. Thieves of Rank 3 or higher are trained to identify their presence by spotting residual signs such as powdered incense. They may detect a sigil with a Successful Formidable Perception roll and disarm it with a Formidable Mechanisms roll."
+  },
+
+  "slow": {
+    name: "Slow",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity",
+    area: "20\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "2 Rounds/Intensity",
+    range: "100\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "Time thickens around your enemies -- their movements stagger, their reactions drag.",
+    description: "This spell reduces the Movement Rate of one creature per point of Intensity to half its normal value. All affected creatures must be within the Area of Effect at the moment of casting, though they may move freely afterward. In addition to reduced movement, each affected creature suffers a --4 penalty to Initiative (or current Initiative, if combat is already underway) and has its total number of Action Points halved for the Duration of the spell. Slow cancels the effects of Haste when cast, and cannot be stacked with itself or similar magical effects."
+  },
+
+  "snake charm": {
+    name: "Snake Charm",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Bard", rank: 1 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Animal",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "15\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "100\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You sway and hum the words to the spell. The serpent stills, hypnotized by rhythm and magic alike.",
+    description: "This spell creates a series of hypnotic patterns and gestures that charm up to 10 SIZ points of snakes per point of Intensity. Affected snakes become mesmerized, ceasing all activity and simply swaying in place, staring at the caster. The Duration depends on the snakes\u2019 mental state at the time of casting. Snakes in a torpid state remain charmed for 1d4+2 x10 minutes. Snakes that are active but not hostile are affected for 1d3 x10 minutes. Snakes that are angry or already attacking remain charmed for only 1d4+4 Combat Rounds. Once charmed, the caster does not need to maintain Concentration for the effect to continue."
+  },
+
+  "snare": {
+    name: "Snare",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Plant",
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "2\u2019",
+    castingTime: "3 Minutes",
+    duration: "Until Triggered +12 hrs.",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You whisper to the rope or vine, and it stirs -- ready to spring at the next careless step.",
+    description: "When cast on a length of vine or rope fashioned into a snare, this spell renders the trap nearly undetectable by mundane means. Perception rolls to spot it are made at Herculean Difficulty. Typically, one end of the snare fastens itself to the ground. Any creature stepping into it triggers the trap, causing it to tighten around one or more limbs -- usually a leg, though the location may be randomly determined if the creature is prone. If the free end is tied to a tree or branch, the spell holds the limb bent until sprung. When triggered, the tree snaps upright, lifting the trapped creature off the ground and inflicting 1d6 points of damage to the entangled location. For creatures over SIZ 20, whether they are lifted is left to the Games Master\u2019s discretion, though the other effects still apply. If the snare catches the creature\u2019s head, there is a 30% chance it wraps around the neck. In such cases, if the snare is tied to a tree, the damage is doubled. Even if the creature survives, the snare begins to constrict, initiating strangulation. Refer to Asphyxiation, Drowning, and Suffocation in the *Games Master\u2019s Guide*, page XX. Escaping the trap requires an Opposed Brawn roll against the snare, which has a Brawn of 125%. The affected limb is magically strengthened, making it especially difficult to break free. However, the snare\u2019s magic weakens over time -- its Brawn decreases by 10% every hour after being triggered. After 12 hours, the enchantment fades and the snare releases automatically. Any bladed magical weapon may be used to cut the snare. The enchanted cord has 8 Armor Points and 12 Hit Points for this purpose. Dispel Magic may also end the effect if cast at sufficient Intensity."
+  },
+
+  "speak with animals": {
+    name: "Speak with Animals",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Animal, Divination",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 or more Animals",
+    castingTime: "2 Actions",
+    duration: "2 Minutes/Intensity",
+    range: "30\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You murmur the final word. Growls, chirps, and howls of the chosen animal type become clear, carrying thought and meaning.",
+    description: "This spell allows the caster to understand, and be understood by, one type of natural animal within 30 feet. The chosen creature must respond to any questions asked, and even hostile animals cooperate freely for the Duration. Non-hostile creatures may go further, offering assistance or helping the caster and their party in some way. The spell applies only to non-sapient animals -- those with the INS Characteristic. It does not grant them intelligence beyond their natural level, so communication is limited to thoughts and knowledge as the creature understands them. The caster may switch communication from one animal to another during the spell\u2019s Duration."
+  },
+
+  "speak with dead (arcane)": {
+    name: "Speak with Dead (Arcane)",
+    school: "Necromancy",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Creature",
+    castingTime: "30 Minutes",
+    duration: "See Below",
+    range: "10\u2019",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You touch the remains. Their eyes glow faintly, and the dead speak -- slow, cryptic, and bound by memory.",
+    description: "This spell allows the caster to communicate with one dead creature, asking a limited number of questions over the spell\u2019s Duration. The caster must have the remains present and must speak the language the creature knew in life. The dead will respond based on their knowledge at the time of death. Answers are usually brief, literal, and often cryptic, as the dead tend to be evasive or overly precise. The number of questions allowed depends on the spell\u2019s Intensity (1 Intensity = 1 question), as does the maximum time since death -- outlined in the Time Since Death Table below. Intensity Max. Time Since Death 1-2 1 Week 3-4 1 Month 5-6 1 Year 7-8 10 Years 9+ 100 Years If the spirit\u2019s Alignment differs from that of the caster, it may attempt to resist answering. This requires a Successful Opposed Willpower roll. Additionally, the creature\u2019s Passions can influence its replies. For instance, a Neutral (Dishonest) spirit is likely to offer misleading or deceptive information."
+  },
+
+  "speak with dead (divine)": {
+    name: "Speak with Dead (Divine)",
+    school: "Necromancy",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Paladin", rank: 2 },
+      { class: "Ranger", rank: 3 }
+    ],
+    sphere: "Divination",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Creature",
+    castingTime: "10 Minutes",
+    duration: "See Below",
+    range: "10\u2019",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You touch the remains. Their eyes glow faintly, and the dead speak -- slow, cryptic, and bound by memory.",
+    description: "This spell allows the caster to communicate with one dead creature, asking a limited number of questions over the spell\u2019s Duration. The caster must have the remains present and must speak the language the creature knew in life. The dead will respond based on their knowledge at the time of death. Answers are usually brief, literal, and often cryptic, as the dead tend to be evasive or overly precise. The number of questions allowed depends on the spell\u2019s Intensity, as does the maximum time since death -- outlined in the Time Since Death Table below. Intensity Max. Time Since Death 1-2 1 Week 3-4 1 Month 5-6 1 Year 7-8 10 Years 9+ 100 Years If the spirit\u2019s Alignment differs from that of the caster, it may attempt to resist answering. This requires a Successful Opposed Willpower roll. Additionally, the creature\u2019s Passions can influence its replies. For instance, a Neutral (Dishonest) spirit is likely to offer misleading or deceptive information."
+  },
+
+  "spectral hand": {
+    name: "Spectral Hand",
+    school: "Necromancy",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Target",
+    castingTime: "1 Action",
+    duration: "2 Rounds/Intensity",
+    range: "40\u2019/Intensity",
+    resist: "N/A/Evade",
+    intensityScaling: null,
+    flavorText: "A ghostly hand rises from your own -- glowing faintly, ready to deliver touch-based magic from afar.",
+    description: "When cast, a translucent, glowing hand appears beside the mage. The caster may move this hand instantly within range and use it to deliver Rank 1 or 2 Touch spells. To do so, the mage must make an Arcane Casting roll for the desired spell and spend the required Magic Points. Casting Time is as listed in the chosen spell\u2019s write-up. If successful, the hand becomes imbued with that spell. While manipulating the hand, the caster cannot move. To touch an opponent, the mage must use an Attack Action and succeed at an Easy roll against their Combat Skill. The attack benefits from flanking or rear-position bonuses if applicable. If the target successfully Evades, the touch is avoided, but the spell remains charged in the hand, allowing the caster to try again in a later Action. Only one Touch spell may be imbued in the hand at a time, though the caster may imbue additional spells during the Duration, one after another. The hand remains until dismissed, dispelled, or destroyed. The hand can be attacked by magic weapons or damaging spells. It may attempt to Evade when targeted. A Successful roll avoids all damage except from area effects; Failure means the hand is hit. Any amount of damage dispels the hand and causes the caster to suffer one Level of Fatigue. Continue progression"
+  },
+
+  "spiritual hammer": {
+    name: "Spiritual Hammer",
+    school: "Evocation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Combat",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "30\u2019/Intensity",
+    castingTime: "2 Actions",
+    duration: "3 Rounds/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "A radiant hammer-shaped weapon appears beside you -- floating, swinging, and striking with divine force at your command.",
+    description: "Upon casting, the cleric summons a hammer-shaped force of spiritual energy that immediately launches itself toward a designated target. The hammer has 3 Action Points, which the cleric may spend to command it -- provided they maintain Concentration. Each Action Point allows the hammer to move freely within the spell\u2019s Area of Effect and strike from the most advantageous angle, such as from behind, potentially denying the target their best defense. The hammer attacks using the cleric\u2019s Combat Skill and deals 1d8+1 damage, equivalent to a normal war hammer. The hammer is considered a magical weapon and can strike creatures only harmed by such. Every 3 points of Intensity grants it the equivalent of a +1 Magic Bonus, up to a maximum of +5. This bonus applies only to overcoming Resistance or Magical Immunity -- not to damage. *For example, at Intensity 3, the hammer is treated as a +2 magic weapon for the purpose of hitting resistant or immune creatures.*"
+  },
+
+  "stinking cloud": {
+    name: "Stinking Cloud",
+    school: "Evocation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "2 Rounds/Intensity",
+    range: "100\u2019",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "A thick, noxious fog erupts -- eyes burn, stomachs churn, and chaos follows wherever it drifts.",
+    description: "When cast, a wispy cloud of noxious fumes forms at a location within range, causing intense nausea in all creatures caught within it. At the start of each Round, affected creatures must succeed at an Endurance Resistance Roll or suffer two Difficulty Grades of penalty to all skill rolls due to uncontrollable retching. This condition persists each Round the creature remains in the cloud, and for 1d4+1 minutes after leaving its Area of Effect. The Duration of the cloud assumes calm weather. Moderate wind reduces its Duration by half, while strong wind disperses it entirely in a single Round. See the *Games Master\u2019s Guide*, page XX for more information on Wind."
+  },
+
+  "strength": {
+    name: "Strength",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Mage", rank: 2 },
+      { class: "Paladin", rank: 2 }
+    ],
+    sphere: "Combat",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "1 Minute",
+    duration: "1 Hour/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your muscles tense and swell -- gripping harder, hitting heavier, every movement filled with power.",
+    description: "When cast, this spell imbues the subject with enhanced strength. For mechanical purposes, assume the subject\u2019s STR increases by +4. All Brawn and other STR-based skill rolls gain a +5% bonus. In addition, the subject\u2019s Damage Modifier increases by one step per point of Intensity for the Duration of the spell. steps steps steps Continue progression"
+  },
+
+  "suggestion": {
+    name: "Suggestion",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Creature",
+    castingTime: "2 Rounds",
+    duration: "1 Hour/Intensity",
+    range: "300\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You speak calmly and reasonably. Your words nestle into your target\u2019s thoughts like their own idea.",
+    description: "This spell allows the caster to influence the actions of a single individual for up to 1 hour per point of Intensity, provided the target Fails a Resistance Roll. The caster must speak a language the target understands, and the suggestion must be phrased as a sentence or two proposing a course of action desirable to the caster. The target will not follow any suggestion that would lead to obvious harm. However, indirect or misleading suggestions -- such as describing a stagnant pool of poison as a crystal-clear spring to a thirsty target -- may succeed. The suggestion must be clearly stated at the time of casting. If the course of action seems especially reasonable, the Games Master may rule that the Resistance Roll is one Difficulty Grade harder."
+  },
+
+  "summon insects": {
+    name: "Summon Insects",
+    school: "Conjuration",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Animal",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 or more Targets",
+    castingTime: "1 Round",
+    duration: "1 Round/Intensity",
+    range: "100\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You whistle softly. A swarm of stinging, biting bugs rises to harass and overwhelm.",
+    description: "This spell summons a swarm of normal biting, stinging, or pinching insects at a point of the caster\u2019s choosing within range. Seventy percent of the time, the swarm consists of flying insects such as bees, hornets, or wasps; the remaining 30 percent consists of crawling insects such as ants or beetles. The swarm will appears at a spot of the caster\u2019s choosing within range of the spell and attack any target the caster designates. Refer to Insect Swarm in the *Monster Manual*, page XX, for full swarm mechanics. The total SIZ of the swarm equals 3 per point of Intensity. *For example, a casting at Intensity 8 produces a SIZ 24 swarm, capable of attacking two average-sized humanoids and inflicting 1d4 damage to all Hit Locations.* The caster must maintain Concentration throughout the spell\u2019s Duration; breaking Concentration causes the swarm to disperse early. If the spell is cast underground, there is a 30% chance it summons 1d4 giant ants, plus 1 additional ant per point of Intensity beyond the first. If a giant ant lair is nearby, they automatically respond instead. Each ant operates independently and may attack separate targets. This spell cannot summon swarms into environments unsuitable for insect survival."
+  },
+
+  "tongues (arcane)": {
+    name: "Tongues (Confuse Tongues) (Arcane)",
+    school: "Transmutation",
+    classes: [
+      { class: "Bard", rank: 2 },
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "Caster",
+    castingTime: "1 Round",
+    duration: "1 Minute/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your mouth opens, and foreign words flow -- perfect and fluent, no matter the language.",
+    description: "This spell allows the caster to both speak and understand any one language spoken by a sapient species, including those of newly encountered creatures. The language is chosen at the time of casting and grants the caster perfect fluency and native-level accent. The caster can understand and be understood by all within hearing range, typically about 60 feet. This includes the ability to read and comprehend any racially written script used by the chosen species. The spell does not make the caster more persuasive or likable -- it only enables communication. For every 3 points of Intensity, the caster may choose an additional language to speak and understand. *For example, at Intensity 3, the caster could communicate with both goblins and elves, potentially acting as a translator or mediator.*",
+    reverse: {
+      name: "Confuse Tongues",
+      flavorText: "You twist the meaning of speech. Words slur and tangle -- gibberish, even to the one who speaks them.",
+      description: "The reverse of this spell, Confuse Tongues, cancels Tongues if cast at an Intensity equal to or greater than its Magnitude. If cast independently, it causes confusion in all verbal communication within a 60-foot radius. *Note that this spell differs from the Rank 3 Divine spell. See page XX.*"
+    }
+  },
+
+  "tree": {
+    name: "Tree",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 3 }
+    ],
+    sphere: "Plant",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "Caster",
+    castingTime: "1 Round",
+    duration: "1 Hour/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You transform into a sturdy tree. Roots grip the earth, bark shields you, and danger passes by.",
+    description: "This spell transforms the caster and all carried gear into a small tree, a large dead trunk with a few branches, or a large shrub or bush -- at the caster\u2019s discretion. While transformed, the caster is fully aware of their surroundings but is otherwise treated as an ordinary plant. In this form, the caster has 6 Armor Points and receives damage normally, though Hit Locations should not be revealed until the caster returns to normal form. Special Effects triggered while in tree form should be interpreted with context. For example, Bleed may appear as dripping sap, while Trip Opponent is likely ignored. The caster may end the spell at will, instantly reverting to normal form as a Free Action. Upon return, any damage sustained is applied to the appropriate Hit Locations."
+  },
+
+  "trip": {
+    name: "Trip",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 1 }
+    ],
+    sphere: "Plant",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Item or Object",
+    castingTime: "2 Actions",
+    duration: "10 Minutes/Intensity",
+    range: "Touch",
+    resist: "Athletics",
+    intensityScaling: null,
+    flavorText: "You flick your hand, and force yanks at your foe\u2019s feet -- toppling them with invisible mischief.",
+    description: "This spell is cast on a loose object no longer than 10 feet -- such as a stick, stone, rope, vine, or pole -- causing it to subtly lift and attempt to trip any creature that passes over or near it. Affected creatures must make a Resistance Roll to avoid falling; the roll becomes one Difficulty Grade harder if the creature is moving faster than a walk. The number of potential targets is based on the object\u2019s size, typically one man-sized creature per 5 feet of length, unless the Games Master rules otherwise due to formation or spacing. Creatures that fall while moving faster than a walk take 1d4 damage to a random Hit Location. On soft ground, this is reduced to 1d2. In either case, the victim must use the Regain Footing action before standing again."
+  },
+
+  "vampiric touch": {
+    name: "Vampiric Touch",
+    school: "Necromancy",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "Caster",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "Touch",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "Your hand pulses with dark energy. On contact, life drains from your foe -- warmth flowing into you.",
+    description: "When cast, the mage drains Hit Points from each of the target\u2019s Hit Locations through touch. The spell takes effect either immediately upon a successful touch or automatically after 10 minutes, whichever comes first. Once discharged, the spell is expended. The amount drained is determined by the caster\u2019s Rank (see table below). The result is rolled once and applied equally to all of the target\u2019s Hit Locations. The same number of Hit Points is then added to the caster\u2019s corresponding locations. If the caster has Hit Locations that the target does not (such as wings or a tail), they still gain the full benefit. However, any damage drained from a location the caster does not possess is lost. Worn and natural armor offer no protection against this spell, though magical Armor Points reduce the damage normally. A Successful Evade or Parry prevents the touch and negates the effect. 1 \\- 2 1d2 3 1d4 4 1d6 5 1d8 The caster\u2019s total Hit Points may not exceed twice their normal maximum in any location. Multiple castings may or may not provide additional benefit, depending on the caster\u2019s current totals. Any excess Hit Points gained through Vampiric Touch expire after 1 hour. The victim may recover lost Hit Points through normal or magical healing. Undead are immune to this spell."
+  },
+
+  "warp wood": {
+    name: "Warp Wood (Straighten Wood)",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 1 }
+    ],
+    sphere: "Plant",
+    cost: { base: 1, type: "perIntensity" },
+    costDisplay: "1/Intensity",
+    area: "1 Wooden Item or Object",
+    castingTime: "2 Actions",
+    duration: "10 Minutes/Intensity",
+    range: "Touch",
+    resist: "Athletics",
+    intensityScaling: null,
+    flavorText: "You twist your fingers, and the wood groans -- bending, splintering, and warping beyond use.",
+    description: "This spell causes wood to twist and bend, potentially rendering it unusable. The caster may affect 1 Thing or 5 Hit Points of wood per point of Intensity. Use Things for small items and Hit Points for larger structures such as doors, walls, or beams. It\u2019s not always necessary to warp an entire object to disable it; for instance, a single bent plank might be enough to cause a boat to leak, depending on the situation. The full piece of wood must be covered for the effect to take hold, unless the Games Master rules otherwise. When targeting an enchanted wooden object, the casting roll is Opposed by the skill of the original caster. If the skill is unknown, assume 60%, +20% per spell Rank above 1 (Rank 2 = 80%, Rank 3 = 100%, and so on). For wooden magic items, use the item\u2019s Intensity x10 as the opposing skill.",
+    reverse: {
+      name: "Straighten Wood",
+      flavorText: "With a firm gesture, splinters fuse and warped lines smooth -- restoring the wood to its true form.",
+      description: "The reverse of this spell, Straighten Wood, can undo the effects of Warp Wood or straighten naturally warped or crooked wooden items."
+    }
+  },
+
+  "water walk": {
+    name: "Water Walk",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 2 },
+      { class: "Druid", rank: 2 },
+      { class: "Ranger", rank: 2 }
+    ],
+    sphere: "Elemental (Water)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 or more Targets",
+    castingTime: "2 Actions",
+    duration: "1 Minute/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You bless your feet. With each step, the water firms beneath you -- bearing your weight like solid stone.",
+    description: "When cast, this spell allows one or more subjects to walk on the surface of liquids or liquefied solids -- including water, oil, snow, mud, or quicksand -- as though walking on solid ground. Subjects move across these surfaces at their normal Movement Rate and may leave shallow footprints in softer materials like mud or snow. If cast while underwater, the spell causes the subject to rise toward the surface at a rate of 20 feet per Round. An unwilling target in this case may Evade to avoid the caster\u2019s touch. Each level of Intensity allows the spell to affect one additional subject."
+  },
+
+  "web": {
+    name: "Web",
+    school: "Evocation",
+    classes: [
+      { class: "Mage", rank: 2 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "20\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "20 Minutes/Intensity",
+    range: "30\u2019/Intensity",
+    resist: "Evade, plus See Below",
+    intensityScaling: null,
+    flavorText: "Sticky strands burst forth, coating walls and floors -- ensnaring anything that moves through their grasp.",
+    description: "This spell causes thick, sticky strands of webbing to shoot from the caster\u2019s hand. The webs may be anchored floor to ceiling or wall to wall to block movement, or sprayed directly at opponents to entangle them. If a target has space to escape, they may attempt an Evade roll to move outside the Area of Effect. This requires an available Action Point. A Failed Resistance Roll results in immobilization, with 1d3 random Hit Locations entangled. A webbed limb cannot be used, and if the chest, abdomen, or a leg is ensnared, all physical skill rolls (except Brawn rolls to escape) are made one Difficulty Grade harder. If the head is entangled, the victim begins to suffocate (see Asphyxiation, Drowning, and Suffocation in the *Games Master\u2019s Guide*, page XX). On the following Turn, the victim may spend an Action Point to attempt to break free. Magic webbing has 6 Armor Points and Hit Points equal to 3x the spell\u2019s Intensity. Escaping requires winning an Opposed Brawn roll against the web\u2019s Stickiness, which equals the caster\u2019s Arcane Casting skill. If the roll Fails, the victim remains trapped. Attempting to cut free exposes any tool or weapon used to the same entangling effects. Despite common belief, webs are not flammable. However, they can be slowly burned through by applying open flame -- fire damage bypasses the web\u2019s Armor Points."
+  },
+
+  // =========================================================================
+  //  RANK 2 REVERSE / ALIAS ENTRIES
+  // =========================================================================
+
+  "breathe air": { name: "Breathe Air", aliasOf: "breathe water", version: "reverse" },
+  "continual darkness": { name: "Continual Darkness", aliasOf: "continual light", version: "reverse" },
+  "cause blindness of deafness": { name: "Cause Blindness of Deafness", aliasOf: "cure blindness or deafness", version: "reverse" },
+  "cause disease": { name: "Cause Disease", aliasOf: "cure disease", version: "reverse" },
+  "cause serious wounds": { name: "Cause Serious Wounds", aliasOf: "cure serious wounds", version: "reverse" },
+  "detect good (arcane)": { name: "Detect Good (Arcane)", aliasOf: "detect evil (arcane)", version: "reverse" },
+  "chill metal": { name: "Chill Metal", aliasOf: "heat metal", version: "reverse" },
+  "obscure passions": { name: "Obscure Passions", aliasOf: "know passions", version: "reverse" },
+  "obscure object": { name: "Obscure Object", aliasOf: "locate object", version: "reverse" },
+  "protection from good 10' radius": { name: "Protection from Good 10' Radius", aliasOf: "protection from evil 10 foot radius", version: "reverse" },
+  "bestow curse": { name: "Bestow Curse", aliasOf: "remove curse (divine)", version: "reverse" },
+  "confuse tongues": { name: "Confuse Tongues", aliasOf: "tongues (arcane)", version: "reverse" },  "straighten wood": { name: "Straighten Wood", aliasOf: "warp wood", version: "reverse" }
 
 };
 
