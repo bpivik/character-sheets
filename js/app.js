@@ -8216,9 +8216,18 @@ const App = {
       m.intensity = 1;
       m.costStr = costStr;
 
-      // Check memorized state
-      const memCheck = document.getElementById(`${rankKey}-${slotIndex}-mem`);
+      // Check memorized state — use row-based query for robustness
+      // (IDs can desync after row removal/reindex; querySelector on the actual row is most reliable)
+      const spellTbody = document.getElementById(`${rankKey}-body`);
+      const spellRow = spellTbody?.rows[slotIndex];
+      const memCheckByRow = spellRow?.querySelector('.spell-memorized');
+      const memCheckById = document.getElementById(`${rankKey}-${slotIndex}-mem`);
+      const memCheck = memCheckByRow || memCheckById;
       m.isNonMemorized = memCheck ? !memCheck.checked : false;
+      console.log(`%c[CAST] memCheck: byRow=${!!memCheckByRow} byId=${!!memCheckById} checked=${memCheck?.checked} → isNonMemorized=${m.isNonMemorized}`, 'color: #c87832; font-weight: bold');
+      if (memCheckByRow && memCheckById && memCheckByRow !== memCheckById) {
+        console.warn('[CAST] WARNING: Row-based and ID-based checkbox are DIFFERENT elements! Row says checked=' + memCheckByRow.checked + ', ID says checked=' + memCheckById.checked);
+      }
 
       // Determine spell rank number
       m.spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
@@ -8230,7 +8239,7 @@ const App = {
 
       // Determine casting class and skill
       this._determineCastingInfo(m, classSpell, costStr);
-      console.log(`castSpell: class=${m.classSource}, type=${m.castingType}, skill=${m.effectiveSkill}%`);
+      console.log(`%c[CAST] FINAL: class=${m.classSource}, type=${m.castingType}, baseSkill=${m.castingSkillPercent}, effectiveSkill=${m.effectiveSkill}%, nonMem=${m.isNonMemorized}, penalty=${m.nonMemPenalty}, difficulty="${m.nonMemDifficulty}"`, 'color: #2a9d8f; font-weight: bold');
 
       // Populate and show modal
       this._populateCastModal(m, costStr);
@@ -8393,8 +8402,11 @@ const App = {
     m.nonMemSkillId = '';
     m.nonMemSkillPercent = 0;
 
+    console.log(`%c[CAST] _applySelectedClass: isNonMemorized=${m.isNonMemorized}, classSource="${m.classSource}", sel.name="${sel.name}", effectiveSkill=${m.effectiveSkill}`, 'color: #c87832; font-weight: bold');
+
     if (m.isNonMemorized) {
       const classNorm = sel.name.toLowerCase();
+      console.log(`%c[CAST] NON-MEM branch entered. classNorm="${classNorm}"`, 'color: #e63946; font-weight: bold');
       if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
         // Mage: Hard Arcane Casting — cast directly from spellbook
         m.nonMemDifficulty = 'Hard';
@@ -8429,9 +8441,56 @@ const App = {
         }
       }
       m.effectiveSkill += m.nonMemPenalty;
+      console.log(`%c[CAST] NON-MEM penalty=${m.nonMemPenalty}, difficulty="${m.nonMemDifficulty}", effectiveSkill=${m.effectiveSkill}`, 'color: #e63946; font-weight: bold');
+    } else {
+      console.log(`[CAST] Memorized casting — no non-mem penalty applied`);
     }
 
     m.effectiveSkill = Math.max(0, Math.min(m.effectiveSkill, 200));
+    console.log(`%c[CAST] _applySelectedClass DONE: effectiveSkill=${m.effectiveSkill}`, 'color: #2a9d8f; font-weight: bold');
+  },
+
+  /**
+   * Defensive recalculation of effective skill from current state.
+   * Called before display and before rolling to guarantee non-mem penalty is applied.
+   * This exists as a safety net in case _applySelectedClass is skipped or overridden.
+   */
+  _ensureEffectiveSkill(m) {
+    // Start from the casting skill percent (base value from the skill input)
+    const skillEl = document.getElementById(m.castingSkillId);
+    let baseSkill = parseInt(skillEl?.value, 10) || 0;
+
+    // For non-memorized divine, use Piety instead
+    if (m.isNonMemorized && m.nonMemSkillName === 'Piety') {
+      const pietyEl = document.getElementById('piety-percent');
+      baseSkill = parseInt(pietyEl?.value, 10) || 0;
+    }
+
+    let effective = baseSkill;
+
+    // Cantrip rank bonus
+    if (m.spellRank === 0 && m.casterRank >= 1) {
+      effective += (m.casterRank * 20);
+    }
+
+    // Armor penalty
+    if (m.armorRestriction?.penalty) {
+      effective -= 20;
+    }
+
+    // Non-memorized penalty — THIS IS THE CRITICAL PART
+    if (m.isNonMemorized && m.nonMemPenalty) {
+      effective += m.nonMemPenalty;
+    }
+
+    effective = Math.max(0, Math.min(effective, 200));
+
+    // Only update if our recalculation differs (log for debugging)
+    if (effective !== m.effectiveSkill) {
+      console.warn(`%c[CAST] _ensureEffectiveSkill CORRECTED: was ${m.effectiveSkill}, recalculated to ${effective} (base=${baseSkill}, nonMem=${m.isNonMemorized}, penalty=${m.nonMemPenalty})`, 'color: #e63946; font-weight: bold');
+      m.effectiveSkill = effective;
+    }
+    return effective;
   },
 
   /**
@@ -8542,7 +8601,17 @@ const App = {
     if (d) {
       document.getElementById('cast-stat-cost').textContent = d.costDisplay || costStr || '1';
       document.getElementById('cast-stat-area').textContent = d.area || '—';
-      document.getElementById('cast-stat-time').textContent = d.castingTime || '—';
+      // Show stepped casting time for non-memorized spells
+      const timeEl = document.getElementById('cast-stat-time');
+      if (m.isNonMemorized) {
+        const baseTime = d.castingTime || '1 Action';
+        const steppedTime = this._stepCastingTime(baseTime);
+        timeEl.innerHTML = `<span class="stat-time-stepped">${steppedTime}</span>`;
+        timeEl.classList.add('stat-time-increased');
+      } else {
+        timeEl.textContent = d.castingTime || '—';
+        timeEl.classList.remove('stat-time-increased');
+      }
       document.getElementById('cast-stat-duration').textContent = d.duration || '—';
       document.getElementById('cast-stat-range').textContent = d.range || '—';
       document.getElementById('cast-stat-resist').textContent = d.resist || 'None';
@@ -8586,10 +8655,11 @@ const App = {
       document.getElementById('cast-nonmem-difficulty').textContent =
         `${m.nonMemDifficulty} ${skillLabel} roll (${m.nonMemPenalty >= 0 ? '+' : ''}${m.nonMemPenalty}%)`;
 
-      // Casting time step increase
+      // Casting time step increase — make it stand out
       const baseTime = d?.castingTime || '1 Action';
       const steppedTime = this._stepCastingTime(baseTime);
-      document.getElementById('cast-nonmem-time').textContent = `Casting Time: ${steppedTime}`;
+      const timeEl = document.getElementById('cast-nonmem-time');
+      timeEl.innerHTML = `<span class="cast-nonmem-time-label">Casting Time:</span> <span class="cast-nonmem-time-base">${baseTime}</span> <span class="cast-nonmem-time-arrow">\u27A1</span> <span class="cast-nonmem-time-stepped">${steppedTime}</span>`;
 
       // Class-specific rules summary
       const classNorm = m.classSource.toLowerCase();
@@ -8624,6 +8694,8 @@ const App = {
     document.getElementById('cast-toggle-desc').textContent = 'Show Full Description \u25BC';
 
     // Casting skill — show override for non-memorized divine
+    // Defensive recalculation to guarantee non-mem penalty is applied
+    this._ensureEffectiveSkill(m);
     let displaySkillName;
     if (m.isNonMemorized && m.nonMemSkillName) {
       displaySkillName = m.nonMemSkillName;
@@ -8876,6 +8948,9 @@ const App = {
     const resultSection = document.getElementById('cast-modal-result');
     resultSection.classList.remove('hidden');
 
+    // Defensive recalculation before rolling
+    this._ensureEffectiveSkill(m);
+
     // Hide sub-sections initially
     document.getElementById('cast-force-section').classList.add('hidden');
     document.getElementById('cast-result-banner').style.visibility = 'hidden';
@@ -8978,15 +9053,20 @@ const App = {
         // Fumble: class-specific consequences, no MP spent
         if (classNorm.includes('mage') || classNorm.includes('magic-user')) {
           details.textContent = `Fumble! No MP spent. The spell fades from the spellbook\u2019s pages and is permanently lost.`;
+          // Remove spell from the spell list
+          this._removeSpellFromList(m);
         } else if (classNorm.includes('bard')) {
           details.textContent = `Fumble! No MP spent. The spell fades from the bard\u2019s known spells and is lost.`;
+          // Remove spell from the spell list
+          this._removeSpellFromList(m);
         } else if (classNorm.includes('sorcerer')) {
-          const skillLoss = Math.floor(Math.random() * 4) + 2; // 1d4+1
-          details.textContent = `Fumble! No MP spent. Arcane Casting skill reduced by ${skillLoss}%. Apply this penalty manually.`;
+          // Sorcerer: reduce Arcane Casting by 1d4+1%
+          this._showFumbleSkillLossOverlay(m, 'arcane-casting-percent', 'Arcane Casting',
+            'The weave unravels violently. Your connection to the arcane frays.');
         } else {
-          // Divine
-          const skillLoss = Math.floor(Math.random() * 4) + 2; // 1d4+1
-          details.textContent = `Fumble! No MP spent. The deity is displeased \u2014 Piety skill reduced by ${skillLoss}%. Apply this penalty manually.`;
+          // Divine: reduce Piety by 1d4+1%
+          this._showFumbleSkillLossOverlay(m, 'piety-percent', 'Piety',
+            'Your deity is disappointed in you and your Piety decreases.');
         }
       } else {
         // Failure: no MP spent — class-flavored messages
@@ -9142,6 +9222,106 @@ const App = {
     }, 60);
 
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Remove a spell from the spell list after a fumble (mage/bard non-memorized)
+   */
+  _removeSpellFromList(m) {
+    const tbody = document.getElementById(`${m.rankKey}-body`);
+    if (!tbody) return;
+    const row = tbody.rows[m.slotIndex];
+    if (!row) return;
+
+    // Brief delay so the user sees the fumble result first
+    setTimeout(() => {
+      row.style.transition = 'opacity 0.6s ease, background-color 0.3s ease';
+      row.style.backgroundColor = 'rgba(114, 28, 36, 0.15)';
+      setTimeout(() => {
+        row.style.opacity = '0';
+        setTimeout(() => {
+          this.removeSpellRow(m.rankKey, row);
+          console.log(`[CAST] Spell "${m.spellName}" removed from ${m.rankKey} after fumble`);
+        }, 600);
+      }, 400);
+    }, 800);
+  },
+
+  /**
+   * Show animated fumble overlay for skill loss (divine Piety / sorcerer Arcane Casting)
+   * Rolls 1d4+1, reduces the skill, and shows a dramatic overlay
+   */
+  _showFumbleSkillLossOverlay(m, skillFieldId, skillLabel, message) {
+    // Create or get the fumble overlay
+    let overlay = document.getElementById('fumble-skill-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'fumble-skill-overlay';
+      overlay.className = 'fumble-skill-overlay';
+      overlay.innerHTML = `
+        <div class="fumble-skill-content">
+          <div class="fumble-skill-icon">\u26A1</div>
+          <div class="fumble-skill-message" id="fumble-skill-message"></div>
+          <div class="fumble-skill-roll-section">
+            <span class="fumble-skill-roll-label">1d4+1 \u2192</span>
+            <span class="fumble-skill-roll-number" id="fumble-skill-roll-number">?</span>
+          </div>
+          <div class="fumble-skill-result" id="fumble-skill-result"></div>
+          <button class="fumble-skill-close" id="fumble-skill-close">OK</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      document.getElementById('fumble-skill-close').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+    }
+
+    // Set message
+    document.getElementById('fumble-skill-message').textContent = message;
+    document.getElementById('fumble-skill-result').textContent = '';
+    const rollEl = document.getElementById('fumble-skill-roll-number');
+    rollEl.textContent = '?';
+    rollEl.classList.add('rolling');
+
+    // Show overlay after brief delay
+    setTimeout(() => {
+      overlay.classList.add('visible');
+
+      // Animate the 1d4+1 roll
+      const finalRoll = Math.floor(Math.random() * 4) + 2; // 1d4+1 = 2-5
+      let ticks = 0;
+      const maxTicks = 12;
+      const rollInterval = setInterval(() => {
+        ticks++;
+        rollEl.textContent = String(Math.floor(Math.random() * 4) + 2);
+        if (ticks >= maxTicks) {
+          clearInterval(rollInterval);
+          rollEl.classList.remove('rolling');
+          rollEl.textContent = String(finalRoll);
+
+          // Apply skill reduction
+          const skillEl = document.getElementById(skillFieldId);
+          if (skillEl) {
+            const current = parseInt(skillEl.value, 10) || 0;
+            const reduced = Math.max(0, current - finalRoll);
+            skillEl.value = reduced;
+            // Save to character
+            this.scheduleAutoSave();
+          }
+
+          // Show result text
+          const resultEl = document.getElementById('fumble-skill-result');
+          resultEl.textContent = `${skillLabel} reduced by ${finalRoll}%`;
+          resultEl.classList.add('visible');
+
+          // Also update the fumble details text in the cast modal
+          const details = document.getElementById('cast-result-details');
+          if (details) {
+            details.textContent = `Fumble! No MP spent. ${skillLabel} reduced by ${finalRoll}%.`;
+          }
+        }
+      }, 80);
+    }, 600);
   },
 
   /**
