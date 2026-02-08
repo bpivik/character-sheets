@@ -453,6 +453,9 @@ const App = {
       // Force recalculate ENC status - this will also call updateArtfulDodgerDisplay
       // and updateAgileDisplay since isInitializing is now false
       this.updateTotalEnc();
+      
+      // Update MP display on spell pages
+      this.updateMagicMPDisplay();
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -1393,6 +1396,11 @@ const App = {
             if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
               window.WeaponData.updateAllWeaponDamage();
             }
+          }
+          
+          // Update MP display on spell pages when magic points change
+          if (fieldId === 'magic-points-current') {
+            this.updateMagicMPDisplay();
           }
         });
         
@@ -5682,6 +5690,33 @@ const App = {
   },
   
   /**
+   * Update the Magic Points display bars on spell pages
+   * Syncs from the main magic-points-current and magic-points-original fields
+   */
+  updateMagicMPDisplay() {
+    const mpCurrent = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
+    const mpMax = parseInt(document.getElementById('magic-points-original')?.value, 10) || 0;
+    
+    ['1', '2'].forEach(pageNum => {
+      const currentEl = document.getElementById(`magic-mp-display-${pageNum}`);
+      const maxEl = document.getElementById(`magic-mp-max-display-${pageNum}`);
+      const bar = currentEl?.closest('.magic-mp-bar');
+      
+      if (currentEl) currentEl.textContent = mpCurrent;
+      if (maxEl) maxEl.textContent = mpMax;
+      
+      if (bar) {
+        bar.classList.remove('mp-low', 'mp-empty');
+        if (mpCurrent <= 0) {
+          bar.classList.add('mp-empty');
+        } else if (mpMax > 0 && mpCurrent <= Math.floor(mpMax * 0.25)) {
+          bar.classList.add('mp-low');
+        }
+      }
+    });
+  },
+  
+  /**
    * Add a single spell row to a rank
    * @param {string} rankKey - The rank key (cantrips, rank1, etc.)
    * @param {Object} data - Optional spell data {name, cost, memorized, classSpell}
@@ -6658,6 +6693,9 @@ const App = {
     if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
       window.WeaponData.updateAllWeaponDamage();
     }
+    
+    // Update MP display on spell pages
+    this.updateMagicMPDisplay();
     
     // Tenacity Max is always equal to POW (not affected by lock)
     const tenacityMax = document.getElementById('tenacity-max');
@@ -8072,6 +8110,9 @@ const App = {
     
     // Show success feedback
     this.showCastFeedback(castBtn, 'success');
+    
+    // Update MP display on spell pages
+    this.updateMagicMPDisplay();
     
     console.log(`Cast ${spellName} for ${cost} MP (${currentMP} → ${mpField.value})`);
     this.scheduleAutoSave();
@@ -15106,6 +15147,7 @@ const App = {
     if (apCurrent) apCurrent.value = currentAP - 1;
     if (mpCurrent) mpCurrent.value = currentMP - 1;
     
+    this.updateMagicMPDisplay();
     this.scheduleAutoSave();
     
     // Open the modal
