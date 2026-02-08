@@ -589,13 +589,11 @@
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .scrollable-skills-container::-webkit-scrollbar-track,
-[data-theme="dark"] .scrollable-language-container::-webkit-scrollbar-track {
+[data-theme="dark"] .scrollable-skills-container::-webkit-scrollbar-track {
   background: rgba(255,255,255,0.05);
 }
 
-[data-theme="dark"] .scrollable-skills-container::-webkit-scrollbar-thumb,
-[data-theme="dark"] .scrollable-language-container::-webkit-scrollbar-thumb {
+[data-theme="dark"] .scrollable-skills-container::-webkit-scrollbar-thumb {
   background: rgba(139, 115, 85, 0.5);
 }
 

@@ -2325,6 +2325,10 @@ const App = {
       nameInput.addEventListener('blur', (e) => {
         if (e.target.value.trim()) {
           e.target.value = this.toTitleCase(e.target.value.trim());
+        } else {
+          // Name cleared - remove this row
+          row.remove();
+          this.reindexLanguages();
         }
         this.scheduleAutoSave();
       });
@@ -5702,9 +5706,67 @@ const App = {
       const maxEl = document.getElementById(`magic-mp-max-display-${pageNum}`);
       const bar = currentEl?.closest('.magic-mp-bar');
       
-      if (currentEl) currentEl.textContent = mpCurrent;
+      if (currentEl && parseInt(currentEl.value, 10) !== mpCurrent) {
+        currentEl.value = mpCurrent;
+      }
       if (maxEl) maxEl.textContent = mpMax;
       
+      // Setup listener once
+      if (currentEl && !currentEl.dataset.syncAdded) {
+        currentEl.dataset.syncAdded = 'true';
+        currentEl.addEventListener('input', (e) => {
+          // Enforce max
+          const max = parseInt(document.getElementById('magic-points-original')?.value, 10) || 0;
+          let val = parseInt(e.target.value, 10);
+          if (!isNaN(val) && val > max) {
+            val = max;
+            e.target.value = val;
+          }
+          if (val < 0) {
+            val = 0;
+            e.target.value = val;
+          }
+          
+          // Sync to main field
+          const mainField = document.getElementById('magic-points-current');
+          if (mainField) {
+            mainField.value = e.target.value;
+            this.character.derived = this.character.derived || {};
+            this.character.derived.magicPointsCurrent = e.target.value;
+          }
+          
+          // Sync to other magic page display
+          const otherId = pageNum === '1' ? 'magic-mp-display-2' : 'magic-mp-display-1';
+          const otherEl = document.getElementById(otherId);
+          if (otherEl) otherEl.value = e.target.value;
+          
+          // Update bar styling
+          this._updateMPBarStyling();
+          this.scheduleAutoSave();
+        });
+      }
+      
+      if (bar) {
+        bar.classList.remove('mp-low', 'mp-empty');
+        if (mpCurrent <= 0) {
+          bar.classList.add('mp-empty');
+        } else if (mpMax > 0 && mpCurrent <= Math.floor(mpMax * 0.25)) {
+          bar.classList.add('mp-low');
+        }
+      }
+    });
+  },
+  
+  /**
+   * Update MP bar color styling on both pages
+   */
+  _updateMPBarStyling() {
+    const mpCurrent = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
+    const mpMax = parseInt(document.getElementById('magic-points-original')?.value, 10) || 0;
+    
+    ['1', '2'].forEach(pageNum => {
+      const currentEl = document.getElementById(`magic-mp-display-${pageNum}`);
+      const bar = currentEl?.closest('.magic-mp-bar');
       if (bar) {
         bar.classList.remove('mp-low', 'mp-empty');
         if (mpCurrent <= 0) {
@@ -8701,6 +8763,21 @@ const App = {
         <input type="number" class="language-input" id="language-${newIndex}-current" placeholder="" value="${baseValue}">
       `;
       container.appendChild(row);
+      
+      // Add event listeners with auto-remove on empty
+      const nameInput = row.querySelector('.language-name');
+      const currentInput = row.querySelector('.language-input');
+      nameInput.addEventListener('blur', (e) => {
+        if (e.target.value.trim()) {
+          e.target.value = this.toTitleCase(e.target.value.trim());
+        } else {
+          row.remove();
+          this.reindexLanguages();
+        }
+        this.scheduleAutoSave();
+      });
+      nameInput.addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', () => this.scheduleAutoSave());
     }
     
     // Also add to Special Abilities as "Language (X)" unless skipAbility is true
@@ -19014,16 +19091,20 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const container = document.getElementById('language-container');
     if (!container) return;
     
-    // Gather non-native languages
+    // Gather non-native languages with all data
     const languages = [];
     const rows = container.querySelectorAll('.language-row:not(.native)');
     rows.forEach(row => {
       const nameInput = row.querySelector('.language-name');
       const currentInput = row.querySelector('.language-input');
+      const formulaSpan = row.querySelector('.language-formula');
       if (nameInput && nameInput.value.trim()) {
         languages.push({
           name: nameInput.value.trim(),
-          current: currentInput?.value || ''
+          current: currentInput?.value || '',
+          classLanguage: nameInput.dataset.classLanguage || null,
+          classGranted: row.dataset.classGranted || null,
+          formula: formulaSpan?.textContent || 'INT+CHA'
         });
       }
     });
@@ -19031,19 +19112,41 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Sort alphabetically
     languages.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Re-populate non-native rows
-    rows.forEach((row, i) => {
+    // Remove all non-native rows
+    rows.forEach(row => row.remove());
+    
+    // Re-create only filled rows
+    languages.forEach(lang => {
+      const newIndex = container.querySelectorAll('.language-row:not(.native)').length + 2;
+      const row = document.createElement('div');
+      row.className = 'language-row';
+      if (lang.classGranted) row.dataset.classGranted = 'true';
+      row.innerHTML = `
+        <input type="text" class="language-name" id="language-${newIndex}-name" placeholder="" value="${lang.name.replace(/"/g, '&quot;')}"${lang.classLanguage ? ` data-class-language="${lang.classLanguage}"` : ''}>
+        <span class="language-formula">${lang.formula}</span>
+        <span class="language-base" id="language-${newIndex}-base">0</span>
+        <input type="number" class="language-input" id="language-${newIndex}-current" placeholder="" value="${lang.current}">
+      `;
+      container.appendChild(row);
+      
+      // Add event listeners with auto-remove on empty
       const nameInput = row.querySelector('.language-name');
       const currentInput = row.querySelector('.language-input');
-      if (i < languages.length) {
-        nameInput.value = languages[i].name;
-        currentInput.value = languages[i].current;
-      } else {
-        nameInput.value = '';
-        currentInput.value = '';
-      }
+      nameInput.addEventListener('blur', (e) => {
+        if (e.target.value.trim()) {
+          e.target.value = this.toTitleCase(e.target.value.trim());
+        } else {
+          row.remove();
+          this.reindexLanguages();
+        }
+        this.scheduleAutoSave();
+      });
+      nameInput.addEventListener('input', () => this.scheduleAutoSave());
+      currentInput.addEventListener('input', () => this.scheduleAutoSave());
     });
     
+    // Recalculate bases
+    this.recalculateAll();
     this.scheduleAutoSave();
   },
   
@@ -19498,12 +19601,28 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     `;
     container.appendChild(row);
     
+    // Add event listeners with auto-remove on empty
+    const nameInput = row.querySelector('.language-name');
+    const currentInput = row.querySelector('.language-input');
+    
+    nameInput.addEventListener('blur', (e) => {
+      if (e.target.value.trim()) {
+        e.target.value = this.toTitleCase(e.target.value.trim());
+      } else {
+        // Name cleared - remove this row
+        row.remove();
+        this.reindexLanguages();
+      }
+      this.scheduleAutoSave();
+    });
+    nameInput.addEventListener('input', () => this.scheduleAutoSave());
+    currentInput.addEventListener('input', () => this.scheduleAutoSave());
+    
     // Calculate base value
     this.recalculateAll();
     
-    // Scroll to show new row and focus
-    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    row.querySelector('.language-name').focus();
+    // Focus the new row
+    nameInput.focus();
     
     this.scheduleAutoSave();
   },
