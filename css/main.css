@@ -8207,6 +8207,60 @@ input.skill-input.powerful-concentration-bonus,
   z-index: 2;
 }
 
+/* Multiclass selector */
+.cast-modal-class-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+  border-bottom: 1px solid rgba(139, 115, 85, 0.2);
+  background: rgba(139, 115, 85, 0.06);
+  position: relative;
+  z-index: 2;
+}
+
+.cast-class-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b7355;
+  white-space: nowrap;
+}
+
+.cast-class-options {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.cast-class-btn {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(139, 115, 85, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  color: #6b5344;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.15s;
+}
+.cast-class-btn:hover {
+  background: rgba(139, 115, 85, 0.12);
+  border-color: rgba(139, 115, 85, 0.5);
+}
+.cast-class-btn.active {
+  background: rgba(139, 115, 85, 0.2);
+  border-color: #8b7355;
+  color: #4a3a2a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+/* Theme-colored active states */
+.theme-divine .cast-class-btn.active { border-color: #daa520; background: rgba(218,165,32,0.15); }
+.theme-arcane .cast-class-btn.active { border-color: #6a5acd; background: rgba(106,90,205,0.15); }
+.theme-sorcery .cast-class-btn.active { border-color: #b22222; background: rgba(178,34,34,0.15); }
+.theme-bardic .cast-class-btn.active { border-color: #2e8b57; background: rgba(46,139,87,0.15); }
+
 .cast-modal-title-row {
   display: flex;
   flex-direction: column;
@@ -8739,6 +8793,82 @@ input.skill-input.powerful-concentration-bonus,
 .cast-animation-overlay.anim-critical {
   background: radial-gradient(circle at center, rgba(255, 215, 0, 0.6), rgba(255, 255, 100, 0.35), rgba(255, 200, 0, 0.15), transparent 70%);
   animation: criticalBurst 2.2s ease-out forwards;
+}
+
+/* ========== DIALOG-LEVEL CASTING ANIMATIONS (box-shadow based) ========== */
+/* These animate on the modal dialog itself, ensuring visibility regardless of overflow/stacking */
+
+@keyframes castGlowDivine {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(218,165,32,0); }
+  15% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(218,165,32,0.7), 0 0 120px rgba(255,215,0,0.3), inset 0 0 40px rgba(255,215,0,0.15); }
+  40% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 40px rgba(218,165,32,0.5), 0 0 80px rgba(255,215,0,0.2), inset 0 0 25px rgba(255,215,0,0.1); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(218,165,32,0); }
+}
+.cast-modal-content.casting-anim-divine-success {
+  animation: castGlowDivine 2s ease-out forwards;
+}
+
+@keyframes castGlowArcane {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(106,90,205,0); }
+  15% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(106,90,205,0.7), 0 0 120px rgba(138,43,226,0.3), inset 0 0 40px rgba(138,43,226,0.15); }
+  40% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 40px rgba(106,90,205,0.5), 0 0 80px rgba(138,43,226,0.2), inset 0 0 25px rgba(138,43,226,0.1); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(106,90,205,0); }
+}
+.cast-modal-content.casting-anim-arcane-success {
+  animation: castGlowArcane 2s ease-out forwards;
+}
+
+@keyframes castGlowSorcery {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(178,34,34,0); }
+  15% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(178,34,34,0.7), 0 0 120px rgba(220,20,60,0.3), inset 0 0 40px rgba(178,34,34,0.15); }
+  40% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 40px rgba(178,34,34,0.5), 0 0 80px rgba(220,20,60,0.2), inset 0 0 25px rgba(178,34,34,0.1); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(178,34,34,0); }
+}
+.cast-modal-content.casting-anim-sorcery-success {
+  animation: castGlowSorcery 2s ease-out forwards;
+}
+
+@keyframes castGlowBardic {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(46,139,87,0); }
+  15% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(46,139,87,0.7), 0 0 120px rgba(60,179,113,0.3), inset 0 0 40px rgba(46,139,87,0.15); }
+  40% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 40px rgba(46,139,87,0.5), 0 0 80px rgba(60,179,113,0.2), inset 0 0 25px rgba(46,139,87,0.1); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(46,139,87,0); }
+}
+.cast-modal-content.casting-anim-bardic-success {
+  animation: castGlowBardic 2s ease-out forwards;
+}
+
+@keyframes castGlowCritical {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(255,215,0,0); }
+  10% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 80px rgba(255,215,0,0.9), 0 0 160px rgba(255,255,100,0.4), inset 0 0 50px rgba(255,215,0,0.2); }
+  30% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(255,215,0,0.7), 0 0 120px rgba(255,255,100,0.3), inset 0 0 35px rgba(255,215,0,0.15); }
+  60% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255,215,0,0.4), 0 0 60px rgba(255,255,100,0.15); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(255,215,0,0); }
+}
+.cast-modal-content.casting-anim-critical {
+  animation: castGlowCritical 2.2s ease-out forwards;
+}
+
+@keyframes castGlowFizzle {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5); }
+  15% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 30px rgba(128,128,128,0.4), inset 0 0 20px rgba(128,128,128,0.1); }
+  40% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 15px rgba(128,128,128,0.2); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5); }
+}
+.cast-modal-content.casting-anim-fizzle {
+  animation: castGlowFizzle 1.2s ease-out forwards;
+}
+
+@keyframes castGlowFumble {
+  0% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(200,30,30,0); }
+  10% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(200,30,30,0.8), 0 0 100px rgba(139,0,0,0.3), inset 0 0 30px rgba(200,30,30,0.15); }
+  25% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 20px rgba(200,30,30,0.3); }
+  40% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 50px rgba(200,30,30,0.6), 0 0 80px rgba(139,0,0,0.2), inset 0 0 25px rgba(200,30,30,0.1); }
+  60% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 15px rgba(200,30,30,0.2); }
+  100% { box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 0 rgba(200,30,30,0); }
+}
+.cast-modal-content.casting-anim-fumble {
+  animation: castGlowFumble 1.5s ease-out forwards;
 }
 
 /* Add Spell Button */

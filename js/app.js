@@ -8176,7 +8176,9 @@ const App = {
     cost: 1,
     armorRestriction: null,
     hasRolled: false,
-    rollResult: null
+    rollResult: null,
+    matchingClasses: [],
+    selectedClassIndex: 0
   },
 
   /**
@@ -8205,6 +8207,7 @@ const App = {
       m.hasRolled = false;
       m.rollResult = null;
       m.intensity = 1;
+      m.costStr = costStr;
 
       // Determine spell rank number
       m.spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
@@ -8235,90 +8238,158 @@ const App = {
   },
 
   /**
-   * Determine casting class, skill, rank, and armor restrictions
+   * Determine casting class, skill, rank, and armor restrictions.
+   * Finds ALL matching casting classes for multiclass support.
    */
   _determineCastingInfo(m, classSpell, costStr) {
     const L = window.SpellDetailsLookup;
+    const casterClassTypes = ['cleric', 'mage', 'sorcerer', 'bard', 'druid', 'paladin', 'ranger', 'anti-paladin'];
 
-    // Find the casting class from: classSpell dataset, or guess from spell details, or from character classes
-    // Keep positional alignment between class names and rank values
-    const rawClasses = [
-      document.getElementById('class-primary')?.value?.trim() || '',
-      document.getElementById('class-secondary')?.value?.trim() || '',
-      document.getElementById('class-tertiary')?.value?.trim() || ''
-    ];
+    // Gather character's classes with ranks
+    const charClasses = [
+      { field: 'class-primary', rankField: 'rank-primary' },
+      { field: 'class-secondary', rankField: 'rank-secondary' },
+      { field: 'class-tertiary', rankField: 'rank-tertiary' }
+    ].map(c => ({
+      name: document.getElementById(c.field)?.value?.trim() || '',
+      rank: parseInt(document.getElementById(c.rankField)?.value, 10) || 0
+    })).filter(c => c.name);
 
-    const rawRanks = [
-      parseInt(document.getElementById('rank-primary')?.value, 10) || 0,
-      parseInt(document.getElementById('rank-secondary')?.value, 10) || 0,
-      parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
-    ];
+    // Find which of the character's classes can cast this spell
+    m.matchingClasses = [];
+    const spellDetails = m.spellDetails;
 
-    // Find best matching class
-    let bestClass = classSpell || '';
-    let bestRank = 1;
+    for (const cc of charClasses) {
+      const ccNorm = cc.name.toLowerCase();
+      const isCaster = casterClassTypes.some(ct => ccNorm.includes(ct));
+      if (!isCaster) continue;
 
-    if (bestClass) {
-      // Find the rank of the class that matches (search all 3 slots)
-      for (let i = 0; i < 3; i++) {
-        if (!rawClasses[i]) continue;
-        if (rawClasses[i].toLowerCase().includes(bestClass.toLowerCase()) ||
-            bestClass.toLowerCase().includes(rawClasses[i].toLowerCase())) {
-          bestRank = rawRanks[i] || 1;
-          bestClass = rawClasses[i];
-          break;
-        }
+      let matches = false;
+
+      // Method 1: Check spell-details-data classes array
+      if (spellDetails?.classes) {
+        matches = spellDetails.classes.some(sc =>
+          sc.class.toLowerCase() === ccNorm ||
+          ccNorm.includes(sc.class.toLowerCase()) ||
+          sc.class.toLowerCase().includes(ccNorm)
+        );
       }
-    } else {
-      // No classSpell data — find first spellcasting class
-      const casterClasses = ['cleric', 'mage', 'sorcerer', 'bard', 'druid', 'paladin', 'ranger', 'anti-paladin'];
-      for (let i = 0; i < 3; i++) {
-        if (!rawClasses[i]) continue;
-        const norm = rawClasses[i].toLowerCase();
-        if (casterClasses.some(cc => norm.includes(cc))) {
-          bestClass = rawClasses[i];
-          bestRank = rawRanks[i] || 1;
-          break;
-        }
+
+      // Method 2: Check class-spells-data
+      if (!matches && window.ClassSpellLists) {
+        matches = window.ClassSpellLists.hasSpell(cc.name, m.spellName);
+      }
+
+      // Method 3: If classSpell dataset matches this class
+      if (!matches && classSpell) {
+        matches = ccNorm.includes(classSpell.toLowerCase()) || classSpell.toLowerCase().includes(ccNorm);
+      }
+
+      if (matches) {
+        m.matchingClasses.push({
+          name: cc.name,
+          rank: cc.rank,
+          castingType: L ? L.getCastingType(cc.name) : 'arcane',
+          castingSkillId: L ? L.getCastingSkillId(cc.name) : 'arcane-casting-percent',
+          castingSkillName: L ? L.getCastingSkillName(cc.name) : 'Casting Skill'
+        });
       }
     }
 
-    m.classSource = bestClass;
-    m.casterRank = bestRank;
+    // If no matches found, fall back to classSpell or first caster class
+    if (m.matchingClasses.length === 0) {
+      let fallback = null;
+      if (classSpell) {
+        fallback = charClasses.find(c => c.name.toLowerCase().includes(classSpell.toLowerCase()));
+      }
+      if (!fallback) {
+        fallback = charClasses.find(c => casterClassTypes.some(ct => c.name.toLowerCase().includes(ct)));
+      }
+      if (fallback) {
+        m.matchingClasses.push({
+          name: fallback.name,
+          rank: fallback.rank,
+          castingType: L ? L.getCastingType(fallback.name) : 'arcane',
+          castingSkillId: L ? L.getCastingSkillId(fallback.name) : 'arcane-casting-percent',
+          castingSkillName: L ? L.getCastingSkillName(fallback.name) : 'Casting Skill'
+        });
+      }
+    }
 
-    if (L) {
-      m.castingType = L.getCastingType(bestClass);
-      m.castingSkillId = L.getCastingSkillId(bestClass);
+    // Select the first matching class (or the one from classSpell dataset if present)
+    let selectedIndex = 0;
+    if (classSpell && m.matchingClasses.length > 1) {
+      const prefIdx = m.matchingClasses.findIndex(mc =>
+        mc.name.toLowerCase().includes(classSpell.toLowerCase()) ||
+        classSpell.toLowerCase().includes(mc.name.toLowerCase())
+      );
+      if (prefIdx >= 0) selectedIndex = prefIdx;
+    }
 
-      const skillEl = document.getElementById(m.castingSkillId);
-      m.castingSkillPercent = parseInt(skillEl?.value, 10) || 0;
+    m.selectedClassIndex = selectedIndex;
+    this._applySelectedClass(m);
+  },
 
-      // Max intensity
-      m.maxIntensity = L.getMaxIntensity(m.castingSkillPercent, m.spellRank);
+  /**
+   * Apply the currently selected casting class to the modal state
+   */
+  _applySelectedClass(m) {
+    const L = window.SpellDetailsLookup;
+    const sel = m.matchingClasses[m.selectedClassIndex] || m.matchingClasses[0];
 
-      // Armor check
-      const armorCat = this._detectArmorCategory();
-      const species = document.getElementById('species')?.value || '';
-      m.armorRestriction = L.checkArmorRestriction(bestClass, armorCat, species);
-    } else {
+    if (!sel) {
+      m.classSource = '';
+      m.casterRank = 1;
       m.castingType = 'arcane';
       m.castingSkillPercent = 50;
       m.maxIntensity = 1;
       m.armorRestriction = { canCast: true, penalty: null, reason: null };
+      m.effectiveSkill = 50;
+      return;
     }
 
-    // Calculate effective skill (with cantrip rank bonus and armor penalty)
+    m.classSource = sel.name;
+    m.casterRank = sel.rank;
+    m.castingType = sel.castingType;
+    m.castingSkillId = sel.castingSkillId;
+
+    const skillEl = document.getElementById(m.castingSkillId);
+    m.castingSkillPercent = parseInt(skillEl?.value, 10) || 0;
+
+    if (L) {
+      m.maxIntensity = L.getMaxIntensity(m.castingSkillPercent, m.spellRank);
+      const armorCat = this._detectArmorCategory();
+      const species = document.getElementById('species')?.value || '';
+      m.armorRestriction = L.checkArmorRestriction(sel.name, armorCat, species);
+    } else {
+      m.maxIntensity = 1;
+      m.armorRestriction = { canCast: true, penalty: null, reason: null };
+    }
+
+    // Calculate effective skill
     m.effectiveSkill = m.castingSkillPercent;
     if (m.spellRank === 0) {
-      // Cantrips: each rank above 0 is 1 grade easier (+20% per rank)
       m.effectiveSkill += (m.casterRank * 20);
     }
     if (m.armorRestriction?.penalty) {
-      // Elven chain penalty: 1 grade harder (-20%)
       m.effectiveSkill -= 20;
     }
-    // Cap at reasonable bounds
     m.effectiveSkill = Math.max(0, Math.min(m.effectiveSkill, 200));
+  },
+
+  /**
+   * Switch casting class in the modal (multiclass support)
+   * Recalculates skill, armor, theme, and refreshes the modal display
+   */
+  _switchCastingClass(classIndex, costStr) {
+    const m = this._castModal;
+    if (classIndex === m.selectedClassIndex) return;
+    if (classIndex < 0 || classIndex >= m.matchingClasses.length) return;
+
+    m.selectedClassIndex = classIndex;
+    m.intensity = 1;
+    this._applySelectedClass(m);
+    this._populateCastModal(m, costStr || m.costStr || '');
   },
 
   /**
@@ -8361,8 +8432,30 @@ const App = {
     document.getElementById('cast-modal-spell-name').textContent = d?.name || m.spellName;
 
     const rankLabels = { 0: 'Cantrip', 1: 'Rank 1', 2: 'Rank 2', 3: 'Rank 3', 4: 'Rank 4', 5: 'Rank 5' };
-    const classLabel = m.classSource ? ` \u2022 ${m.classSource}` : '';
-    document.getElementById('cast-modal-rank-badge').textContent = (rankLabels[m.spellRank] || `Rank ${m.spellRank}`) + classLabel;
+
+    // Multiclass selector
+    const classSelectRow = document.getElementById('cast-class-select-row');
+    const classOptionsDiv = document.getElementById('cast-class-options');
+    if (m.matchingClasses && m.matchingClasses.length > 1) {
+      // Show selector, put class name in the selector instead of the badge
+      classSelectRow.classList.remove('hidden');
+      classOptionsDiv.innerHTML = '';
+      m.matchingClasses.forEach((mc, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cast-class-btn' + (idx === m.selectedClassIndex ? ' active' : '');
+        btn.textContent = mc.name + ' (' + mc.castingSkillName + ')';
+        btn.dataset.classIndex = idx;
+        btn.addEventListener('click', () => this._switchCastingClass(idx, costStr));
+        classOptionsDiv.appendChild(btn);
+      });
+      document.getElementById('cast-modal-rank-badge').textContent = rankLabels[m.spellRank] || `Rank ${m.spellRank}`;
+    } else {
+      // Single class — hide selector, show class in badge
+      classSelectRow.classList.add('hidden');
+      const classLabel = m.classSource ? ` \u2022 ${m.classSource}` : '';
+      document.getElementById('cast-modal-rank-badge').textContent = (rankLabels[m.spellRank] || `Rank ${m.spellRank}`) + classLabel;
+    }
 
     // Stat block
     if (d) {
@@ -8461,6 +8554,10 @@ const App = {
     // Reset animation overlay
     const animOverlay = document.getElementById('cast-animation-overlay');
     animOverlay.className = 'cast-animation-overlay hidden';
+    // Clear any lingering dialog-level animations
+    dialog.classList.forEach(c => {
+      if (c.startsWith('casting-anim-')) dialog.classList.remove(c);
+    });
   },
 
   /**
@@ -8599,8 +8696,13 @@ const App = {
    */
   _closeCastModal() {
     document.getElementById('cast-modal').classList.add('hidden');
-    // Reset animation
+    // Reset animation overlay
     document.getElementById('cast-animation-overlay').className = 'cast-animation-overlay hidden';
+    // Remove dialog-level animation classes
+    const dialog = document.getElementById('cast-modal-dialog');
+    dialog.classList.forEach(c => {
+      if (c.startsWith('casting-anim-')) dialog.classList.remove(c);
+    });
   },
 
   /**
@@ -8826,23 +8928,40 @@ const App = {
    * Play casting type animation on the modal
    */
   _playCastAnimation(castingType, resultClass) {
+    const dialog = document.getElementById('cast-modal-dialog');
     const overlay = document.getElementById('cast-animation-overlay');
-    overlay.className = 'cast-animation-overlay';
 
+    // Determine animation class
     let animClass;
     if (resultClass === 'critical') {
-      animClass = 'anim-critical';
+      animClass = 'casting-anim-critical';
     } else if (resultClass === 'success' || resultClass === 'forced') {
-      animClass = `anim-${castingType}-success`;
+      animClass = `casting-anim-${castingType}-success`;
     } else if (resultClass === 'fumble') {
-      animClass = 'anim-fumble';
+      animClass = 'casting-anim-fumble';
     } else {
-      animClass = 'anim-fizzle';
+      animClass = 'casting-anim-fizzle';
     }
 
-    // Trigger reflow then add animation class
+    // Remove any previous animation class from dialog
+    dialog.classList.forEach(c => {
+      if (c.startsWith('casting-anim-')) dialog.classList.remove(c);
+    });
+
+    // Apply animation to dialog (box-shadow based — cannot be clipped)
+    void dialog.offsetWidth; // force reflow
+    dialog.classList.add(animClass);
+
+    // Also show the overlay for the gradient effect
+    overlay.className = 'cast-animation-overlay';
     void overlay.offsetWidth;
-    overlay.classList.add(animClass);
+    overlay.classList.add(animClass.replace('casting-anim-', 'anim-'));
+
+    // Remove animation class after it completes
+    setTimeout(() => {
+      dialog.classList.remove(animClass);
+      overlay.className = 'cast-animation-overlay hidden';
+    }, 2500);
   },
 
   /**
