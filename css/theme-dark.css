@@ -708,18 +708,6 @@
   border-color: #6fcf6f;
 }
 
-[data-theme="dark"] .btn-remove-spell {
-  background: #3a3a3a;
-  border-color: #555;
-  color: #777;
-}
-
-[data-theme="dark"] .btn-remove-spell:hover {
-  background: #3a1a1a;
-  border-color: #dc3545;
-  color: #ff6b6b;
-}
-
 /* Spell widget in dark mode */
 [data-theme="dark"] .widget-content .spell-widget-header {
   color: #888;

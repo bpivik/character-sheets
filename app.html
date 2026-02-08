@@ -1399,6 +1399,29 @@
                   </div>
                 </div>
               </section>
+
+              <!-- Shape Change Section (only visible if character has Shape Change ability) -->
+              <section class="shape-change-section" id="shape-change-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🐺 Shape Change</h3>
+                </div>
+                <div class="shape-change-content">
+                  <div class="shape-change-info-row">
+                    <span class="shape-change-value" id="shape-change-uses-available">0</span>
+                    <span class="shape-change-label">/ <span id="shape-change-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-shape-change" id="btn-reset-shape-change-uses" title="Reset uses (new day)">↺</button>
+                  </div>
+                  <div class="shape-change-tier-info">
+                    <span class="shape-change-tier" id="shape-change-tier-label">Shape Change I</span>
+                    <span class="shape-change-duration" id="shape-change-duration">Duration: 5 hrs</span>
+                  </div>
+                  <div class="shape-change-button-row">
+                    <button type="button" class="btn btn-shape-change" id="btn-shape-change-use" title="Transform into an animal form">
+                      🐺 Shape Change
+                    </button>
+                  </div>
+                </div>
+              </section>
             </div>
             <hr class="ability-cards-divider" id="spell-like-divider" style="display: none;">
 
@@ -1550,7 +1573,6 @@
                   <th class="col-spell">Spell</th>
                   <th class="col-cost">Magic Point Cost</th>
                   <th class="col-cast">Cast</th>
-                  <th class="col-remove-spell"></th>
                 </tr>
               </thead>
               <tbody id="cantrips-body">
@@ -1575,7 +1597,6 @@
                   <th class="col-spell">Spell</th>
                   <th class="col-cost">Magic Point Cost</th>
                   <th class="col-cast">Cast</th>
-                  <th class="col-remove-spell"></th>
                 </tr>
               </thead>
               <tbody id="rank1-body">
@@ -1600,7 +1621,6 @@
                   <th class="col-spell">Spell</th>
                   <th class="col-cost">Magic Point Cost</th>
                   <th class="col-cast">Cast</th>
-                  <th class="col-remove-spell"></th>
                 </tr>
               </thead>
               <tbody id="rank2-body">
@@ -1697,7 +1717,6 @@
                   <th class="col-spell">Spell</th>
                   <th class="col-cost">Magic Point Cost</th>
                   <th class="col-cast">Cast</th>
-                  <th class="col-remove-spell"></th>
                 </tr>
               </thead>
               <tbody id="rank3-body">
@@ -1722,7 +1741,6 @@
                   <th class="col-spell">Spell</th>
                   <th class="col-cost">Magic Point Cost</th>
                   <th class="col-cast">Cast</th>
-                  <th class="col-remove-spell"></th>
                 </tr>
               </thead>
               <tbody id="rank4-body">
@@ -1747,7 +1765,6 @@
                   <th class="col-spell">Spell</th>
                   <th class="col-cost">Magic Point Cost</th>
                   <th class="col-cast">Cast</th>
-                  <th class="col-remove-spell"></th>
                 </tr>
               </thead>
               <tbody id="rank5-body">

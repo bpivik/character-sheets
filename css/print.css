@@ -19,8 +19,8 @@
   .spell-actions-bar,
   .col-cast,
   .spell-cast-cell,
-  .col-remove-spell,
-  .spell-remove-cell {
+  .shape-change-button-row,
+  .btn-reset-shape-change {
     display: none !important;
   }
 

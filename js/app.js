@@ -426,6 +426,9 @@ const App = {
     // Check if Animal Companion section should be visible
     this.checkAnimalCompanionVisibility();
     
+    // Check if Shape Change section should be visible
+    this.checkShapeChangeVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -4288,6 +4291,8 @@ const App = {
         this.checkTurnUndeadVisibility();
       } else if (normalizedName.startsWith('animal companion')) {
         this.checkAnimalCompanionVisibility();
+      } else if (normalizedName.startsWith('shape change')) {
+        this.checkShapeChangeVisibility();
       }
     }
     
@@ -5489,6 +5494,11 @@ const App = {
           this.checkAnimalCompanionVisibility();
         }
         
+        // Check if Shape Change section should now be visible
+        if (normalizedName.startsWith('shape change')) {
+          this.checkShapeChangeVisibility();
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -5531,6 +5541,11 @@ const App = {
     // Check if Animal Companion section should now be visible
     if (normalizedName.startsWith('animal companion')) {
       this.checkAnimalCompanionVisibility();
+    }
+    
+    // Check if Shape Change section should now be visible
+    if (normalizedName.startsWith('shape change')) {
+      this.checkShapeChangeVisibility();
     }
     
     return !!newInput;
@@ -5685,7 +5700,6 @@ const App = {
       </td>
       <td><input type="text" id="${rankKey}-${index}-cost" class="spell-cost" placeholder=""></td>
       <td class="spell-cast-cell"><button type="button" class="btn-cast-spell" id="${rankKey}-${index}-cast" title="Cast this spell">✦</button></td>
-      <td class="spell-remove-cell"><button type="button" class="btn-remove-spell" title="Remove this spell">−</button></td>
     `;
     tbody.appendChild(tr);
     
@@ -5726,7 +5740,7 @@ const App = {
       this.scheduleAutoSave();
     });
     
-    // Auto-fill cost on spell name change
+    // Auto-fill cost on spell name change, auto-remove if cleared
     nameInput.addEventListener('change', () => {
       const spellName = nameInput.value.trim();
       if (spellName && window.SpellData) {
@@ -5736,10 +5750,10 @@ const App = {
         if (cost) costInput.value = cost;
         const description = window.SpellData.getSpellDescription(spellName);
         nameInput.title = description || '';
-      } else {
-        costInput.value = '';
-        nameInput.title = '';
-        delete nameInput.dataset.classSpell;
+      } else if (!spellName) {
+        // Name was cleared - remove the row
+        this.removeSpellRow(rankKey, tr);
+        return;
       }
       this.scheduleAutoSave();
     });
@@ -5753,12 +5767,6 @@ const App = {
     castBtn.addEventListener('click', () => {
       const idx = Array.from(tbody.rows).indexOf(tr);
       this.castSpell(rankKey, idx);
-    });
-    
-    // Remove button
-    const removeBtn = tr.querySelector('.btn-remove-spell');
-    removeBtn.addEventListener('click', () => {
-      this.removeSpellRow(rankKey, tr);
     });
     
     return tr;
@@ -8268,6 +8276,7 @@ const App = {
     this.checkHolySmiteVisibility();
     this.checkPowerfulConcentrationVisibility();
     this.checkAnimalCompanionVisibility();
+    this.checkShapeChangeVisibility();
   },
   
   /**
@@ -10673,6 +10682,19 @@ const App = {
         messages.push(`<strong>${holySmiteTier.tier} uses restored:</strong> ${prevUses} → ${maxUses}`);
       } else {
         messages.push(`<strong>${holySmiteTier.tier}:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+    
+    // Reset Shape Change uses if character has the ability
+    if (this.getShapeChangeTier()) {
+      const maxUses = this.getMaxShapeChangeUses();
+      const prevUses = this.character.shapeChangeUsesRemaining || 0;
+      this.character.shapeChangeUsesRemaining = maxUses;
+      this.updateShapeChangeDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>Shape Change uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>Shape Change:</strong> Already at maximum (${maxUses} uses)`);
       }
     }
     
@@ -14486,6 +14508,304 @@ const App = {
     this.character.animalCompanions.splice(index, 1);
     this.renderCompanionList();
     this.scheduleAutoSave();
+  },
+
+  // ========================================
+  // SHAPE CHANGE SYSTEM (Druid)
+  // ========================================
+  
+  /**
+   * Shape Change tier descriptions for each level
+   */
+  SHAPE_CHANGE_DATA: {
+    1: {
+      label: 'Shape Change I',
+      sizRange: 'SIZ 3–20',
+      description: `<p>You can transform into a mundane reptile, bird, or mammal and back again without expending Magic Points. This ability does not allow you to take the form of magical or supernatural creatures.</p>
+<p>The transformation lasts up to 5 hours, plus 5 additional hours for each Rank beyond the minimum requirement, or until you choose to revert. Changing form requires 1 Cast Magic Action. You can assume the shape of any natural animal with a SIZ between 3 and 20. Upon transformation, you adopt the creature's average physical Characteristics (STR, CON, SIZ, and DEX), as well as any inherent attacks and movement Creature Abilities (such as Swimmer or Flying). You may use either the creature's skills or your own, whichever is higher. For specific animals related to Shape Change I–IV, see the <em>Monster Manual</em>.</p>
+<p>Your clothing and one item in each hand (up to 2 Things per item, or a single item of 4 Things held with both hands) transform with you. Any additional items drop to the ground and can be retrieved after you revert to your original form. Any items transformed are not useable unless the animal you change into has opposable thumbs (an ape for instance).</p>`
+    },
+    2: {
+      label: 'Shape Change II',
+      sizRange: 'SIZ 1–60',
+      description: `<p>This ability functions like Shape Change I, but with expanded options. You can now transform into tiny animals with a SIZ of 1–2 or larger animals with a SIZ of 21–60. If your Piety reaches 100% or higher, you also gain the ability to transform into plant creatures, such as a tree'nt or shambler.</p>`
+    },
+    3: {
+      label: 'Shape Change III',
+      sizRange: 'SIZ 1–60 + Elementals',
+      description: `<p>This ability functions like Shape Change I, but with additional forms. You can now transform into a small, medium, or large elemental once per day. At 120% Piety, you may use this ability twice per day. When in elemental form, you gain all the elemental's supernatural and Spell-Like Abilities. This transformation is in addition to your usual animal forms and does not replace them.</p>`
+    },
+    4: {
+      label: 'Shape Change IV',
+      sizRange: 'SIZ 1–60 + Huge Elemental',
+      description: `<p>This ability functions like Shape Change III, but you may now transform into a Huge elemental once per day. This form is in addition to your existing animal and elemental transformations and does not replace any previously gained forms.</p>`
+    }
+  },
+  
+  /**
+   * Random transformation animations and phrases
+   */
+  SHAPE_CHANGE_PHRASES: [
+    'You transform into the animal of your choice.',
+    'Your bones shift and reshape as fur sprouts across your skin...',
+    'Nature\'s power flows through you as your form changes...',
+    'With a shimmer of druidic magic, you take on a new shape.',
+    'The wild calls to you and your body answers.',
+    'Your senses sharpen as you embrace the beast within.',
+    'Feathers, fur, or scales — the choice is yours.',
+    'The boundary between humanoid and animal blurs and fades...',
+    'You feel the earth\'s pulse as your transformation completes.',
+    'The spirit of the wild grants you a new form.'
+  ],
+  
+  SHAPE_CHANGE_EMOJIS: ['🐺', '🦅', '🐻', '🐍', '🦌', '🐆', '🦉', '🐗', '🦎', '🐬', '🦇', '🐒', '🦈', '🐊', '🐘'],
+  
+  /**
+   * Check if character has Shape Change ability and show/hide section
+   */
+  checkShapeChangeVisibility() {
+    const section = document.getElementById('shape-change-section');
+    if (!section) return;
+    
+    const tier = this.getShapeChangeTier();
+    
+    if (tier) {
+      section.style.display = '';
+      this.initShapeChange();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Get the highest Shape Change tier the character has (1-4, or 0 if none)
+   */
+  getShapeChangeTier() {
+    if (this.hasAbility('Shape Change IV') || this.hasAbility('Shape Change 4')) return 4;
+    if (this.hasAbility('Shape Change III') || this.hasAbility('Shape Change 3')) return 3;
+    if (this.hasAbility('Shape Change II') || this.hasAbility('Shape Change 2')) return 2;
+    if (this.hasAbility('Shape Change I') || this.hasAbility('Shape Change 1')) return 1;
+    return 0;
+  },
+  
+  /**
+   * Get Piety skill value
+   */
+  getPietyValue() {
+    const pietyInput = document.getElementById('piety-percent');
+    if (pietyInput) return parseInt(pietyInput.value, 10) || 0;
+    
+    // Fallback: search professional skills
+    const profSkills = document.querySelectorAll('.prof-skill-row');
+    for (const row of profSkills) {
+      const nameInput = row.querySelector('.prof-skill-name');
+      const totalInput = row.querySelector('.prof-skill-total');
+      if (nameInput && nameInput.value.toLowerCase().trim() === 'piety' && totalInput) {
+        return parseInt(totalInput.value, 10) || 0;
+      }
+    }
+    return 0;
+  },
+  
+  /**
+   * Get Druid rank for duration calculation
+   */
+  getDruidRank() {
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    
+    let maxRank = 0;
+    for (const slot of classSlots) {
+      const className = document.getElementById(slot.class)?.value?.toLowerCase().trim() || '';
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      if (className === 'druid' && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    return maxRank;
+  },
+  
+  /**
+   * Get maximum Shape Change uses per day based on Piety
+   * 1/day at 70% Piety, +1 per full 10% above that
+   */
+  getMaxShapeChangeUses() {
+    const piety = this.getPietyValue();
+    if (piety < 70) return 0;
+    return 1 + Math.floor((piety - 70) / 10);
+  },
+  
+  /**
+   * Initialize Shape Change system
+   */
+  initShapeChange() {
+    this.updateShapeChangeDisplay();
+    this.setupShapeChangeListeners();
+  },
+  
+  /**
+   * Update Shape Change display values
+   */
+  updateShapeChangeDisplay() {
+    const tier = this.getShapeChangeTier();
+    const maxUses = this.getMaxShapeChangeUses();
+    const druidRank = this.getDruidRank();
+    const data = this.SHAPE_CHANGE_DATA[tier];
+    
+    // Initialize uses remaining if not set
+    if (this.character.shapeChangeUsesRemaining === undefined || this.character.shapeChangeUsesRemaining === null) {
+      this.character.shapeChangeUsesRemaining = maxUses;
+    }
+    
+    const usesAvail = document.getElementById('shape-change-uses-available');
+    const usesMax = document.getElementById('shape-change-uses-max');
+    const tierLabel = document.getElementById('shape-change-tier-label');
+    const durationLabel = document.getElementById('shape-change-duration');
+    
+    if (usesAvail) usesAvail.textContent = this.character.shapeChangeUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+    if (tierLabel && data) tierLabel.textContent = data.label;
+    
+    // Duration: 5 hrs base + 5 hrs per rank beyond 2 (minimum rank for Shape Change I)
+    const bonusRanks = Math.max(druidRank - 2, 0);
+    const totalHours = 5 + (bonusRanks * 5);
+    if (durationLabel) durationLabel.textContent = `Duration: ${totalHours} hrs`;
+    
+    // Update button state
+    const useBtn = document.getElementById('btn-shape-change-use');
+    const noUses = this.character.shapeChangeUsesRemaining <= 0;
+    if (useBtn) useBtn.disabled = noUses;
+  },
+  
+  /**
+   * Setup Shape Change event listeners
+   */
+  setupShapeChangeListeners() {
+    const useBtn = document.getElementById('btn-shape-change-use');
+    const resetBtn = document.getElementById('btn-reset-shape-change-uses');
+    
+    if (useBtn && !useBtn.dataset.listenerAdded) {
+      useBtn.addEventListener('click', () => this.openShapeChangeModal());
+      useBtn.dataset.listenerAdded = 'true';
+    }
+    
+    if (resetBtn && !resetBtn.dataset.listenerAdded) {
+      resetBtn.addEventListener('click', () => {
+        this.character.shapeChangeUsesRemaining = this.getMaxShapeChangeUses();
+        this.updateShapeChangeDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAdded = 'true';
+    }
+  },
+  
+  /**
+   * Open the Shape Change modal with tier-appropriate description
+   */
+  openShapeChangeModal() {
+    const tier = this.getShapeChangeTier();
+    const data = this.SHAPE_CHANGE_DATA[tier];
+    if (!data) return;
+    
+    // Remove existing modal if any
+    const existing = document.getElementById('shape-change-modal-overlay');
+    if (existing) existing.remove();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'shape-change-modal-overlay';
+    overlay.className = 'shape-change-modal-overlay';
+    overlay.innerHTML = `
+      <div class="shape-change-modal">
+        <div class="shape-change-modal-header">
+          <h3>🐺 ${data.label}</h3>
+          <span class="shape-change-modal-siz">${data.sizRange}</span>
+        </div>
+        <div class="shape-change-modal-body">
+          ${data.description}
+        </div>
+        <div class="shape-change-modal-footer">
+          <button type="button" class="btn btn-shape-change-transform" id="btn-shape-change-transform">
+            🐾 Shape Change
+          </button>
+          <button type="button" class="btn btn-shape-change-cancel" id="btn-shape-change-cancel">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // Close on cancel
+    document.getElementById('btn-shape-change-cancel').addEventListener('click', () => {
+      overlay.remove();
+    });
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+    
+    // Transform button
+    document.getElementById('btn-shape-change-transform').addEventListener('click', () => {
+      overlay.remove();
+      this.executeShapeChange();
+    });
+  },
+  
+  /**
+   * Execute shape change: decrement uses, show animation
+   */
+  executeShapeChange() {
+    if (this.character.shapeChangeUsesRemaining <= 0) return;
+    
+    // Decrement uses
+    this.character.shapeChangeUsesRemaining--;
+    this.updateShapeChangeDisplay();
+    this.scheduleAutoSave();
+    
+    // Show transformation animation
+    this.showShapeChangeAnimation();
+  },
+  
+  /**
+   * Show shape change transformation animation with random phrase
+   */
+  showShapeChangeAnimation() {
+    const phrase = this.SHAPE_CHANGE_PHRASES[Math.floor(Math.random() * this.SHAPE_CHANGE_PHRASES.length)];
+    const emojis = [...this.SHAPE_CHANGE_EMOJIS].sort(() => Math.random() - 0.5).slice(0, 8);
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'shape-change-anim-overlay';
+    overlay.innerHTML = `
+      <div class="shape-change-anim-content">
+        <div class="shape-change-anim-burst"></div>
+        <div class="shape-change-anim-animals">
+          ${emojis.map((e, i) => `<span class="shape-change-anim-emoji" style="--delay:${i * 0.12}s; --angle:${i * 45}deg">${e}</span>`).join('')}
+        </div>
+        <div class="shape-change-anim-text">${phrase}</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
+    
+    // Remove after animation
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 500);
+    }, 3000);
+    
+    // Click to dismiss early
+    overlay.addEventListener('click', () => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 500);
+    });
   },
 
   // ========================================

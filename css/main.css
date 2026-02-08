@@ -44,7 +44,7 @@ input[type="number"],
 select {
   padding: 0.4rem 0.5rem;
   font-family: var(--font-body);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   border-radius: 4px;
@@ -422,7 +422,7 @@ select:focus {
   flex: 1 1 auto;
   padding: 0.5rem 0.75rem;
   font-family: var(--font-body);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   min-width: 0;
@@ -796,7 +796,7 @@ select:focus {
 .derived-input {
   width: 100%;
   padding: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   text-align: center !important;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -2053,7 +2053,7 @@ input.weapon-damage.rage-boosted,
   border: 2px solid #ffd700;
   border-radius: 4px;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .turn-undead-intensity-display strong {
@@ -2093,7 +2093,7 @@ input.weapon-damage.rage-boosted,
 
 .outcome-critical p:first-child {
   color: #1565c0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .outcome-success {
@@ -2105,7 +2105,7 @@ input.weapon-damage.rage-boosted,
 
 .outcome-success p:first-child {
   color: #2e7d32;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .outcome-failure {
@@ -2117,7 +2117,7 @@ input.weapon-damage.rage-boosted,
 
 .outcome-failure p:first-child {
   color: #c62828;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .outcome-fumble {
@@ -2129,7 +2129,7 @@ input.weapon-damage.rage-boosted,
 
 .outcome-fumble p:first-child {
   color: #6a1b9a;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .outcome-note {
@@ -2675,6 +2675,311 @@ input.skill-input.powerful-concentration-bonus,
 .companion-modal-footer .btn-cancel:hover {
   background: linear-gradient(135deg, #5a5a5a 0%, #6a6a6a 100%);
   border-color: #888;
+}
+
+/* ============================================
+   SHAPE CHANGE SECTION (Druid)
+   ============================================ */
+.shape-change-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a2a1a 0%, #2a3d2a 100%);
+  border: 2px solid #4a8b4a;
+  border-radius: 6px;
+}
+
+.shape-change-section .section-header-row {
+  margin-bottom: 0.3rem;
+}
+
+.shape-change-section .section-header {
+  color: #8bc68b;
+  text-shadow: 0 0 10px rgba(100, 180, 100, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.shape-change-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.shape-change-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shape-change-value {
+  color: #8bc68b;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.shape-change-label {
+  color: #a0c0a0;
+  font-size: 0.85rem;
+}
+
+.btn-reset-shape-change {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+  background: #2a3d2a;
+  border: 1px solid #4a8b4a;
+  color: #8bc68b;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-reset-shape-change:hover {
+  background: #3a4d3a;
+}
+
+.shape-change-tier-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+
+.shape-change-tier {
+  color: #c0e0c0;
+  font-weight: 600;
+}
+
+.shape-change-duration {
+  color: #90b090;
+  font-style: italic;
+}
+
+.shape-change-button-row {
+  margin-top: 0.2rem;
+}
+
+.btn-shape-change {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 100%);
+  border: 2px solid #5a9a5a;
+  color: #d4f0d4;
+  cursor: pointer;
+  border-radius: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-shape-change:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3d7a3d 0%, #4d9a4d 100%);
+  border-color: #7aba7a;
+  box-shadow: 0 0 12px rgba(100, 180, 100, 0.4);
+}
+
+.btn-shape-change:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Shape Change Modal */
+.shape-change-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.shape-change-modal {
+  background: linear-gradient(135deg, #1a2a1a 0%, #2a3d20 100%);
+  border: 2px solid #5a9a5a;
+  border-radius: 10px;
+  max-width: 550px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(80, 160, 80, 0.3);
+}
+
+.shape-change-modal-header {
+  padding: 1rem 1.2rem 0.5rem;
+  border-bottom: 1px solid #4a8b4a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shape-change-modal-header h3 {
+  color: #c0e8c0;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.shape-change-modal-siz {
+  color: #90c090;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.shape-change-modal-body {
+  padding: 1rem 1.2rem;
+  color: #b0d0b0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.shape-change-modal-body p {
+  margin: 0 0 0.8rem 0;
+}
+
+.shape-change-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.shape-change-modal-footer {
+  padding: 0.8rem 1.2rem;
+  border-top: 1px solid #4a8b4a;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
+.btn-shape-change-transform {
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 100%);
+  border: 2px solid #6ab06a;
+  color: #e0ffe0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.btn-shape-change-transform:hover {
+  background: linear-gradient(135deg, #3d7a3d 0%, #4d9a4d 100%);
+  box-shadow: 0 0 20px rgba(100, 200, 100, 0.5);
+  transform: scale(1.03);
+}
+
+.btn-shape-change-cancel {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  background: #333;
+  border: 1px solid #555;
+  color: #aaa;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.btn-shape-change-cancel:hover {
+  background: #444;
+  color: #ccc;
+}
+
+/* Shape Change Animation Overlay */
+.shape-change-anim-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10, 30, 10, 0.85);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  cursor: pointer;
+}
+
+.shape-change-anim-overlay.active {
+  opacity: 1;
+}
+
+.shape-change-anim-overlay.fade-out {
+  opacity: 0;
+}
+
+.shape-change-anim-content {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shape-change-anim-burst {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100, 200, 100, 0.6) 0%, rgba(50, 120, 50, 0.2) 60%, transparent 80%);
+  animation: shapeChangePulse 1.5s ease-in-out infinite;
+}
+
+.shape-change-anim-animals {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.shape-change-anim-emoji {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 2rem;
+  opacity: 0;
+  animation: shapeChangeOrbit 2.5s ease-out forwards;
+  animation-delay: var(--delay);
+  transform-origin: center center;
+}
+
+.shape-change-anim-text {
+  position: absolute;
+  bottom: -60px;
+  text-align: center;
+  color: #c0e8c0;
+  font-size: 1.1rem;
+  font-style: italic;
+  text-shadow: 0 0 15px rgba(100, 200, 100, 0.6);
+  opacity: 0;
+  animation: shapeChangeTextFade 2s ease-out 0.5s forwards;
+  width: 400px;
+}
+
+@keyframes shapeChangePulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.9; }
+}
+
+@keyframes shapeChangeOrbit {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0px) scale(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-100px) scale(1.2);
+  }
+  70% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 180deg)) translateY(-120px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 360deg)) translateY(-80px) scale(0.5);
+  }
+}
+
+@keyframes shapeChangeTextFade {
+  0% { opacity: 0; transform: translateY(10px); }
+  30% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0.8; }
 }
 
 /* ============================================
@@ -3362,7 +3667,7 @@ input.skill-input.powerful-concentration-bonus,
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -3470,14 +3775,14 @@ input.skill-input.powerful-concentration-bonus,
   font-weight: 600;
   background: rgba(255,255,255,0.5);
   padding: 0.3rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-radius: 4px;
 }
 
 .skill-input {
   width: 100%;
   padding: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -3579,7 +3884,7 @@ input.skill-input.powerful-concentration-bonus,
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -3599,7 +3904,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .belief-name {
   padding: 0.4rem 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   border-radius: 4px;
@@ -3638,14 +3943,14 @@ input.skill-input.powerful-concentration-bonus,
   font-weight: 600;
   background: rgba(255,255,255,0.5);
   padding: 0.3rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-radius: 4px;
 }
 
 .belief-input {
   width: 100%;
   padding: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -3664,7 +3969,7 @@ input.skill-input.powerful-concentration-bonus,
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -3684,7 +3989,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .language-name {
   padding: 0.4rem 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   min-width: 0;
@@ -3708,14 +4013,14 @@ input.skill-input.powerful-concentration-bonus,
   font-weight: 600;
   background: rgba(255,255,255,0.5);
   padding: 0.3rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-radius: 4px;
 }
 
 .language-input {
   width: 100%;
   padding: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -3734,7 +4039,7 @@ input.skill-input.powerful-concentration-bonus,
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -3760,7 +4065,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .prof-skill-name {
   padding: 0.4rem 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   border-radius: 4px;
@@ -3792,14 +4097,14 @@ input.skill-input.powerful-concentration-bonus,
   font-weight: 600;
   background: rgba(255,255,255,0.5);
   padding: 0.3rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border-radius: 4px;
 }
 
 .prof-skill-current {
   width: 100%;
   padding: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -3811,7 +4116,7 @@ input.skill-input.powerful-concentration-bonus,
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.75rem;
@@ -3850,7 +4155,7 @@ input.skill-input.powerful-concentration-bonus,
   display: flex;
   justify-content: space-between;
   padding: 0.15rem 0.3rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   background: rgba(255,255,255,0.3);
 }
 
@@ -3905,7 +4210,7 @@ input.skill-input.powerful-concentration-bonus,
 .equipment-name {
   flex: 1;
   padding: 0.4rem 0.6rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   min-width: 0;
@@ -3920,7 +4225,7 @@ input.skill-input.powerful-concentration-bonus,
 .equipment-enc {
   width: 60px;
   padding: 0.4rem;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   text-align: center;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
@@ -4320,7 +4625,7 @@ input.skill-input.powerful-concentration-bonus,
   background: rgba(0,0,0,0.08);
   font-family: var(--font-header);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   color: var(--text-header);
 }
 
@@ -4553,7 +4858,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .heal-modal-body p {
   margin: 0 0 0.75rem 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .heal-modal-note {
@@ -5390,7 +5695,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .rest-icon {
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   line-height: 1;
 }
 
@@ -5570,7 +5875,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .finish-game-message {
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   color: var(--text-header);
   margin: 0 0 1.25rem 0;
   text-align: center;
@@ -5631,7 +5936,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .finish-game-summary strong {
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .finish-game-modal-footer {
@@ -6271,7 +6576,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .short-rest-toast-title {
   font-family: var(--font-header);
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   font-weight: bold;
 }
 
@@ -6736,7 +7041,7 @@ input.skill-input.powerful-concentration-bonus,
   width: 24px;
   height: 24px;
   padding: 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   font-weight: bold;
   line-height: 1;
   display: flex;
@@ -7151,7 +7456,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .notes-editor h3 {
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   margin: 0.5rem 0;
   color: var(--accent-color);
   border-bottom: 1px solid var(--border-color);
@@ -7291,7 +7596,7 @@ input.skill-input.powerful-concentration-bonus,
   border: none;
   background: transparent;
   color: #c00;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   cursor: pointer;
   opacity: 0.5;
   transition: opacity 0.15s;
@@ -7470,7 +7775,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .magic-skills-table td {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
 }
 
@@ -7674,7 +7979,7 @@ input.skill-input.powerful-concentration-bonus,
 .spell-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .spell-table th,
@@ -7791,37 +8096,6 @@ input.skill-input.powerful-concentration-bonus,
 .btn-add-spell:hover {
   background: #c8e6c9;
   border-color: #4caf50;
-}
-
-/* Remove Spell Button */
-.col-remove-spell {
-  width: 28px;
-  text-align: center;
-}
-
-.spell-remove-cell {
-  text-align: center;
-  padding: 0.1rem !important;
-}
-
-.btn-remove-spell {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid var(--border-light);
-  background: var(--input-bg);
-  color: #999;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-}
-
-.btn-remove-spell:hover {
-  background: #f8d7da;
-  border-color: #dc3545;
-  color: #dc3545;
 }
 
 /* Magic skill reference (page 5) */
@@ -8200,7 +8474,7 @@ input.skill-input.powerful-concentration-bonus,
 .subclass-cost-value {
   font-weight: 700;
   color: #c62828;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .subclass-cost-note {
@@ -8880,7 +9154,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .char-option .char-label {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   color: var(--text-header);
   min-width: 40px;
 }
@@ -9346,7 +9620,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .specialty-label {
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   color: var(--text-header);
   display: block;
   margin-bottom: 0.25rem;
@@ -9444,7 +9718,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .prereq-modal-header h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .prereq-modal-close {
@@ -9720,7 +9994,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .widget-content h4 {
   margin: 0 0 10px 0;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   color: var(--accent-color, #8B4513);
   border-bottom: 2px solid #ddd;
   padding-bottom: 6px;
@@ -10028,7 +10302,7 @@ input.skill-input.powerful-concentration-bonus,
 
 .combat-stat .stat-value {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 
 .stat-spinner {
@@ -10173,7 +10447,7 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 .memorize-warning-message {
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   color: #eee;
   margin-bottom: 20px;
   line-height: 1.5;
@@ -10325,7 +10599,7 @@ input.skill-input.powerful-concentration-bonus,
 
 /* Theme toggle button */
 #btn-theme {
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   padding: 4px 10px;
   min-width: auto;
 }
