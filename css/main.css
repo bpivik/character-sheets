@@ -3354,6 +3354,117 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 /* ============================================
+   WEAPON SPECIALIZATION SECTION
+   ============================================ */
+.weapon-spec-section {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.weapon-spec-header {
+  cursor: pointer;
+}
+
+.weapon-spec-section .section-header {
+  font-size: 0.85rem;
+  margin: 0;
+  color: var(--accent-color, #c9a55a);
+}
+
+.weapon-spec-content.collapsible {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.weapon-spec-content.collapsible:not(.collapsed) {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+.weapon-spec-content.collapsible.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
+.weapon-spec-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.weapon-spec-card {
+  background: linear-gradient(135deg, rgba(40, 40, 60, 0.6) 0%, rgba(50, 40, 30, 0.6) 100%);
+  border: 1px solid rgba(201, 165, 90, 0.3);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.weapon-spec-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.weapon-spec-card-icon {
+  font-size: 1rem;
+}
+
+.weapon-spec-card-title {
+  font-weight: bold;
+  color: var(--accent-color, #c9a55a);
+  font-size: 0.85rem;
+}
+
+.weapon-spec-card-type {
+  font-size: 0.7rem;
+  color: #999;
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.weapon-spec-card-benefits {
+  font-size: 0.78rem;
+  color: #ccc;
+  line-height: 1.45;
+}
+
+.weapon-spec-card-benefits p {
+  margin: 0.25rem 0;
+}
+
+.weapon-spec-card-benefits strong {
+  color: var(--accent-color, #c9a55a);
+}
+
+.weapon-spec-card-benefits .benefit-item {
+  margin: 0.3rem 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid rgba(201, 165, 90, 0.25);
+}
+
+/* Combat page weapon highlighting for specializations */
+.weapon-specialized {
+  background: rgba(201, 165, 90, 0.12) !important;
+  border-color: rgba(201, 165, 90, 0.4) !important;
+  box-shadow: inset 0 0 6px rgba(201, 165, 90, 0.15);
+}
+
+.weapon-specialized-indicator {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  font-size: 0.6rem;
+  color: var(--accent-color, #c9a55a);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
    SYRIN SPECIES ABILITIES SECTION
    ============================================ */
 .syrin-abilities-row {

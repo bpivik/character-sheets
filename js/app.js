@@ -429,6 +429,9 @@ const App = {
     // Check if Shape Change section should be visible
     this.checkShapeChangeVisibility();
     
+    // Check if Weapon Specialization section should be visible
+    this.checkWeaponSpecVisibility();
+    
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
     
@@ -456,6 +459,9 @@ const App = {
       
       // Update MP display on spell pages
       this.updateMagicMPDisplay();
+      
+      // Highlight specialized weapons on combat page
+      this.highlightSpecializedWeapons();
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -879,6 +885,9 @@ const App = {
       // Populate the Species Abilities section (replaces old content)
       // Pass true to apply persistent effects since this is a user-initiated species change
       this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
+      
+      // Update spell-like section visibility (hide if new species doesn't have it)
+      this.checkSpellLikeAbilitiesVisibility();
       
       // Check if new species has Spell-Like Abilities and prompt for selection
       // Only prompt on blur event (not every keystroke)
@@ -4000,6 +4009,7 @@ const App = {
             }
             if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
               window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
+              this.highlightSpecializedWeapons();
               this.scheduleAutoSave();
             }
           });
@@ -4058,6 +4068,7 @@ const App = {
             }
             if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
               window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
+              this.highlightSpecializedWeapons();
               this.scheduleAutoSave();
             }
           });
@@ -4196,6 +4207,7 @@ const App = {
         }
         if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
           window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
+              this.highlightSpecializedWeapons();
           this.scheduleAutoSave();
         }
       });
@@ -4337,6 +4349,8 @@ const App = {
         this.checkAnimalCompanionVisibility();
       } else if (normalizedName.startsWith('shape change')) {
         this.checkShapeChangeVisibility();
+      } else if (normalizedName.startsWith('weapon specialization')) {
+        this.checkWeaponSpecVisibility();
       }
     }
     
@@ -4367,6 +4381,12 @@ const App = {
     lastRow.remove();
     this.reindexClassAbilityRows();
     this.syncClassAbilitiesToCharacter();
+    
+    // Re-check weapon spec visibility in case a specialization was removed
+    if (hasContent && input.value.toLowerCase().includes('weapon specialization')) {
+      this.checkWeaponSpecVisibility();
+    }
+    
     this.scheduleAutoSave();
   },
   
@@ -4475,6 +4495,13 @@ const App = {
       if (infoBtn) infoBtn.style.display = '';
       return;
     }
+
+    // Special handling for Weapon Specialization - show selection modal
+    // Only trigger if they typed the base name without a specific weapon
+    if (normalizedValue === 'weapon specialization') {
+      this.promptWeaponSpecialization(input);
+      return;
+    }
     
     // Check for duplicates
     const isDuplicate = this.checkAbilityDuplicate(input);
@@ -4515,6 +4542,11 @@ const App = {
       // Clear all characteristic increases (user deleted the ability)
       // Note: This doesn't reverse the stat increases - those remain
       this.character.characteristicIncreases = [];
+    }
+
+    // Special handling for Weapon Specialization - re-sync and update display
+    if (baseName === 'weapon specialization') {
+      this.checkWeaponSpecVisibility();
     }
     
     // Check for ability effects to remove
@@ -5543,6 +5575,11 @@ const App = {
           this.checkShapeChangeVisibility();
         }
         
+        // Weapon Specialization: prompt for weapon choice
+        if (normalizedName === 'weapon specialization') {
+          setTimeout(() => this.promptWeaponSpecialization(input), 100);
+        }
+        
         this.scheduleAutoSave();
         return true;
       }
@@ -5590,6 +5627,11 @@ const App = {
     // Check if Shape Change section should now be visible
     if (normalizedName.startsWith('shape change')) {
       this.checkShapeChangeVisibility();
+    }
+    
+    // Weapon Specialization: prompt for weapon choice
+    if (normalizedName === 'weapon specialization' && newInput) {
+      setTimeout(() => this.promptWeaponSpecialization(newInput), 100);
     }
     
     return !!newInput;
@@ -17591,6 +17633,545 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     });
   },
 
+  // ============================================
+  // WEAPON SPECIALIZATION SYSTEM
+  // ============================================
+
+  /**
+   * Curated weapon lists for specialization selection
+   */
+  WEAPON_SPEC_MELEE_WEAPONS: [
+    'Ball & Chain', 'Bastard Sword', 'Battle Axe', 'Bo Stick', 'Broadsword',
+    'Chain', 'Club', 'Dagger', 'Falchion', 'Flail', 'Heavy Flail',
+    'Garrote', 'Glaive', 'Great Axe', 'Great Club', 'Great Hammer',
+    'Great Sword', 'Halberd', 'Hand Axe', 'Hatchet',
+    "Horseman's Flail", "Horseman's Mace", "Horseman's Military Pick",
+    'Jo Stick', 'Knife', 'Lance', 'Long Spear', 'Longsword',
+    'Main Gauche', 'Mace', 'Heavy Mace', 'Military Flail',
+    'Military Pick', 'Heavy Military Pick', 'Morning Star',
+    'Net', 'Pike', 'Polearm', 'Quarterstaff', 'Rapier',
+    'Rhomphaia', 'Sabre', 'Sarissa', 'Scimitar',
+    'Short Spear', 'Shortsword', 'Sickle', 'Trident',
+    'War Hammer', 'Whip', 'Xyston'
+  ],
+
+  WEAPON_SPEC_RANGED_WEAPONS: [
+    'Arbalest', 'Atlatl', 'Blowgun', 'Bolas',
+    'Composite Long Bow', 'Composite Short Bow',
+    'Dagger (Thrown)', 'Dart', 'Discus',
+    'Hand Crossbow', 'Hatchet (Thrown)', 'Heavy Crossbow',
+    'Repeating Heavy Crossbow', 'Javelin',
+    'Light Crossbow', 'Repeating Light Crossbow',
+    'Long Bow', 'Net', 'Recurve Bow',
+    'Short Bow', 'Sling', 'Staff Sling',
+    'Throwing Axe', 'Throwing Knife', 'Trident (Thrown)'
+  ],
+
+  /**
+   * Get the benefit description for a weapon specialization type
+   */
+  getWeaponSpecBenefits(type) {
+    switch (type) {
+      case 'Melee':
+        return {
+          icon: '⚔️',
+          benefits: [
+            { label: 'Combat Skill Bonus', text: 'Your Combat Skill is improved by +5% when using your weapon of specialization. This bonus will not aid in Rank advancement.' },
+            { label: 'Parry Bonus', text: 'You gain +1 Action Point for the purposes of Parrying only when wielding this weapon.' }
+          ]
+        };
+      case 'Ranged':
+        return {
+          icon: '🏹',
+          benefits: [
+            { label: 'Quick Shot', text: 'If you are not surprised, you may automatically fire first at the start of combat (before rolling for Initiative), provided your weapon and ammunition are readied.' },
+            { label: 'Improved Aim', text: "When targeting an enemy within the weapon's Close Range, aiming requires only 1 Turn to steady the weapon instead of a full Round. The next attack is one Difficulty Grade easier." },
+            { label: 'Reduced Reload Time', text: "You reduce the Reload time of your specialized weapon by 1. If the weapon's Reload time is reduced to 0, it can be readied as a Free Action." }
+          ]
+        };
+      case 'Shield':
+        return {
+          icon: '🛡️',
+          benefits: [
+            { label: 'Improved Combat Skill', text: 'Your Combat Skill when using any shield is increased by +5%. This bonus does not contribute to Rank advancement.' },
+            { label: 'Enhanced Parrying', text: 'All shields you wield count as one Size category larger for the purpose of Parrying damage. For example, a Large shield counts as Huge, a Huge shield counts as Enormous, and an Enormous shield counts as Colossal.' }
+          ]
+        };
+      default:
+        return null;
+    }
+  },
+
+  /**
+   * Prompt user to select their Weapon Specialization
+   * Two-step modal: 1) Choose type (Melee/Ranged/Shield) 2) Choose specific weapon
+   * @param {HTMLElement} abilityInput - The class ability input that triggered this
+   */
+  promptWeaponSpecialization(abilityInput) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay weapon-spec-modal-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8); display: flex; justify-content: center;
+      align-items: center; z-index: 10000;
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'weapon-spec-modal';
+    modal.style.cssText = `
+      background: linear-gradient(135deg, #1a1a2a 0%, #2d2a1d 100%);
+      border: 2px solid var(--accent-color, #c9a55a); border-radius: 12px;
+      padding: 1.5rem; max-width: 420px; width: 90%;
+      box-shadow: 0 0 30px rgba(201, 165, 90, 0.3); max-height: 80vh; overflow-y: auto;
+    `;
+
+    // Step 1: Choose type
+    this._renderWeaponSpecStep1(modal, overlay, abilityInput);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  },
+
+  /**
+   * Render Step 1: Choose specialization type
+   */
+  _renderWeaponSpecStep1(modal, overlay, abilityInput) {
+    modal.innerHTML = `
+      <h3 style="color: var(--accent-color, #c9a55a); margin: 0 0 0.5rem 0; text-align: center;">
+        Weapon Specialization
+      </h3>
+      <p style="color: #aaa; margin-bottom: 1rem; text-align: center; font-size: 0.85rem;">
+        Choose your specialization type:
+      </p>
+      <div class="spec-type-choices" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <button type="button" class="spec-type-btn" data-type="Melee" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid rgba(201, 165, 90, 0.3); color: #ddd;
+          padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer;
+          text-align: left; transition: all 0.2s ease; font-size: 0.9rem;
+        ">⚔️ <strong>Melee Weapon</strong><br><span style="font-size:0.75rem;color:#999;">+5% Combat Skill &amp; +1 AP for Parrying with chosen weapon</span></button>
+        <button type="button" class="spec-type-btn" data-type="Ranged" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid rgba(201, 165, 90, 0.3); color: #ddd;
+          padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer;
+          text-align: left; transition: all 0.2s ease; font-size: 0.9rem;
+        ">🏹 <strong>Ranged Weapon</strong><br><span style="font-size:0.75rem;color:#999;">Quick Shot, Improved Aim, &amp; Reduced Reload Time</span></button>
+        <button type="button" class="spec-type-btn" data-type="Shield" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid rgba(201, 165, 90, 0.3); color: #ddd;
+          padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer;
+          text-align: left; transition: all 0.2s ease; font-size: 0.9rem;
+        ">🛡️ <strong>Shield</strong><br><span style="font-size:0.75rem;color:#999;">+5% Combat Skill &amp; shields count as one Size larger for Parrying</span></button>
+      </div>
+      <div style="text-align: center; margin-top: 0.75rem;">
+        <button type="button" class="spec-cancel-btn" style="
+          background: transparent; border: 1px solid #666; color: #999;
+          padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        ">Cancel</button>
+      </div>
+    `;
+
+    // Add hover effects
+    modal.querySelectorAll('.spec-type-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = 'rgba(201, 165, 90, 0.6)';
+        btn.style.transform = 'translateX(5px)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = 'rgba(201, 165, 90, 0.3)';
+        btn.style.transform = 'translateX(0)';
+      });
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        if (type === 'Shield') {
+          // Shield applies to all shields — no specific weapon choice needed
+          this._finalizeWeaponSpec(overlay, abilityInput, 'Shield', 'Shield');
+        } else {
+          this._renderWeaponSpecStep2(modal, overlay, abilityInput, type);
+        }
+      });
+    });
+
+    // Cancel button
+    modal.querySelector('.spec-cancel-btn').addEventListener('click', () => {
+      // Remove the ability row if it was just added
+      if (abilityInput) {
+        const row = abilityInput.closest('.class-ability-row');
+        if (row) row.remove();
+        this.reindexClassAbilityRows();
+        this.syncClassAbilitiesToCharacter();
+      }
+      document.body.removeChild(overlay);
+    });
+  },
+
+  /**
+   * Render Step 2: Choose specific weapon
+   */
+  _renderWeaponSpecStep2(modal, overlay, abilityInput, type) {
+    const weapons = type === 'Melee' ? this.WEAPON_SPEC_MELEE_WEAPONS : this.WEAPON_SPEC_RANGED_WEAPONS;
+    const icon = type === 'Melee' ? '⚔️' : '🏹';
+
+    // Check already-specialized weapons to prevent duplicates
+    const existingSpecs = (this.character.weaponSpecializations || [])
+      .filter(s => s.type === type)
+      .map(s => s.weapon.toLowerCase());
+
+    const availableWeapons = weapons.filter(w => !existingSpecs.includes(w.toLowerCase()));
+
+    modal.innerHTML = `
+      <h3 style="color: var(--accent-color, #c9a55a); margin: 0 0 0.5rem 0; text-align: center;">
+        ${icon} Choose ${type} Weapon
+      </h3>
+      <p style="color: #aaa; margin-bottom: 0.75rem; text-align: center; font-size: 0.85rem;">
+        Select a weapon to specialize in:
+      </p>
+      <div class="weapon-search-wrapper" style="margin-bottom: 0.5rem;">
+        <input type="text" class="weapon-spec-search" placeholder="Search weapons..." style="
+          width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(201, 165, 90, 0.3); border-radius: 4px;
+          color: #ddd; font-size: 0.85rem; box-sizing: border-box;
+        ">
+      </div>
+      <div class="weapon-list" style="
+        display: flex; flex-direction: column; gap: 0.25rem;
+        max-height: 45vh; overflow-y: auto; padding-right: 0.25rem;
+      ">
+        ${availableWeapons.map(weapon => `
+          <button type="button" class="weapon-choice-btn" data-weapon="${weapon}" style="
+            background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+            border: 1px solid rgba(201, 165, 90, 0.15); color: #ddd;
+            padding: 0.5rem 0.75rem; border-radius: 4px; cursor: pointer;
+            text-align: left; transition: all 0.2s ease; font-size: 0.85rem;
+          ">${weapon}</button>
+        `).join('')}
+      </div>
+      <div style="text-align: center; margin-top: 0.75rem;">
+        <button type="button" class="spec-back-btn" style="
+          background: transparent; border: 1px solid #666; color: #999;
+          padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+          margin-right: 0.5rem;
+        ">← Back</button>
+        <button type="button" class="spec-cancel-btn" style="
+          background: transparent; border: 1px solid #666; color: #999;
+          padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        ">Cancel</button>
+      </div>
+    `;
+
+    // Search filter
+    const searchInput = modal.querySelector('.weapon-spec-search');
+    const weaponBtns = modal.querySelectorAll('.weapon-choice-btn');
+    searchInput.addEventListener('input', () => {
+      const filter = searchInput.value.toLowerCase();
+      weaponBtns.forEach(btn => {
+        btn.style.display = btn.dataset.weapon.toLowerCase().includes(filter) ? '' : 'none';
+      });
+    });
+    searchInput.focus();
+
+    // Weapon hover + click
+    weaponBtns.forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = 'rgba(201, 165, 90, 0.5)';
+        btn.style.background = 'linear-gradient(135deg, #3a3a4a 0%, #4d4a3d 100%)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = 'rgba(201, 165, 90, 0.15)';
+        btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
+      });
+      btn.addEventListener('click', () => {
+        this._finalizeWeaponSpec(overlay, abilityInput, type, btn.dataset.weapon);
+      });
+    });
+
+    // Back button
+    modal.querySelector('.spec-back-btn').addEventListener('click', () => {
+      this._renderWeaponSpecStep1(modal, overlay, abilityInput);
+    });
+
+    // Cancel button
+    modal.querySelector('.spec-cancel-btn').addEventListener('click', () => {
+      if (abilityInput) {
+        const row = abilityInput.closest('.class-ability-row');
+        if (row) row.remove();
+        this.reindexClassAbilityRows();
+        this.syncClassAbilitiesToCharacter();
+      }
+      document.body.removeChild(overlay);
+    });
+  },
+
+  /**
+   * Finalize the weapon specialization selection
+   */
+  _finalizeWeaponSpec(overlay, abilityInput, type, weapon) {
+    // Build the display name
+    const displayName = type === 'Shield'
+      ? 'Weapon Specialization (Shield)'
+      : `Weapon Specialization (${weapon})`;
+
+    // Update the ability input
+    if (abilityInput) {
+      abilityInput.value = displayName;
+      abilityInput.dataset.previousValue = displayName;
+      // Show info button
+      const row = abilityInput.closest('.class-ability-row');
+      if (row) {
+        const infoBtn = row.querySelector('.class-ability-info-btn');
+        if (infoBtn) infoBtn.style.display = '';
+      }
+    }
+
+    // Save to character data
+    if (!this.character.weaponSpecializations) {
+      this.character.weaponSpecializations = [];
+    }
+
+    // Check for duplicate
+    const exists = this.character.weaponSpecializations.some(
+      s => s.type === type && s.weapon.toLowerCase() === weapon.toLowerCase()
+    );
+    if (!exists) {
+      this.character.weaponSpecializations.push({ type, weapon });
+    }
+
+    // Close overlay
+    document.body.removeChild(overlay);
+
+    // Update UI
+    this.checkWeaponSpecVisibility();
+    this.highlightSpecializedWeapons();
+    this.syncClassAbilitiesToCharacter();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Check if character has any Weapon Specialization and show/hide the section
+   */
+  checkWeaponSpecVisibility() {
+    const section = document.getElementById('weapon-spec-section');
+    const divider = document.getElementById('weapon-spec-divider');
+    if (!section) return;
+
+    // Scan class abilities for any "Weapon Specialization (...)" entries
+    const specs = this._getWeaponSpecsFromAbilities();
+
+    if (specs.length > 0) {
+      section.style.display = '';
+      if (divider) divider.style.display = '';
+      // Sync to character data
+      this.character.weaponSpecializations = specs;
+      this.updateWeaponSpecDisplay();
+      this.setupWeaponSpecToggle();
+    } else {
+      section.style.display = 'none';
+      if (divider) divider.style.display = 'none';
+      this.character.weaponSpecializations = [];
+    }
+
+    this.highlightSpecializedWeapons();
+  },
+
+  /**
+   * Parse weapon specializations from the class abilities list
+   */
+  _getWeaponSpecsFromAbilities() {
+    const specs = [];
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return specs;
+
+    const inputs = container.querySelectorAll('.class-ability-input');
+    for (const input of inputs) {
+      const value = input.value.trim();
+      const match = value.match(/^Weapon Specialization\s*\(([^)]+)\)/i);
+      if (match) {
+        const innerVal = match[1].trim();
+        if (innerVal.toLowerCase() === 'shield') {
+          specs.push({ type: 'Shield', weapon: 'Shield' });
+        } else if (this.WEAPON_SPEC_RANGED_WEAPONS.some(w => w.toLowerCase() === innerVal.toLowerCase())) {
+          specs.push({ type: 'Ranged', weapon: innerVal });
+        } else {
+          specs.push({ type: 'Melee', weapon: innerVal });
+        }
+      }
+    }
+    return specs;
+  },
+
+  /**
+   * Render the weapon specialization info cards
+   */
+  updateWeaponSpecDisplay() {
+    const cardsContainer = document.getElementById('weapon-spec-cards');
+    if (!cardsContainer) return;
+
+    const specs = this.character.weaponSpecializations || [];
+    if (specs.length === 0) {
+      cardsContainer.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    for (const spec of specs) {
+      const benefitData = this.getWeaponSpecBenefits(spec.type);
+      if (!benefitData) continue;
+
+      const title = spec.type === 'Shield'
+        ? 'Shield Specialization'
+        : spec.weapon;
+
+      html += `
+        <div class="weapon-spec-card">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">${benefitData.icon}</span>
+            <span class="weapon-spec-card-title">${title}</span>
+            <span class="weapon-spec-card-type">${spec.type}</span>
+          </div>
+          <div class="weapon-spec-card-benefits">
+            ${benefitData.benefits.map(b => `
+              <div class="benefit-item">
+                <strong>${b.label}:</strong> ${b.text}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    cardsContainer.innerHTML = html;
+  },
+
+  /**
+   * Setup the weapon spec collapse/expand toggle
+   */
+  setupWeaponSpecToggle() {
+    const toggleBtn = document.getElementById('weapon-spec-toggle');
+    const content = document.getElementById('weapon-spec-content');
+
+    if (!toggleBtn || !content) return;
+
+    // Only add listener once
+    if (toggleBtn.dataset.listenerAdded) return;
+    toggleBtn.dataset.listenerAdded = 'true';
+
+    // Restore collapsed state
+    if (this.character.weaponSpecCollapsed) {
+      toggleBtn.classList.add('collapsed');
+      content.classList.add('collapsed');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = toggleBtn.classList.toggle('collapsed');
+      content.classList.toggle('collapsed');
+      this.character.weaponSpecCollapsed = isCollapsed;
+      this.scheduleAutoSave();
+    });
+  },
+
+  /**
+   * Highlight specialized weapons on the Combat page
+   * Adds a visual indicator to weapon name inputs that match a specialization
+   */
+  highlightSpecializedWeapons() {
+    const specs = this.character.weaponSpecializations || [];
+
+    // Build lookup sets
+    const meleeSpecs = new Set();
+    const rangedSpecs = new Set();
+    let hasShieldSpec = false;
+
+    for (const s of specs) {
+      if (s.type === 'Shield') {
+        hasShieldSpec = true;
+      } else if (s.type === 'Melee') {
+        meleeSpecs.add(s.weapon.toLowerCase().replace(/\s*\(.*\)/, ''));
+      } else if (s.type === 'Ranged') {
+        rangedSpecs.add(s.weapon.toLowerCase().replace(/\s*\(.*\)/, ''));
+      }
+    }
+
+    // Known shield names for matching
+    const shieldNames = new Set([
+      'buckler', 'heater', 'hoplite', 'kite', 'peltast', 'round',
+      'scutum', 'target', 'tower', 'viking',
+      'buckler shield', 'heater shield', 'hoplite shield', 'kite shield',
+      'peltast shield', 'round shield', 'scutum shield', 'target shield',
+      'tower shield', 'viking shield'
+    ]);
+
+    // Process melee weapon rows
+    const meleeBody = document.getElementById('melee-weapons-body');
+    if (meleeBody) {
+      meleeBody.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const weaponName = nameInput.value.trim().toLowerCase();
+        row.classList.remove('weapon-specialized');
+        nameInput.title = '';
+
+        if (!weaponName) return;
+
+        // Check if it's a shield
+        if (hasShieldSpec && shieldNames.has(weaponName)) {
+          row.classList.add('weapon-specialized');
+          nameInput.title = '🛡️ Weapon Specialization (Shield)';
+          return;
+        }
+
+        // Check melee specs - match by normalizing
+        for (const specWeapon of meleeSpecs) {
+          if (this._weaponNameMatches(weaponName, specWeapon)) {
+            row.classList.add('weapon-specialized');
+            nameInput.title = `⚔️ Weapon Specialization`;
+            break;
+          }
+        }
+      });
+    }
+
+    // Process ranged weapon rows
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (rangedBody) {
+      rangedBody.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const weaponName = nameInput.value.trim().toLowerCase();
+        row.classList.remove('weapon-specialized');
+        nameInput.title = '';
+
+        if (!weaponName) return;
+
+        for (const specWeapon of rangedSpecs) {
+          if (this._weaponNameMatches(weaponName, specWeapon)) {
+            row.classList.add('weapon-specialized');
+            nameInput.title = `🏹 Weapon Specialization`;
+            break;
+          }
+        }
+      });
+    }
+  },
+
+  /**
+   * Check if a weapon name from the combat page matches a specialization weapon name
+   * Handles variants like "1H Bastard Sword" matching "Bastard Sword"
+   */
+  _weaponNameMatches(combatName, specName) {
+    // Direct match
+    if (combatName === specName) return true;
+
+    // Strip leading "1h " or "2h " prefix
+    const stripped = combatName.replace(/^[12]h\s+/i, '');
+    if (stripped === specName) return true;
+
+    // Handle "(Thrown)" suffix - match base name
+    const baseSpec = specName.replace(/\s*\(thrown\)/i, '');
+    if (combatName === baseSpec || stripped === baseSpec) return true;
+
+    return false;
+  },
+
   /**
    * Navigate to a specific page
    */
@@ -17644,6 +18225,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           window.WeaponData.updateAllWeaponDamage();
         }
         this.reapplyDamageBoostStyling();
+        this.highlightSpecializedWeapons();
       }
     }
   },
