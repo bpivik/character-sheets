@@ -3081,47 +3081,73 @@ const App = {
     
     container.innerHTML = '';
     
-    // Calculate row count based on saved data + extra empty rows
+    // Only create rows for saved items — no empty padding
     const savedItems = this.character.containers?.[containerId] || [];
-    const savedCount = savedItems.length;
-    const extraRows = 3; // Number of empty rows to show
-    const minRows = 5;   // Minimum rows to display
-    const rowCount = Math.max(savedCount + extraRows, minRows);
+    savedItems.forEach((item, i) => {
+      if (item.name || (item.enc && item.enc !== '0')) {
+        this._addContainerRowWithData(item.name || '', item.enc || '');
+      }
+    });
+  },
+  
+  /**
+   * Internal: create a single container row with optional data and auto-remove
+   */
+  _addContainerRowWithData(name = '', enc = '') {
+    const container = document.getElementById('container-items');
+    if (!container) return null;
     
-    for (let i = 0; i < rowCount; i++) {
-      const row = document.createElement('div');
-      row.className = 'equipment-row';
-      row.innerHTML = `
-        <input type="text" class="equipment-name" id="container-${i}-name" placeholder="">
-        <input type="number" class="equipment-enc" id="container-${i}-enc" placeholder="" step="0.1">
-      `;
-      container.appendChild(row);
-      
+    const i = container.querySelectorAll('.equipment-row').length;
+    const row = document.createElement('div');
+    row.className = 'equipment-row';
+    row.innerHTML = `
+      <input type="text" class="equipment-name" id="container-${i}-name" placeholder="">
+      <input type="number" class="equipment-enc" id="container-${i}-enc" placeholder="" step="0.1">
+    `;
+    container.appendChild(row);
+    
+    const nameInput = row.querySelector('.equipment-name');
+    const encInput = row.querySelector('.equipment-enc');
+    
+    if (name) nameInput.value = this.toTitleCase(name);
+    if (enc) encInput.value = enc;
+    
+    // Autofill ENC on blur, auto-remove if cleared
+    nameInput.addEventListener('blur', () => {
+      if (nameInput.value.trim()) {
+        nameInput.value = this.toTitleCase(nameInput.value.trim());
+        if (window.EncumbranceData) {
+          window.EncumbranceData.autofillEquipmentEnc('container', Array.from(container.querySelectorAll('.equipment-row')).indexOf(row), nameInput.value);
+        }
+      } else if (!nameInput.value.trim() && !encInput.value.trim()) {
+        // Name cleared and no ENC — remove row
+        row.remove();
+        this._reindexContainerRows();
+      }
+      this.updateContainerCapacity();
+    });
+    
+    encInput.addEventListener('input', () => {
+      this.updateContainerCapacity();
+    });
+    
+    return row;
+  },
+  
+  /**
+   * Reindex container rows after removal
+   */
+  _reindexContainerRows() {
+    const container = document.getElementById('container-items');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.equipment-row');
+    rows.forEach((row, i) => {
       const nameInput = row.querySelector('.equipment-name');
       const encInput = row.querySelector('.equipment-enc');
-      const rowIndex = i;
-      
-      // Autofill ENC on blur
-      nameInput.addEventListener('blur', () => {
-        // Convert to title case
-        if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
-        }
-        if (window.EncumbranceData) {
-          const itemName = nameInput.value;
-          if (itemName.trim() === '') {
-            window.EncumbranceData.clearEquipmentEncIfEmpty('container', rowIndex, itemName);
-          } else {
-            window.EncumbranceData.autofillEquipmentEnc('container', rowIndex, itemName);
-          }
-          this.updateContainerCapacity();
-        }
-      });
-      
-      encInput.addEventListener('input', () => {
-        this.updateContainerCapacity();
-      });
-    }
+      if (nameInput) nameInput.id = `container-${i}-name`;
+      if (encInput) encInput.id = `container-${i}-enc`;
+    });
   },
 
   /**
@@ -3202,103 +3228,49 @@ const App = {
 
   /**
    * Load container data from character
+   * Note: Data is now loaded directly in generateContainerRows
    */
   loadContainerData(containerId) {
-    if (!this.character.containers || !this.character.containers[containerId]) return;
-    
-    const items = this.character.containers[containerId];
-    items.forEach((item, i) => {
-      const nameInput = document.getElementById(`container-${i}-name`);
-      const encInput = document.getElementById(`container-${i}-enc`);
-      if (nameInput && item.name) nameInput.value = this.toTitleCase(item.name);
-      if (encInput && item.enc) encInput.value = item.enc;
-    });
+    // Data already populated by generateContainerRows
   },
 
   /**
-   * Alphabetize container items
+   * Alphabetize container items - rebuild with only filled rows
    */
   alphabetizeContainerItems() {
     const container = document.getElementById('container-items');
     if (!container) return;
     
-    // Gather all items with their data
+    // Gather filled items
     const items = [];
     container.querySelectorAll('.equipment-row').forEach(row => {
       const nameInput = row.querySelector('.equipment-name');
       const encInput = row.querySelector('.equipment-enc');
       const name = nameInput?.value?.trim() || '';
       const enc = encInput?.value || '';
-      items.push({ name, enc });
+      if (name) items.push({ name, enc });
     });
     
-    // Separate filled and empty items
-    const filledItems = items.filter(item => item.name);
-    const emptyItems = items.filter(item => !item.name);
+    // Sort alphabetically
+    items.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     
-    // Sort filled items alphabetically
-    filledItems.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-    
-    // Combine: filled first, then empty
-    const sortedItems = [...filledItems, ...emptyItems];
-    
-    // Update the DOM
-    const rows = container.querySelectorAll('.equipment-row');
-    sortedItems.forEach((item, i) => {
-      if (rows[i]) {
-        const nameInput = rows[i].querySelector('.equipment-name');
-        const encInput = rows[i].querySelector('.equipment-enc');
-        if (nameInput) nameInput.value = item.name;
-        if (encInput) encInput.value = item.enc;
-      }
+    // Clear and rebuild with only filled rows
+    container.innerHTML = '';
+    items.forEach(item => {
+      this._addContainerRowWithData(item.name, item.enc);
     });
+    
+    this.updateContainerCapacity();
   },
 
   /**
    * Add a new row to the container
    */
   addContainerRow() {
-    const container = document.getElementById('container-items');
-    if (!container) return;
-    
-    const rowCount = container.querySelectorAll('.equipment-row').length;
-    const i = rowCount;
-    
-    const row = document.createElement('div');
-    row.className = 'equipment-row';
-    row.innerHTML = `
-      <input type="text" class="equipment-name" id="container-${i}-name" placeholder="">
-      <input type="number" class="equipment-enc" id="container-${i}-enc" placeholder="" step="0.1">
-    `;
-    container.appendChild(row);
-    
-    const nameInput = row.querySelector('.equipment-name');
-    const encInput = row.querySelector('.equipment-enc');
-    const rowIndex = i;
-    
-    // Autofill ENC on blur
-    nameInput.addEventListener('blur', () => {
-      // Convert to title case
-      if (nameInput.value.trim()) {
-        nameInput.value = this.toTitleCase(nameInput.value.trim());
-      }
-      if (window.EncumbranceData) {
-        const itemName = nameInput.value;
-        if (itemName.trim() === '') {
-          window.EncumbranceData.clearEquipmentEncIfEmpty('container', rowIndex, itemName);
-        } else {
-          window.EncumbranceData.autofillEquipmentEnc('container', rowIndex, itemName);
-        }
-        this.updateContainerCapacity();
-      }
-    });
-    
-    encInput.addEventListener('input', () => {
-      this.updateContainerCapacity();
-    });
-    
-    // Focus the new row
-    nameInput.focus();
+    const row = this._addContainerRowWithData('', '');
+    if (row) {
+      row.querySelector('.equipment-name')?.focus();
+    }
   },
 
   /**
@@ -3309,22 +3281,19 @@ const App = {
     if (!container) return;
     
     const rows = container.querySelectorAll('.equipment-row');
-    if (rows.length <= 1) return; // Keep at least one row
+    if (rows.length === 0) return;
     
-    // Find the last empty row (from the end)
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const nameInput = rows[i].querySelector('.equipment-name');
-      const encInput = rows[i].querySelector('.equipment-enc');
-      const isEmpty = (!nameInput?.value?.trim()) && (!encInput?.value?.trim() || encInput?.value === '0');
-      
-      if (isEmpty) {
-        rows[i].remove();
-        return;
-      }
+    const lastRow = rows[rows.length - 1];
+    const nameInput = lastRow.querySelector('.equipment-name');
+    const hasContent = nameInput && nameInput.value.trim();
+    
+    if (hasContent) {
+      if (!confirm(`Remove "${nameInput.value.trim()}"?`)) return;
     }
     
-    // If no empty row found, don't remove anything (alert user)
-    alert('No empty rows to remove. Clear a row first.');
+    lastRow.remove();
+    this._reindexContainerRows();
+    this.updateContainerCapacity();
   },
 
   /**
@@ -7945,6 +7914,44 @@ const App = {
    * Instead of auto-populating, we show buttons that let the user choose when to fill
    */
   updateClassSpells(previousClasses = null) {
+    // If classes changed, clear all spells so user starts fresh
+    if (previousClasses) {
+      const currentClasses = [
+        document.getElementById('class-primary')?.value?.trim().toLowerCase() || '',
+        document.getElementById('class-secondary')?.value?.trim().toLowerCase() || '',
+        document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || ''
+      ];
+      const prevNames = previousClasses.map(c => c.name.toLowerCase());
+      
+      // Check if any class actually changed (not just rank)
+      const classChanged = currentClasses.some((c, i) => c !== prevNames[i]);
+      
+      if (classChanged) {
+        const rankKeys = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+        rankKeys.forEach(rankKey => {
+          const tbody = document.getElementById(`${rankKey}-body`);
+          if (tbody && tbody.rows.length > 0) {
+            tbody.innerHTML = '';
+          }
+        });
+        // Also reset memorization max fields
+        rankKeys.forEach(rankKey => {
+          const maxInput = document.getElementById(`${rankKey}-max`);
+          if (maxInput) maxInput.value = '';
+        });
+        // Clear saved spell data
+        if (this.character.magic && this.character.magic.spells) {
+          rankKeys.forEach(rankKey => {
+            if (this.character.magic.spells[rankKey]) {
+              this.character.magic.spells[rankKey].spells = [];
+              this.character.magic.spells[rankKey].max = '';
+            }
+          });
+        }
+        console.log('Class changed — cleared all spells and memorization');
+      }
+    }
+    
     this.updateSpellFillButtons();
   },
   

@@ -286,5 +286,11 @@ const CONTAINER_CONFIGS = {
     maxEnc: 6,
     rows: 12,
     triggers: ['slingbag', 'satchel', 'slingbag/satchel']
+  },
+  'belt-pouch': {
+    name: 'Belt Pouch',
+    maxEnc: 1,
+    rows: 4,
+    triggers: ['belt pouch', 'pouch, belt']
   }
 };
