@@ -8146,6 +8146,586 @@ input.skill-input.powerful-concentration-bonus,
   color: #856404;
 }
 
+/* ==================== SPELL CASTING MODAL ==================== */
+.cast-modal-content {
+  max-width: 420px;
+  width: 94%;
+  min-height: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.5);
+}
+
+.cast-modal-theme-border {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 1;
+  border: 2px solid var(--border-gold);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Casting type themes */
+.cast-modal-content.theme-divine .cast-modal-theme-border {
+  border-color: #daa520;
+  box-shadow: inset 0 0 20px rgba(218, 165, 32, 0.15), 0 0 15px rgba(218, 165, 32, 0.2);
+}
+.cast-modal-content.theme-arcane .cast-modal-theme-border {
+  border-color: #6a5acd;
+  box-shadow: inset 0 0 20px rgba(106, 90, 205, 0.15), 0 0 15px rgba(106, 90, 205, 0.2);
+}
+.cast-modal-content.theme-sorcery .cast-modal-theme-border {
+  border-color: #b22222;
+  box-shadow: inset 0 0 20px rgba(178, 34, 34, 0.15), 0 0 15px rgba(178, 34, 34, 0.2);
+}
+.cast-modal-content.theme-bardic .cast-modal-theme-border {
+  border-color: #2e8b57;
+  box-shadow: inset 0 0 20px rgba(46, 139, 87, 0.15), 0 0 15px rgba(46, 139, 87, 0.2);
+}
+
+/* Header */
+.cast-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 1rem 0.6rem;
+  border-bottom: 1px solid rgba(139, 115, 85, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.cast-modal-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+}
+
+.cast-modal-school {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b7355;
+  font-weight: 600;
+}
+
+.cast-modal-spell-name {
+  font-family: var(--font-header);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-header);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cast-modal-rank-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(139, 115, 85, 0.15);
+  color: #6b5344;
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  letter-spacing: 0.03em;
+}
+
+/* Stat Block */
+.cast-modal-stats {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgba(139, 115, 85, 0.2);
+  background: rgba(139, 115, 85, 0.04);
+  position: relative;
+  z-index: 2;
+}
+
+.cast-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.3rem 0.8rem;
+}
+
+.cast-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.cast-stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b7355;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cast-stat-value {
+  font-size: 0.8rem;
+  color: #2a2520;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.cast-stat-value.scaled {
+  color: #6a5acd;
+  font-weight: 700;
+}
+
+/* Intensity Controls */
+.cast-modal-intensity {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgba(139, 115, 85, 0.2);
+  background: rgba(139, 115, 85, 0.06);
+  position: relative;
+  z-index: 2;
+}
+
+.intensity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.intensity-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b5344;
+  letter-spacing: 0.05em;
+  min-width: 60px;
+}
+
+.btn-intensity {
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  background: rgba(255, 255, 255, 0.5);
+  color: #6b5344;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.btn-intensity:hover { background: rgba(139, 115, 85, 0.15); }
+.btn-intensity:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.intensity-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #2a2520;
+  min-width: 24px;
+  text-align: center;
+}
+
+.intensity-max {
+  font-size: 0.75rem;
+  color: #8b7355;
+}
+
+.intensity-info-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #6b5344;
+}
+
+.intensity-cost-display { font-weight: 600; }
+.intensity-magnitude-display { opacity: 0.8; }
+
+/* Armor Warning */
+.cast-modal-armor-warning {
+  padding: 0.5rem 1rem;
+  background: #fff3cd;
+  border-bottom: 1px solid #ffc107;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  position: relative;
+  z-index: 2;
+}
+.cast-modal-armor-warning.blocked {
+  background: #f8d7da;
+  border-bottom-color: #dc3545;
+}
+.armor-warning-icon { font-size: 1rem; }
+.armor-warning-text { font-size: 0.75rem; color: #856404; font-weight: 500; }
+.cast-modal-armor-warning.blocked .armor-warning-text { color: #721c24; }
+
+/* Description */
+.cast-modal-description {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(139, 115, 85, 0.2);
+  position: relative;
+  z-index: 2;
+}
+
+.cast-flavor-text {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #5a4a3a;
+  line-height: 1.4;
+  margin-bottom: 0.3rem;
+}
+
+.btn-toggle-desc {
+  background: none;
+  border: none;
+  color: #8b7355;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  text-decoration: underline;
+  font-weight: 500;
+}
+.btn-toggle-desc:hover { color: #6b5344; }
+
+.cast-full-desc {
+  font-size: 0.75rem;
+  color: #3a3025;
+  line-height: 1.5;
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  border: 1px solid rgba(139, 115, 85, 0.15);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* Casting Controls */
+.cast-modal-casting {
+  padding: 0.6rem 1rem 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.cast-skill-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.cast-skill-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b5344;
+}
+
+.cast-skill-percent {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #2a2520;
+}
+
+.cast-difficulty-note {
+  font-size: 0.68rem;
+  color: #2e7d32;
+  font-weight: 600;
+  font-style: italic;
+}
+.cast-difficulty-note.penalty {
+  color: #c62828;
+}
+
+.cast-mp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+}
+
+.cast-mp-label {
+  color: #8b7355;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.cast-mp-current { font-weight: 700; color: #2a2520; }
+.cast-mp-arrow { color: #8b7355; font-size: 0.75rem; }
+.cast-mp-after { font-weight: 700; color: #6a5acd; }
+.cast-mp-after.insufficient { color: #dc3545; }
+
+/* Main Cast Button */
+.btn-cast-main {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 2px solid #8b7355;
+  background: linear-gradient(to bottom, #f5f0e8, #e8dfd0);
+  color: #4a3a2a;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+.btn-cast-main:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #fff8f0, #f0e8d8);
+  border-color: #6b5344;
+  box-shadow: 0 2px 8px rgba(139, 115, 85, 0.3);
+}
+.btn-cast-main:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cast-btn-icon { font-size: 1.1rem; }
+
+/* Theme-colored cast buttons */
+.theme-divine .btn-cast-main { border-color: #daa520; }
+.theme-divine .btn-cast-main:hover:not(:disabled) { border-color: #b8860b; box-shadow: 0 2px 12px rgba(218, 165, 32, 0.3); }
+.theme-arcane .btn-cast-main { border-color: #6a5acd; }
+.theme-arcane .btn-cast-main:hover:not(:disabled) { border-color: #483d8b; box-shadow: 0 2px 12px rgba(106, 90, 205, 0.3); }
+.theme-sorcery .btn-cast-main { border-color: #b22222; }
+.theme-sorcery .btn-cast-main:hover:not(:disabled) { border-color: #8b0000; box-shadow: 0 2px 12px rgba(178, 34, 34, 0.3); }
+.theme-bardic .btn-cast-main { border-color: #2e8b57; }
+.theme-bardic .btn-cast-main:hover:not(:disabled) { border-color: #1a5632; box-shadow: 0 2px 12px rgba(46, 139, 87, 0.3); }
+
+/* Roll Result */
+.cast-modal-result {
+  padding: 0.6rem 1rem 0.75rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.cast-roll-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.cast-roll-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #8b7355;
+}
+
+.cast-roll-number {
+  font-size: 2rem;
+  font-weight: 900;
+  font-family: 'Courier New', monospace;
+  color: #2a2520;
+  min-width: 60px;
+  text-align: center;
+  transition: color 0.3s;
+}
+.cast-roll-number.rolling {
+  animation: rollFlash 0.08s infinite;
+}
+
+@keyframes rollFlash {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.cast-roll-target {
+  font-size: 0.75rem;
+  color: #8b7355;
+  font-weight: 600;
+}
+
+.cast-result-banner {
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-header);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cast-result-banner.critical {
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  color: #5a4a00;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.cast-result-banner.success {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+}
+.cast-result-banner.failure {
+  background: linear-gradient(135deg, #f8d7da, #f1c2c7);
+  color: #721c24;
+}
+.cast-result-banner.fumble {
+  background: linear-gradient(135deg, #721c24, #a02030);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(114, 28, 36, 0.5);
+}
+
+.cast-result-details {
+  font-size: 0.72rem;
+  color: #5a4a3a;
+  line-height: 1.4;
+  margin-bottom: 0.4rem;
+  min-height: 1em;
+}
+
+/* Force Failed Spell */
+.cast-force-section {
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  background: rgba(255, 243, 205, 0.5);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+}
+
+.cast-force-explain {
+  font-size: 0.72rem;
+  color: #856404;
+  margin: 0 0 0.4rem 0;
+  line-height: 1.3;
+}
+
+.cast-force-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-force-spell, .btn-force-luck {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+  color: #4a3a2a;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.btn-force-spell:hover { background: #fff3cd; border-color: #ffc107; }
+.btn-force-luck:hover { background: #d4edda; border-color: #28a745; }
+.btn-force-luck:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-cast-done {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border: 1px solid rgba(139, 115, 85, 0.3);
+  background: rgba(139, 115, 85, 0.1);
+  color: #6b5344;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.15s;
+}
+.btn-cast-done:hover { background: rgba(139, 115, 85, 0.2); }
+
+/* Animation Overlay */
+.cast-animation-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+
+/* Success animations per casting type */
+@keyframes divineGlow {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes arcaneRunes {
+  0% { opacity: 0; transform: rotate(0deg) scale(0.8); }
+  40% { opacity: 0.9; transform: rotate(10deg) scale(1.05); }
+  100% { opacity: 0; transform: rotate(20deg) scale(1.1); }
+}
+@keyframes sorceryPulse {
+  0% { opacity: 0; box-shadow: inset 0 0 20px rgba(178, 34, 34, 0); }
+  40% { opacity: 1; box-shadow: inset 0 0 40px rgba(178, 34, 34, 0.3); }
+  100% { opacity: 0; box-shadow: inset 0 0 20px rgba(178, 34, 34, 0); }
+}
+@keyframes bardicWave {
+  0% { opacity: 0; background-position: 0% 50%; }
+  40% { opacity: 0.8; }
+  100% { opacity: 0; background-position: 200% 50%; }
+}
+
+.cast-animation-overlay.anim-divine-success {
+  background: radial-gradient(ellipse at center top, rgba(255, 215, 0, 0.25), rgba(255, 255, 200, 0.1), transparent 70%);
+  animation: divineGlow 1.5s ease-out forwards;
+}
+.cast-animation-overlay.anim-arcane-success {
+  background: radial-gradient(circle at center, rgba(106, 90, 205, 0.2), rgba(138, 43, 226, 0.1), transparent 70%);
+  animation: arcaneRunes 1.5s ease-out forwards;
+}
+.cast-animation-overlay.anim-sorcery-success {
+  background: radial-gradient(circle at center, rgba(178, 34, 34, 0.15), rgba(139, 0, 0, 0.08), transparent 65%);
+  animation: sorceryPulse 1.5s ease-out forwards;
+}
+.cast-animation-overlay.anim-bardic-success {
+  background: linear-gradient(90deg, transparent, rgba(46, 139, 87, 0.15), rgba(60, 179, 113, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: bardicWave 1.5s ease-out forwards;
+}
+
+/* Fizzle animation for failures */
+@keyframes fizzle {
+  0% { opacity: 0; }
+  20% { opacity: 0.4; }
+  40% { opacity: 0.2; }
+  60% { opacity: 0.35; }
+  80% { opacity: 0.1; }
+  100% { opacity: 0; }
+}
+.cast-animation-overlay.anim-fizzle {
+  background: radial-gradient(circle at center, rgba(128, 128, 128, 0.2), transparent 60%);
+  animation: fizzle 1s ease-out forwards;
+}
+
+/* Fumble animation */
+@keyframes fumbleFlash {
+  0% { opacity: 0; }
+  15% { opacity: 0.7; }
+  30% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+  70% { opacity: 0.1; }
+  100% { opacity: 0; }
+}
+.cast-animation-overlay.anim-fumble {
+  background: radial-gradient(circle at center, rgba(200, 30, 30, 0.3), rgba(100, 0, 0, 0.15), transparent 65%);
+  animation: fumbleFlash 1.2s ease-out forwards;
+}
+
+/* Critical animation */
+@keyframes criticalBurst {
+  0% { opacity: 0; transform: scale(0.5); }
+  30% { opacity: 1; transform: scale(1.05); }
+  60% { opacity: 0.8; }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+.cast-animation-overlay.anim-critical {
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.35), rgba(255, 255, 150, 0.15), transparent 65%);
+  animation: criticalBurst 1.8s ease-out forwards;
+}
+
 /* Add Spell Button */
 .btn-add-spell {
   background: #e8f5e9;

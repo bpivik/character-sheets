@@ -885,6 +885,115 @@
       </div>
     </div>
 
+    <!-- ==================== SPELL CASTING MODAL ==================== -->
+    <div id="cast-modal" class="modal-overlay hidden">
+      <div class="modal-content cast-modal-content" id="cast-modal-dialog">
+        <!-- Casting type theme border (set via JS) -->
+        <div class="cast-modal-theme-border" id="cast-modal-theme-border"></div>
+
+        <!-- Header -->
+        <div class="cast-modal-header">
+          <div class="cast-modal-title-row">
+            <span class="cast-modal-school" id="cast-modal-school"></span>
+            <h3 class="cast-modal-spell-name" id="cast-modal-spell-name"></h3>
+            <span class="cast-modal-rank-badge" id="cast-modal-rank-badge"></span>
+          </div>
+          <button type="button" class="btn-modal-close" id="cast-modal-close">&times;</button>
+        </div>
+
+        <!-- Stat Block -->
+        <div class="cast-modal-stats">
+          <div class="cast-stat-grid">
+            <div class="cast-stat"><span class="cast-stat-label">Cost</span><span class="cast-stat-value" id="cast-stat-cost"></span></div>
+            <div class="cast-stat"><span class="cast-stat-label">Area</span><span class="cast-stat-value" id="cast-stat-area"></span></div>
+            <div class="cast-stat"><span class="cast-stat-label">Cast Time</span><span class="cast-stat-value" id="cast-stat-time"></span></div>
+            <div class="cast-stat"><span class="cast-stat-label">Duration</span><span class="cast-stat-value" id="cast-stat-duration"></span></div>
+            <div class="cast-stat"><span class="cast-stat-label">Range</span><span class="cast-stat-value" id="cast-stat-range"></span></div>
+            <div class="cast-stat"><span class="cast-stat-label">Resist</span><span class="cast-stat-value" id="cast-stat-resist"></span></div>
+          </div>
+        </div>
+
+        <!-- Intensity Controls (hidden for cantrips) -->
+        <div class="cast-modal-intensity" id="cast-modal-intensity-section" style="display:none;">
+          <div class="intensity-row">
+            <span class="intensity-label">Intensity</span>
+            <button type="button" class="btn-intensity" id="cast-intensity-down" title="Decrease intensity">&#9664;</button>
+            <span class="intensity-value" id="cast-intensity-value">1</span>
+            <button type="button" class="btn-intensity" id="cast-intensity-up" title="Increase intensity">&#9654;</button>
+            <span class="intensity-max" id="cast-intensity-max">/1</span>
+          </div>
+          <div class="intensity-info-row">
+            <span class="intensity-cost-display" id="cast-intensity-cost"></span>
+            <span class="intensity-magnitude-display" id="cast-intensity-magnitude"></span>
+          </div>
+        </div>
+
+        <!-- Armor Warning -->
+        <div class="cast-modal-armor-warning hidden" id="cast-armor-warning">
+          <span class="armor-warning-icon">&#9888;</span>
+          <span class="armor-warning-text" id="cast-armor-warning-text"></span>
+        </div>
+
+        <!-- Description (collapsible) -->
+        <div class="cast-modal-description">
+          <div class="cast-flavor-text" id="cast-flavor-text"></div>
+          <button type="button" class="btn-toggle-desc" id="cast-toggle-desc">Show Full Description &#9660;</button>
+          <div class="cast-full-desc hidden" id="cast-full-desc"></div>
+        </div>
+
+        <!-- Casting Controls -->
+        <div class="cast-modal-casting">
+          <div class="cast-skill-row">
+            <span class="cast-skill-name" id="cast-skill-name">Arcane Casting</span>
+            <span class="cast-skill-percent" id="cast-skill-percent">72%</span>
+            <span class="cast-difficulty-note" id="cast-difficulty-note"></span>
+          </div>
+          <div class="cast-mp-row">
+            <span class="cast-mp-label">Magic Points</span>
+            <span class="cast-mp-current" id="cast-mp-current">12</span>
+            <span class="cast-mp-arrow">&rarr;</span>
+            <span class="cast-mp-after" id="cast-mp-after">11</span>
+          </div>
+
+          <!-- Cast Button -->
+          <button type="button" class="btn-cast-main" id="cast-modal-cast-btn">
+            <span class="cast-btn-icon">&#10022;</span>
+            <span class="cast-btn-text" id="cast-btn-text">Cast Spell</span>
+          </button>
+        </div>
+
+        <!-- Roll Result (hidden until cast) -->
+        <div class="cast-modal-result hidden" id="cast-modal-result">
+          <div class="cast-roll-display">
+            <span class="cast-roll-label">d100 Roll</span>
+            <span class="cast-roll-number" id="cast-roll-number">00</span>
+            <span class="cast-roll-target" id="cast-roll-target">vs 72%</span>
+          </div>
+          <div class="cast-result-banner" id="cast-result-banner">
+            <span class="cast-result-text" id="cast-result-text">SUCCESS</span>
+          </div>
+          <div class="cast-result-details" id="cast-result-details"></div>
+
+          <!-- Force Failed Spell (hidden unless failed) -->
+          <div class="cast-force-section hidden" id="cast-force-section">
+            <p class="cast-force-explain">The spell fizzled. You may force it to succeed, but it will be expunged from memory.</p>
+            <div class="cast-force-buttons">
+              <button type="button" class="btn-force-spell" id="cast-force-btn">Force Spell</button>
+              <button type="button" class="btn-force-luck" id="cast-luck-btn">
+                Spend Luck Point (<span id="cast-luck-count">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <!-- Close after result -->
+          <button type="button" class="btn-cast-done" id="cast-done-btn">Done</button>
+        </div>
+
+        <!-- Animation Overlay -->
+        <div class="cast-animation-overlay hidden" id="cast-animation-overlay"></div>
+      </div>
+    </div>
+
     <!-- ==================== PAGE 3: COMBAT AND SPECIAL ABILITIES ==================== -->
     <section id="page-combat" class="sheet-page page-combat">
       <div class="page-content ornate-border">
@@ -1903,6 +2012,7 @@
   <script src="js/encumbrance-data.js"></script>
   <script src="js/class-ranks-data.js"></script>
   <script src="js/spell-data.js"></script>
+  <script src="js/spell-details-data.js"></script>
   <script src="js/class-spells-data.js"></script>
   <script src="js/abilities-data.js"></script>
   <script src="js/species-data.js"></script>

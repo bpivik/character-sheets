@@ -8132,78 +8132,701 @@ const App = {
   /**
    * Cast a spell - deducts magic point cost from current MP
    */
+  // =========================================================================
+  //  SPELL CASTING MODAL
+  // =========================================================================
+
+  /**
+   * State object for the casting modal
+   */
+  _castModal: {
+    rankKey: null,
+    slotIndex: null,
+    spellName: '',
+    spellDetails: null,
+    classSource: '',
+    castingType: '',
+    castingSkillId: '',
+    castingSkillPercent: 0,
+    effectiveSkill: 0,
+    intensity: 1,
+    maxIntensity: 1,
+    spellRank: 0,
+    casterRank: 1,
+    cost: 1,
+    armorRestriction: null,
+    hasRolled: false,
+    rollResult: null
+  },
+
+  /**
+   * Open the casting modal for a spell (replaces old castSpell)
+   */
   castSpell(rankKey, slotIndex) {
     const nameInput = document.getElementById(`${rankKey}-${slotIndex}-name`);
-    const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
-    const castBtn = document.getElementById(`${rankKey}-${slotIndex}-cast`);
-    
     if (!nameInput || !nameInput.value.trim()) return;
-    
+
     const spellName = nameInput.value.trim();
+    const costInput = document.getElementById(`${rankKey}-${slotIndex}-cost`);
     const costStr = costInput?.value?.trim() || '';
-    
-    // Parse cost - handle values like "1", "2", "1/HIT", "3/Intensity", etc.
-    // Take the first number found
-    const costMatch = costStr.match(/^(\d+)/);
-    if (!costMatch) {
-      this.showCastFeedback(castBtn, 'no-cost');
-      return;
+    const classSpell = nameInput.dataset.classSpell || '';
+
+    // Reset modal state
+    const m = this._castModal;
+    m.rankKey = rankKey;
+    m.slotIndex = slotIndex;
+    m.spellName = spellName;
+    m.hasRolled = false;
+    m.rollResult = null;
+    m.intensity = 1;
+
+    // Determine spell rank number
+    m.spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
+
+    // Look up spell details
+    const L = window.SpellDetailsLookup;
+    m.spellDetails = L ? L.get(spellName) : null;
+
+    // Determine casting class and skill
+    this._determineCastingInfo(m, classSpell, costStr);
+
+    // Populate and show modal
+    this._populateCastModal(m, costStr);
+    this._showCastModal();
+  },
+
+  /**
+   * Determine casting class, skill, rank, and armor restrictions
+   */
+  _determineCastingInfo(m, classSpell, costStr) {
+    const L = window.SpellDetailsLookup;
+
+    // Find the casting class from: classSpell dataset, or guess from spell details, or from character classes
+    const classCandidates = [
+      document.getElementById('class-primary')?.value?.trim() || '',
+      document.getElementById('class-secondary')?.value?.trim() || '',
+      document.getElementById('class-tertiary')?.value?.trim() || ''
+    ].filter(c => c);
+
+    const rankValues = [
+      parseInt(document.getElementById('rank-primary')?.value, 10) || 0,
+      parseInt(document.getElementById('rank-secondary')?.value, 10) || 0,
+      parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
+    ];
+
+    // Find best matching class
+    let bestClass = classSpell || '';
+    let bestRank = 1;
+
+    if (bestClass && L) {
+      // Find the rank of the class that matches
+      for (let i = 0; i < classCandidates.length; i++) {
+        if (classCandidates[i].toLowerCase().includes(bestClass.toLowerCase()) ||
+            bestClass.toLowerCase().includes(classCandidates[i].toLowerCase())) {
+          bestRank = rankValues[i] || 1;
+          bestClass = classCandidates[i];
+          break;
+        }
+      }
+    } else {
+      // No classSpell data — find first spellcasting class
+      const casterClasses = ['cleric', 'mage', 'sorcerer', 'bard', 'druid', 'paladin', 'ranger', 'anti-paladin'];
+      for (let i = 0; i < classCandidates.length; i++) {
+        const norm = classCandidates[i].toLowerCase();
+        if (casterClasses.some(cc => norm.includes(cc))) {
+          bestClass = classCandidates[i];
+          bestRank = rankValues[i] || 1;
+          break;
+        }
+      }
     }
-    
-    const cost = parseInt(costMatch[1], 10);
-    if (cost <= 0) {
-      this.showCastFeedback(castBtn, 'no-cost');
-      return;
+
+    m.classSource = bestClass;
+    m.casterRank = bestRank;
+
+    if (L) {
+      m.castingType = L.getCastingType(bestClass);
+      m.castingSkillId = L.getCastingSkillId(bestClass);
+
+      const skillEl = document.getElementById(m.castingSkillId);
+      m.castingSkillPercent = parseInt(skillEl?.value, 10) || 0;
+
+      // Max intensity
+      m.maxIntensity = L.getMaxIntensity(m.castingSkillPercent, m.spellRank);
+
+      // Armor check
+      const armorCat = this._detectArmorCategory();
+      const species = document.getElementById('species')?.value || '';
+      m.armorRestriction = L.checkArmorRestriction(bestClass, armorCat, species);
+    } else {
+      m.castingType = 'arcane';
+      m.castingSkillPercent = 50;
+      m.maxIntensity = 1;
+      m.armorRestriction = { canCast: true, penalty: null, reason: null };
     }
-    
-    // Get current magic points
+
+    // Calculate effective skill (with cantrip rank bonus and armor penalty)
+    m.effectiveSkill = m.castingSkillPercent;
+    if (m.spellRank === 0) {
+      // Cantrips: each rank above 0 is 1 grade easier (+20% per rank)
+      m.effectiveSkill += (m.casterRank * 20);
+    }
+    if (m.armorRestriction?.penalty) {
+      // Elven chain penalty: 1 grade harder (-20%)
+      m.effectiveSkill -= 20;
+    }
+    // Cap at reasonable bounds
+    m.effectiveSkill = Math.max(0, Math.min(m.effectiveSkill, 200));
+  },
+
+  /**
+   * Detect what armor the character is wearing from hit location fields
+   */
+  _detectArmorCategory() {
+    const L = window.SpellDetailsLookup;
+    if (!L) return 'none';
+
+    // Scan armor inputs on the combat page
+    const armorInputs = document.querySelectorAll('.armor-input');
+    let heaviestCategory = 'none';
+    const categoryWeight = { 'none': 0, 'light': 1, 'elven-chain': 2, 'heavy': 3, 'unknown': 3 };
+
+    armorInputs.forEach(input => {
+      const val = input.value?.trim();
+      if (!val) return;
+      const cat = L.classifyArmor(val);
+      if ((categoryWeight[cat] || 0) > (categoryWeight[heaviestCategory] || 0)) {
+        heaviestCategory = cat;
+      }
+    });
+
+    return heaviestCategory;
+  },
+
+  /**
+   * Populate all modal fields from state
+   */
+  _populateCastModal(m, costStr) {
+    const L = window.SpellDetailsLookup;
+    const d = m.spellDetails;
+
+    // Theme
+    const dialog = document.getElementById('cast-modal-dialog');
+    dialog.className = 'modal-content cast-modal-content theme-' + m.castingType;
+
+    // Header
+    document.getElementById('cast-modal-school').textContent = d?.school || '';
+    document.getElementById('cast-modal-spell-name').textContent = d?.name || m.spellName;
+
+    const rankLabels = { 0: 'Cantrip', 1: 'Rank 1', 2: 'Rank 2', 3: 'Rank 3', 4: 'Rank 4', 5: 'Rank 5' };
+    const classLabel = m.classSource ? ` \u2022 ${m.classSource}` : '';
+    document.getElementById('cast-modal-rank-badge').textContent = (rankLabels[m.spellRank] || `Rank ${m.spellRank}`) + classLabel;
+
+    // Stat block
+    if (d) {
+      document.getElementById('cast-stat-cost').textContent = d.costDisplay || costStr || '1';
+      document.getElementById('cast-stat-area').textContent = d.area || '—';
+      document.getElementById('cast-stat-time').textContent = d.castingTime || '—';
+      document.getElementById('cast-stat-duration').textContent = d.duration || '—';
+      document.getElementById('cast-stat-range').textContent = d.range || '—';
+      document.getElementById('cast-stat-resist').textContent = d.resist || 'None';
+    } else {
+      // No detail data — show basic info from the spell row cost field
+      document.getElementById('cast-stat-cost').textContent = costStr || '1';
+      ['area', 'time', 'duration', 'range', 'resist'].forEach(f => {
+        document.getElementById(`cast-stat-${f}`).textContent = '—';
+      });
+    }
+
+    // Intensity section
+    const intensitySection = document.getElementById('cast-modal-intensity-section');
+    if (m.spellRank === 0) {
+      intensitySection.style.display = 'none';
+      m.intensity = 1;
+    } else {
+      intensitySection.style.display = '';
+      m.intensity = 1;
+      this._updateIntensityDisplay(m, costStr);
+    }
+
+    // Armor warning
+    const armorWarn = document.getElementById('cast-armor-warning');
+    if (m.armorRestriction && !m.armorRestriction.canCast) {
+      armorWarn.classList.remove('hidden');
+      armorWarn.classList.add('blocked');
+      document.getElementById('cast-armor-warning-text').textContent = m.armorRestriction.reason;
+    } else if (m.armorRestriction?.penalty) {
+      armorWarn.classList.remove('hidden', 'blocked');
+      document.getElementById('cast-armor-warning-text').textContent = m.armorRestriction.reason;
+    } else {
+      armorWarn.classList.add('hidden');
+    }
+
+    // Description
+    if (d) {
+      document.getElementById('cast-flavor-text').textContent = d.flavorText || '';
+      document.getElementById('cast-full-desc').textContent = d.description || '';
+      document.getElementById('cast-flavor-text').style.display = d.flavorText ? '' : 'none';
+    } else {
+      // Fallback: use tooltip from SpellData
+      const fallbackDesc = window.SpellData?.getSpellDescription(m.spellName) || '';
+      document.getElementById('cast-flavor-text').textContent = fallbackDesc;
+      document.getElementById('cast-full-desc').textContent = '';
+      document.getElementById('cast-flavor-text').style.display = fallbackDesc ? '' : 'none';
+    }
+    document.getElementById('cast-full-desc').classList.add('hidden');
+    document.getElementById('cast-toggle-desc').textContent = 'Show Full Description \u25BC';
+
+    // Casting skill
+    const skillName = L ? L.getCastingSkillName(m.classSource) : 'Casting Skill';
+    document.getElementById('cast-skill-name').textContent = skillName;
+    document.getElementById('cast-skill-percent').textContent = m.effectiveSkill + '%';
+
+    // Difficulty note
+    const diffNote = document.getElementById('cast-difficulty-note');
+    if (m.spellRank === 0 && m.casterRank >= 1) {
+      const bonus = L ? L.getCantripDifficultyAdjustment(m.casterRank) : '';
+      diffNote.textContent = `(${bonus})`;
+      diffNote.classList.remove('penalty');
+    } else if (m.armorRestriction?.penalty) {
+      diffNote.textContent = `(${m.armorRestriction.penalty})`;
+      diffNote.classList.add('penalty');
+    } else {
+      diffNote.textContent = '';
+    }
+
+    // MP display
+    this._updateCostDisplay(m, costStr);
+
+    // Cast button state
+    const castBtn = document.getElementById('cast-modal-cast-btn');
+    const canCast = m.armorRestriction?.canCast !== false;
+    const canAfford = m.cost <= (parseInt(document.getElementById('magic-points-current')?.value, 10) || 0);
+    castBtn.disabled = !canCast || !canAfford;
+
+    if (!canCast) {
+      document.getElementById('cast-btn-text').textContent = 'Cannot Cast (Armor)';
+    } else if (!canAfford) {
+      document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
+    } else {
+      document.getElementById('cast-btn-text').textContent = 'Cast ' + (d?.name || m.spellName);
+    }
+
+    // Hide result section, show casting section
+    document.getElementById('cast-modal-result').classList.add('hidden');
+    document.getElementById('cast-modal-casting').style.display = '';
+
+    // Reset animation overlay
+    const animOverlay = document.getElementById('cast-animation-overlay');
+    animOverlay.className = 'cast-animation-overlay hidden';
+  },
+
+  /**
+   * Update intensity display and dependent stat values
+   */
+  _updateIntensityDisplay(m, costStr) {
+    document.getElementById('cast-intensity-value').textContent = m.intensity;
+    document.getElementById('cast-intensity-max').textContent = '/' + m.maxIntensity;
+
+    document.getElementById('cast-intensity-down').disabled = m.intensity <= 1;
+    document.getElementById('cast-intensity-up').disabled = m.intensity >= m.maxIntensity;
+
+    // Update cost
+    this._updateCostDisplay(m, costStr);
+
+    // Update intensity-scaling stat values
+    const d = m.spellDetails;
+    if (d?.intensityScaling && m.intensity > 1) {
+      d.intensityScaling.forEach(s => {
+        const el = document.getElementById(`cast-stat-${s.field}`);
+        if (!el) return;
+        const val = s.base + s.per * (m.intensity - 1);
+        el.textContent = val + (s.unit || '');
+        el.classList.add('scaled');
+      });
+    }
+
+    // Magnitude display
+    const mag = Math.max(1, Math.floor(m.castingSkillPercent / 10));
+    document.getElementById('cast-intensity-magnitude').textContent = `Magnitude: ${mag}`;
+
+    // Cost info in intensity row
+    document.getElementById('cast-intensity-cost').textContent = `Total Cost: ${m.cost} MP`;
+  },
+
+  /**
+   * Calculate and display the MP cost at current intensity
+   */
+  _updateCostDisplay(m, costStr) {
+    const L = window.SpellDetailsLookup;
+    const d = m.spellDetails;
+
+    // Calculate cost
+    if (d?.cost && L) {
+      m.cost = L.calculateCost(d.cost, m.intensity, m.spellRank, m.casterRank);
+    } else {
+      // Parse from cost string as fallback
+      const costMatch = (costStr || '').match(/^(\d+)/);
+      m.cost = costMatch ? parseInt(costMatch[1], 10) : 1;
+    }
+
+    const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
+    const mpAfter = currentMP - m.cost;
+
+    document.getElementById('cast-mp-current').textContent = currentMP;
+    document.getElementById('cast-mp-after').textContent = mpAfter >= 0 ? mpAfter : mpAfter;
+
+    const mpAfterEl = document.getElementById('cast-mp-after');
+    if (mpAfter < 0) {
+      mpAfterEl.classList.add('insufficient');
+    } else {
+      mpAfterEl.classList.remove('insufficient');
+    }
+
+    // Update cast button if needed
+    const castBtn = document.getElementById('cast-modal-cast-btn');
+    if (castBtn && m.armorRestriction?.canCast !== false) {
+      castBtn.disabled = mpAfter < 0;
+      if (mpAfter < 0) {
+        document.getElementById('cast-btn-text').textContent = 'Insufficient MP';
+      } else {
+        document.getElementById('cast-btn-text').textContent = 'Cast ' + (d?.name || m.spellName);
+      }
+    }
+  },
+
+  /**
+   * Show the modal and bind event listeners
+   */
+  _showCastModal() {
+    const modal = document.getElementById('cast-modal');
+    modal.classList.remove('hidden');
+
+    // Close button
+    document.getElementById('cast-modal-close').onclick = () => this._closeCastModal();
+
+    // Click overlay to close
+    modal.onclick = (e) => {
+      if (e.target === modal) this._closeCastModal();
+    };
+
+    // Toggle description
+    document.getElementById('cast-toggle-desc').onclick = () => {
+      const desc = document.getElementById('cast-full-desc');
+      const btn = document.getElementById('cast-toggle-desc');
+      if (desc.classList.contains('hidden')) {
+        desc.classList.remove('hidden');
+        btn.textContent = 'Hide Description \u25B2';
+      } else {
+        desc.classList.add('hidden');
+        btn.textContent = 'Show Full Description \u25BC';
+      }
+    };
+
+    // Intensity buttons
+    document.getElementById('cast-intensity-down').onclick = () => {
+      const m = this._castModal;
+      if (m.intensity > 1) {
+        m.intensity--;
+        this._updateIntensityDisplay(m);
+      }
+    };
+    document.getElementById('cast-intensity-up').onclick = () => {
+      const m = this._castModal;
+      if (m.intensity < m.maxIntensity) {
+        m.intensity++;
+        this._updateIntensityDisplay(m);
+      }
+    };
+
+    // Cast button
+    document.getElementById('cast-modal-cast-btn').onclick = () => this._executeCast();
+
+    // Done button
+    document.getElementById('cast-done-btn').onclick = () => this._closeCastModal();
+
+    // Force spell button
+    document.getElementById('cast-force-btn').onclick = () => this._forceSpell();
+
+    // Luck point button
+    document.getElementById('cast-luck-btn').onclick = () => this._useLuckPoint();
+  },
+
+  /**
+   * Close the casting modal
+   */
+  _closeCastModal() {
+    document.getElementById('cast-modal').classList.add('hidden');
+    // Reset animation
+    document.getElementById('cast-animation-overlay').className = 'cast-animation-overlay hidden';
+  },
+
+  /**
+   * Execute the spell casting — roll d100 with animation
+   */
+  _executeCast() {
+    const m = this._castModal;
+    if (m.hasRolled) return;
+
+    // Deduct MP
     const mpField = document.getElementById('magic-points-current');
-    if (!mpField) return;
-    
-    const currentMP = parseInt(mpField.value, 10) || 0;
-    
-    if (currentMP < cost) {
-      this.showCastFeedback(castBtn, 'insufficient');
-      this.showMemorizeWarning(`Not enough Magic Points to cast ${spellName}. Need ${cost} MP, have ${currentMP} MP.`);
-      return;
-    }
-    
-    // Deduct cost
-    mpField.value = currentMP - cost;
-    
-    // Update character data
+    const currentMP = parseInt(mpField?.value, 10) || 0;
+    if (currentMP < m.cost) return;
+
+    mpField.value = currentMP - m.cost;
     this.character.derived = this.character.derived || {};
     this.character.derived.magicPointsCurrent = mpField.value;
-    
-    // Show success feedback
-    this.showCastFeedback(castBtn, 'success');
-    
-    // Update MP display on spell pages
     this.updateMagicMPDisplay();
-    
-    console.log(`Cast ${spellName} for ${cost} MP (${currentMP} → ${mpField.value})`);
+
+    // Hide casting controls, show result area
+    document.getElementById('cast-modal-casting').style.display = 'none';
+    const resultSection = document.getElementById('cast-modal-result');
+    resultSection.classList.remove('hidden');
+
+    // Hide sub-sections initially
+    document.getElementById('cast-force-section').classList.add('hidden');
+    document.getElementById('cast-result-banner').style.visibility = 'hidden';
+    document.getElementById('cast-result-details').textContent = '';
+    document.getElementById('cast-roll-target').textContent = `vs ${m.effectiveSkill}%`;
+
+    // Animate d100 roll
+    const rollEl = document.getElementById('cast-roll-number');
+    rollEl.classList.add('rolling');
+    rollEl.textContent = '00';
+
+    const finalRoll = Math.floor(Math.random() * 100) + 1;
+    let ticks = 0;
+    const maxTicks = 18;
+    const rollInterval = setInterval(() => {
+      ticks++;
+      rollEl.textContent = String(Math.floor(Math.random() * 100) + 1).padStart(2, '0');
+      if (ticks >= maxTicks) {
+        clearInterval(rollInterval);
+        rollEl.classList.remove('rolling');
+        rollEl.textContent = String(finalRoll).padStart(2, '0');
+        this._resolveRoll(m, finalRoll);
+      }
+    }, 60);
+
+    m.hasRolled = true;
     this.scheduleAutoSave();
   },
-  
+
   /**
-   * Show visual feedback on the cast button
+   * Resolve the d100 roll result
    */
-  showCastFeedback(btn, type) {
-    if (!btn) return;
-    
-    btn.classList.remove('cast-success', 'cast-fail', 'cast-no-cost');
-    
-    if (type === 'success') {
-      btn.classList.add('cast-success');
-    } else if (type === 'insufficient') {
-      btn.classList.add('cast-fail');
-    } else if (type === 'no-cost') {
-      btn.classList.add('cast-no-cost');
+  _resolveRoll(m, roll) {
+    const skill = m.effectiveSkill;
+
+    // Determine result thresholds
+    const critThreshold = Math.max(1, Math.floor(skill / 10));
+    const fumbleThreshold = Math.min(100, 100 - Math.floor((100 - skill) / 10));
+
+    let result, resultClass;
+    if (roll <= critThreshold) {
+      result = 'CRITICAL SUCCESS';
+      resultClass = 'critical';
+    } else if (roll <= skill) {
+      result = 'SUCCESS';
+      resultClass = 'success';
+    } else if (roll >= 100 || roll > fumbleThreshold) {
+      // 96-00 is always a fumble, or if roll > fumble threshold
+      if (roll >= 96) {
+        result = 'FUMBLE';
+        resultClass = 'fumble';
+      } else {
+        result = 'FAILURE';
+        resultClass = 'failure';
+      }
+    } else {
+      result = 'FAILURE';
+      resultClass = 'failure';
     }
-    
+
+    m.rollResult = { roll, result, resultClass, critThreshold, fumbleThreshold };
+
+    // Update display
+    const banner = document.getElementById('cast-result-banner');
+    banner.style.visibility = 'visible';
+    banner.className = 'cast-result-banner ' + resultClass;
+    document.getElementById('cast-result-text').textContent = result;
+
+    // Color the roll number
+    const rollEl = document.getElementById('cast-roll-number');
+    rollEl.style.color = resultClass === 'critical' ? '#b8860b' :
+                         resultClass === 'success' ? '#155724' :
+                         resultClass === 'fumble' ? '#721c24' : '#856404';
+
+    // Result details
+    const details = document.getElementById('cast-result-details');
+    const mpField = document.getElementById('magic-points-current');
+    const newMP = parseInt(mpField?.value, 10) || 0;
+
+    if (resultClass === 'critical') {
+      details.textContent = `Critical! ${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect with exceptional potency.`;
+    } else if (resultClass === 'success') {
+      details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell takes effect normally.`;
+    } else if (resultClass === 'fumble') {
+      details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
+    } else {
+      details.textContent = `${m.cost} MP spent. Remaining: ${newMP} MP. The spell fizzles and fails.`;
+    }
+
+    // Show force section on failure (not fumble, not cantrip for memory expunge)
+    if (resultClass === 'failure') {
+      const forceSection = document.getElementById('cast-force-section');
+      forceSection.classList.remove('hidden');
+
+      // Update luck points display
+      const luckEl = document.getElementById('luck-current');
+      const luckCount = parseInt(luckEl?.value, 10) || 0;
+      document.getElementById('cast-luck-count').textContent = luckCount;
+      document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
+
+      // Adjust force explanation for cantrips vs memorized spells
+      const forceExplain = document.getElementById('cast-force-section').querySelector('.cast-force-explain');
+      if (m.spellRank === 0) {
+        forceExplain.textContent = 'The spell fizzled. You may force it to succeed (cantrips are not expunged from memory).';
+      } else {
+        forceExplain.textContent = 'The spell fizzled. You may force it to succeed, but it will be expunged from memory and must be re-memorized.';
+      }
+    }
+
+    // Play animation
+    this._playCastAnimation(m.castingType, resultClass);
+
+    // Flash the original cast button
+    const castBtn = document.getElementById(`${m.rankKey}-${m.slotIndex}-cast`);
+    this._showCastButtonFeedback(castBtn, resultClass === 'critical' || resultClass === 'success' ? 'success' : 'fail');
+  },
+
+  /**
+   * Force a failed spell to succeed
+   */
+  _forceSpell() {
+    const m = this._castModal;
+    if (!m.rollResult || m.rollResult.resultClass !== 'failure') return;
+
+    // Update result display
+    const banner = document.getElementById('cast-result-banner');
+    banner.className = 'cast-result-banner success';
+    document.getElementById('cast-result-text').textContent = 'FORCED SUCCESS';
+
+    const mpField = document.getElementById('magic-points-current');
+    const newMP = parseInt(mpField?.value, 10) || 0;
+
+    const details = document.getElementById('cast-result-details');
+    if (m.spellRank === 0) {
+      details.textContent = `Spell forced! ${m.cost} MP spent. Remaining: ${newMP} MP. Cantrip casts successfully.`;
+    } else {
+      details.textContent = `Spell forced! ${m.cost} MP spent. Remaining: ${newMP} MP. Spell is expunged from memory \u2014 must be re-memorized before casting again.`;
+      // Uncheck the memorized checkbox for this spell
+      const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
+      if (memCheck) memCheck.checked = false;
+    }
+
+    // Hide force section
+    document.getElementById('cast-force-section').classList.add('hidden');
+
+    // Play success animation
+    this._playCastAnimation(m.castingType, 'success');
+
+    // Update result state
+    m.rollResult.resultClass = 'forced';
+
+    // Flash original button
+    const castBtn = document.getElementById(`${m.rankKey}-${m.slotIndex}-cast`);
+    this._showCastButtonFeedback(castBtn, 'success');
+
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Spend a Luck Point to reroll the casting attempt
+   */
+  _useLuckPoint() {
+    const m = this._castModal;
+    if (!m.rollResult || m.rollResult.resultClass !== 'failure') return;
+
+    // Deduct luck point
+    const luckEl = document.getElementById('luck-current');
+    const luckCount = parseInt(luckEl?.value, 10) || 0;
+    if (luckCount <= 0) return;
+
+    luckEl.value = luckCount - 1;
+    this.character.derived = this.character.derived || {};
+    this.character.derived.luckCurrent = luckEl.value;
+
+    // Reset and reroll
+    m.hasRolled = false;
+    m.rollResult = null;
+
+    // Hide force section
+    document.getElementById('cast-force-section').classList.add('hidden');
+
+    // Animate new roll
+    const rollEl = document.getElementById('cast-roll-number');
+    rollEl.classList.add('rolling');
+    rollEl.style.color = '#2a2520';
+
+    document.getElementById('cast-result-banner').style.visibility = 'hidden';
+    document.getElementById('cast-result-details').textContent = 'Luck Point spent \u2014 rerolling...';
+
+    const finalRoll = Math.floor(Math.random() * 100) + 1;
+    let ticks = 0;
+    const rollInterval = setInterval(() => {
+      ticks++;
+      rollEl.textContent = String(Math.floor(Math.random() * 100) + 1).padStart(2, '0');
+      if (ticks >= 18) {
+        clearInterval(rollInterval);
+        rollEl.classList.remove('rolling');
+        rollEl.textContent = String(finalRoll).padStart(2, '0');
+        m.hasRolled = true;
+        this._resolveRoll(m, finalRoll);
+      }
+    }, 60);
+
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Play casting type animation on the modal
+   */
+  _playCastAnimation(castingType, resultClass) {
+    const overlay = document.getElementById('cast-animation-overlay');
+    overlay.className = 'cast-animation-overlay';
+
+    let animClass;
+    if (resultClass === 'critical') {
+      animClass = 'anim-critical';
+    } else if (resultClass === 'success' || resultClass === 'forced') {
+      animClass = `anim-${castingType}-success`;
+    } else if (resultClass === 'fumble') {
+      animClass = 'anim-fumble';
+    } else {
+      animClass = 'anim-fizzle';
+    }
+
+    // Trigger reflow then add animation class
+    void overlay.offsetWidth;
+    overlay.classList.add(animClass);
+  },
+
+  /**
+   * Flash the spell row cast button (brief visual feedback)
+   */
+  _showCastButtonFeedback(btn, type) {
+    if (!btn) return;
+    btn.classList.remove('cast-success', 'cast-fail', 'cast-no-cost');
+    btn.classList.add(type === 'success' ? 'cast-success' : 'cast-fail');
     setTimeout(() => {
-      btn.classList.remove('cast-success', 'cast-fail', 'cast-no-cost');
-    }, 800);
+      btn.classList.remove('cast-success', 'cast-fail');
+    }, 1500);
+  },
+
+  // Keep legacy method name for compatibility
+  showCastFeedback(btn, type) {
+    this._showCastButtonFeedback(btn, type === 'success' ? 'success' : type === 'insufficient' ? 'fail' : 'fail');
   },
   
   /**
