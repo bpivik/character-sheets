@@ -4351,6 +4351,11 @@ const App = {
         this.checkShapeChangeVisibility();
       } else if (normalizedName.startsWith('weapon specialization')) {
         this.checkWeaponSpecVisibility();
+        // If it's the base name without a weapon chosen, prompt for selection
+        // Don't prompt during initialization (loading saved data)
+        if (normalizedName === 'weapon specialization' && !this.isInitializing) {
+          setTimeout(() => this.promptWeaponSpecialization(input), 150);
+        }
       }
     }
     
