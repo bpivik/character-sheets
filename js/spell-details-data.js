@@ -7008,6 +7008,732 @@ const SpellDetails = {
   "precise teleport": { name: "Precise Teleport", aliasOf: "teleport, precise", version: "primary" },
   "limited wish": { name: "Limited Wish", aliasOf: "wish, limited", version: "primary" },
 
+
+  // =========================================================================
+  //  RANK 5 SPELL ENTRIES (A-I) - Batch 1
+  // =========================================================================
+
+  "alter reality": {
+    name: "Alter Reality",
+    school: "Conjuration, Evocation",
+    classes: [
+      { class: "Cleric", rank: 5 }
+    ],
+    sphere: "Creation",
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 or more EXP",
+    area: "See Below",
+    castingTime: "See Below",
+    duration: "See Below",
+    range: "Unlimited",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You speak your will through prayer, and the world bends and reality changes around your desire.",
+    description: "Like the Arcane spell Wish (see page XX), this spell allows a cleric to reshape reality in dramatic ways \u2013 some temporary, some permanent. To cast, the cleric expends 3 Magic Points and one or more EXP Rolls, depending on the scope of the desired effect. Each additional casting within a one month period doubles the required EXP expenditure. The Casting Time is equal to the time it takes the caster to clearly state their intent. Once complete, the cleric suffers Fatigue equal to the number of EXP Rolls spent and ages 5% of their typical lifespan (five years for a human).\n\nThe effect of this spell depends heavily on the personality, Alignment, and Passions of the caster\u2019s deity. For pantheonic clerics, the caster\u2019s own values apply. If the request conflicts with those principles, there is a flat 10% chance the spell fails outright. Alter Reality cannot overturn divine decrees unless cast by a deity or being of similar power.\n\n**Alter Reality EXP Expenditure:** Reverse effects requiring Wish: 1 EXP. Duplicate Rank 1-2 spell at 15 Intensity: 1 EXP. Duplicate Rank 3-4 spell at 15 Intensity (except Limited Wish): 2 EXP. Duplicate Rank 5 spell at 15 Intensity (except Wish): 3 EXP. Render magical effect permanent: 3 EXP. Create temp non-magical items up to 50,000 GP (1 week/Intensity): 1 EXP. Create temp non-magical items up to 100,000 GP (1 week/Intensity): 2 EXP. Create permanent non-magical items up to 10,000 GP: 2 EXP. Create permanent non-magical items up to 50,000 GP: 3 EXP. Create permanent non-magical items up to 100,000 GP: 4 EXP. Create temp Rank 1-2 magic item (1 hour/Intensity): 1 EXP. Create temp Rank 3 magic item (1 hour/Intensity): 2 EXP. Create temp Rank 4 magic item (1 hour/Intensity): 3 EXP. Create permanent Rank 1-2 magic item: 5 EXP. Reshape terrain (100\u2019 cube, 1 Round each): 1 EXP per 100\u2019 cube."
+  },
+
+  "antipathy/sympathy": {
+    name: "Antipathy/Sympathy",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "1 Hour",
+    duration: "2 Hours/Intensity",
+    range: "60\u2019",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You charge a place or object with raw emotion \u2013 either pulling creatures toward it or pushing them away in deep unease.",
+    description: "Casting this spell on a location or item creates subtle magical vibrations that radiate powerful feelings of either repulsion or attraction. The caster must choose whether the spell generates antipathy or sympathy, and then designate the affected type of creature (e.g., human, elf, dragon, hill giant) or Alignment (Good, Neutral, Evil). If cast on an area, the effect extends out to a 200-foot radius. If cast on an item, the caster may enchant only one object at a time. Resistance Rolls are made one Difficulty Grade harder.\n\n**Antipathy:** Instills an intense compulsion to avoid the designated object or area. A Successful Willpower Resistance Roll allows the affected individual to enter the area or handle the object, but doing so causes discomfort and an intense itching sensation. While exposed, all skill rolls are one Difficulty Grade harder. On a Failed roll, the target permanently avoids the area or object until the spell ends. Requires alum (a rare chemical compound worth 1,000 GP) soaked in vinegar.\n\n**Sympathy:** Creates an overwhelming sense of joy and contentment when near the designated area or object. A Successful Willpower Resistance Roll breaks the effect temporarily; however, the creature must roll again 1d6x10 minutes later. On a Failed roll, they return to the area or reclaim the item, remaining under the spell\u2019s influence until it ends. Requires crushed pearls worth 1,000 GP mixed with a single drop of honey."
+  },
+
+  "astral spell": {
+    name: "Astral Spell",
+    school: "Transmutation",
+    classes: [
+      { class: "Cleric", rank: 5 },
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: "Astral",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You and your companions slip from your bodies \u2013 your spirits drifting into the endless silver void of the Astral Plane.",
+    description: "When cast, the caster and up to five additional individuals (+1 person per extra level of Intensity) can enter the Astral Plane using a process similar to psychic astral projection (see page XX). All participants must be touching and form a circle during the casting. The travelers leave their physical bodies behind in the plane of origin and typically do not bring clothing or equipment with them, except for items that possess a magical aura. These items manifest as astral equivalents of their original form. Each traveler is tethered to their physical body by a silver cord of spiritual energy. The cord remains visible for 10 feet, after which it becomes both invisible and intangible. The spell\u2019s Duration lasts until the caster wills it to end. It may also end prematurely if the caster\u2019s physical body is killed or if the spell is disrupted by an external effect, such as Dispel Magic. If the caster dies while the spell is active, all accompanying travelers become stranded on the Astral Plane. See page XX of the *Games Master\u2019s Guide* for more details on astral travel."
+  },
+
+  "big crushing fist": {
+    name: "Big Crushing Fist",
+    school: "Evocation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "3 Rounds/Intensity",
+    range: "20\u2019/Intensity",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "At your final arcane word, a colossal hand appears in midair \u2013 grabbing, slamming, or crushing with sheer magical force.",
+    description: "Upon casting, the mage conjures a massive magical fist that acts under their control. The caster may direct it to pummel a new adversary each Round or crush a single target over consecutive Rounds. The target must be within the caster\u2019s line of sight. To hit, the caster must succeed on a Willpower roll. The fist can be used in two different ways:\n\n**Clenched Fist:** The caster may strike one opponent per Round without spending Action Points or maintaining Concentration. The target may attempt to Parry or Evade as normal; however, the attack is considered Huge and has the Stun Location Special Effect. On a hit, the fist deals 1d6 damage per 2 Intensity (see the table below). Worn armor offers no protection, but magical Armor Points and natural armor reduce damage normally.\n\n**Crushing Fist:** The caster may choose to grapple and crush an opponent over one or more consecutive Rounds. This requires spending an Action Point and maintaining Concentration. The fist uses the caster\u2019s Willpower as its Brawn skill. If the victim Fails an Opposed Brawn roll, they take crushing damage to 1d3 Hit Locations if their SIZ is 20 or less, or to one location if larger. Worn armor offers no protection, but magical Armor Points and natural armor reduce damage as normal.\n\nThe fist itself may be targeted and attacked. It has 25 Hit Points, 10 natural Armor Points, and is immune to all Special Effects.\n\n**Big Crushing Fist Effects Table:** Intensity 1: Cost 3, 3 Rounds, 20\u2019 range, 1d6 damage. Intensity 2: Cost 4, 6 Rounds, 40\u2019 range, 1d6 damage. Intensity 3: Cost 5, 9 Rounds, 60\u2019 range, 2d6 damage. Intensity 4: Cost 6, 12 Rounds, 80\u2019 range, 2d6 damage. Intensity 5: Cost 7, 15 Rounds, 100\u2019 range, 3d6 damage. Continue progression."
+  },
+
+  "changestaff": {
+    name: "Changestaff",
+    school: "Enchantment (Charm), Evocation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Plant",
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 EXP",
+    area: "Caster\u2019s staff",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You plant your staff in the earth, speaking the words, and it transforms \u2013 growing into a towering tree creature, ready to defend or attack.",
+    description: "The caster creates a special staff that, when one end is planted into the ground, transforms into a large living tree creature similar to an elder tree\u2019nt. The creature follows the caster\u2019s commands and defends them against any perceived threat. It is not sapient, cannot commune with other tree\u2019nt, and has no control over other trees. The spell\u2019s Duration is 30 minutes per level of Intensity. The caster may command the staff to revert to its original form at any time. If the tree creature is destroyed, both it and the staff crumble into dust. Changestaff may be cast only once every 24 hours. Each casting fully restores any damage the tree creature previously suffered.\n\nTo create a treestaff, the caster must harvest a limb from an ash, oak, or yew tree. They must then prepare and pray over the wood for 28 days, followed by another 28 days spent shaping, carving, and polishing the staff. During this entire period, the caster may not adventure or engage in any strenuous activity. At the end of this process, the caster casts Changestaff to enchant the staff with the ability to transform into a tree creature and back once per 24 hours. When used in combat in its normal form, the treestaff functions as a quarterstaff with a +1 Magic Bonus.\n\nSee the tree\u2019nt entry in the *Monster Manual* (page XX) for stats and additional details."
+  },
+
+  "conjure earth elemental": {
+    name: "Conjure Earth Elemental (Dismiss Earth Elemental)",
+    school: "Conjuration",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Elemental (Earth)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "10 Minutes",
+    duration: "10 Minutes/Intensity",
+    range: "120\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "The ground rumbles, then splits. A massive figure of stone and soil rises, eyes glowing with buried power.",
+    description: "Unlike the Arcane version of Conjure Elemental (see page XX), this Divine spell does not require a portion of the corresponding element to be present when cast. Instead, the caster opens a gate or portal and summons one or more earth elementals directly from the Elemental Plane of Earth. These elementals do not survive in opposing environments, and will dissipate if placed in such conditions. Unlike their Arcane counterparts, Divine-summoned earth elementals never attack the caster or their allies. They act in complete cooperation, defending the caster and providing any assistance within their capabilities for the Duration of the spell.\n\nA summoned elemental returns to its plane when the spell\u2019s Duration ends, its physical form is destroyed, or it is banished.\n\n**Earth Element Summoning Table (d100):** 01-60 \u2013 1 Large. 61-95 \u2013 1 Huge. 96-98 \u2013 1 Colossal. 99-00 \u2013 1 Gigantic.",
+    reverse: {
+      name: "Dismiss Earth Elemental",
+      flavorText: "You speak a binding word. The elemental writhes, then vanishes into a puff of dirt.",
+      description: "The caster may banish the elemental at will using Dispel Magic or the reversed version of this spell, Dismiss Earth Elemental. When cast as Dismiss Earth Elemental, only a single level of Intensity is required, regardless of the Magnitude of the original summoning spell."
+    }
+  },
+
+  "creeping doom": {
+    name: "Creeping Doom",
+    school: "Conjuration",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Animal",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "1 Round",
+    duration: "4 Minutes/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "A swarm of deadly insects pours forth \u2013 venomous, endless, and hungry enough to strip flesh from bone.",
+    description: "When cast, a huge, slow-moving swarm of up to 1,000 venomous, stinging, and biting insects \u2013 spiders, centipedes, millipedes, and the like \u2013 issues forth from the caster. Roll 1d6+4 and multiply the result by 10 times the Intensity to determine the Density of the swarm. Each point of Density equals roughly 10 small insects or one large one. The spell is limited to 10 Intensity and a maximum Density of 1,000.\n\nThe swarm occupies a 20-square-foot area and moves slowly at a rate of 15\u2019 per Combat Round, following the caster\u2019s instructions. It cannot run or sprint. If the swarm moves more than 250\u2019 away from the caster, it loses 50 Density per additional 30\u2019, or fraction thereof.\n\nAny victim caught in the swarm\u2019s Area of Effect has their Movement Rate halved. Running or moving faster requires a Successful Athletics roll to avoid falling prone. The swarm has Hit Points equal to its Density, and any damage reduces the Density accordingly. Normal attacks inflict only the minimum rolled damage (ignore Damage Modifier). Elemental attacks such as Fireball or Lightning Bolt inflict 10 times the rolled damage. When the swarm\u2019s Density falls to 100 or fewer, it disperses.\n\nOn the first Round a target is within the swarm, they suffer 1d6 damage to each Hit Location in contact with the swarm \u2013 typically the legs, but other locations apply if prone. Each Round thereafter, the damage increases cumulatively by 1d6. As the swarm spreads over the body, it begins affecting all other Hit Locations as well. Each point of rolled damage, whether blocked or not, reduces the swarm\u2019s Density by 1.\n\n**Creeping Doom Effects Table:** Intensity 1: Cost 3, 4 Minutes, Density 50-100. Intensity 2: Cost 4, 8 Minutes, Density 100-200. Intensity 3: Cost 5, 12 Minutes, Density 150-300. Intensity 4: Cost 6, 16 Minutes, Density 200-400. Intensity 5: Cost 7, 20 Minutes, Density 250-500. Continue progression to max 10 Intensity."
+  },
+
+  "disjunction": {
+    name: "Disjunction",
+    school: "Enchantment (Charm) or Transmutation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity, +1 EXP",
+    area: "30\u2019",
+    castingTime: "2 Actions",
+    duration: "Instantaneous",
+    range: "0",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You release raw magic in a wave \u2013 tearing through spells, unraveling wards, and destroying enchanted items outright.",
+    description: "When cast, this spell disrupts all spells currently being cast, as well as any ongoing magical effects, within its Area of Effect. It can also suppress or permanently nullify magic items, depending on the spell\u2019s Intensity.\n\nIf three times the spell\u2019s Intensity equals or exceeds an item\u2019s Magnitude, the item becomes mundane and loses all magical properties permanently. Magic items worn or carried by a character may resist this effect with a Willpower roll made by the bearer. A Successful roll means the item is unaffected.\n\nArtifacts and relics are not immune to Disjunction, but are harder to affect. Regardless of their Magnitude, each artifact has only a 1% chance per point of Intensity of becoming inert. The spell also has a 1% chance per Intensity to destroy any Anti-Magic Shell within the area. If the shell remains in effect, it protects all items inside from the effects of Disjunction.\n\nIf an artifact is destroyed, there is a Magnitude x5% chance that a powerful entity with a vested interest in the item senses the disruption. In addition, the artifact has a Magnitude x5% chance of lashing out at the caster with a blast of magical energy. The caster must succeed at an Opposed Willpower roll to resist. Failure results in the permanent loss of all spellcasting ability. Only a Wish or Restoration spell or scroll can restore this ability.\n\n**Disjunction Effects Table:** Intensity 1: Cost 3, Magnitude 3 items disrupted, 1% artifact chance. Intensity 2: Cost 4, Magnitude 6 items disrupted, 2% artifact chance. Intensity 3: Cost 5, Magnitude 9 items disrupted, 3% artifact chance. Intensity 4: Cost 6, Magnitude 12 items disrupted, 4% artifact chance. Continue progression."
+  },
+
+  "earthquake": {
+    name: "Earthquake",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Elemental (Earth)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 Radius/Intensity",
+    castingTime: "10 Minutes",
+    duration: "1 Minute",
+    range: "50\u2019/Intensity",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You strike the ground, and it trembles violently \u2013 buildings collapse, chasms open, and the unsteady fall.",
+    description: "When cast, this spell causes a powerful ground tremor capable of knocking creatures off their feet and collapsing rigid structures. At minimum, any creature that Fails to resist the spell falls prone. If the target is located within a building, built-up area, forest, or beneath a cliff, and Fails to Evade, they are struck and potentially trapped by falling debris. Worn armor offers only half its normal protection from falling debris. However, magical armor and a creature\u2019s natural armor reduce damage as normal.\n\n**Earthquake Effects Table:** Intensity 1: Cost 3, 50\u2019 range, 10\u2019 Radius, delicately balanced objects topple \u2013 No damage. Intensity 2: Cost 4, 100\u2019 range, 20\u2019 Radius, walls and buildings creak \u2013 No damage. Intensity 3: Cost 5, 150\u2019 range, 30\u2019 Radius, plaster and glass crack, trees quiver \u2013 No damage. Intensity 4: Cost 6, 200\u2019 range, 40\u2019 Radius, heavy furniture moved, wall objects fall \u2013 No damage. Intensity 5: Cost 7, 250\u2019 range, 50\u2019 Radius, modest earth/wattle buildings partially collapse \u2013 1d2 to 1 location. Intensity 6: Cost 8, 300\u2019 range, 60\u2019 Radius, earth buildings destroyed, timber/masonry partially collapse \u2013 1d4 to 1 location. Intensity 7: Cost 9, 350\u2019 range, 70\u2019 Radius, modest buildings collapse, ground cracks, wooden bridges collapse \u2013 1d6 to 1 location. Intensity 8: Cost 10, 400\u2019 range, 80\u2019 Radius, well-constructed buildings collapse, fortifications damaged \u2013 1d8 to 2 locations. Intensity 9: Cost 11, 450\u2019 range, 90\u2019 Radius, few structures remain, tunnels collapse \u2013 1d10 to 3 locations. Intensity 10: Cost 12, 500\u2019 range, 100\u2019 Radius, total destruction \u2013 1d12 to 4 locations."
+  },
+
+  "energy drain": {
+    name: "Energy Drain",
+    school: "Evocation or Necromancy",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "Permanent",
+    range: "Touch",
+    resist: "Endurance",
+    intensityScaling: null,
+    flavorText: "You speak the arcane words, reach out, and life bleeds away. Your target grows pale, tired, and weak.",
+    description: "When cast, this spell imposes two levels of permanent Fatigue loss on a victim who Fails a Resistance Roll. This Fatigue loss is cumulative with any normal Fatigue loss, meaning opponents already worn down by travel or combat are especially vulnerable. Fatigue lost through Energy Drain cannot be restored by Cure Fatigue spells or potions. Only a Restoration spell or scroll can permanently recover the drained levels. Armor offers no protection against this effect."
+  },
+
+  "etherealness, greater": {
+    name: "Etherealness, Greater",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "1 Action",
+    duration: "1 Minute/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You and possibly others fade completely from the world \u2013 passing through walls and walking just beyond reach, untouchable and unseen.",
+    description: "With the exceptions noted above and in the following text, this spell functions in all ways as per Lesser Etherealness (see page XX). The caster, along with one additional creature per level of Intensity beyond the first (all of whom must be linking hands at the time of casting), becomes ethereal. Once ethereal, the group is no longer required to stay together. When the Duration ends, all affected individuals return to the Prime Material Plane. The caster may also will the spell to end early, at which point all affected creatures return at the same time.\n\n**Greater Etherealness Effects Table:** Intensity 1: Cost 3, 1 Minute, caster only. Intensity 2: Cost 4, 2 Minutes, caster and 1 other. Intensity 3: Cost 5, 3 Minutes, caster and 2 others. Intensity 4: Cost 6, 4 Minutes, caster and 3 others. Continue progression."
+  },
+
+  "exaction": {
+    name: "Exaction",
+    school: "Evocation, Transmutation",
+    classes: [
+      { class: "Cleric", rank: 5 }
+    ],
+    sphere: "Charm, Summoning",
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 EXP",
+    area: "1 Target",
+    castingTime: "1 Minute",
+    duration: "See Below",
+    range: "30\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You call on divine authority and bind a powerful being to act \u2013 compelled by sacred law or face your god\u2019s wrath.",
+    description: "When cast, the cleric calls forth a powerful entity from another realm of existence. This being may be as strong as an angel or minor demon, but not a demigod or deity. Upon arrival, the cleric may request the entity perform a task or quest. If their Alignments are compatible, the entity is more likely to comply. Entities of opposing Alignment are under no compulsion to aid the caster unless they see some benefit in doing so. Creatures of a Neutral (Strives for Balance) Alignment rarely assist either side unless the request helps restore a perceived imbalance.\n\nThe cleric must offer something of value in exchange \u2013 whether that\u2019s a favor owed, a prior debt, or a worthy trade. If the offer is fair given the danger or effort required (as determined by the Games Master), and there\u2019s no moral conflict, the entity must assist the caster. However, innate Magic Resistance still applies. Demanding too much voids the agreement, and the entity may leave or retaliate depending on its nature. If the task results in the entity\u2019s death, and the deed is seen as unworthy, the caster may incur a debt to its kin \u2013 opening them up to an Exaction spell in return.\n\nAssuming the spell succeeds, the entity is bound as per the Rank 3 spell Quest. Once the task is complete, it returns to the cleric to receive its reward. If the promised payment isn\u2019t delivered, the contract is broken. Best case: the cleric becomes subject to Exaction by the entity or its patron. Worst case: the entity attacks, and it becomes immune to the cleric\u2019s spells for betraying the bargain. In addition to standard material components, the casting consumes a substance from the entity\u2019s native plane, which the cleric must already possess."
+  },
+
+  "finger of death": {
+    name: "Finger of Death",
+    school: "Necromancy",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity, +3 EXP",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "Permanent",
+    range: "60\u2019",
+    resist: "Endurance (See Below)",
+    intensityScaling: null,
+    flavorText: "You speak. You point. They drop. No scream, no fight \u2013 just a body hitting the ground.",
+    description: "When cast, this most powerful of death spells instantly stops a victim\u2019s heart, killing them outright. It affects only living creatures and has no effect on undead, constructs, or similar beings.\n\nThe caster must point at the intended victim throughout the casting. The target may attempt an Endurance Resistance Roll, modified by either their Rank or SIZ (whichever gives the better result). Each additional level of Intensity cast beyond the first improves the caster\u2019s chances by reducing the level of this roll by one Difficulty Grade.\n\n**Endurance Roll Modifiers:** Rank 0-1 / SIZ 1-20: Formidable. Rank 2 / SIZ 21-40: Hard. Rank 3 / SIZ 41-60: Standard. Rank 4 / SIZ 61-80: Easy. Rank 5 / SIZ 81+: Very Easy.\n\nVictims slain by this spell may be restored through powerful magics such as Alter Reality, Wish, Raise Dead, Resurrection, or Reincarnation."
+  },
+
+  "fire storm": {
+    name: "Fire Storm (Greater Quench Fire)",
+    school: "Evocation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Elemental (Fire)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "10\u2019 Radius/Intensity",
+    castingTime: "1 Round",
+    duration: "1 Minute",
+    range: "500\u2019",
+    resist: "Evade (Willpower)",
+    intensityScaling: null,
+    flavorText: "You call a tempest of flame. Fire swirls across a wide area, consuming everything in its path.",
+    description: "When cast, sheets of flame rain from above, filling the Area of Effect. Creatures caught within the flames suffer 1d8+1 points of damage for each 2 points of Intensity (or fraction thereof). Roll the damage once and apply it to each of the target\u2019s Hit Locations. Worn armor offers only half protection, while magical Armor Points and natural armor reduce damage as normal.\n\nA Successful Evade roll, throwing oneself prone, negates all damage. Creatures with the Artful Dodger ability may Evade without going prone, but a Success in this case only halves the damage \u2013 unless they\u2019re within 5\u2019 of the edge of the Area of Effect.\n\nFire Storm has a chance of igniting flammable materials equal to the damage rolled x5%.\n\n**Fire Storm Effects Table:** Intensity 1: Cost 3, 10\u2019 Radius, 1d8+1 damage. Intensity 2: Cost 4, 20\u2019 Radius, 1d8+1 damage. Intensity 3: Cost 5, 30\u2019 Radius, 2d8+2 damage. Intensity 4: Cost 6, 40\u2019 Radius, 2d8+2 damage. Intensity 5: Cost 7, 50\u2019 Radius, 3d8+3 damage. Continue progression.",
+    reverse: {
+      name: "Greater Quench Fire",
+      flavorText: "With a sweep of your hand, the blaze dies \u2013 extinguished in a breath, leaving only smoke behind.",
+      description: "The reverse of this spell, Greater Quench Fire, smothers all normal fire in double the Area of Effect and all magical fire in the normal area. It also extinguishes fire-based entities such as fire elementals, salamanders, and similar beings if the Intensity x10 exceeds their SIZ and they fail a Willpower Resistance Roll. For example, a salamander of SIZ 17 would be extinguished by Greater Quench Fire cast at Intensity 2 or higher, while a Huge fire elemental (SIZ 50) would require Intensity 5."
+    }
+  },
+
+  "gate": {
+    name: "Gate",
+    school: "Conjuration",
+    classes: [
+      { class: "Cleric", rank: 5 },
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: "Summoning",
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity, + See Below",
+    area: "See Below",
+    castingTime: "2 Rounds",
+    duration: "See Below",
+    range: "100\u2019",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You tear open a portal between worlds. Something vast, alien, and powerful may now step through.",
+    description: "This summoning spell requires the caster to know the true name of the entity they wish to call upon \u2013 typically a creature from another plane of existence, such as a demon, devil, angel, demigod, or even a deity. The spell must be cast at a sufficient level to summon the entity based on its Intensity. When successfully cast, a portal opens between the caster\u2019s plane and that of the summoned being. Casting the spell automatically gains the entity\u2019s attention, whether or not the summoning is successful.\n\nThis spell is extremely taxing. It costs the caster 3 Magic Points per Intensity and 1 EXP Roll per Intensity (to a maximum of 5 EXP), and ages them 5% of their typical lifespan (five years for a human).\n\n**Extra Planar Entity Table:** Intensity 1: Cost 3, Entity Intensity 1 (Sub-demon/sub-devil), Willpower up to 70%. Intensity 2: Cost 6 +1 EXP, Entity Intensity 2-4 (Minor demon/devil), Willpower up to 70%. Intensity 3: Cost 9 +2 EXP, Entity Intensity 5-7 (Lesser demon/devil), Willpower 71-90%. Intensity 4: Cost 12 +3 EXP, Entity Intensity 8-13 (Greater demon/devil), Willpower 91-110%. Intensity 5: Cost 15 +4 EXP, Entity Intensity 14-19 (Demon/devil prince, arch angel, demigod), Willpower 111-130%. Intensity 6: Cost 18 +5 EXP, Entity Intensity 20-25 (Demon lord, arch-devil, lesser deity), Willpower 131-150%. Intensity 7: Cost 21 +5 EXP, Entity Intensity 26-31 (Greater deity), Willpower 151-170%. Intensity 8: Cost 24 +5 EXP, Entity Intensity 32+ (Ruling deity), Willpower 171%+.\n\nThe response of the summoned entity depends greatly on its nature, Ethical Passions, and the specifics of the request. The Gate remains open as long as the entity chooses to stay. Once it departs, the portal closes. During that time, others may pass through the Gate, allowing two-way travel between both realities."
+  },
+
+  "holy word": {
+    name: "Holy Word (Unholy Word)",
+    school: "Conjuration",
+    classes: [
+      { class: "Cleric", rank: 5 }
+    ],
+    sphere: "Combat",
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 EXP",
+    area: "30\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "See Below",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You speak a word of divine power. Evil burns, flees, or dies \u2013 by holy sound alone.",
+    description: "When cast, the cleric utters a word of incredible Divine power capable of repelling Evil entities from other planes of existence. The caster must be within their own plane to do so. Any affected creatures are instantly forced back to their plane of origin and cannot return to the caster\u2019s plane for at least 24 hours.\n\nIn addition, both planar and non-planar creatures of Evil Alignment suffer additional effects based on their Rank or SIZ \u2013 whichever gives the more beneficial result:\n\n**Holy Word Effects Table:** Rank 0-1 / SIZ 1-20: Kills. Rank 2 / SIZ 21-40: Paralyzes 1d4 x10 Minutes. Rank 3 / SIZ 41-60: Slows 2d4 Rounds (all skills Formidable, Movement halved). Rank 4-5 / SIZ 61+: Deafens 1d4 Rounds (all skills Hard, Movement quartered).\n\nCreatures previously deafened or otherwise unable to hear the spell are unaffected by the table above, though the spell still repels extraplanar entities as described.",
+    reverse: {
+      name: "Unholy Word",
+      flavorText: "You whisper blasphemy. Good-aligned creatures stagger, panic, or vanish in a wave of pure darkness.",
+      description: "When reversed, Unholy Word functions the same but targets creatures of Good Alignment."
+    }
+  },
+
+  "irresistible dance": {
+    name: "Irresistible Dance",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "1d4 Rounds",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your target starts to dance \u2013 wildly, uncontrollably, lost in motion as their body defies their will.",
+    description: "When cast, the creature the caster touches begins to dance uncontrollably. The prancing, shuffling, and wild cavorting render the victim unable to take any Proactive Actions for the Duration. While affected, the victim cannot use a shield for Passive Blocking or against ranged attacks. Also, they cannot Evade unless they possess a Class Ability that allows Evade without falling prone (such as Artful Dodger), and all allowed defensive rolls are two Difficulty Grades harder."
+  },
+
+  // RANK 5 A-I REVERSE AND CONVENIENCE ALIASES
+  "dismiss earth elemental": { name: "Dismiss Earth Elemental", aliasOf: "conjure earth elemental", version: "reverse" },
+  "greater quench fire": { name: "Greater Quench Fire", aliasOf: "fire storm", version: "reverse" },
+  "unholy word": { name: "Unholy Word", aliasOf: "holy word", version: "reverse" },
+  "greater etherealness": { name: "Greater Etherealness", aliasOf: "etherealness, greater", version: "primary" },
+
+  // =========================================================================
+  //  RANK 5 SPELL ENTRIES (M-W) - Batch 2
+  // =========================================================================
+
+  "mass charm": {
+    name: "Mass Charm",
+    school: "Enchantment (Charm)",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity, +1 EXP",
+    area: "20\u2019 Radius/Intensity",
+    castingTime: "2 Rounds",
+    duration: "1 Week/Intensity",
+    range: "40\u2019/Intensity",
+    resist: "Willpower",
+    intensityScaling: null,
+    flavorText: "You send out a wave of charm magic with the spell words. A crowd, a mob, even an army turns to you, friendly and willing.",
+    description: "With the exceptions noted above and in the following text, this spell functions as per Charm Being and Charm Being or Mammal. This most powerful form of charm affects all creatures within the Area of Effect. The Difficulty Grade of the Willpower Resistance Roll depends on the creature\u2019s SIZ: Human-sized or smaller (SIZ 1-20): Hard. Large (SIZ 21-40): Standard. Huge (SIZ 41+): Easy.\n\n**Mass Charm Effects Table:** Intensity 1: Cost 3, Charmed for 1 Week. Intensity 2: Cost 6, Charmed for 2 Weeks. Intensity 3: Cost 9, Charmed for 3 Weeks. Intensity 4: Cost 12, Charmed for 4 Weeks. Continue progression."
+  },
+
+  "maze": {
+    name: "Maze",
+    school: "Conjuration",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "1 Target",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "40\u2019/Intensity",
+    resist: "None",
+    intensityScaling: null,
+    flavorText: "You banish your foe to a shifting, endless labyrinth \u2013 no walls, no map, no escape but time.",
+    description: "When cast, the mage creates an extra-dimensional labyrinth, trapping the victim within. To escape, use the Task Round System (see the *Games Master\u2019s Guide*, page XX). Escaping requires four Successes using any combination of Perception, Insight, Track, or Navigation. Track and Navigation rolls are one Difficulty Grade easier. Each Task Round represents 5 minutes, and a group of characters may contribute toward the total number of required Successes.\n\nThe Arcane spells Teleport and Dimension Door cannot aid in escape. However, Teleport, Precise and the Divine spell Plane Shift may be used to exit the maze. Minotaurs are immune to Maze."
+  },
+
+  "metal to wood": {
+    name: "Metal to Wood",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Elemental (Earth)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity, +1 EXP",
+    area: "One metal object",
+    castingTime: "1 Round",
+    duration: "Permanent",
+    range: "250\u2019",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You whisper the words of power, and metal twists \u2013 swords, chains, armor all warp into brittle wood.",
+    description: "Once cast, the druid can transmute a volume of metal equal to 1 SIZ per level of Intensity into wood. Magic items are 90% resistant to the spell. Objects in a creature\u2019s possession may make a Willpower Resistance Roll using the Willpower of the creature holding it. It is not possible to transmute magical artifacts or relics. Only a Wish or similar magic can restore a transmuted object to its original form. Otherwise, the target must replace their items with new ones."
+  },
+
+  "meteor shower": {
+    name: "Meteor Shower",
+    school: "Evocation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "Instantaneous",
+    range: "20\u2019/Intensity",
+    resist: "Evade",
+    intensityScaling: null,
+    flavorText: "The sky opens. Burning stones crash down, smashing the earth and turning battlefields to cinders.",
+    description: "When cast, two micro-meteors per level of Intensity (to a maximum of eight) streak from the caster\u2019s outstretched hand. The first meteor always strikes the intended location. Each additional meteor hits randomly nearby (roll 1d8 for direction, 1d6-1 x5\u2019 for distance from impact; a roll of 1 means another direct hit).\n\nEach meteor inflicts 1d8 fire damage within a 15\u2019 radius. Because these areas may overlap, victims caught in multiple blast zones take cumulative damage. Combine all relevant damage rolls and apply them to each of the target\u2019s Hit Locations. Worn armor provides only half protection, while magical Armor Points or natural armor reduce damage as normal.\n\nA Successful Evade roll, throwing oneself prone, allows the victim to avoid all damage. Those with the Artful Dodger ability may Evade without going prone; a Success halves the damage unless within 5 cubic feet of the edge. Anyone within 60\u2019 of an impact point must succeed at an Athletics roll or fall prone from the concussive blast.\n\nMeteor Shower has a chance of igniting flammable materials equal to the total damage rolled x5%.\n\n**Meteor Shower Effects Table:** Intensity 1: Cost 3, 20\u2019 range, 2 meteors. Intensity 2: Cost 6, 40\u2019 range, 4 meteors. Intensity 3: Cost 9, 60\u2019 range, 6 meteors. Intensity 4 (max): Cost 12, 60\u2019 range, 8 meteors."
+  },
+
+  "monster summoning, ultimate": {
+    name: "Monster Summoning, Ultimate",
+    school: "Conjuration",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "200\u2019 Radius",
+    castingTime: "2 Rounds",
+    duration: "10 Minutes/Intensity",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You summon a creature of legend \u2013 a dragon, a demon, something titanic and terrible. It answers. Briefly.",
+    description: "This spell functions in all ways as the Rank 2 version (see Greater Monster Summoning, page XX) except where it differs as noted above. The monsters the mage summons are drawn from the following table.\n\n**Ultimate Monster Summoning Table (d100):** 01 \u2013 Basilisk. 02 \u2013 Black Dragon (Young Adult). 03 \u2013 Blue Dragon (Juvenile). 04 \u2013 Brass Dragon (Young Adult). 05 \u2013 Bronze Dragon (Juvenile). 06-10 \u2013 1d6+2 Bugbears. 11-13 \u2013 Carrion Creeper. 14-16 \u2013 Chimera. 17 \u2013 Copper Dragon (Young Adult). 18-20 \u2013 1d6+6 Dark Elf Warriors. 21-23 \u2013 1d2 Ettins. 24-26 \u2013 1d2 Fire Giants. 27-29 \u2013 1d2 Frost Giants. 30-32 \u2013 Giant Scorpion. 33-35 \u2013 1d8+1 Gnolls. 36 \u2013 Gold Dragon (Juvenile). 37 \u2013 Gorgon, Greater. 38 \u2013 Green Dragon (Young Adult). 39-42 \u2013 1d3+1 Hill Giants. 43-48 \u2013 1d8+3 Hobgoblins. 49-51 \u2013 Huge Elemental (01-25 Earth, 26-50 Air, 51-75 Fire, 76-00 Water). 52-54 \u2013 Hydra (1d3+6 heads). 55-58 \u2013 1d8+1 Lizard Men. 59-61 \u2013 Mind Slayer. 62-64 \u2013 Mummy. 65-69 \u2013 1d4+2 Ogres. 70-76 \u2013 1d8+3 Orcs. 77 \u2013 Red Dragon (Juvenile). 78-80 \u2013 1d2+1 Rust Monsters. 81 \u2013 Silver Dragon (Juvenile). 82-84 \u2013 Spirit Naga. 85-87 \u2013 1d2+1 Stone Giants. 88-92 \u2013 1d8+1 Troglodytes. 93-95 \u2013 1d3 Trolls. 96-97 \u2013 1d2 Werebears. 98 \u2013 White Dragon (Young Adult). 99-00 \u2013 1d2 Wyverns."
+  },
+
+  "part water": {
+    name: "Part Water",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Elemental (Water)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "See Below",
+    castingTime: "10 Minutes",
+    duration: "10 Minutes/Intensity",
+    range: "60\u2019/Intensity",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You lift your hands, and the liquid before you splits \u2013 forming a path where none should exist.",
+    description: "This spell allows the caster to part water or other liquid, creating a safe, traversable path \u2013 provided the spell is cast at sufficient Intensity. It forms a trough 100 feet wide, 10 feet deep per Intensity, and 120 feet long per Intensity. The caster may end the effect at any time; otherwise, the parted liquid remains so for the spell\u2019s full Duration. The spell may also be cast underwater, forming a corridor of air with the same dimensions noted above.\n\nPart Water can be cast offensively against a creature composed of liquid, such as a water elemental. In this case, the spell inflicts 4d6 damage per level of Intensity (e.g., 4d6 x3 at Intensity 3). Elemental Protection offers no defense. If the creature survives, it must make a Willpower Resistance Roll or flee from the caster for 3d4 minutes.\n\n**Part Water Effects Table:** Intensity 1: Cost 3, 10 Minutes, 60\u2019 range, 100\u2019 wide, 10\u2019 deep, 120\u2019 long. Intensity 2: Cost 4, 20 Minutes, 120\u2019 range, 100\u2019 wide, 20\u2019 deep, 240\u2019 long. Intensity 3: Cost 5, 30 Minutes, 180\u2019 range, 100\u2019 wide, 30\u2019 deep, 360\u2019 long. Continue progression."
+  },
+
+  "permanency": {
+    name: "Permanency",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 EXP",
+    area: "See Below",
+    castingTime: "1 Action",
+    duration: "Permanent",
+    range: "See Below",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "With words and arcane gestures, you fix your magic into the world \u2013 permanent, stable, and immune to time\u2019s decay.",
+    description: "The casting of this spell alters the Duration of certain other spells, making them permanent. To use it, the mage must first cast the spell they wish to make permanent. Upon completing that spell, its effects are delayed, and the caster must immediately spend an additional Action Point to cast Permanency. Once Permanency is cast, the original spell takes effect in permanent form. If Dispel Magic is cast during the casting of Permanency, it cancels both Permanency and the original spell.\n\nPermanency is also a key component in the creation of magic items using the Rank 4 spell Enchant Item. Only specific spells may be made permanent. Each use requires the expenditure of 1 EXP Roll, 3 Magic Points, and the normal casting Cost of the original spell.\n\n**Personal Spells Usable with Permanency (1 EXP each):** Darkvision, Detect Evil/Good, Detect Invisibility, Detect Illusion, Detect Magic, Detect Undead, Know Languages/Confuse Languages, Protection from Cantrips, Protection from Evil/Good, Protection from Mundane Missiles, Read Magic, Tongues/Confuse Tongues, Unseen Servant.\n\n**External Spells Usable with Permanency (3 EXP each):** Alarm, Audible Illusion, Faerie Lights, Enlarge/Reduce (self), Fear (self), Gust of Wind, Invisibility* (self), Magic Mouth, Prismatic Sphere, Solid Fog, Stinking Cloud, Teleport, Wall of Fire, Wall of Force, Web.\n\n*If Invisibility, Lesser is made permanent, the subject becomes visible during the Round following any Action that would normally end the spell. Invisibility, Greater does not have this limitation."
+  },
+
+  "polymorph any object": {
+    name: "Polymorph any Object",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity",
+    area: "See Below",
+    castingTime: "1 Round",
+    duration: "See Below",
+    range: "30\u2019/Intensity",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You gesture, and the impossible becomes real. Shape follows your thought into reality.",
+    description: "Once cast, this spell transforms one creature or object into another. It is not limited to living creatures. The caster selects one creature or non-magical object within range and changes it into something else: a creature into another creature, a creature into an object, or an object into a creature. Objects currently being worn or carried by another being cannot be targeted. Unwilling subjects may attempt an Endurance Resistance Roll to negate the effect.\n\n**Creature into creature:** Each point of Intensity allows for a difference of up to 9 points of SIZ. The subject may resist with an Endurance roll. The Duration is Permanent but remains subject to Dispel Magic. See Polymorph Other (page XX) for more information.\n\n**Object into creature:** Costs 1 Intensity per 9 points of the creature\u2019s SIZ. The resulting creature is friendly toward the caster, gains physical attributes (bite, claws, flight, natural armor), but not magical or heightened Creature Abilities (e.g., no breath attack or Spell-Like Abilities). The transformation lasts 24 Hours and is susceptible to Dispel Magic.\n\n**Creature into object:** Costs 1 Intensity per 9 SIZ of the target. Large creatures (SIZ 21-40) make an Easy Endurance roll; Huge creatures (SIZ 41+) make a Very Easy roll. Lasts 24 Hours, subject to Dispel Magic.\n\n**Polymorph Effects Table:** Intensity 1: Cost 3, 1-9 SIZ difference. Intensity 2: Cost 6, 10-18 SIZ difference. Intensity 3: Cost 9, 19-27 SIZ difference. Intensity 4: Cost 12, 28-36 SIZ difference. Intensity 5: Cost 15, 37-45 SIZ difference. Intensity 6: Cost 18, 46-54 SIZ difference. Continue progression."
+  },
+
+  "power word - kill": {
+    name: "Power Word \u2013 Kill",
+    school: "Conjuration",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity, +1 EXP",
+    area: "10\u2019 Radius",
+    castingTime: "1 Action",
+    duration: "Permanent",
+    range: "20\u2019/Intensity",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You speak one word. A weakened foe dies instantly \u2013 no warning, no wound, just silence.",
+    description: "The successful casting of this spell kills either one creature of up to SIZ 60 or four creatures per level of Intensity, each no larger than SIZ 20. In either case, the spell cannot be cast at more than Intensity 3. Casting this spell is extremely draining \u2013 each use automatically causes the caster to lose one Level of Fatigue. All potential targets must be within the designated Area of Effect at the time of casting.\n\n**Power Word \u2013 Kill Modifier Table:** Rank 0-1 / SIZ 1-20: Required Intensity 1. Rank 2 / SIZ 21-40: Required Intensity 2. Rank 3 / SIZ 41-60: Required Intensity 3. Rank 4-5 / SIZ 61+: No effect.\n\nCreatures larger than SIZ 60, or characters of Rank 4 or higher, are unaffected. Unlike the Death Spell, Power Word \u2013 Kill automatically slays targets within the listed limits. Victims may still be brought back to life using Wish, Raise Dead, Resurrection, or Reincarnation."
+  },
+
+  "prismatic sphere": {
+    name: "Prismatic Sphere",
+    school: "Abjuration or Conjuration",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "10 Minutes/Intensity",
+    range: "0",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "A globe of layered colors surrounds you. Each layer is deadly, each one a different magical threat.",
+    description: "When cast, a stationary, multicolored globe of oscillating lights springs up around the caster. The sphere \u2013 typically with its lower hemisphere below ground \u2013 appears as a dome and cycles through the seven colors of the visible spectrum, with each layer possessing a distinct power.\n\nSimply viewing the shimmering lights can cause temporary blindness lasting 2d4x10 minutes on a Failed Endurance roll.\n\n**Endurance Roll Modifiers:** Rank 0-1 / SIZ 1-20: Standard. Rank 2 / SIZ 21-30: Easy. Rank 3+ / SIZ 31+: No Effect.\n\nOnly the caster can pass through the sphere without taking damage. The globe must be destroyed one color layer at a time, outermost to innermost. Each requires a specific magical attack to negate. A Rod of Cancellation or the Disjunction spell can destroy the entire sphere. Anti-Magic Shell has no effect.\n\n**Prismatic Sphere Color Effects:** Red (Outer): Stops non-magical ranged weapons, 2d6 fire damage. Negated by Cone of Cold. Orange: Stops magical ranged weapons, 1d6 acid damage for 3 Rounds. Negated by Gust of Wind. Yellow: Stops poisons/gases/petrification, 3d6 electricity to 1d6 Hit Locations. Negated by Disintegrate. Green: Stops breath weapons, Poison. Negated by Pass Wall. Blue: Stops detection/mental attacks, Petrification. Negated by Magic Missile. Indigo: Stops magical spells, Insanity. Negated by Continual Light. Violet (Inner): Stops movement (force field), Banishment. Negated by Dispel Magic."
+  },
+
+  "resurrection": {
+    name: "Resurrection (Destruction)",
+    school: "Necromancy",
+    classes: [
+      { class: "Cleric", rank: 5 }
+    ],
+    sphere: "Necromantic",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity, +2 EXP",
+    area: "One Target",
+    castingTime: "10 Minutes",
+    duration: "Permanent",
+    range: "Touch",
+    resist: "N/A (Willpower (Formidable))",
+    intensityScaling: null,
+    flavorText: "You call to a soul beyond death. It returns, rejoined with its body by divine light and your will.",
+    description: "Resurrection raises any creature that has been dead for no more than 20 years per level of Intensity. The spell not only restores life but also fully heals the subject, including the regeneration of lost limbs. Very little of the original body needs to remain for the spell to take effect. The resurrected individual requires no period of recovery and is fully functional immediately. This spell cannot raise a creature that died of natural causes at the end of its lifespan.\n\nIf the subject\u2019s Alignment was anything other than Evil, they may resist the spell with an Opposed Willpower roll. If Successful, the spell fails (most souls are unwilling to return once they\u2019ve reached their eternal reward). The GM may waive this roll if the deceased has unfinished business or a heroic reason to return. For Evil souls, the caster must overcome the tormentor\u2019s Willpower (typically at least 20 points higher than the deceased\u2019s).\n\nCasting Resurrection ages the caster 3% of their typical lifespan (three years for a human).",
+    reverse: {
+      name: "Destruction",
+      flavorText: "You touch your target \u2013 and erase them. Body, spirit, and memory vanish in a single pulse, leaving only dust.",
+      description: "The reverse of this spell allows the cleric to kill a single victim by touch. The target may make a Willpower roll to resist, modified by Rank or SIZ (whichever is more favorable).\n\n**Willpower Modifier Table:** Rank 0-1 / SIZ 1-20: Formidable. Rank 2 / SIZ 21-40: Hard. Rank 3 / SIZ 41-60: Standard. Rank 4 / SIZ 61-80: Easy. Rank 5 / SIZ 81+: Very Easy.\n\nIf the Resistance Roll Fails, the victim dies instantly, their body reduced to dust. Only a casting of Wish can restore someone after this. If the roll Succeeds, the spell still inflicts 1d4 Hit Points of damage to the touched Hit Location, reducing it into the negatives. Armor offers no protection. Casting Destruction does not age the cleric."
+    }
+  },
+
+  "succor": {
+    name: "Succor",
+    school: "Enchantment (Charm), Transmutation",
+    classes: [
+      { class: "Cleric", rank: 5 }
+    ],
+    sphere: "Summoning",
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 EXP",
+    area: "1 Target",
+    castingTime: "24 Hours",
+    duration: "See Below",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You enchant an item with hidden power \u2013 ready to transport when its moment arrives.",
+    description: "When cast, the cleric enchants a specially prepared item (amulet, holy symbol, prayer beads, etc.). Once enchanted, the cleric sets a predetermined command word within the item. When someone speaks this command and breaks the item, it teleports the individual and all carried equipment to the cleric\u2019s sanctuary.\n\nTypically, the cleric gives this item to a willing recipient, who may use it once they know the command word. The spell only affects the bearer of the item. Any condition that would prevent the use of Plane Shift or Teleport also prevents the activation of an item enchanted with Succor.\n\nThe reversed version enchants an item so that, when broken, it teleports the cleric to the possessor\u2019s location. The possessor must speak the command word and break the item. The cleric becomes fully aware of the situation and may choose not to respond. If they decline, the item is wasted.\n\nThe item used for either version of Succor must be worth between 2,000 and 5,000 GP, with the more valuable items allowing for teleportation across the planes of existence."
+  },
+
+  "sun ray": {
+    name: "Sun Ray",
+    school: "Evocation, Transmutation",
+    classes: [
+      { class: "Cleric", rank: 5 }
+    ],
+    sphere: "Sun",
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity",
+    area: "5\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "1d4+1 Rounds",
+    range: "30\u2019/Intensity",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "With a prayer, a beam of divine sunlight erupts from your hand \u2013 searing the undead and banishing shadow in a blazing flash.",
+    description: "When cast, the cleric may summon a brilliant beam of holy light at any point during the spell\u2019s Duration by using a Cast Magic Action. The beam counts as natural sunlight and affects a 5\u2019 radius. Those within the area must attempt to Evade or become blinded for 1d3 minutes. On a Failed Resistance Roll, creatures with Darkvision are blinded for 2d4 minutes and lose their Darkvision for 1d4+1 minutes out to 20\u2019 beyond the Area of Effect. Creatures harmed by sunlight suffer permanent blindness on a Failed Resistance Roll or are blinded for 2d6 Rounds if the roll Succeeds.\n\nUndead caught within the beam take 2d6 points of damage to each Hit Location. Armor, natural or worn, offers no protection, though magical Armor Points reduce damage as normal. Undead within 5\u2019 of the edge may attempt to Evade; if Successful, they take no damage. Undead within 20\u2019 of the beam take 1d6+1 points of damage but suffer no damage on a successful Resistance roll.\n\nUndead specifically harmed by sunlight, such as vampires, are destroyed if they fail to Evade. Fungoid creatures, including all forms of subterranean fungi, suffer the same effects as undead but cannot attempt a Resistance Roll."
+  },
+
+  "symbol": {
+    name: "Symbol",
+    school: "Conjuration",
+    classes: [
+      { class: "Cleric", rank: 5 },
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: "Guardian, Protection",
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, (Death +2 EXP)",
+    area: "60\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "Touch",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You inscribe a glowing rune. When triggered, it explodes into terror, pain, sleep, or worse.",
+    description: "When cast, this spell inscribes mystical runes on a surface, item, door, or any other location the caster chooses. A creature that reads the runes, touches or passes over them, or moves through a rune-inscribed doorway suffers a predetermined negative effect based on the symbol the caster selects. The symbol detects as magic and Dispel Magic can remove it if cast at a higher Intensity than the symbol\u2019s Magnitude. The caster is immune to their own symbol.\n\n**Symbol Resistance Modifiers:** Rank 0-1 / SIZ 1-30: Hard, counts as 1. Rank 2 / SIZ 31-40: Standard, counts as 2. Rank 3 / SIZ 41-50: Easy, counts as 5. Rank 4 / SIZ 51-60: Very Easy, counts as 10. Rank 5 / SIZ 61+: No effect.\n\n**Available Symbols:** Death (Arcane, +2 EXP): Kills up to 16 creatures per Death Spell rules. Discord (Arcane): Bickering 5d4 Rounds, differing Alignment creatures fight 2d4 Rounds. Fear (Arcane): Panic and flee 2d4 Rounds. Hopelessness (Arcane & Divine): Surrender/abandon task for 3d4x10 minutes. Insanity (Arcane): Up to 24 creatures affected as Confusion spell. Pain (Arcane & Divine): All skill rolls two Difficulty Grades harder. Persuasion (Divine): Adopt cleric\u2019s Alignment and become friendly for 2d10x10 minutes. Sleep (Arcane): Magical slumber per Sleep spell. Stunning (Arcane): Up to 32 creatures stunned 3d4 Rounds.\n\nRequires powdered black pearl and diamond dust worth at least 5,000 GP."
+  },
+
+  "time stop": {
+    name: "Time Stop",
+    school: "Transmutation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "perIntensity" },
+    costDisplay: "3/Intensity, +1 or more EXP",
+    area: "15\u2019 Radius",
+    castingTime: "2 Actions",
+    duration: "1d3 Minutes",
+    range: "0",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Time freezes. The world halts. You (and those you choose) move, acting while everything else stands still.",
+    description: "When cast, time stands still for everyone except the caster and one additional character per level of Intensity, all within the Area of Effect. The area of effect may not be cast on a person or moveable object and stays in place. The caster rolls 1d3 to determine the perceived Duration of the spell in minutes.\n\nWhile time is stopped, those affected can move freely within the spell\u2019s radius. However, leaving the area ends the spell immediately. Any attack or spell that crosses the boundary also ends the spell, as does teleporting out. Once time resumes, those within the radius must make a Formidable Perception roll to detect any subtle changes.\n\nThe mage and their allies may act as they please during the Duration, including casting spells or attacking enemies. Attacks made during Time Stop automatically hit, and the attacker may choose one Special Effect in addition to Choose Location. However, damage is not rolled until time resumes.\n\nAny action that disrupts the natural flow of time or adversely affects another character costs the caster additional EXP Rolls per incident.\n\n**EXP Cost Table:** Rank 0-1 / SIZ 1-30: 1 EXP. Rank 2 / SIZ 31-40: 2 EXP. Rank 3 / SIZ 41-50: 3 EXP. Rank 4 / SIZ 51-60: 4 EXP. Rank 5 / SIZ 61+: 5 EXP."
+  },
+
+  "transport via plants": {
+    name: "Transport Via Plants",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Plant",
+    cost: { base: 3, type: "fixed" },
+    costDisplay: "3",
+    area: "See Below",
+    castingTime: "2 Actions",
+    duration: "See Below",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "You step into the foliage \u2013 and emerge from another, no matter how distant, hidden in the roots.",
+    description: "When cast, this spell allows the caster to enter any living plant equal to or larger than their own SIZ and travel through it to another living plant of the same species, regardless of distance, in a single Round. The destination does not need to be known; the caster simply states a direction and distance when casting the spell, and they are transported to the nearest matching plant in that direction, as close to the intended range as possible.\n\nThe caster may step out of the destination plant immediately using any remaining Movement. Alternatively, they may choose to remain within the plant for up to 24 hours. If no suitable destination plant lies within range, the caster may remain within the original plant for the full 24-hour Duration.\n\nIf the plant the caster is occupying is destroyed or burned before they exit, the caster dies. On a casting roll of 96-00, the spell misfires and sends the caster to a random plant of the same species located 1d100 miles away, in a random direction."
+  },
+
+  "trap the soul": {
+    name: "Trap the Soul",
+    school: "Conjuration",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 EXP",
+    area: "1 Target",
+    castingTime: "See Below",
+    duration: "Permanent until broken",
+    range: "30\u2019",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You speak a name, raise a gem, and seal a creature\u2019s spirit within \u2013 its essence trapped until you choose otherwise.",
+    description: "When cast, the mage can imprison a living creature\u2019s soul (along with its physical body) inside a previously enchanted gem. There are two primary methods:\n\n**Direct Method:** The caster has the target within line of sight as they speak the final word. The target receives any applicable Magic Resistance, followed by a Willpower Resistance Roll. If the caster knows and incorporates the victim\u2019s true name, the spell bypasses innate Magic Resistance, and the Willpower roll becomes one Difficulty Grade harder. A successful Resistance roll shatters the gem.\n\n**Subtle Method:** The caster inscribes the victim\u2019s true name and a trigger word onto the gem during enchantment. Upon contact, the spell activates automatically. The caster may also enchant the gem with the Sympathy spell to increase the likelihood of the target touching it.\n\nOnce imprisoned, the victim is held permanently within the gem. Breaking the gem releases the soul and body. If the trapped entity is from another plane, the one who breaks the gem may compel it to perform a service.\n\n**Trap Soul Gem Cost:** Rank 0-1 / SIZ 1-20: 1,000 GP. Rank 2 / SIZ 21-30: 5,000 GP. Rank 3 / SIZ 31-40: 10,000 GP. Rank 4 / SIZ 41-50: 15,000 GP. Rank 5 / SIZ 51-60: 20,000 GP. SIZ 61-70: 25,000 GP. SIZ 71-80: 30,000 GP. Each +20 SIZ: +5,000 GP.\n\nThe gem must have Enchant Item and Maze cast into it first."
+  },
+
+  "wind walk": {
+    name: "Wind Walk",
+    school: "Transmutation",
+    classes: [
+      { class: "Druid", rank: 5 }
+    ],
+    sphere: "Elemental (Air)",
+    cost: { base: 3, type: "plusPerAdditional", perAdditional: 1 },
+    costDisplay: "3, +1/additional Intensity",
+    area: "Caster, +1 person/additional Intensity",
+    castingTime: "1 Minute",
+    duration: "1 Hour/Intensity",
+    range: "Touch",
+    resist: "N/A",
+    intensityScaling: null,
+    flavorText: "Your body becomes mist. You (and those you choose) drift through the air \u2013 fast, quiet, and free.",
+    description: "When cast, this spell allows the druid (and up to three others, depending on Intensity) to transform into a translucent mist that can magically move at speeds of up to 60\u2019 per Round. A wind with a STR of 31 or higher halves the Movement Rate when traveling into it and doubles movement when moving with it.\n\nWhile not invisible, those affected appear as wisps of vapor and are extremely hard to see. Opponents must succeed at a Formidable Perception roll to notice them in motion. The spell lasts for 1 hour per level of Intensity, though the caster may end it at any time. Transitioning from mist back into solid form takes a full Round.\n\nWhile in mist form, only magical spells or magic weapons can cause harm. It is not possible to cast spells while in this state.\n\n**Wind Walk Effects Table:** Intensity 1: Cost 3, 1 Hour, caster only. Intensity 2: Cost 4, 2 Hours, caster and 1 other. Intensity 3: Cost 5, 3 Hours, caster and 2 others. Intensity 4: Cost 6, 4 Hours, caster and 3 others max. Intensity 5: Cost 7, 5 Hours, caster and 3 others max. Continue progression."
+  },
+
+  "wish": {
+    name: "Wish",
+    school: "Conjuration, Evocation",
+    classes: [
+      { class: "Mage", rank: 5 }
+    ],
+    sphere: null,
+    cost: { base: 3, type: "special" },
+    costDisplay: "3, +1 or more EXP",
+    area: "See Below",
+    castingTime: "See Below",
+    duration: "See Below",
+    range: "Unlimited",
+    resist: "See Below",
+    intensityScaling: null,
+    flavorText: "You wish with cosmic weight. The world shifts. Reality bends. The price? That may come later.",
+    description: "Wish is a more powerful version of Limited Wish and Alter Reality, capable of changing reality in a permanent and significant way. To cast, the mage must spend 3 Magic Points and 1 or more EXP Rolls, depending on the desired result. Each additional casting within the same 1-month span doubles the normal EXP Cost. Casting Time is typically the amount of time needed to verbally detail the specifics of the Wish. Upon completion, the caster loses Fatigue equal to the number of EXP Rolls expended and ages 5% of their normal life expectancy (five years for a human).\n\nThe results of a Wish should be taken literally and are subject to interpretation by the Games Master. Greedy or overly selfish Wishes often have unintended consequences (10% chance of backfiring). A Wish cannot undo a decree made by a deity-like being unless that being was the one who issued the Wish itself.\n\n**Wish Examples and Costs:** Reverse effects requiring Wish: 1 EXP. Duplicate Rank 1-2 spell at 15 Intensity: 1 EXP. Duplicate Rank 3-4 spell at 15 Intensity: 2 EXP. Duplicate Rank 5 spell at 15 Intensity (except Alter Reality): 3 EXP. Render magical effect permanent: 3 EXP. Raise dead (regardless of time/remains): 5 EXP. Restore lost limb: 2 EXP. Heal all Major and Minor Wounds: 1 EXP. Permanently raise/lower one Characteristic by 1 (max +/-5): cumulative EXP (1, 2, 3, 4, 5). Permanently raise/lower one skill by 10% (max +/-50%): cumulative EXP. Transport self and up to 7 allies to another location: 1 EXP. Transport across planes: 2 EXP. Create temp items up to 50k GP (1 week/Int): 1 EXP. Create temp items up to 100k GP: 2 EXP. Create permanent items up to 10k GP: 2 EXP. Create permanent items up to 50k GP: 3 EXP. Create permanent items up to 100k GP: 4 EXP. Create temp Rank 1-2 magic item (1 hr/Int): 1 EXP. Create temp Rank 3: 2 EXP. Create temp Rank 4: 3 EXP. Create permanent Rank 1-2 magic item: 5 EXP. Kill another creature: 5 EXP (requires Opposed Willpower). Maim a Hit Location: 2 EXP. Major Wound to a Hit Location: 1 EXP. Reshape terrain (100\u2019 cube): 1 EXP per cube."
+  },
+
+  // RANK 5 M-W REVERSE AND CONVENIENCE ALIASES
+  "destruction": { name: "Destruction", aliasOf: "resurrection", version: "reverse" },
+  "ultimate monster summoning": { name: "Ultimate Monster Summoning", aliasOf: "monster summoning, ultimate", version: "primary" },
+
 };
 
 
@@ -7166,9 +7892,9 @@ const SpellDetailsLookup = {
         cost = (costObj.perIntensity || costObj.base) * intensity;
         break;
       case 'plusPerAdditional':
-        // Base cost covers first 2 intensities, +perAdditional for each beyond that
-        // e.g., "3, +1/add'l": Int 1=3, Int 2=3, Int 3=4, Int 4=5
-        cost = costObj.base + (costObj.perAdditional || 1) * Math.max(0, intensity - 2);
+        // Base cost at Intensity 1, +perAdditional for each additional Intensity
+        // e.g., "3, +1/add'l": Int 1=3, Int 2=4, Int 3=5, Int 4=6
+        cost = costObj.base + (costObj.perAdditional || 1) * Math.max(0, intensity - 1);
         break;
       case 'special':
         cost = costObj.base || 1;
