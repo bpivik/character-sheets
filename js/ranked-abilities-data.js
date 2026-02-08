@@ -716,6 +716,53 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  fighter: [
+    // Rank 1
+    { 
+      name: "Forceful Strike", 
+      rank: 1, 
+      prereqs: "Brawn 50% OR Mysticism 50%; Combat Style 50%",
+      summary: "-1 grade to attack, +2 grades to Damage Modifier"
+    },
+    { 
+      name: "Just a Scratch", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: Heal one hit location by Healing Rate (not Major Wounds)"
+    },
+    { 
+      name: "Mounted Combat", 
+      rank: 1, 
+      prereqs: "Ride 50%",
+      summary: "Combat Skills not limited by Ride, no Charge penalty, ignore first Ride difficulty"
+    },
+    { 
+      name: "Second Wind", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: After 1hr rest, recover up to 3 Fatigue levels"
+    },
+    { 
+      name: "Skirmishing", 
+      rank: 1, 
+      prereqs: "Athletics 50%; Combat Style 50%",
+      summary: "Ranged attacks while running (capped by Athletics)"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+    { 
+      name: "Weapon Specialization", 
+      rank: 1, 
+      repeatable: true,
+      prereqs: "Combat Style 50%",
+      summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
+    },
+  ],
+  
   // More classes to be added...
 };
 
