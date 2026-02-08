@@ -10179,6 +10179,7 @@ const App = {
     this.checkPowerfulConcentrationVisibility();
     this.checkAnimalCompanionVisibility();
     this.checkShapeChangeVisibility();
+    this.checkWeaponSpecVisibility();
   },
   
   /**
