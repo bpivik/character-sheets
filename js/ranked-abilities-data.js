@@ -1002,6 +1002,44 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: null,
       summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
     },
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 2, 
+      prereqs: "Defensive Reflexes I",
+      summary: "May use Defensive Reflexes twice per combat (no re-rolls vs same attack, no Luck combo)"
+    },
+    { 
+      name: "Greater Sweeping Strike", 
+      rank: 2, 
+      prereqs: "Sweeping Strike; Combat Style 70%",
+      summary: "Sweeping Strike against all enemies in range if each preceding attack drops an opponent"
+    },
+    { 
+      name: "Mystic Healing", 
+      rank: 2, 
+      prereqs: "Meditation 70%; Mysticism 70%",
+      summary: "Heal 2× Healing Rate HP/day via meditation (15 min + Meditation roll)"
+    },
+    { 
+      name: "Pain Control", 
+      rank: 2, 
+      prereqs: "Meditation 70%",
+      summary: "Endurance rolls vs injury penalties are Automatic Successes (fail only on 100)"
+    },
+    { 
+      name: "Speak with Animals", 
+      rank: 2, 
+      prereqs: "Mysticism 70%",
+      summary: "Communicate with a chosen animal species",
+      promptForDetail: "animal"
+    },
   ],
   
   // More classes to be added...

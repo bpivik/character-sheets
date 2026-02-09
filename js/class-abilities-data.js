@@ -46,7 +46,7 @@ const ClassAbilities = {
     // Special: Adds Unarmed weapon with damage scaling by rank, plus Mysticism & Meditation prof skills
     specialActions: {
       rank1: { addUnarmed: "1d4", addProfessionalSkills: ["Mysticism", "Meditation"] },
-      rank2: { changeUnarmedDamage: "1d6" },
+      rank2: { changeUnarmedDamage: "1d6", addAbility: "Immune to Disease" },
       rank3: { changeUnarmedDamage: "1d8" },
       rank4: { changeUnarmedDamage: "1d10" },
       rank5: { changeUnarmedDamage: "1d12" }

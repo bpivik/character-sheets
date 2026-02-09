@@ -457,6 +457,12 @@ const App = {
     // Check if Just a Scratch section should be visible
     this.checkJustAScratchVisibility();
     
+    // Check if Mystic Healing section should be visible
+    this.checkMysticHealingVisibility();
+    
+    // Check if Pain Control section should be visible
+    this.checkPainControlVisibility();
+    
     // Check if Commanding section should be visible
     this.checkCommandingVisibility();
     
@@ -3502,12 +3508,26 @@ const App = {
           }
           this.updateWoundStatus(i);
           this.scheduleAutoSave();
+          // Update unarmed AP/HP if arm HP changed
+          const locName = cells[1]?.textContent?.trim() || '';
+          if (locName === 'R Arm' || locName === 'L Arm') {
+            this.updateUnarmedAPHP();
+          }
         });
       }
       
       // Add event listeners (only for editable inputs)
       tr.querySelectorAll('input:not([readonly]):not(.hp-current)').forEach(input => {
-        input.addEventListener('input', () => this.scheduleAutoSave());
+        input.addEventListener('input', () => {
+          this.scheduleAutoSave();
+          // Update unarmed AP/HP if arm AP changed
+          if (input.classList.contains('ap-input')) {
+            const locName2 = input.closest('tr')?.querySelectorAll('td')[1]?.textContent?.trim() || '';
+            if (locName2 === 'R Arm' || locName2 === 'L Arm') {
+              this.updateUnarmedAPHP();
+            }
+          }
+        });
       });
       
       // Add armor AP auto-fill on blur (only for armor inputs)
@@ -4485,6 +4505,19 @@ const App = {
         }
       } else if (['weapon master', 'high master', 'grand master', 'legendary master'].includes(normalizedName)) {
         this.checkWeaponMasterProgression(abilityName);
+      } else if (normalizedName === 'mystic healing') {
+        this.checkMysticHealingVisibility();
+      } else if (normalizedName === 'pain control') {
+        this.checkPainControlVisibility();
+      } else if (normalizedName.startsWith('speak with animals') && !this.isInitializing) {
+        // If it's the base name without animal chosen, prompt for selection
+        if (normalizedName === 'speak with animals') {
+          setTimeout(() => {
+            if (input && input.isConnected) {
+              this.promptSpeakWithAnimals(input);
+            }
+          }, 150);
+        }
       }
     }
     
@@ -5708,6 +5741,16 @@ const App = {
           this.checkJustAScratchVisibility();
         }
         
+        // Check if Mystic Healing section should now be visible
+        if (normalizedName === 'mystic healing') {
+          this.checkMysticHealingVisibility();
+        }
+        
+        // Check if Pain Control section should now be visible
+        if (normalizedName === 'pain control') {
+          this.checkPainControlVisibility();
+        }
+        
         // Check if Commanding section should now be visible
         if (normalizedName === 'commanding') {
           this.checkCommandingVisibility();
@@ -5865,10 +5908,12 @@ const App = {
     
     // Check Just a Scratch visibility
     this.checkJustAScratchVisibility();
+    this.checkMysticHealingVisibility();
+    this.checkPainControlVisibility();
     
     this.scheduleAutoSave();
   },
-
+  
   /**
    * Sync class abilities from DOM to character data
    * Called when abilities are added, edited, or sorted
@@ -6449,6 +6494,9 @@ const App = {
         }
       });
     }
+    
+    // Update Unarmed AP/HP from arm hit locations
+    this.updateUnarmedAPHP();
     
     // Special Abilities (dynamic format)
     if (this.character.combat && this.character.combat.specialAbilities) {
@@ -10301,6 +10349,8 @@ const App = {
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
+    this.checkMysticHealingVisibility();
+    this.checkPainControlVisibility();
     this.checkHolySmiteVisibility();
     this.checkPowerfulConcentrationVisibility();
     this.checkAnimalCompanionVisibility();
@@ -10420,6 +10470,11 @@ const App = {
         for (const skillName of actions.addProfessionalSkills) {
           this.addProfessionalSkillIfNotExists(skillName);
         }
+      }
+      
+      // Auto-add class ability (e.g., Monk Rank 2: Immune to Disease)
+      if (actions.addAbility) {
+        this.addAbilityDirectly(actions.addAbility);
       }
     }
     
@@ -11004,6 +11059,7 @@ const App = {
           // Use composeDamage to get proper damage with best DM
           damageInput.value = window.WeaponData.composeDamage(damage, 'unarmed');
         }
+        this.updateUnarmedAPHP();
         return;
       }
     }
@@ -11033,6 +11089,7 @@ const App = {
         const reachInput = document.getElementById(`melee-${i}-reach`);
         if (reachInput) reachInput.value = 'T';
         
+        this.updateUnarmedAPHP();
         return;
       }
     }
@@ -11055,6 +11112,45 @@ const App = {
         }
         return;
       }
+    }
+  },
+  
+  /**
+   * Update Unarmed weapon AP/HP based on arm hit locations
+   * AP = higher of R Arm AP or L Arm AP
+   * HP = lower of R Arm current HP or L Arm current HP
+   */
+  updateUnarmedAPHP() {
+    // Find arm location indices based on sheet type
+    const locations = HIT_LOCATIONS[this.sheetType] || HIT_LOCATIONS.human;
+    let rArmIdx = -1, lArmIdx = -1;
+    locations.forEach((loc, i) => {
+      if (loc.location === 'R Arm') rArmIdx = i;
+      if (loc.location === 'L Arm') lArmIdx = i;
+    });
+    if (rArmIdx === -1 || lArmIdx === -1) return;
+    
+    // Read AP values (from armor AP inputs)
+    const rArmAP = parseInt(document.getElementById(`loc-${rArmIdx}-ap`)?.value, 10) || 0;
+    const lArmAP = parseInt(document.getElementById(`loc-${lArmIdx}-ap`)?.value, 10) || 0;
+    const higherAP = Math.max(rArmAP, lArmAP);
+    
+    // Read current HP values
+    const rArmHP = parseInt(document.getElementById(`loc-${rArmIdx}-current`)?.value, 10) || 0;
+    const lArmHP = parseInt(document.getElementById(`loc-${lArmIdx}-current`)?.value, 10) || 0;
+    const lowerHP = Math.min(rArmHP, lArmHP);
+    
+    // Find unarmed weapon and set AP/HP
+    for (let i = 1; i <= 5; i++) {
+      const nameInput = document.getElementById(`melee-${i}-name`);
+      if (!nameInput || nameInput.value.toLowerCase().trim() !== 'unarmed') continue;
+      
+      const aphpInput = document.getElementById(`melee-${i}-aphp`);
+      if (aphpInput) {
+        aphpInput.value = `${higherAP}/${lowerHP}`;
+        aphpInput.title = `AP: higher arm (R:${rArmAP}/L:${lArmAP}), HP: lower arm (R:${rArmHP}/L:${lArmHP})`;
+      }
+      break;
     }
   },
   
@@ -14327,6 +14423,7 @@ const App = {
   // ============================================
   
   _applyKiStrikeTrait(add) {
+    const monkRank = this.getMonkRank();
     for (let i = 1; i <= 5; i++) {
       const nameInput = document.getElementById(`melee-${i}-name`);
       if (!nameInput || nameInput.value.toLowerCase().trim() !== 'unarmed') continue;
@@ -14335,16 +14432,20 @@ const App = {
       if (!traitsInput) continue;
       
       const currentTraits = traitsInput.value.trim();
-      const hasMagical = currentTraits.toLowerCase().includes('magical');
+      // Remove any existing Ki Strike trait ("+N Magical weapon" or "Magical")
+      let cleanedTraits = currentTraits
+        .replace(/,?\s*\+\d+ Magical weapon\s*/gi, '')
+        .replace(/,?\s*Magical\s*/gi, '')
+        .replace(/^\s*,\s*/, '')
+        .replace(/,\s*$/, '')
+        .replace(/^[–—-]$/, '') // Remove lone dash
+        .trim();
       
-      if (add && !hasMagical) {
-        traitsInput.value = currentTraits ? `${currentTraits}, Magical` : 'Magical';
-      } else if (!add && hasMagical) {
-        // Remove "Magical" from traits
-        traitsInput.value = currentTraits
-          .replace(/,?\s*Magical\s*/i, '')
-          .replace(/^\s*,\s*/, '')
-          .trim();
+      if (add) {
+        const kiTrait = `+${monkRank} Magical weapon`;
+        traitsInput.value = cleanedTraits ? `${cleanedTraits}, ${kiTrait}` : kiTrait;
+      } else {
+        traitsInput.value = cleanedTraits || '–';
       }
       break;
     }
@@ -15118,6 +15219,299 @@ const App = {
     alert(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP}).`);
     
     this.scheduleAutoSave();
+  },
+
+  // ============================================
+  // MYSTIC HEALING ABILITY (MONK)
+  // ============================================
+  
+  checkMysticHealingVisibility() {
+    const section = document.getElementById('mystic-healing-section');
+    if (!section) return;
+    
+    if (this.hasAbility('Mystic Healing')) {
+      section.style.display = '';
+      this.initMysticHealing();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  initMysticHealing() {
+    const healingRate = parseInt(document.getElementById('healing-rate-current')?.value, 10) || 
+                        parseInt(document.getElementById('healing-rate-original')?.value, 10) || 1;
+    const pool = healingRate * 2;
+    
+    // Initialize remaining pool if not set
+    if (this.character.mysticHealingRemaining === undefined) {
+      this.character.mysticHealingRemaining = pool;
+    }
+    
+    // Update display
+    const remainingEl = document.getElementById('mystic-healing-remaining');
+    const poolEl = document.getElementById('mystic-healing-pool');
+    if (remainingEl) remainingEl.textContent = this.character.mysticHealingRemaining;
+    if (poolEl) poolEl.textContent = pool;
+    
+    // Setup listeners (only once)
+    const btn = document.getElementById('btn-mystic-healing-use');
+    const resetBtn = document.getElementById('btn-reset-mystic-healing');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.openMysticHealingModal());
+      btn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.mysticHealingRemaining = pool;
+        this.initMysticHealing();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+    
+    // Disable button if no healing remaining
+    if (btn) {
+      btn.disabled = this.character.mysticHealingRemaining <= 0;
+    }
+  },
+  
+  openMysticHealingModal() {
+    const remaining = this.character.mysticHealingRemaining || 0;
+    if (remaining <= 0) {
+      alert('No Mystic Healing points remaining today.');
+      return;
+    }
+    
+    const injuredLocations = this.getInjuredLocations();
+    if (injuredLocations.length === 0) {
+      alert('No injured hit locations to heal.');
+      return;
+    }
+    
+    let modal = document.getElementById('mystic-healing-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mystic-healing-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    const locationsHtml = injuredLocations.map(loc => {
+      const canHeal = Math.min(remaining, loc.maxHP - loc.currentHP);
+      return `
+        <div class="scratch-location-option" style="display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem 0;">
+          <span class="loc-name" style="flex: 1; font-size: 0.85rem;">${loc.name}</span>
+          <span class="loc-hp" style="font-size: 0.8rem; color: #999;">${loc.currentHP}/${loc.maxHP} HP</span>
+          <input type="number" class="mh-heal-input" data-loc-index="${loc.index}" data-max-hp="${loc.maxHP}" data-current-hp="${loc.currentHP}"
+                 min="0" max="${canHeal}" value="0" style="width: 50px; text-align: center; font-size: 0.85rem;">
+        </div>
+      `;
+    }).join('');
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-location-modal-content">
+        <div class="modal-header">
+          <h3>🧘 Mystic Healing</h3>
+          <button class="modal-close" id="mh-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.85rem;">Distribute up to <strong id="mh-pool-display">${remaining}</strong> HP across injured locations:</p>
+          <p style="font-size: 0.75rem; color: #999;">Requires 15 min meditation + Successful Meditation roll. Cannot regrow limbs.</p>
+          <div class="scratch-locations-list" style="margin: 0.5rem 0;">
+            ${locationsHtml}
+          </div>
+          <div style="text-align: right; font-size: 0.85rem; margin-top: 0.5rem;">
+            <span style="color: #999;">Total allocated:</span> <strong id="mh-total-allocated">0</strong> / ${remaining}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="mh-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="mh-accept" disabled>Accept</button>
+        </div>
+      </div>
+    `;
+    
+    // Setup listeners
+    document.getElementById('mh-modal-close').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('mh-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+    
+    // Input change handlers - update total
+    const inputs = modal.querySelectorAll('.mh-heal-input');
+    const totalEl = document.getElementById('mh-total-allocated');
+    const acceptBtn = document.getElementById('mh-accept');
+    
+    const updateTotal = () => {
+      let total = 0;
+      inputs.forEach(inp => { total += parseInt(inp.value, 10) || 0; });
+      totalEl.textContent = total;
+      acceptBtn.disabled = total <= 0 || total > remaining;
+      totalEl.style.color = total > remaining ? '#ff4444' : '#4fc3f7';
+    };
+    
+    inputs.forEach(inp => inp.addEventListener('input', updateTotal));
+    
+    // Accept button
+    acceptBtn.addEventListener('click', () => {
+      let totalHealed = 0;
+      const healActions = [];
+      inputs.forEach(inp => {
+        const amount = parseInt(inp.value, 10) || 0;
+        if (amount > 0) {
+          const locIndex = parseInt(inp.dataset.locIndex, 10);
+          const maxHP = parseInt(inp.dataset.maxHp, 10);
+          const currentHP = parseInt(inp.dataset.currentHp, 10);
+          healActions.push({ locIndex, amount: Math.min(amount, maxHP - currentHP) });
+          totalHealed += Math.min(amount, maxHP - currentHP);
+        }
+      });
+      
+      if (totalHealed > remaining) {
+        alert('Cannot heal more than remaining pool.');
+        return;
+      }
+      
+      // Apply healing to each location
+      const tbody = document.getElementById('hit-locations-body');
+      const rows = tbody?.querySelectorAll('tr');
+      const healed = [];
+      
+      healActions.forEach(action => {
+        const row = rows?.[action.locIndex];
+        if (!row) return;
+        const currentInput = row.querySelector('.hp-current');
+        const maxInput = row.querySelector('.hp-max-input');
+        const cells = row.querySelectorAll('td');
+        if (!currentInput) return;
+        
+        const oldHP = parseInt(currentInput.value, 10) || 0;
+        const maxHP = parseInt(maxInput?.value, 10) || 0;
+        const newHP = Math.min(maxHP, oldHP + action.amount);
+        currentInput.value = newHP;
+        currentInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        const locName = cells[1]?.textContent?.trim() || 'Location';
+        healed.push(`${locName}: ${oldHP}→${newHP}`);
+      });
+      
+      // Deduct from pool
+      this.character.mysticHealingRemaining = Math.max(0, remaining - totalHealed);
+      this.initMysticHealing();
+      this.scheduleAutoSave();
+      
+      modal.classList.add('hidden');
+      alert(`Mystic Healing: ${healed.join(', ')} (${totalHealed} HP total)`);
+    });
+    
+    modal.classList.remove('hidden');
+  },
+
+  // ============================================
+  // PAIN CONTROL ABILITY (MONK)
+  // ============================================
+  
+  checkPainControlVisibility() {
+    const section = document.getElementById('pain-control-section');
+    if (!section) return;
+    
+    if (this.hasAbility('Pain Control')) {
+      section.style.display = '';
+      this.initPainControl();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  initPainControl() {
+    const btn = document.getElementById('btn-pain-control-roll');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.rollPainControl());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+  
+  rollPainControl() {
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const enduranceVal = parseInt(document.getElementById('endurance-current')?.value, 10) || 0;
+    
+    if (roll === 100) {
+      alert(`🎲 Pain Control Endurance Roll: ${roll}\n\n❌ FUMBLE! The only way to fail Pain Control.\n\nEndurance: ${enduranceVal}%`);
+    } else {
+      // Determine success level
+      let level = 'Success';
+      const crit = Math.max(1, Math.floor(enduranceVal / 20));
+      if (roll <= crit) level = 'Critical Success';
+      alert(`🎲 Pain Control Endurance Roll: ${roll}\n\n✅ Automatic ${level}!\n\nPain Control treats all Endurance rolls vs injury as Automatic Successes.\n\nEndurance: ${enduranceVal}%`);
+    }
+  },
+
+  // ============================================
+  // SPEAK WITH ANIMALS ABILITY (MONK)
+  // ============================================
+  
+  promptSpeakWithAnimals(inputField) {
+    let modal = document.getElementById('speak-animals-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'speak-animals-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content">
+        <div class="modal-header">
+          <h3>🐾 Speak with Animals</h3>
+          <button class="modal-close" id="swa-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.85rem;">Choose the animal species you can communicate with:</p>
+          <input type="text" id="swa-animal-input" placeholder="e.g., Wolves, Eagles, Bears..." 
+                 style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-top: 0.5rem; border: 1px solid #555; background: #2a2a3a; color: #eee; border-radius: 4px;">
+          <p style="font-size: 0.72rem; color: #999; margin-top: 0.3rem;">The chosen animal species (and any nearby) must answer your questions.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="swa-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="swa-accept">Accept</button>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('swa-modal-close').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('swa-cancel').addEventListener('click', () => {
+      modal.classList.add('hidden');
+      // Remove the ability if cancelled (user didn't pick an animal)
+      if (inputField && inputField.value.toLowerCase().trim() === 'speak with animals') {
+        inputField.value = '';
+        this.syncClassAbilitiesToCharacter();
+        this.scheduleAutoSave();
+      }
+    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+    
+    const animalInput = document.getElementById('swa-animal-input');
+    document.getElementById('swa-accept').addEventListener('click', () => {
+      const animal = animalInput.value.trim();
+      if (!animal) {
+        animalInput.style.borderColor = '#ff4444';
+        return;
+      }
+      
+      // Update the ability name to include the animal
+      if (inputField) {
+        inputField.value = `Speak with Animals (${animal})`;
+        inputField.dataset.previousValue = inputField.value;
+        this.updateAbilityTooltip(inputField);
+        this.syncClassAbilitiesToCharacter();
+        this.scheduleAutoSave();
+      }
+      
+      modal.classList.add('hidden');
+    });
+    
+    // Focus the input
+    modal.classList.remove('hidden');
+    setTimeout(() => animalInput.focus(), 100);
   },
 
   // ============================================

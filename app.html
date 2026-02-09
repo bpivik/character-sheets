@@ -1407,6 +1407,42 @@
                 </div>
               </section>
 
+              <!-- Mystic Healing Section (only visible for Monks with Mystic Healing) -->
+              <section class="just-a-scratch-section" id="mystic-healing-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🧘 Mystic Healing</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-value" id="mystic-healing-remaining">0</span>
+                    <span class="scratch-label">/ <span id="mystic-healing-pool">0</span> HP remaining today</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-mystic-healing" title="Reset daily pool">↺</button>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-mystic-healing-use">
+                      <span class="scratch-text">Meditate & Heal</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Pain Control Section (only visible for Monks with Pain Control) -->
+              <section class="just-a-scratch-section" id="pain-control-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🧠 Pain Control</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-label" style="font-size: 0.72rem;">Auto-Success Endurance (fail only on 100)</span>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-pain-control-roll">
+                      <span class="scratch-text">Roll Endurance</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
               <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
                 <div class="section-header-row">
