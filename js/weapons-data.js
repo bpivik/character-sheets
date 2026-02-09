@@ -331,6 +331,34 @@ function getWPDamageMod() {
 }
 
 /**
+ * Get Graceful Strike damage modifier (DEX+POW based, Monk only)
+ * Returns empty string if Graceful Strike is not active or no benefit
+ */
+function getGSDamageMod() {
+  const gsCurrent = document.getElementById('gs-damage-mod-current');
+  const gsOriginal = document.getElementById('gs-damage-mod-original');
+  const gsRow = document.getElementById('gs-damage-row');
+  
+  // Check if GS is active (row is visible)
+  if (!gsRow || gsRow.style.display === 'none') return '';
+  
+  let t = '';
+  if (gsCurrent && gsCurrent.value.trim()) {
+    t = gsCurrent.value.trim();
+  } else if (gsOriginal && gsOriginal.value.trim()) {
+    t = gsOriginal.value.trim();
+  }
+  
+  if (!t) return '';
+  
+  t = t.replace(/\s+/g, '');
+  if (t === '+0' || t === '0' || t === '+0d0' || t === '±0' || t === '--' || t === '–') return '';
+  if (!/^[+\-]/.test(t)) t = '+' + t;
+  
+  return t;
+}
+
+/**
  * List of weapons eligible for Weapon Precision
  * Includes variations and aliases
  */
@@ -368,8 +396,23 @@ function isWPEligibleWeapon(weaponName) {
 function composeDamage(baseDamage, weaponName = null) {
   // Determine which damage modifier to use
   let mod = '';
+  const isUnarmed = weaponName && weaponName.trim().toLowerCase() === 'unarmed';
   
-  if (weaponName && isWPEligibleWeapon(weaponName)) {
+  if (isUnarmed) {
+    // Unarmed: use the HIGHEST of standard DM, WP DM (if eligible), or GS DM (if active)
+    const stdMod = getDamageMod();
+    const wpMod = getWPDamageMod();
+    const gsMod = getGSDamageMod();
+    
+    // Start with standard, then check WP and GS for better options
+    mod = stdMod;
+    if (wpMod) {
+      mod = getBetterMod(mod, wpMod);
+    }
+    if (gsMod) {
+      mod = getBetterMod(mod, gsMod);
+    }
+  } else if (weaponName && isWPEligibleWeapon(weaponName)) {
     // For WP-eligible weapons, use WP damage mod if active and better
     const wpMod = getWPDamageMod();
     const stdMod = getDamageMod();
@@ -387,6 +430,31 @@ function composeDamage(baseDamage, weaponName = null) {
 }
 
 /**
+ * Compare two damage modifiers and return the better (higher) one
+ */
+function getBetterMod(mod1, mod2) {
+  if (!mod1) return mod2;
+  if (!mod2) return mod1;
+  
+  const ranking = [
+    '-1d8', '-1d6', '-1d4', '-1d2', '', '+0',
+    '+1d2', '+1d4', '+1d6', '+1d8', '+1d10', '+1d12',
+    '+2d6', '+1d8+1d6', '+2d8', '+1d10+1d8', '+2d10',
+    '+2d10+1d2', '+2d10+1d4', '+2d10+1d6', '+2d10+1d8', '+2d10+1d10', '+2d10+1d12', '+3d10'
+  ];
+  
+  const rank1 = ranking.indexOf(mod1);
+  const rank2 = ranking.indexOf(mod2);
+  
+  // If either not found, return the one that IS found, or mod1 as default
+  if (rank1 === -1 && rank2 === -1) return mod1;
+  if (rank1 === -1) return mod2;
+  if (rank2 === -1) return mod1;
+  
+  return rank1 >= rank2 ? mod1 : mod2;
+}
+
+/**
  * Extract baseDamage from a user-edited total damage string by stripping
  * the current damage modifier suffix. This allows manual edits to the
  * weapon's base damage (e.g., adding "+1" for a magic weapon) to survive
@@ -398,10 +466,24 @@ function composeDamage(baseDamage, weaponName = null) {
 function extractBaseDamage(displayValue, weaponName) {
   if (!displayValue) return '';
   const val = displayValue.replace(/\s+/g, '');
+  const isUnarmed = weaponName && weaponName.trim().toLowerCase() === 'unarmed';
 
   // Determine which mod is currently appended
   let mod = '';
-  if (weaponName && isWPEligibleWeapon(weaponName)) {
+  if (isUnarmed) {
+    // Unarmed could have standard, WP, or GS mod — find which one is appended
+    const stdMod = getDamageMod();
+    const wpMod = getWPDamageMod();
+    const gsMod = getGSDamageMod();
+    // Check in order of specificity (longest match first to avoid partial strips)
+    const candidates = [gsMod, wpMod, stdMod].filter(m => m);
+    for (const candidate of candidates) {
+      if (val.endsWith(candidate)) {
+        mod = candidate;
+        break;
+      }
+    }
+  } else if (weaponName && isWPEligibleWeapon(weaponName)) {
     mod = getWPDamageMod() || getDamageMod();
   } else {
     mod = getDamageMod();

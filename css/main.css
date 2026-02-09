@@ -3540,6 +3540,45 @@ input.combat-skill-percent.damage-boosted {
   font-style: italic;
 }
 
+/* Monk Abilities - compact grid layout like ability-cards-grid */
+#monk-abilities-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+#monk-abilities-cards .weapon-spec-card {
+  padding: 0.4rem 0.55rem;
+  margin: 0;
+}
+
+#monk-abilities-cards .weapon-spec-card-header {
+  margin-bottom: 0.2rem;
+}
+
+#monk-abilities-cards .weapon-spec-card-title {
+  font-size: 0.8rem;
+}
+
+#monk-abilities-cards .weapon-spec-card-icon {
+  font-size: 0.85rem;
+}
+
+#monk-abilities-cards .benefit-item {
+  font-size: 0.72rem;
+  margin: 0.15rem 0;
+  padding-left: 0.4rem;
+}
+
+#monk-abilities-section .section-header {
+  font-size: 0.85rem;
+}
+
+#monk-abilities-cards .monk-status-card {
+  grid-column: 1 / -1;
+}
+
 /* ---- Animations ---- */
 
 @keyframes wmPulse {

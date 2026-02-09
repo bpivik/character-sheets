@@ -5243,6 +5243,15 @@ const App = {
         <p>Uses DEX+SIZ instead of STR+SIZ for the Damage Modifier table.</p>
       `
     },
+    'graceful-dmg': {
+      title: 'Graceful Strike Damage Modifier',
+      content: `
+        <p>Graceful Strike uses DEX+POW instead of STR+SIZ for the Damage Modifier when making Unarmed attacks.</p>
+        <p><strong>Applies to:</strong> Unarmed attacks only.</p>
+        <p><strong>Conditions:</strong> Monk must be Extremely Unburdened and wearing no armor, and DEX+POW must be higher than STR+SIZ.</p>
+        <p>The highest available Damage Modifier is always used (comparing normal DM, Weapon Precision DM, and Graceful Strike DM).</p>
+      `
+    },
     'exp-mod': {
       title: 'Experience Modifier',
       content: `
@@ -10943,11 +10952,14 @@ const App = {
       if (!nameInput) continue;
       
       if (nameInput.value.toLowerCase().trim() === 'unarmed') {
-        // Update existing damage
+        // Update existing damage using baseDamage system
         const damageInput = document.getElementById(`melee-${i}-damage`);
         if (damageInput) {
-          damageInput.value = damage + '+DM';
+          damageInput.dataset.baseDamage = damage;
+          damageInput.dataset.weaponName = 'unarmed';
           damageInput.dataset.monkDamage = 'true';
+          // Use composeDamage to get proper damage with best DM
+          damageInput.value = window.WeaponData.composeDamage(damage, 'unarmed');
         }
         return;
       }
@@ -10964,8 +10976,10 @@ const App = {
         
         const damageInput = document.getElementById(`melee-${i}-damage`);
         if (damageInput) {
-          damageInput.value = damage + '+DM';
+          damageInput.dataset.baseDamage = damage;
+          damageInput.dataset.weaponName = 'unarmed';
           damageInput.dataset.monkDamage = 'true';
+          damageInput.value = window.WeaponData.composeDamage(damage, 'unarmed');
         }
         
         // Set size to S
@@ -10992,7 +11006,9 @@ const App = {
       if (nameInput.value.toLowerCase().trim() === 'unarmed') {
         const damageInput = document.getElementById(`melee-${i}-damage`);
         if (damageInput) {
-          damageInput.value = damage + '+DM';
+          damageInput.dataset.baseDamage = damage;
+          damageInput.dataset.weaponName = 'unarmed';
+          damageInput.value = window.WeaponData.composeDamage(damage, 'unarmed');
         }
         return;
       }
@@ -14067,15 +14083,29 @@ const App = {
   
   /**
    * Update Evade field title to reflect all active display bonuses
+   * Also updates the combat quick ref evade tooltip
    */
   _updateEvadeBonusTitle(evadeField) {
-    const parts = [];
-    if (this.artfulDodgerDisplayed) parts.push('+10 Artful Dodger');
+    const bonusParts = [];
+    if (this.artfulDodgerDisplayed) bonusParts.push('+10 Artful Dodger');
     if (this.lightningReflexesDisplayed) {
       const bonus = this._lightningReflexesBonus || 0;
-      parts.push(`+${bonus} Lightning Reflexes`);
+      const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+      bonusParts.push(`+${bonus} Lightning Reflexes (10 + ⌈${mysticismVal}/10⌉)`);
     }
-    evadeField.title = parts.length > 0 ? parts.join(', ') : '';
+    const titleText = bonusParts.length > 0 ? bonusParts.join(', ') : '';
+    evadeField.title = titleText;
+    
+    // Also update combat quick ref evade tooltip and styling
+    const refEvade = document.getElementById('ref-evade');
+    if (refEvade) {
+      refEvade.title = titleText;
+      if (this.lightningReflexesDisplayed || this.artfulDodgerDisplayed) {
+        refEvade.classList.add('lightning-reflexes-bonus');
+      } else {
+        refEvade.classList.remove('lightning-reflexes-bonus');
+      }
+    }
   },
   // Design: Never modify saved data. Store base Initiative in character.derived.
   // Only add +4 bonus to the DISPLAY field. Track display state with agileDisplayed flag.
@@ -18736,12 +18766,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     let html = '';
 
-    // Status indicator
+    // Status indicator (spans full width of grid)
     html += `
-      <div class="weapon-spec-card" style="border-color: ${statusColor}; background: linear-gradient(135deg, #1a1a2a 0%, #1a2a2a 100%); margin-bottom: 0.5rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem;">
-          <span style="font-size: 1.1rem;">${statusIcon}</span>
-          <span style="color: ${statusColor}; font-size: 0.82rem; font-weight: 600;">Monk Conditions: ${statusText}</span>
+      <div class="weapon-spec-card monk-status-card" style="border-color: ${statusColor}; background: linear-gradient(135deg, #1a1a2a 0%, #1a2a2a 100%);">
+        <div style="display: flex; align-items: center; gap: 0.4rem; padding: 0.15rem;">
+          <span style="font-size: 0.9rem;">${statusIcon}</span>
+          <span style="color: ${statusColor}; font-size: 0.75rem; font-weight: 600;">Monk: ${statusText}</span>
         </div>
       </div>
     `;
@@ -18854,49 +18884,28 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
   
   /**
-   * Apply or remove Graceful Strike DM override on the Unarmed weapon row
-   * When active, replaces "+DM" with the actual DEX+POW damage modifier
+   * Apply or remove Graceful Strike DM row
+   * When active, populates the GS Damage Mod row so composeDamage uses DEX+POW DM for unarmed
    */
   _applyGracefulStrikeDM(active, dexPowTotal) {
-    // Find the Unarmed weapon in melee slots
-    for (let i = 1; i <= 5; i++) {
-      const nameInput = document.getElementById(`melee-${i}-name`);
-      if (!nameInput || nameInput.value.toLowerCase().trim() !== 'unarmed') continue;
-      
-      const damageInput = document.getElementById(`melee-${i}-damage`);
-      if (!damageInput) continue;
-      
-      const currentDamage = damageInput.value.trim();
-      
-      if (active) {
-        const gracefulDM = this.getDamageModifierForSum(dexPowTotal);
-        
-        // Store original damage pattern if not already stored
-        if (!damageInput.dataset.gsOriginalDamage) {
-          damageInput.dataset.gsOriginalDamage = currentDamage;
-        }
-        
-        // Extract the base dice (everything before +DM or before the current DM override)
-        const originalDamage = damageInput.dataset.gsOriginalDamage || currentDamage;
-        const baseDice = originalDamage.replace(/\+DM$/i, '').trim();
-        
-        // Apply DEX+POW DM
-        const newDamage = gracefulDM === '+0' ? baseDice : `${baseDice}${gracefulDM}`;
-        damageInput.value = newDamage;
-        damageInput.classList.add('lightning-reflexes-bonus'); // green styling
-        damageInput.title = `Graceful Strike: DEX+POW (${dexPowTotal}) → DM ${gracefulDM}`;
-      } else {
-        // Restore original "+DM" damage
-        if (damageInput.dataset.gsOriginalDamage) {
-          damageInput.value = damageInput.dataset.gsOriginalDamage;
-          delete damageInput.dataset.gsOriginalDamage;
-        }
-        damageInput.classList.remove('lightning-reflexes-bonus');
-        if (damageInput.title && damageInput.title.includes('Graceful Strike')) {
-          damageInput.title = '';
-        }
-      }
-      break; // Only one Unarmed row
+    const gsRow = document.getElementById('gs-damage-row');
+    const gsOrigField = document.getElementById('gs-damage-mod-original');
+    const gsCurrField = document.getElementById('gs-damage-mod-current');
+    
+    if (active && gsRow && gsOrigField && gsCurrField) {
+      const gracefulDM = this.getDamageModifierForSum(dexPowTotal);
+      gsRow.style.display = '';
+      gsOrigField.value = gracefulDM;
+      gsCurrField.value = gracefulDM;
+    } else if (gsRow) {
+      gsRow.style.display = 'none';
+      if (gsOrigField) gsOrigField.value = '';
+      if (gsCurrField) gsCurrField.value = '';
+    }
+    
+    // Let composeDamage handle the DM selection for unarmed
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
     }
   },
 
