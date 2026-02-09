@@ -470,7 +470,7 @@ const App = {
       }
       
       // Restore active weapon spec VISUALS only (values already saved in localStorage)
-      if (this.character.activeWeaponSpec) {
+      if (this.character.activeWeaponSpecs && this.character.activeWeaponSpecs.length > 0) {
         this.restoreWeaponSpecVisuals();
         this.updateWeaponSpecDisplay();
       }
@@ -1544,7 +1544,7 @@ const App = {
             }
           }
           // Update weapon master critical badge if active
-          if (fieldId === 'combat-skill-1-percent' && this.character.activeWeaponSpec) {
+          if (fieldId === 'combat-skill-1-percent' && (this.character.activeWeaponSpecs || []).length > 0) {
             // Combat skill changed manually while spec active — update pre-values
           }
           this.updateCombatQuickRef();
@@ -10224,7 +10224,7 @@ const App = {
         this.character.weaponMaster.tier = newTier;
       } else {
         // No longer qualifies — deactivate if active
-        if (this.character.activeWeaponSpec) {
+        if ((this.character.activeWeaponSpecs || []).length > 0) {
           this.deactivateWeaponSpec();
         }
       }
@@ -11204,7 +11204,7 @@ const App = {
     if (classKey === 'fighter') {
       if (this.character.weaponMaster) {
         // Deactivate spec if it was the mastered weapon
-        if (this.character.activeWeaponSpec) {
+        if ((this.character.activeWeaponSpecs || []).length > 0) {
           this.deactivateWeaponSpec();
         }
         delete this.character.weaponMaster;
@@ -17083,16 +17083,20 @@ const App = {
     }
     
     // Check for Weapon Master (targeted to specific weapon only, on top of forceful)
-    if (this.character.activeWeaponSpec && this.character.weaponMaster) {
-      const [weapon, type] = this.character.activeWeaponSpec.split('|');
+    const activeSpecs = this.character.activeWeaponSpecs || [];
+    if (activeSpecs.length > 0 && this.character.weaponMaster) {
       const wm = this.character.weaponMaster;
-      const isMastered = wm.weapon && wm.weapon.toLowerCase() === weapon.toLowerCase() && wm.type === type;
-      const isMeleeOrShield = type === 'Melee' || type === 'Shield';
-      if (isMastered && isMeleeOrShield) {
+      // Check if the mastered weapon is among active specs
+      const masteredSpecActive = activeSpecs.some(key => {
+        const [w, t] = key.split('|');
+        return wm.weapon && wm.weapon.toLowerCase() === w.toLowerCase() && wm.type === t;
+      });
+      const isMeleeOrShield = wm.type === 'Melee' || wm.type === 'Shield';
+      if (masteredSpecActive && isMeleeOrShield) {
         const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
         const tierOrder = ['master', 'high', 'grand', 'legendary'];
         const dmSteps = tierOrder.indexOf(wm.tier) >= 2 ? 2 : 1;
-        this.applyDamageBoostToSpecificWeapon(weapon, `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`);
+        this.applyDamageBoostToSpecificWeapon(wm.weapon, `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`);
       }
     }
   },
@@ -17767,6 +17771,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * @param {HTMLElement} abilityInput - The class ability input that triggered this
    */
   promptWeaponSpecialization(abilityInput) {
+    // Prevent double-prompting with cooldown
+    if (this._weaponSpecPromptOpen) return;
+    if (this._weaponSpecPromptCooldown && Date.now() - this._weaponSpecPromptCooldown < 500) return;
+    this._weaponSpecPromptOpen = true;
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay weapon-spec-modal-overlay';
     overlay.style.cssText = `
@@ -17853,6 +17861,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     // Cancel button
     modal.querySelector('.spec-cancel-btn').addEventListener('click', () => {
+      this._weaponSpecPromptOpen = false;
+      this._weaponSpecPromptCooldown = Date.now();
       // Remove the ability row if it was just added
       if (abilityInput) {
         const row = abilityInput.closest('.class-ability-row');
@@ -17951,6 +17961,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     // Cancel button
     modal.querySelector('.spec-cancel-btn').addEventListener('click', () => {
+      this._weaponSpecPromptOpen = false;
+      this._weaponSpecPromptCooldown = Date.now();
       if (abilityInput) {
         const row = abilityInput.closest('.class-ability-row');
         if (row) row.remove();
@@ -17965,6 +17977,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Finalize the weapon specialization selection
    */
   _finalizeWeaponSpec(overlay, abilityInput, type, weapon) {
+    this._weaponSpecPromptOpen = false;
+    this._weaponSpecPromptCooldown = Date.now();
     // Build the display name
     const displayName = type === 'Shield'
       ? 'Weapon Specialization (Shield)'
@@ -18028,7 +18042,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       section.style.display = 'none';
       if (divider) divider.style.display = 'none';
       // Clean up active weapon spec if specs removed
-      if (this.character.activeWeaponSpec) {
+      if ((this.character.activeWeaponSpecs || []).length > 0) {
         this.deactivateWeaponSpec();
       }
       // Restore ranged load values
@@ -18079,15 +18093,19 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
 
     const wm = this.character.weaponMaster;
-    const activeSpec = this.character.activeWeaponSpec || null;
+    const activeSpecs = this.character.activeWeaponSpecs || [];
 
-    // Validate active spec still exists
-    if (activeSpec) {
-      const [bonusWeapon, bonusType] = activeSpec.split('|');
-      const stillExists = specs.some(s => s.weapon === bonusWeapon && s.type === bonusType);
-      if (!stillExists) {
-        this.deactivateWeaponSpec();
-        this.character.activeWeaponSpec = null;
+    // Validate active specs still exist
+    if (activeSpecs.length > 0) {
+      const validSpecs = activeSpecs.filter(key => {
+        const [bonusWeapon, bonusType] = key.split('|');
+        return specs.some(s => s.weapon === bonusWeapon && s.type === bonusType);
+      });
+      if (validSpecs.length !== activeSpecs.length) {
+        this.character.activeWeaponSpecs = validSpecs;
+        if (validSpecs.length === 0) {
+          this.deactivateWeaponSpec();
+        }
       }
     }
 
@@ -18125,7 +18143,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
 
       const specKey = `${spec.weapon}|${spec.type}`;
-      const isActive = activeSpec === specKey;
+      const isActive = activeSpecs.includes(specKey);
 
       const buttonHtml = showButton ? `
         <button type="button" class="weapon-spec-activate-btn${isActive ? ' ws-active' : ''}"
@@ -18396,7 +18414,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Check if any combat buff is still active. If none, release baseline.
    */
   releaseBaselineIfClean() {
-    if (!this.character.isForcefulStrikeActive && !this.character.activeWeaponSpec) {
+    const specs = this.character.activeWeaponSpecs || [];
+    if (!this.character.isForcefulStrikeActive && specs.length === 0) {
       delete this.character.combatBuffBaseline;
     }
   },
@@ -18409,17 +18428,36 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const baseline = this.character.combatBuffBaseline;
     if (!baseline) return;
 
-    const isWeaponSpecActive = !!this.character.activeWeaponSpec;
+    const activeSpecs = this.character.activeWeaponSpecs || [];
+    const isWeaponSpecActive = activeSpecs.length > 0;
     const isForcefulActive = !!this.character.isForcefulStrikeActive;
-    const specKey = this.character.activeWeaponSpec || '';
-    const [specWeapon, specType] = specKey ? specKey.split('|') : ['', ''];
-    const isMeleeOrShield = specType === 'Melee' || specType === 'Shield';
+    const wm = this.character.weaponMaster;
 
-    // --- Combat Skill ---
+    // Check if any active spec is melee/shield (for CS +5, non-stacking)
+    const hasAnyMeleeOrShield = activeSpecs.some(key => {
+      const [, t] = key.split('|');
+      return t === 'Melee' || t === 'Shield';
+    });
+
+    // Check if ANY active spec is the mastered weapon
+    let anyMastered = false;
+    let masteredTierData = null;
+    if (wm && wm.weapon) {
+      for (const key of activeSpecs) {
+        const [w, t] = key.split('|');
+        if (wm.weapon.toLowerCase() === w.toLowerCase() && wm.type === t) {
+          anyMastered = true;
+          masteredTierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+          break;
+        }
+      }
+    }
+
+    // --- Combat Skill (non-stacking +5 if any melee/shield active) ---
     const skillInput = document.getElementById('combat-skill-1-percent');
     if (skillInput) {
       let cs = parseInt(baseline.combatSkill, 10) || 0;
-      if (isWeaponSpecActive && isMeleeOrShield) cs += 5;
+      if (isWeaponSpecActive && hasAnyMeleeOrShield) cs += 5;
       if (isForcefulActive) cs -= 20;
       skillInput.value = cs;
 
@@ -18430,14 +18468,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (row) row.classList.remove('weapon-spec-active-row');
 
       if (isWeaponSpecActive) {
-        const wm = this.character.weaponMaster;
-        const isMastered = wm && wm.weapon &&
-          wm.weapon.toLowerCase() === specWeapon.toLowerCase() &&
-          wm.type === specType;
         skillInput.classList.add('damage-boosted');
-        if (isMastered) {
-          const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
-          skillInput.title = 'Critical doubled (' + tierData.label + ')';
+        if (anyMastered && masteredTierData) {
+          skillInput.title = 'Critical doubled (' + masteredTierData.label + ')';
         } else {
           skillInput.title = 'Weapon Specialization: +5% Combat Skill';
         }
@@ -18522,32 +18555,23 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // --- Weapon Master: step ONLY mastered weapon's damage on top ---
     this._clearWeaponMasterDamageBoost();
 
-    if (isWeaponSpecActive) {
-      const wm = this.character.weaponMaster;
-      const isMastered = wm && wm.weapon &&
-        wm.weapon.toLowerCase() === specWeapon.toLowerCase() &&
-        wm.type === specType;
-
-      if (isMastered && isMeleeOrShield && wm.tier) {
-        const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+    if (anyMastered && wm && wm.tier) {
+      const isMeleeOrShieldMaster = wm.type === 'Melee' || wm.type === 'Shield';
+      if (isMeleeOrShieldMaster) {
         const tierOrder = ['master', 'high', 'grand', 'legendary'];
         const tierIdx = tierOrder.indexOf(wm.tier);
         const dmSteps = tierIdx >= 2 ? 2 : 1;
-        const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
+        const tooltipText = `${masteredTierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
 
         const currentGlobalDM = dmgCurrField ? dmgCurrField.value.trim() : '+0';
         const masteredDM = this.stepDamageModifier(currentGlobalDM, dmSteps);
 
-        this._applyWeaponMasterDamageStep(specWeapon, currentGlobalDM, masteredDM, tooltipText);
+        this._applyWeaponMasterDamageStep(wm.weapon, currentGlobalDM, masteredDM, tooltipText);
       }
-
-      this.character.weaponSpecCritDoubled = !!(this.character.weaponMaster &&
-        this.character.weaponMaster.weapon &&
-        this.character.weaponMaster.weapon.toLowerCase() === specWeapon.toLowerCase() &&
-        this.character.weaponMaster.type === specType);
-    } else {
-      this.character.weaponSpecCritDoubled = false;
     }
+
+    // Set doubled crit flag
+    this.character.weaponSpecCritDoubled = anyMastered;
 
     this.refreshSummaryWidgets();
     this.updateCombatQuickRef();
@@ -18847,18 +18871,19 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
   toggleWeaponSpec(weapon, type) {
     const specKey = `${weapon}|${type}`;
-    const wasActive = this.character.activeWeaponSpec === specKey;
+    if (!this.character.activeWeaponSpecs) this.character.activeWeaponSpecs = [];
+    const idx = this.character.activeWeaponSpecs.indexOf(specKey);
+    const wasActive = idx !== -1;
 
     // Capture baseline before any changes
     this.captureBaselineIfNeeded();
 
-    // Deactivate current
-    if (this.character.activeWeaponSpec) {
-      this.character.activeWeaponSpec = null;
-    }
-
-    if (!wasActive) {
-      this.character.activeWeaponSpec = specKey;
+    if (wasActive) {
+      // Remove from array
+      this.character.activeWeaponSpecs.splice(idx, 1);
+    } else {
+      // Add to array
+      this.character.activeWeaponSpecs.push(specKey);
 
       // Play animation for mastered weapons
       const wm = this.character.weaponMaster;
@@ -18879,12 +18904,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
-   * Deactivate the current weapon spec via the baseline system
+   * Deactivate all weapon specs via the baseline system
    */
   deactivateWeaponSpec() {
-    if (!this.character.activeWeaponSpec) return;
-    this.captureBaselineIfNeeded(); // Ensure baseline exists
-    this.character.activeWeaponSpec = null;
+    const specs = this.character.activeWeaponSpecs || [];
+    if (specs.length === 0) return;
+    this.captureBaselineIfNeeded();
+    this.character.activeWeaponSpecs = [];
     this.character.weaponSpecCritDoubled = false;
     this.recalculateCombatBuffs();
     this.releaseBaselineIfClean();
@@ -18896,22 +18922,31 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * The baseline should also already be saved.
    */
   restoreWeaponSpecVisuals() {
-    if (!this.character.activeWeaponSpec) return;
+    const activeSpecs = this.character.activeWeaponSpecs || [];
+    if (activeSpecs.length === 0) return;
 
-    const [weapon, type] = this.character.activeWeaponSpec.split('|');
-    const isMeleeOrShield = type === 'Melee' || type === 'Shield';
     const wm = this.character.weaponMaster;
-    const isMastered = wm && wm.weapon &&
-      wm.weapon.toLowerCase() === weapon.toLowerCase() &&
-      wm.type === type;
-    const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || null) : null;
+
+    // Check if any active spec is mastered
+    let anyMastered = false;
+    let masteredTierData = null;
+    if (wm && wm.weapon) {
+      for (const key of activeSpecs) {
+        const [w, t] = key.split('|');
+        if (wm.weapon.toLowerCase() === w.toLowerCase() && wm.type === t) {
+          anyMastered = true;
+          masteredTierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+          break;
+        }
+      }
+    }
 
     // Green styling on Combat Skill
     const skillInput = document.getElementById('combat-skill-1-percent');
     if (skillInput) {
       skillInput.classList.add('damage-boosted');
-      if (isMastered) {
-        skillInput.title = 'Critical doubled (' + (tierData ? tierData.label : 'Weapon Master') + ')';
+      if (anyMastered && masteredTierData) {
+        skillInput.title = 'Critical doubled (' + masteredTierData.label + ')';
       } else {
         skillInput.title = 'Weapon Specialization: +5% Combat Skill';
       }
@@ -18925,16 +18960,19 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
     if (row) row.classList.add('weapon-spec-active-row');
 
-    // Weapon Master specific weapon damage boost
-    if (isMastered && isMeleeOrShield && tierData) {
-      const tierOrder = ['master', 'high', 'grand', 'legendary'];
-      const tierIdx = tierOrder.indexOf(wm.tier);
-      const dmSteps = tierIdx >= 2 ? 2 : 1;
-      const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
-      this.applyDamageBoostToSpecificWeapon(weapon, tooltipText);
+    // Weapon Master specific weapon damage boost (if mastered weapon is active)
+    if (anyMastered && wm && wm.tier) {
+      const isMeleeOrShieldMaster = wm.type === 'Melee' || wm.type === 'Shield';
+      if (isMeleeOrShieldMaster && masteredTierData) {
+        const tierOrder = ['master', 'high', 'grand', 'legendary'];
+        const tierIdx = tierOrder.indexOf(wm.tier);
+        const dmSteps = tierIdx >= 2 ? 2 : 1;
+        const tooltipText = `${masteredTierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
+        this.applyDamageBoostToSpecificWeapon(wm.weapon, tooltipText);
+      }
     }
 
-    this.character.weaponSpecCritDoubled = !!isMastered;
+    this.character.weaponSpecCritDoubled = anyMastered;
   },
 
   /**
@@ -22205,7 +22243,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // Weapon Master: double critical range for Combat Skill rolls
     let critDoubled = false;
-    if (this.character.weaponSpecCritDoubled && this.character.activeWeaponSpec) {
+    if (this.character.weaponSpecCritDoubled && (this.character.activeWeaponSpecs || []).length > 0) {
       const normalizedSkill = (skillName || '').toLowerCase().trim();
       if (normalizedSkill.includes('combat') || normalizedSkill.includes('combat skill')) {
         critThreshold = critThreshold * 2;
@@ -22614,9 +22652,61 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (!confirmed) return;
     }
     
+    // If this is a weapon row, sync deletion to Equipment page
+    const isWeaponRow = containerId === 'melee-weapons-body' || containerId === 'ranged-weapons-body';
+    const weaponName = isWeaponRow && dataField ? dataField.value.trim() : '';
+    
     lastRow.remove();
     this.reindexSection(containerId, rowSelector);
+    
+    // Remove from Equipment if it was a weapon
+    if (isWeaponRow && weaponName) {
+      this._removeWeaponFromEquipment(weaponName);
+    }
+    
     this.scheduleAutoSave();
+  },
+  
+  /**
+   * Remove a weapon from the Equipment page by name
+   */
+  _removeWeaponFromEquipment(weaponName) {
+    if (!weaponName) return;
+    const targetName = weaponName.toLowerCase().trim();
+    
+    // Search main equipment container
+    const mainContainer = document.getElementById('equipment-container');
+    if (mainContainer) {
+      mainContainer.querySelectorAll('.equipment-row').forEach(row => {
+        const nameInput = row.querySelector('.equipment-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (rowName === targetName || this._weaponNameMatches(rowName, targetName)) {
+          row.querySelectorAll('input').forEach(input => { input.value = ''; });
+          row.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+        }
+      });
+    }
+    
+    // Search sub-containers (bags, backpacks, etc.)
+    document.querySelectorAll('.container-section').forEach(section => {
+      const itemsContainer = section.querySelector('.container-items');
+      if (!itemsContainer) return;
+      itemsContainer.querySelectorAll('.equipment-row').forEach(row => {
+        const nameInput = row.querySelector('.equipment-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (rowName === targetName || this._weaponNameMatches(rowName, targetName)) {
+          row.querySelectorAll('input').forEach(input => { input.value = ''; });
+          row.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+        }
+      });
+    });
+    
+    // Recalculate encumbrance after removing
+    if (window.EncumbranceData && window.EncumbranceData.recalculateEncumbrance) {
+      window.EncumbranceData.recalculateEncumbrance();
+    }
   },
   
   /**
