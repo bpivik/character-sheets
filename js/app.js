@@ -1894,6 +1894,14 @@ const App = {
       });
     }
     
+    // Initiative d10 Roll button
+    const initRollBtn = document.getElementById('btn-init-roll');
+    if (initRollBtn) {
+      initRollBtn.addEventListener('click', () => {
+        this.openInitiativeRollModal();
+      });
+    }
+    
     const healModalClose = document.getElementById('heal-modal-close');
     if (healModalClose) {
       healModalClose.addEventListener('click', () => {
@@ -2802,17 +2810,24 @@ const App = {
         if (previousValue && (!currentValue || currentValue !== previousValue)) {
           const removedContainer = this.getContainerIdFromItemName(previousValue);
           if (removedContainer) {
-            // Check if this container type still exists elsewhere in equipment
-            const stillExists = this.containerStillExistsElsewhere(removedContainer, rowIndex);
-            if (!stillExists) {
-              const hasItems = this.containerHasItems(removedContainer);
-              if (hasItems) {
-                const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
-                if (!handled) {
-                  // User cancelled - restore the value
-                  nameInput.value = previousValue;
-                  nameInput.dataset.previousValue = previousValue;
-                  return;
+            // Check if the new value is also a container (transfer scenario)
+            const newContainer = currentValue ? this.getContainerIdFromItemName(currentValue) : null;
+            if (newContainer && newContainer !== removedContainer && this.containerHasItems(removedContainer)) {
+              // Transfer items from old container to new container
+              this.transferContainerItems(removedContainer, newContainer);
+            } else {
+              // Check if this container type still exists elsewhere in equipment
+              const stillExists = this.containerStillExistsElsewhere(removedContainer, rowIndex);
+              if (!stillExists) {
+                const hasItems = this.containerHasItems(removedContainer);
+                if (hasItems) {
+                  const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
+                  if (!handled) {
+                    // User cancelled - restore the value
+                    nameInput.value = previousValue;
+                    nameInput.dataset.previousValue = previousValue;
+                    return;
+                  }
                 }
               }
             }
@@ -2932,6 +2947,44 @@ const App = {
       return [];
     }
     return this.character.containers[containerId].filter(item => item.name && item.name.trim() !== '');
+  },
+
+  /**
+   * Transfer items from one container to another (e.g., Backpack → Reinforced Backpack)
+   */
+  transferContainerItems(fromId, toId) {
+    if (!this.character.containers) this.character.containers = {};
+    
+    const fromItems = this.character.containers[fromId] || [];
+    const toConfig = CONTAINER_CONFIGS[toId];
+    const fromConfig = CONTAINER_CONFIGS[fromId];
+    
+    // Initialize destination container with proper number of rows
+    const toRows = toConfig ? toConfig.rows : 20;
+    if (!this.character.containers[toId]) {
+      this.character.containers[toId] = [];
+      for (let i = 0; i < toRows; i++) {
+        this.character.containers[toId].push({ name: '', enc: '' });
+      }
+    }
+    
+    // Copy items from old container to new container
+    const itemsToCopy = fromItems.filter(item => item.name && item.name.trim() !== '');
+    itemsToCopy.forEach((item, i) => {
+      if (i < toRows) {
+        this.character.containers[toId][i] = { ...item };
+      }
+    });
+    
+    // Clear old container
+    delete this.character.containers[fromId];
+    
+    const fromName = fromConfig ? fromConfig.name : fromId;
+    const toName = toConfig ? toConfig.name : toId;
+    console.log(`Transferred ${itemsToCopy.length} items from ${fromName} to ${toName}`);
+    
+    this.updateContainerButtons();
+    this.scheduleAutoSave();
   },
 
   /**
@@ -21265,6 +21318,95 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   /**
    * Apply combined ENC + Fatigue penalty to Initiative
    */
+  // ============================================
+  // INITIATIVE D10 ROLL
+  // ============================================
+  
+  openInitiativeRollModal() {
+    let modal = document.getElementById('init-roll-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'init-roll-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    const currentInit = parseInt(document.getElementById('initiative-current')?.value, 10) || 0;
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 320px; text-align: center;">
+        <div class="modal-header">
+          <h3>🎲 Initiative Roll</h3>
+          <button class="modal-close" id="init-roll-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.9rem;">Ready to roll for Initiative?</p>
+          <p style="font-size: 0.8rem; color: #999;">Current Initiative bonus: <strong>${currentInit}</strong></p>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" id="init-roll-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="init-roll-yes">Roll!</button>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('init-roll-close').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('init-roll-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+    
+    document.getElementById('init-roll-yes').addEventListener('click', () => {
+      modal.classList.add('hidden');
+      this.rollInitiativeD10();
+    });
+    
+    modal.classList.remove('hidden');
+  },
+  
+  rollInitiativeD10() {
+    const d10 = Math.floor(Math.random() * 10) + 1;
+    const currentInit = parseInt(document.getElementById('initiative-current')?.value, 10) || 0;
+    const total = currentInit + d10;
+    
+    // Show result modal
+    let modal = document.getElementById('init-result-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'init-result-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 320px; text-align: center;">
+        <div class="modal-header">
+          <h3>🎲 Initiative Result</h3>
+          <button class="modal-close" id="init-result-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <div style="font-size: 0.8rem; color: #999; margin-bottom: 0.5rem;">
+            Base ${currentInit} + d10 roll: ${d10}
+          </div>
+          <div style="font-size: 2rem; font-weight: bold; color: #4fc3f7; margin: 0.5rem 0;">
+            ${total}
+          </div>
+          <div style="font-size: 0.95rem;">
+            Your Initiative for this combat is <strong>${total}</strong>.
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: center;">
+          <button type="button" class="btn btn-primary" id="init-result-ok">OK</button>
+        </div>
+      </div>
+    `;
+    
+    const closeModal = () => modal.classList.add('hidden');
+    document.getElementById('init-result-close').addEventListener('click', closeModal);
+    document.getElementById('init-result-ok').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    
+    modal.classList.remove('hidden');
+  },
+  
   applyInitiativePenalty(encStatus, fatigue) {
     const initCurrent = document.getElementById('initiative-current');
     if (!initCurrent) return;
@@ -24433,15 +24575,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         if (previousValue && (!currentValue || currentValue !== previousValue)) {
           const removedContainer = this.getContainerIdFromItemName(previousValue);
           if (removedContainer) {
-            const stillExists = this.containerStillExistsElsewhere(removedContainer, index);
-            if (!stillExists) {
-              const hasItems = this.containerHasItems(removedContainer);
-              if (hasItems) {
-                const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
-                if (!handled) {
-                  nameInput.value = previousValue;
-                  nameInput.dataset.previousValue = previousValue;
-                  return;
+            // Check if the new value is also a container (transfer scenario)
+            const newContainer = currentValue ? this.getContainerIdFromItemName(currentValue) : null;
+            if (newContainer && newContainer !== removedContainer && this.containerHasItems(removedContainer)) {
+              this.transferContainerItems(removedContainer, newContainer);
+            } else {
+              const stillExists = this.containerStillExistsElsewhere(removedContainer, index);
+              if (!stillExists) {
+                const hasItems = this.containerHasItems(removedContainer);
+                if (hasItems) {
+                  const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
+                  if (!handled) {
+                    nameInput.value = previousValue;
+                    nameInput.dataset.previousValue = previousValue;
+                    return;
+                  }
                 }
               }
             }
@@ -25001,15 +25149,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (previousValue && (!currentValue || currentValue !== previousValue)) {
         const removedContainer = this.getContainerIdFromItemName(previousValue);
         if (removedContainer) {
-          const stillExists = this.containerStillExistsElsewhere(removedContainer, rowIndex);
-          if (!stillExists) {
-            const hasItems = this.containerHasItems(removedContainer);
-            if (hasItems) {
-              const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
-              if (!handled) {
-                nameInput.value = previousValue;
-                nameInput.dataset.previousValue = previousValue;
-                return;
+          // Check if the new value is also a container (transfer scenario)
+          const newContainer = currentValue ? this.getContainerIdFromItemName(currentValue) : null;
+          if (newContainer && newContainer !== removedContainer && this.containerHasItems(removedContainer)) {
+            this.transferContainerItems(removedContainer, newContainer);
+          } else {
+            const stillExists = this.containerStillExistsElsewhere(removedContainer, rowIndex);
+            if (!stillExists) {
+              const hasItems = this.containerHasItems(removedContainer);
+              if (hasItems) {
+                const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
+                if (!handled) {
+                  nameInput.value = previousValue;
+                  nameInput.dataset.previousValue = previousValue;
+                  return;
+                }
               }
             }
           }
