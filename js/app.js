@@ -10247,9 +10247,15 @@ const App = {
     // Add each ability if not already present
     abilities.forEach(ability => {
       const normalizedAbility = ability.toLowerCase().trim();
-      const alreadyExists = existingAbilities.some(
-        existing => existing.toLowerCase().trim() === normalizedAbility
-      );
+      const alreadyExists = existingAbilities.some(existing => {
+        const normalizedExisting = existing.toLowerCase().trim();
+        // Exact match
+        if (normalizedExisting === normalizedAbility) return true;
+        // Handle "Weapon Specialization" matching "Weapon Specialization (Longsword)" etc.
+        if (normalizedAbility === 'weapon specialization' && 
+            normalizedExisting.startsWith('weapon specialization (')) return true;
+        return false;
+      });
       
       if (!alreadyExists) {
         this.addSpecialAbility(ability, className);
@@ -17100,6 +17106,74 @@ const App = {
       field.title = '';
     });
   },
+
+  /**
+   * Apply damage boost styling ONLY to a specific weapon by name
+   * Used for Weapon Master which only affects the mastered weapon
+   */
+  applyDamageBoostToSpecificWeapon(weaponName, tooltipText) {
+    if (!weaponName) return;
+    const targetName = weaponName.toLowerCase().trim();
+    
+    // Check melee weapons
+    const meleeBody = document.getElementById('melee-weapons-body');
+    if (meleeBody) {
+      meleeBody.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (this._weaponNameMatches(rowName, targetName)) {
+          const damageField = row.querySelector('.weapon-damage');
+          if (damageField && damageField.value.trim()) {
+            damageField.classList.add('damage-boosted');
+            damageField.title = tooltipText;
+          }
+        }
+      });
+    }
+    
+    // Check ranged weapons
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (rangedBody) {
+      rangedBody.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (this._weaponNameMatches(rowName, targetName)) {
+          const damageField = row.querySelector('.weapon-damage');
+          if (damageField && damageField.value.trim()) {
+            damageField.classList.add('damage-boosted');
+            damageField.title = tooltipText;
+          }
+        }
+      });
+    }
+  },
+
+  /**
+   * Remove damage boost styling ONLY from a specific weapon by name
+   */
+  removeDamageBoostFromSpecificWeapon(weaponName) {
+    if (!weaponName) return;
+    const targetName = weaponName.toLowerCase().trim();
+    
+    ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      body.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (this._weaponNameMatches(rowName, targetName)) {
+          const damageField = row.querySelector('.weapon-damage');
+          if (damageField) {
+            damageField.classList.remove('damage-boosted');
+            damageField.title = '';
+          }
+        }
+      });
+    });
+  },
   
   /**
    * Re-apply damage boost styling if any damage-boosting ability is active
@@ -17124,6 +17198,20 @@ const App = {
     if (this.character.isRaging) {
       this.applyDamageBoostToWeapons('Increased damage modifier due to Rage');
       return;
+    }
+    
+    // Check for Weapon Master (targeted to specific weapon only)
+    if (this.character.activeWeaponSpec && this.character.weaponMaster) {
+      const [weapon, type] = this.character.activeWeaponSpec.split('|');
+      const wm = this.character.weaponMaster;
+      const isMastered = wm.weapon && wm.weapon.toLowerCase() === weapon.toLowerCase() && wm.type === type;
+      const isMeleeOrShield = type === 'Melee' || type === 'Shield';
+      if (isMastered && isMeleeOrShield) {
+        const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+        const tierOrder = ['master', 'high', 'grand', 'legendary'];
+        const dmSteps = tierOrder.indexOf(wm.tier) >= 2 ? 2 : 1;
+        this.applyDamageBoostToSpecificWeapon(weapon, `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`);
+      }
     }
   },
   
@@ -18033,14 +18121,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.highlightSpecializedWeapons();
     this.syncClassAbilitiesToCharacter();
     
-    // Sync weapon to equipment and combat page
-    this.syncWeaponSpecToAll(weapon, type);
-    
-    // Apply ranged load reduction after sync (weapon is now on the combat page)
-    if (type === 'Ranged') {
-      this.applyRangedSpecLoadReduction();
-    }
-    
     this.scheduleAutoSave();
   },
 
@@ -18671,13 +18751,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     // Store pre-activation values for clean revert
     const skillInput = document.getElementById('combat-skill-1-percent');
-    const dmgCurrent = document.getElementById('damage-mod-current');
-    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
 
     this.character.preWeaponSpecValues = {
       combatSkill: skillInput ? skillInput.value : '0',
-      damageMod: dmgCurrent ? dmgCurrent.value : '+0',
-      wpDamageMod: wpDmgCurrent ? wpDmgCurrent.value : ''
+      weaponDamages: {} // Will store per-weapon original damage values
     };
 
     // 1. +5% Combat Skill (melee/shield only)
@@ -18702,32 +18779,20 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       row.classList.add('weapon-spec-active-row');
     }
 
-    // 3. If mastered: step Damage Modifier for melee weapons
-    if (isMastered && isMeleeOrShield) {
-      // Determine DM steps: Weapon Master = +1, Grand Master = +2
+    // 3. If mastered melee: step ONLY the mastered weapon's damage on combat page
+    if (isMastered && isMeleeOrShield && tierData) {
       const tierOrder = ['master', 'high', 'grand', 'legendary'];
       const tierIdx = tierOrder.indexOf(wm.tier);
-      const dmSteps = tierIdx >= 2 ? 2 : 1; // Grand+ = 2 steps, Master/High = 1 step
+      const dmSteps = tierIdx >= 2 ? 2 : 1;
+      const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
 
-      if (dmgCurrent && dmgCurrent.value) {
-        const steppedUp = this.stepDamageModifier(dmgCurrent.value, dmSteps);
-        dmgCurrent.value = steppedUp;
-        dmgCurrent.classList.add('damage-boosted');
-        dmgCurrent.title = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
-      }
+      // Get the current global DM and the stepped version
+      const dmgCurrent = document.getElementById('damage-mod-current');
+      const currentDM = dmgCurrent ? dmgCurrent.value.trim() : '+0';
+      const steppedDM = this.stepDamageModifier(currentDM, dmSteps);
 
-      if (wpDmgCurrent && wpDmgCurrent.value) {
-        const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, dmSteps);
-        wpDmgCurrent.value = steppedUp;
-        wpDmgCurrent.classList.add('damage-boosted');
-        wpDmgCurrent.title = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
-      }
-
-      // Update weapon damage displays
-      if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-        window.WeaponData.updateAllWeaponDamage();
-      }
-      this.applyDamageBoostToWeapons(`${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`);
+      // Find the mastered weapon on combat page and swap its DM portion
+      this._stepSpecificWeaponDamage(weapon, currentDM, steppedDM, tooltipText);
     }
 
     // 4. If mastered: play activation animation
@@ -18742,10 +18807,63 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
+   * Step a specific weapon's damage on the combat page by swapping
+   * the DM portion from currentDM to steppedDM.
+   */
+  _stepSpecificWeaponDamage(weaponName, currentDM, steppedDM, tooltipText) {
+    const targetName = weaponName.toLowerCase().trim();
+
+    ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      body.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (!this._weaponNameMatches(rowName, targetName)) return;
+
+        const damageField = row.querySelector('.weapon-damage');
+        if (!damageField || !damageField.value.trim()) return;
+
+        // Store original value for revert
+        const originalDamage = damageField.value.trim();
+        const fieldId = damageField.id || rowName;
+        this.character.preWeaponSpecValues.weaponDamages[fieldId] = originalDamage;
+
+        // Replace the DM portion in the damage string
+        // e.g., "1d8+1d2" → if currentDM is "+1d2" and steppedDM is "+1d4" → "1d8+1d4"
+        let newDamage = originalDamage;
+        if (currentDM && currentDM !== '+0' && originalDamage.includes(currentDM.replace(/^\+/, ''))) {
+          // Strip the current DM suffix and add the stepped one
+          const dmSuffix = currentDM.startsWith('+') ? currentDM : '+' + currentDM;
+          const steppedSuffix = steppedDM.startsWith('+') ? steppedDM : '+' + steppedDM;
+          const idx = originalDamage.lastIndexOf(dmSuffix.replace(/^\+/, ''));
+          if (idx > 0) {
+            // Check if preceded by + or -
+            const prefix = originalDamage.substring(0, idx);
+            const cleanPrefix = prefix.endsWith('+') ? prefix.slice(0, -1) : prefix;
+            newDamage = cleanPrefix + steppedSuffix;
+          }
+        } else if (currentDM === '+0' || !currentDM) {
+          // No DM currently applied, just append the stepped DM
+          if (steppedDM && steppedDM !== '+0') {
+            newDamage = originalDamage + steppedDM;
+          }
+        }
+
+        damageField.value = newDamage;
+        damageField.classList.add('damage-boosted');
+        damageField.title = tooltipText;
+      });
+    });
+  },
+
+  /**
    * Deactivate the current weapon spec — revert all bonuses
    */
   deactivateWeaponSpec() {
     const pre = this.character.preWeaponSpecValues;
+    const activeKey = this.character.activeWeaponSpec;
     if (!pre) {
       this.character.activeWeaponSpec = null;
       this.character.weaponSpecCritDoubled = false;
@@ -18753,8 +18871,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
 
     const skillInput = document.getElementById('combat-skill-1-percent');
-    const dmgCurrent = document.getElementById('damage-mod-current');
-    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
 
     // Restore combat skill
     if (skillInput) {
@@ -18767,24 +18883,38 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
     if (row) row.classList.remove('weapon-spec-active-row');
 
-    // Restore damage modifiers
-    if (dmgCurrent) {
-      dmgCurrent.value = pre.damageMod;
-      dmgCurrent.classList.remove('damage-boosted');
-      dmgCurrent.title = '';
+    // Restore per-weapon damage values
+    if (pre.weaponDamages) {
+      for (const [fieldId, originalDamage] of Object.entries(pre.weaponDamages)) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.value = originalDamage;
+          field.classList.remove('damage-boosted');
+          field.title = '';
+        } else {
+          // fieldId might be the weapon name — search by name
+          ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
+            const body = document.getElementById(bodyId);
+            if (!body) return;
+            body.querySelectorAll('tr').forEach(r => {
+              const nameInput = r.querySelector('.weapon-name');
+              const damageField = r.querySelector('.weapon-damage');
+              if (nameInput && damageField && this._weaponNameMatches(nameInput.value.trim().toLowerCase(), fieldId)) {
+                damageField.value = originalDamage;
+                damageField.classList.remove('damage-boosted');
+                damageField.title = '';
+              }
+            });
+          });
+        }
+      }
     }
 
-    if (wpDmgCurrent) {
-      wpDmgCurrent.value = pre.wpDamageMod;
-      wpDmgCurrent.classList.remove('damage-boosted');
-      wpDmgCurrent.title = '';
+    // Also clean up any lingering boost on the specific weapon
+    if (activeKey) {
+      const [weaponName] = activeKey.split('|');
+      this.removeDamageBoostFromSpecificWeapon(weaponName);
     }
-
-    // Refresh weapon damage displays
-    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-      window.WeaponData.updateAllWeaponDamage();
-    }
-    this.removeDamageBoostFromWeapons();
 
     // Clear flags
     this.character.activeWeaponSpec = null;
@@ -18823,26 +18953,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
     if (row) row.classList.add('weapon-spec-active-row');
     
-    // Green styling on Damage Modifier if mastered melee
+    // Green styling on ONLY the mastered weapon's damage field (not global DM)
     if (isMastered && isMeleeOrShield && tierData) {
       const tierOrder = ['master', 'high', 'grand', 'legendary'];
       const tierIdx = tierOrder.indexOf(wm.tier);
       const dmSteps = tierIdx >= 2 ? 2 : 1;
       const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
       
-      const dmgCurrent = document.getElementById('damage-mod-current');
-      if (dmgCurrent) {
-        dmgCurrent.classList.add('damage-boosted');
-        dmgCurrent.title = tooltipText;
-      }
-      const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
-      if (wpDmgCurrent && wpDmgCurrent.value) {
-        wpDmgCurrent.classList.add('damage-boosted');
-        wpDmgCurrent.title = tooltipText;
-      }
-      
-      // Boost weapon damage displays
-      this.applyDamageBoostToWeapons(tooltipText);
+      // Only highlight the specific weapon's damage on the combat page
+      this.applyDamageBoostToSpecificWeapon(weapon, tooltipText);
     }
     
     // Set doubled crit flag
