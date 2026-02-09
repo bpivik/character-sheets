@@ -89,6 +89,26 @@ const App = {
         app.checkMonkAbilitiesVisibility();
       }
     },
+    'arrowcut': {
+      description: 'Parry arrows/darts/spears at Standard Difficulty (Extremely Unburdened + No Armor)',
+      apply: function(app) {
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
+    'nether walk': {
+      description: 'Teleport up to 1/10 Mysticism in feet, 1/day',
+      apply: function(app) {
+        app.checkNertherWalkVisibility();
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app.checkNertherWalkVisibility();
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
     'weapon precision': {
       description: 'Use higher of STR+DEX or STR+SIZ for Damage Modifier with finesse weapons',
       // List of weapons that benefit from Weapon Precision
@@ -14504,6 +14524,157 @@ const App = {
     }
   },
 
+  // ============================================
+  // NETHER WALK ABILITY (MONK)
+  // Teleport up to 1/10 Mysticism in feet, 1/day
+  // ============================================
+  
+  checkNertherWalkVisibility() {
+    // Nether Walk is displayed in monk abilities cards, not a separate section
+    // Just ensure initialization
+    if (this.hasAbility('Nether Walk')) {
+      if (this.character.netherWalkUsesRemaining === undefined) {
+        this.character.netherWalkUsesRemaining = 1;
+      }
+    }
+  },
+  
+  useNetherWalk() {
+    if (!this.character.netherWalkUsesRemaining || this.character.netherWalkUsesRemaining <= 0) {
+      alert('Nether Walk has already been used today.');
+      return;
+    }
+    
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const distance = Math.ceil(mysticismVal / 10);
+    
+    // Create teleport animation overlay
+    let overlay = document.getElementById('nether-walk-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'nether-walk-overlay';
+      document.body.appendChild(overlay);
+    }
+    
+    overlay.innerHTML = `
+      <div class="nw-animation">
+        <div class="nw-particles"></div>
+        <div class="nw-flash"></div>
+        <div class="nw-text">
+          <div class="nw-title">✨ Nether Walk ✨</div>
+          <div class="nw-distance">You teleport up to <strong>${distance} ft</strong> away.</div>
+          <div class="nw-note">You must spend 1 full round recovering.<br>Defenses are 1 Difficulty Grade harder.</div>
+        </div>
+      </div>
+    `;
+    
+    // Apply styles
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0); z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.4s;
+    `;
+    
+    const animDiv = overlay.querySelector('.nw-animation');
+    animDiv.style.cssText = `
+      text-align: center; opacity: 0; transform: scale(0.5);
+      transition: opacity 0.5s, transform 0.5s;
+    `;
+    
+    const flash = overlay.querySelector('.nw-flash');
+    flash.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(179, 136, 255, 0.4), transparent 70%);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    `;
+    
+    const textDiv = overlay.querySelector('.nw-text');
+    textDiv.style.cssText = `
+      position: relative; z-index: 1; padding: 2rem;
+      background: rgba(20, 10, 40, 0.9); border: 2px solid #b388ff;
+      border-radius: 12px; color: #e0d0ff; max-width: 340px;
+    `;
+    
+    overlay.querySelector('.nw-title').style.cssText = `
+      font-size: 1.4rem; font-weight: bold; color: #b388ff; margin-bottom: 0.5rem;
+    `;
+    
+    overlay.querySelector('.nw-distance').style.cssText = `
+      font-size: 1.1rem; margin: 0.75rem 0; color: #e0d0ff;
+    `;
+    
+    overlay.querySelector('.nw-note').style.cssText = `
+      font-size: 0.78rem; color: #999; margin-top: 0.5rem;
+    `;
+    
+    const particles = overlay.querySelector('.nw-particles');
+    particles.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; overflow: hidden;
+    `;
+    
+    // Create sparkle particles
+    for (let p = 0; p < 20; p++) {
+      const spark = document.createElement('div');
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const delay = Math.random() * 0.8;
+      const size = 2 + Math.random() * 4;
+      spark.style.cssText = `
+        position: absolute; left: ${x}%; top: ${y}%;
+        width: ${size}px; height: ${size}px; border-radius: 50%;
+        background: #b388ff; opacity: 0;
+        animation: nwSparkle 1.5s ease-in-out ${delay}s;
+      `;
+      particles.appendChild(spark);
+    }
+    
+    // Add keyframe animation if not yet added
+    if (!document.getElementById('nw-sparkle-style')) {
+      const style = document.createElement('style');
+      style.id = 'nw-sparkle-style';
+      style.textContent = `
+        @keyframes nwSparkle {
+          0% { opacity: 0; transform: scale(0) translateY(0); }
+          30% { opacity: 1; transform: scale(1.5) translateY(-10px); }
+          70% { opacity: 0.8; transform: scale(1) translateY(-30px); }
+          100% { opacity: 0; transform: scale(0) translateY(-60px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Animate in
+    requestAnimationFrame(() => {
+      overlay.style.background = 'rgba(0, 0, 0, 0.7)';
+      flash.style.opacity = '1';
+      animDiv.style.opacity = '1';
+      animDiv.style.transform = 'scale(1)';
+    });
+    
+    // Flash out after brief moment
+    setTimeout(() => { flash.style.opacity = '0'; }, 600);
+    
+    // Close on click
+    const closeNW = () => {
+      overlay.style.background = 'rgba(0, 0, 0, 0)';
+      animDiv.style.opacity = '0';
+      animDiv.style.transform = 'scale(0.8)';
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }, 400);
+    };
+    
+    overlay.addEventListener('click', closeNW);
+    
+    // Deduct use
+    this.character.netherWalkUsesRemaining = 0;
+    this.updateMonkAbilitiesDisplay();
+    this.scheduleAutoSave();
+  },
+
   /**
    * Get the next step up in damage modifier progression
    */
@@ -19318,7 +19489,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
                            this.hasAbility('Quick') ||
                            this.hasAbility('Ki Strike') ||
                            this.hasAbility('Slow Fall') ||
-                           this.hasAbility('Very Agile');
+                           this.hasAbility('Very Agile') ||
+                           this.hasAbility('Arrowcut') ||
+                           this.hasAbility('Nether Walk');
 
     if (isMonk && hasMonkAbility) {
       section.style.display = '';
@@ -19536,7 +19709,69 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       `;
     }
 
+    // Arrowcut
+    if (this.hasAbility('Arrowcut')) {
+      const acColor = meetsConditions ? '#4fc3f7' : '#666';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${acColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">🏹</span>
+            <span class="weapon-spec-card-title">Arrowcut</span>
+            <span style="font-size: 0.7rem; color: ${acColor}; margin-left: auto;">${meetsConditions ? '⚡ ACTIVE' : ''}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Parry</strong> arrows, darts, & spears at <strong>Standard Difficulty</strong><br>
+            <span style="color: ${meetsConditions ? '#4fc3f7' : '#888'}; font-size: 0.72rem;">${meetsConditions ? 'Can deflect projectiles bare-handed or with any weapon' : 'Requires Extremely Unburdened + No Armor'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Nether Walk
+    if (this.hasAbility('Nether Walk')) {
+      const nwDistance = Math.ceil(mysticismVal / 10);
+      const nwUsesRemaining = this.character.netherWalkUsesRemaining !== undefined ? this.character.netherWalkUsesRemaining : 1;
+      const nwColor = nwUsesRemaining > 0 ? '#b388ff' : '#666';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${nwColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">🌀</span>
+            <span class="weapon-spec-card-title">Nether Walk</span>
+            <span style="font-size: 0.7rem; color: ${nwColor}; margin-left: auto;">${nwUsesRemaining > 0 ? '1/day' : 'USED'}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Teleport:</strong> <span style="color: ${nwColor};"><strong>${nwDistance} ft</strong></span> (⌈${mysticismVal}/10⌉)<br>
+            <span style="font-size: 0.72rem; color: #999;">1 Action • As Dimension Door • Must recover 1 round after</span>
+          </div>
+          <div style="margin-top: 0.3rem; text-align: center;">
+            <button type="button" class="btn btn-small" id="btn-nether-walk" style="background: ${nwUsesRemaining > 0 ? '#7c4dff' : '#555'}; color: #fff; border: none; padding: 0.25rem 0.8rem; border-radius: 4px; cursor: ${nwUsesRemaining > 0 ? 'pointer' : 'not-allowed'}; font-size: 0.78rem;" ${nwUsesRemaining <= 0 ? 'disabled' : ''}>
+              ✨ Nether Walk
+            </button>
+            <button type="button" class="btn btn-small" id="btn-nether-walk-reset" title="Reset daily use" style="background: none; border: 1px solid #555; color: #999; padding: 0.2rem 0.4rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem; margin-left: 0.3rem;">↺</button>
+          </div>
+        </div>
+      `;
+    }
+
     container.innerHTML = html;
+    
+    // Setup Nether Walk button listeners
+    if (this.hasAbility('Nether Walk')) {
+      const nwBtn = document.getElementById('btn-nether-walk');
+      const nwReset = document.getElementById('btn-nether-walk-reset');
+      if (nwBtn) {
+        nwBtn.addEventListener('click', () => this.useNetherWalk());
+      }
+      if (nwReset) {
+        nwReset.addEventListener('click', () => {
+          this.character.netherWalkUsesRemaining = 1;
+          this.updateMonkAbilitiesDisplay();
+          this.scheduleAutoSave();
+        });
+      }
+    }
     
     // Apply Graceful Strike DM override to Unarmed weapon
     if (this.hasAbility('Graceful Strike')) {

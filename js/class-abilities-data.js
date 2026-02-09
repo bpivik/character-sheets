@@ -47,7 +47,7 @@ const ClassAbilities = {
     specialActions: {
       rank1: { addUnarmed: "1d4", addProfessionalSkills: ["Mysticism", "Meditation"] },
       rank2: { changeUnarmedDamage: "1d6", addAbility: "Immune to Disease" },
-      rank3: { changeUnarmedDamage: "1d8" },
+      rank3: { changeUnarmedDamage: "1d8", addAbility: "Immune to Poison" },
       rank4: { changeUnarmedDamage: "1d10" },
       rank5: { changeUnarmedDamage: "1d12" }
     }

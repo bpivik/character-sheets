@@ -1040,6 +1040,37 @@ const RANKED_CLASS_ABILITIES = {
       summary: "Communicate with a chosen animal species",
       promptForDetail: "animal"
     },
+    // Rank 3
+    { 
+      name: "Arrowcut", 
+      rank: 3, 
+      prereqs: "Mysticism 90%",
+      summary: "Parry arrows, darts, & spears at Standard Difficulty (Extremely Unburdened, no armor)"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes III", 
+      rank: 3, 
+      prereqs: "Defensive Reflexes II",
+      summary: "May use Defensive Reflexes 3 times per combat (no re-rolls vs same attack, no Luck combo)"
+    },
+    { 
+      name: "Nether Walk", 
+      rank: 3, 
+      prereqs: "Meditation 100%; Mysticism 100%",
+      summary: "1/day: Teleport up to 1/10 Mysticism in feet (1 Action, as Dimension Door)"
+    },
+    { 
+      name: "Speak with Plants", 
+      rank: 3, 
+      prereqs: "Mysticism 90%",
+      summary: "Communicate with natural vegetation; request passage or entanglement"
+    },
   ],
   
   // More classes to be added...
