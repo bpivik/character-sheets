@@ -10221,7 +10221,15 @@ const App = {
     if (this.character.weaponMaster) {
       const newTier = this.getWeaponMasterTier();
       if (newTier) {
-        this.character.weaponMaster.tier = newTier;
+        if (newTier !== this.character.weaponMaster.tier) {
+          this.character.weaponMaster.tier = newTier;
+          // If spec was active, recalculate to apply new tier effects
+          if ((this.character.activeWeaponSpecs || []).length > 0) {
+            this.captureBaselineIfNeeded();
+            this.recalculateCombatBuffs();
+            this.releaseBaselineIfClean();
+          }
+        }
       } else {
         // No longer qualifies — deactivate if active
         if ((this.character.activeWeaponSpecs || []).length > 0) {
@@ -10229,6 +10237,7 @@ const App = {
         }
       }
       this.updateWeaponSpecDisplay();
+      this.scheduleAutoSave();
     }
   },
   
@@ -18893,8 +18902,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       color: '#7fb8e0',
       glowColor: 'rgba(127, 184, 224, 0.6)',
       benefits: {
-        melee: '+ Riposte after Parry (one Grade harder). Weapon +1 Size for Parrying.',
-        ranged: '+ Marksman: shift Hit Location to adjacent location at Close Range.'
+        melee: '+ Riposte: free follow-up thrust after Successful Parry (1 Grade harder). Weapon counts as 1 Size category larger for Parrying.',
+        ranged: '+ Marksman: at Close Range, shift Hit Location roll to an adjacent location.'
       }
     },
     grand: {
@@ -18905,7 +18914,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       color: '#d4a0e0',
       glowColor: 'rgba(212, 160, 224, 0.6)',
       benefits: {
-        melee: '+ Additional +1 step Damage Modifier (total +2 grades).',
+        melee: '+ Additional +1 step Damage Modifier (total +2 steps including Weapon Master).',
         ranged: '+ Reduce Reload time by 1. If 0, weapon readied as Free Action.'
       }
     },
@@ -18964,10 +18973,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Get fighter rank from current classes
    */
   getFighterRank() {
-    const classes = this.character.classes || [];
-    for (const cls of classes) {
-      if (cls.name && cls.name.toLowerCase() === 'fighter') {
-        return parseInt(cls.rank, 10) || 0;
+    const classFields = [
+      { cls: 'class-primary', rank: 'rank-primary' },
+      { cls: 'class-secondary', rank: 'rank-secondary' },
+      { cls: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    for (const { cls, rank } of classFields) {
+      const classEl = document.getElementById(cls);
+      const rankEl = document.getElementById(rank);
+      if (classEl && classEl.value.trim().toLowerCase() === 'fighter') {
+        return parseInt(rankEl?.value, 10) || 0;
       }
     }
     return 0;
