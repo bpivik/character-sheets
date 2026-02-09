@@ -11579,8 +11579,8 @@ const App = {
   },
 
   MAGIC_SKILL_CONFIG: {
-    'channel': { magicId: 'channel-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'monk'] },
-    'piety': { magicId: 'piety-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid', 'monk'] },
+    'channel': { magicId: 'channel-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid'] },
+    'piety': { magicId: 'piety-percent', classes: ['cleric', 'ranger', 'paladin', 'anti-paladin', 'druid'] },
     'arcane casting': { magicId: 'arcane-casting-percent', classes: ['mage'] },
     'arcane knowledge': { magicId: 'arcane-knowledge-percent', classes: ['mage'] },
     'arcane sorcery': { magicId: 'arcane-sorcery-percent', classes: ['sorcerer'] },
@@ -21097,7 +21097,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           document.getElementById('class-tertiary')?.value?.toLowerCase().trim() || ''
         ].filter(c => c);
         
-        const divineClasses = ['cleric', 'druid', 'paladin', 'ranger', 'monk', 'anti-paladin'];
+        const divineClasses = ['cleric', 'druid', 'paladin', 'ranger', 'anti-paladin'];
         const arcaneClasses = ['mage'];
         const sorcererClasses = ['sorcerer'];
         const bardClasses = ['bard'];
@@ -21116,7 +21116,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           document.getElementById('class-tertiary')?.value?.toLowerCase().trim() || ''
         ].filter(c => c);
         
-        const divineClasses = ['cleric', 'druid', 'paladin', 'ranger', 'monk', 'anti-paladin'];
+        const divineClasses = ['cleric', 'druid', 'paladin', 'ranger', 'anti-paladin'];
         const arcaneClasses = ['mage'];
         const sorcererClasses = ['sorcerer'];
         const bardClasses = ['bard'];
