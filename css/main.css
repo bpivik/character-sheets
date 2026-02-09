@@ -3468,20 +3468,20 @@ input.skill-input.powerful-concentration-bonus,
    WEAPON MASTER SYSTEM
    ============================================ */
 
-/* Spec bonus button (+5% toggle) */
-.spec-bonus-btn {
+/* Unified weapon spec activation button */
+.weapon-spec-activate-btn {
   font-family: inherit;
   white-space: nowrap;
   transition: all 0.3s ease;
 }
 
-.spec-bonus-btn:hover {
-  transform: scale(1.08);
+.weapon-spec-activate-btn:hover {
+  transform: scale(1.05);
   filter: brightness(1.2);
 }
 
-.spec-bonus-btn.spec-active {
-  animation: specPulse 2.5s ease-in-out infinite;
+.weapon-spec-activate-btn.ws-active {
+  animation: wmPulse 2s ease-in-out infinite;
 }
 
 /* Weapon spec card buttons container */
@@ -3493,9 +3493,28 @@ input.skill-input.powerful-concentration-bonus,
   margin-right: 0.4rem;
 }
 
-/* Combat skill with spec bonus active */
-.spec-bonus-active {
-  outline: 1px solid rgba(100, 200, 100, 0.5) !important;
+/* Combat skill row when weapon spec active */
+.combat-skill-row.weapon-spec-active-row {
+  background: rgba(0, 150, 0, 0.08) !important;
+  border-radius: 4px;
+  position: relative;
+}
+
+.combat-skill-row.weapon-spec-active-row::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 1px solid rgba(42, 122, 42, 0.4);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Ensure damage-boosted wins on combat skill percent input */
+.combat-skill-percent.damage-boosted,
+input.combat-skill-percent.damage-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 /* Ranged weapon load reduced indicator */
@@ -3504,72 +3523,13 @@ input.skill-input.powerful-concentration-bonus,
   font-weight: bold;
 }
 
-@keyframes specPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.65; }
-}
-
-/* Weapon Master toggle button */
-.wm-toggle-btn {
-  font-family: inherit;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  transition: all 0.3s ease;
-}
-
-.wm-toggle-btn:hover {
-  transform: scale(1.05);
-  filter: brightness(1.2);
-}
-
-.wm-toggle-btn.wm-active {
-  animation: wmPulse 2s ease-in-out infinite;
-}
-
 /* Mastered weapon card highlight */
 .weapon-spec-card.weapon-mastered {
   transition: all 0.3s ease;
 }
 
-/* Critical range badge next to combat skill */
-.wm-crit-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: bold;
-  padding: 0.15rem 0.4rem;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  margin-left: 0.3rem;
-  animation: wmBadgeGlow 2s ease-in-out infinite;
-  vertical-align: middle;
-}
-
-/* Combat skill row when weapon master is active */
-.combat-skill-row.weapon-master-active {
-  background: linear-gradient(90deg, 
-    rgba(var(--wm-rgb, 201, 165, 90), 0.08) 0%,
-    rgba(var(--wm-rgb, 201, 165, 90), 0.15) 50%,
-    rgba(var(--wm-rgb, 201, 165, 90), 0.08) 100%
-  ) !important;
-  border-radius: 4px;
-  position: relative;
-}
-
-.combat-skill-row.weapon-master-active::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  border: 1px solid var(--wm-color, #c9a55a);
-  border-radius: 4px;
-  pointer-events: none;
-  animation: wmRowPulse 2.5s ease-in-out infinite;
-}
-
 /* Weapon master benefit line in spec card */
 .wm-benefit {
-  font-size: 0.78rem;
   font-style: italic;
 }
 
@@ -3578,16 +3538,6 @@ input.skill-input.powerful-concentration-bonus,
 @keyframes wmPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
-}
-
-@keyframes wmBadgeGlow {
-  0%, 100% { opacity: 1; text-shadow: none; }
-  50% { opacity: 0.85; text-shadow: 0 0 6px currentColor; }
-}
-
-@keyframes wmRowPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
 }
 
 @keyframes wmFlash {

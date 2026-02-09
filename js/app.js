@@ -463,18 +463,16 @@ const App = {
       // Highlight specialized weapons on combat page
       this.highlightSpecializedWeapons();
       
-      // Restore weapon master state (tier update + critical display)
+      // Restore weapon master tier
       if (this.character.weaponMaster) {
         this.updateWeaponMasterTier();
         this.updateWeaponSpecDisplay();
-        if (this.character.weaponMaster.active) {
-          this.applyWeaponMasterCritical();
-        }
       }
       
-      // Restore spec bonus (+5% Combat Skill) if it was active
-      if (this.character.activeSpecBonus) {
-        this.applySpecBonusToCombatSkill();
+      // Restore active weapon spec VISUALS only (values already saved in localStorage)
+      if (this.character.activeWeaponSpec) {
+        this.restoreWeaponSpecVisuals();
+        this.updateWeaponSpecDisplay();
       }
       
       // Apply ranged weapon load reductions for specializations
@@ -1546,8 +1544,8 @@ const App = {
             }
           }
           // Update weapon master critical badge if active
-          if (fieldId === 'combat-skill-1-percent' && this.character.weaponMaster && this.character.weaponMaster.active) {
-            this.applyWeaponMasterCritical();
+          if (fieldId === 'combat-skill-1-percent' && this.character.activeWeaponSpec) {
+            // Combat skill changed manually while spec active — update pre-values
           }
           this.updateCombatQuickRef();
           this.scheduleAutoSave();
@@ -10225,10 +10223,9 @@ const App = {
       if (newTier) {
         this.character.weaponMaster.tier = newTier;
       } else {
-        // No longer qualifies — deactivate
-        if (this.character.weaponMaster.active) {
-          this.character.weaponMaster.active = false;
-          this.removeWeaponMasterCritical();
+        // No longer qualifies — deactivate if active
+        if (this.character.activeWeaponSpec) {
+          this.deactivateWeaponSpec();
         }
       }
       this.updateWeaponSpecDisplay();
@@ -11200,9 +11197,9 @@ const App = {
     // Remove Fighter's Weapon Master data
     if (classKey === 'fighter') {
       if (this.character.weaponMaster) {
-        // Deactivate first if active
-        if (this.character.weaponMaster.active) {
-          this.removeWeaponMasterCritical();
+        // Deactivate spec if it was the mastered weapon
+        if (this.character.activeWeaponSpec) {
+          this.deactivateWeaponSpec();
         }
         delete this.character.weaponMaster;
       }
@@ -18068,10 +18065,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     } else {
       section.style.display = 'none';
       if (divider) divider.style.display = 'none';
-      // Clean up spec bonus if active
-      if (this.character.activeSpecBonus) {
-        this.removeSpecBonusFromCombatSkill();
-        this.character.activeSpecBonus = null;
+      // Clean up active weapon spec if specs removed
+      if (this.character.activeWeaponSpec) {
+        this.deactivateWeaponSpec();
       }
       // Restore ranged load values
       this.restoreRangedLoadValues();
@@ -18121,18 +18117,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
 
     const wm = this.character.weaponMaster;
-    const tierData = wm ? (this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master) : null;
-    const activeSpec = this.character.activeSpecBonus || null;
-    
-    // Validate active spec bonus still exists in specializations
+    const activeSpec = this.character.activeWeaponSpec || null;
+
+    // Validate active spec still exists
     if (activeSpec) {
       const [bonusWeapon, bonusType] = activeSpec.split('|');
-      const stillExists = specs.some(s => 
-        s.weapon === bonusWeapon && s.type === bonusType
-      );
+      const stillExists = specs.some(s => s.weapon === bonusWeapon && s.type === bonusType);
       if (!stillExists) {
-        this.removeSpecBonusFromCombatSkill();
-        this.character.activeSpecBonus = null;
+        this.deactivateWeaponSpec();
+        this.character.activeWeaponSpec = null;
       }
     }
 
@@ -18141,53 +18134,75 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const benefitData = this.getWeaponSpecBenefits(spec.type);
       if (!benefitData) continue;
 
-      const title = spec.type === 'Shield'
-        ? 'Shield Specialization'
-        : spec.weapon;
+      const title = spec.type === 'Shield' ? 'Shield Specialization' : spec.weapon;
+      const isMeleeOrShield = spec.type === 'Melee' || spec.type === 'Shield';
 
-      // Check if this weapon is the weapon master weapon
-      const isMastered = wm && wm.weapon && 
-        wm.weapon.toLowerCase() === spec.weapon.toLowerCase() && 
+      // Determine if this weapon is the mastered weapon
+      const isMastered = wm && wm.weapon &&
+        wm.weapon.toLowerCase() === spec.weapon.toLowerCase() &&
         wm.type === spec.type;
 
-      // Weapon Master button (Rank 2+)
-      const masterBtnHtml = isMastered ? `
-        <button type="button" class="wm-toggle-btn${wm.active ? ' wm-active' : ''}" data-action="weapon-master"
-          title="Double your Critical range with your weapon. Click to activate."
-          style="
-            padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer;
-            font-size: 0.75rem; transition: all 0.3s ease;
-            background: ${wm.active ? `linear-gradient(135deg, ${tierData.color}22, ${tierData.color}44)` : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
-            border: 1px solid ${wm.active ? tierData.color : 'rgba(201, 165, 90, 0.3)'};
-            color: ${wm.active ? tierData.color : '#999'};
-            box-shadow: ${wm.active ? `0 0 12px ${tierData.glowColor}` : 'none'};
-          ">
-          ${tierData.icon} ${tierData.label}${wm.active ? ' \u2726' : ''}
-        </button>
-      ` : '';
+      // Determine button tier data
+      const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master) : null;
 
-      // Spec Bonus button for melee/shield (+5% Combat Skill toggle)
-      const isMeleeOrShield = spec.type === 'Melee' || spec.type === 'Shield';
+      // Show button for melee/shield always, ranged only if mastered
+      const showButton = isMeleeOrShield || isMastered;
+
+      // Button label and icon
+      let btnLabel, btnIcon, btnColor, btnGlow;
+      if (isMastered && tierData) {
+        btnLabel = tierData.label;
+        btnIcon = tierData.icon;
+        btnColor = tierData.color;
+        btnGlow = tierData.glowColor;
+      } else {
+        btnLabel = 'Weapon Specialization';
+        btnIcon = isMeleeOrShield ? '\u2694\uFE0F' : '\uD83C\uDFF9';
+        btnColor = '#c9a55a';
+        btnGlow = 'rgba(201, 165, 90, 0.6)';
+      }
+
       const specKey = `${spec.weapon}|${spec.type}`;
-      const isSpecActive = activeSpec === specKey;
-      const specBtnHtml = isMeleeOrShield ? `
-        <button type="button" class="spec-bonus-btn${isSpecActive ? ' spec-active' : ''}" 
-          data-action="spec-bonus" data-weapon="${spec.weapon}" data-type="${spec.type}"
-          title="${isSpecActive ? 'Click to deactivate +5% Combat Skill bonus' : '+5% Combat Skill when using this weapon. Click to activate.'}"
+      const isActive = activeSpec === specKey;
+
+      const buttonHtml = showButton ? `
+        <button type="button" class="weapon-spec-activate-btn${isActive ? ' ws-active' : ''}"
+          data-action="toggle-spec" data-weapon="${spec.weapon}" data-type="${spec.type}"
+          title="${isActive ? 'Click to deactivate' : 'Click to activate: ' + btnLabel}"
           style="
-            padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer;
-            font-size: 0.7rem; transition: all 0.3s ease; font-weight: bold;
-            background: ${isSpecActive ? 'linear-gradient(135deg, rgba(100, 200, 100, 0.15), rgba(100, 200, 100, 0.3))' : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
-            border: 1px solid ${isSpecActive ? '#6c6' : 'rgba(201, 165, 90, 0.2)'};
-            color: ${isSpecActive ? '#6c6' : '#888'};
-            box-shadow: ${isSpecActive ? '0 0 8px rgba(100, 200, 100, 0.4)' : 'none'};
+            padding: 0.25rem 0.55rem; border-radius: 4px; cursor: pointer;
+            font-size: 0.72rem; transition: all 0.3s ease; font-weight: 600;
+            letter-spacing: 0.3px; white-space: nowrap;
+            background: ${isActive ? `linear-gradient(135deg, ${btnColor}22, ${btnColor}44)` : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
+            border: 1px solid ${isActive ? btnColor : 'rgba(201, 165, 90, 0.25)'};
+            color: ${isActive ? btnColor : '#888'};
+            box-shadow: ${isActive ? `0 0 10px ${btnGlow}` : 'none'};
           ">
-          ${isSpecActive ? '\u2726 +5%' : '+5%'}
+          ${btnIcon} ${btnLabel}${isActive ? ' \u2726' : ''}
         </button>
       ` : '';
 
       const masteredClass = isMastered ? ' weapon-mastered' : '';
-      const masteredBorder = isMastered ? `border-color: ${tierData.color}; box-shadow: 0 0 8px ${tierData.glowColor};` : '';
+      const masteredBorder = (isMastered && tierData) ? `border-color: ${tierData.color}; box-shadow: 0 0 8px ${tierData.glowColor};` : '';
+
+      // Build cumulative benefits text for mastered weapons
+      let masteryBenefitsHtml = '';
+      if (isMastered && tierData) {
+        const weaponType = spec.type === 'Ranged' ? 'ranged' : 'melee';
+        // Show benefits for current tier and all below
+        const tierOrder = ['master', 'high', 'grand', 'legendary'];
+        const currentTierIdx = tierOrder.indexOf(wm.tier);
+        const benefitLines = [];
+        for (let i = 0; i <= currentTierIdx; i++) {
+          const t = this.WEAPON_MASTER_TIERS[tierOrder[i]];
+          benefitLines.push(`<strong>${t.label}:</strong> ${t.benefits[weaponType]}`);
+        }
+        masteryBenefitsHtml = `
+          <div class="benefit-item wm-benefit" style="color: ${tierData.color}; margin-top: 0.3rem; border-top: 1px solid ${tierData.color}33; padding-top: 0.3rem; font-size: 0.78rem;">
+            ${benefitLines.join('<br>')}
+          </div>
+        `;
+      }
 
       html += `
         <div class="weapon-spec-card${masteredClass}" style="${masteredBorder}">
@@ -18195,8 +18210,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             <span class="weapon-spec-card-icon">${benefitData.icon}</span>
             <span class="weapon-spec-card-title">${title}</span>
             <span class="weapon-spec-card-buttons">
-              ${specBtnHtml}
-              ${masterBtnHtml}
+              ${buttonHtml}
             </span>
             <span class="weapon-spec-card-type">${spec.type}</span>
           </div>
@@ -18206,18 +18220,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
                 <strong>${b.label}:</strong> ${b.text}
               </div>
             `).join('')}
-            ${isMastered && tierData ? `
-              <div class="benefit-item wm-benefit" style="color: ${tierData.color}; margin-top: 0.3rem; border-top: 1px solid ${tierData.color}33; padding-top: 0.3rem;">
-                <strong>${tierData.label}:</strong> ${tierData.benefits[spec.type === 'Ranged' ? 'ranged' : 'melee']}
-              </div>
-            ` : ''}
+            ${masteryBenefitsHtml}
           </div>
         </div>
       `;
     }
 
     cardsContainer.innerHTML = html;
-    
+
     // Show "Choose Weapon Master" prompt if they have the ability but haven't chosen
     const hasWmAbility = this.hasAbility('Weapon Master');
     const nonShieldSpecs = specs.filter(s => s.type !== 'Shield');
@@ -18240,7 +18250,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         ">Choose Your Weapon Master</button>
       `;
       cardsContainer.appendChild(promptDiv);
-      
+
       const chooseBtn = document.getElementById('wm-choose-btn');
       if (chooseBtn) {
         chooseBtn.addEventListener('mouseenter', () => {
@@ -18254,30 +18264,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         chooseBtn.addEventListener('click', () => this.promptWeaponMasterSelection());
       }
     }
-    
-    // Wire up all action buttons via event delegation
-    cardsContainer.querySelectorAll('[data-action="weapon-master"]').forEach(btn => {
+
+    // Wire up all unified toggle buttons
+    cardsContainer.querySelectorAll('[data-action="toggle-spec"]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.toggleWeaponMaster();
+        this.toggleWeaponSpec(btn.dataset.weapon, btn.dataset.type);
       });
     });
-    
-    cardsContainer.querySelectorAll('[data-action="spec-bonus"]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const weapon = btn.dataset.weapon;
-        const type = btn.dataset.type;
-        this.toggleSpecBonus(weapon, type);
-      });
-    });
-    
-    // Restore critical display if weapon master active
-    if (wm && wm.active) {
-      this.applyWeaponMasterCritical();
-    }
-    
-    // Apply ranged spec load reductions
+
+    // Apply ranged spec load reductions (always automatic)
     this.applyRangedSpecLoadReduction();
   },
 
@@ -18411,8 +18407,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     return false;
   },
 
+
   // ============================================
-  // WEAPON MASTER SYSTEM
+  // WEAPON MASTER SYSTEM & SPEC ACTIVATION
   // ============================================
 
   /**
@@ -18423,11 +18420,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     master: {
       rank: 2,
       label: 'Weapon Master',
-      icon: '⚔️',
+      icon: '\u2694\uFE0F',
       prereqSkill: 70,
-      color: '#c9a55a',        // Gold
+      color: '#c9a55a',
       glowColor: 'rgba(201, 165, 90, 0.6)',
-      animationClass: 'wm-activate-master',
       benefits: {
         melee: 'Double Critical range. +1 step Damage Modifier.',
         ranged: 'Double Critical range. DM bonus applies at Close Range.'
@@ -18436,11 +18432,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     high: {
       rank: 3,
       label: 'High Master',
-      icon: '🗡️',
+      icon: '\uD83D\uDDE1\uFE0F',
       prereqSkill: 90,
-      color: '#7fb8e0',        // Steel blue
+      color: '#7fb8e0',
       glowColor: 'rgba(127, 184, 224, 0.6)',
-      animationClass: 'wm-activate-high',
       benefits: {
         melee: '+ Riposte after Parry (one Grade harder). Weapon +1 Size for Parrying.',
         ranged: '+ Marksman: shift Hit Location to adjacent location at Close Range.'
@@ -18449,11 +18444,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     grand: {
       rank: 4,
       label: 'Grand Master',
-      icon: '👑',
+      icon: '\uD83D\uDC51',
       prereqSkill: 110,
-      color: '#d4a0e0',        // Royal purple
+      color: '#d4a0e0',
       glowColor: 'rgba(212, 160, 224, 0.6)',
-      animationClass: 'wm-activate-grand',
       benefits: {
         melee: '+ Additional +1 step Damage Modifier (total +2 grades).',
         ranged: '+ Reduce Reload time by 1. If 0, weapon readied as Free Action.'
@@ -18462,11 +18456,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     legendary: {
       rank: 5,
       label: 'Legendary Master',
-      icon: '🌟',
+      icon: '\uD83C\uDF1F',
       prereqSkill: 130,
-      color: '#ff6b6b',        // Crimson
+      color: '#ff6b6b',
       glowColor: 'rgba(255, 107, 107, 0.6)',
-      animationClass: 'wm-activate-legendary',
       benefits: {
         melee: '+ Weapon +2 Size categories for Parrying.',
         ranged: '+ Multi-shot: 2 projectiles at -1 Grade, or 3 at -2 Grades (Close Range).'
@@ -18479,14 +18472,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    */
   getWeaponMasterTier() {
     if (!this.character.weaponMaster) return null;
-    
-    // Get fighter rank
+
     const fighterRank = this.getFighterRank();
     if (fighterRank < 2) return null;
-    
+
     const combatSkill = this.getSkillValueByName('Combat Style') || 0;
-    
-    // Check from highest tier down
+
     const tiers = ['legendary', 'grand', 'high', 'master'];
     for (const tierKey of tiers) {
       const tier = this.WEAPON_MASTER_TIERS[tierKey];
@@ -18512,14 +18503,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
   /**
    * Check if Weapon Master should be prompted or updated
-   * Called when Weapon Master / High Master / Grand Master / Legendary Master is auto-added
    */
   checkWeaponMasterProgression(abilityName) {
     const normalized = abilityName.toLowerCase().trim();
     const masterAbilities = ['weapon master', 'high master', 'grand master', 'legendary master'];
     if (!masterAbilities.includes(normalized)) return;
-    
-    // If no weapon master weapon chosen yet, prompt selection
+
     if (!this.character.weaponMaster || !this.character.weaponMaster.weapon) {
       if (normalized === 'weapon master') {
         const specs = this.character.weaponSpecializations || [];
@@ -18529,8 +18518,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
       return;
     }
-    
-    // Already have a weapon chosen — update the tier
+
     this.updateWeaponMasterTier();
     this.updateWeaponSpecDisplay();
   },
@@ -18553,8 +18541,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   promptWeaponMasterSelection() {
     const specs = (this.character.weaponSpecializations || []).filter(s => s.type !== 'Shield');
     if (specs.length === 0) return;
-    
-    // Don't prompt if already chosen
     if (this.character.weaponMaster && this.character.weaponMaster.weapon) return;
 
     const overlay = document.createElement('div');
@@ -18566,7 +18552,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     `;
 
     const modal = document.createElement('div');
-    modal.className = 'weapon-master-modal';
     modal.style.cssText = `
       background: linear-gradient(135deg, #1a1a2a 0%, #2d2a1d 100%);
       border: 2px solid #c9a55a; border-radius: 12px;
@@ -18577,7 +18562,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     let weaponButtons = '';
     for (const spec of specs) {
-      const icon = spec.type === 'Ranged' ? '🏹' : '⚔️';
+      const icon = spec.type === 'Ranged' ? '\uD83C\uDFF9' : '\u2694\uFE0F';
       weaponButtons += `
         <button type="button" class="wm-weapon-btn" data-weapon="${spec.weapon}" data-type="${spec.type}" style="
           background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
@@ -18591,13 +18576,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     modal.innerHTML = `
       <div style="text-align:center; margin-bottom: 0.5rem;">
-        <span style="font-size: 2rem;">⚔️</span>
+        <span style="font-size: 2rem;">\u2694\uFE0F</span>
       </div>
       <h3 style="color: #c9a55a; margin: 0 0 0.5rem 0; text-align: center; font-size: 1.1rem;">
         Weapon Master
       </h3>
       <p style="color: #ccc; margin-bottom: 0.5rem; text-align: center; font-size: 0.85rem;">
-        Choose <strong>one weapon</strong> to master. This choice is permanent — you may only have Weapon Master in a single weapon.
+        Choose <strong>one weapon</strong> to master. This choice is permanent \u2014 you may only have Weapon Master in a single weapon.
       </p>
       <p style="color: #999; margin-bottom: 1rem; text-align: center; font-size: 0.75rem; font-style: italic;">
         Doubles your Critical range when using this weapon. Melee weapons also gain a Damage Modifier improvement.
@@ -18613,7 +18598,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       </div>
     `;
 
-    // Hover effects
     modal.querySelectorAll('.wm-weapon-btn').forEach(btn => {
       btn.addEventListener('mouseenter', () => {
         btn.style.borderColor = '#c9a55a';
@@ -18626,17 +18610,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         btn.style.boxShadow = 'none';
       });
       btn.addEventListener('click', () => {
-        const weapon = btn.dataset.weapon;
-        const type = btn.dataset.type;
-        this.finalizeWeaponMasterSelection(weapon, type);
+        this.finalizeWeaponMasterSelection(btn.dataset.weapon, btn.dataset.type);
         overlay.remove();
       });
     });
 
-    // Cancel
-    modal.querySelector('.wm-cancel-btn').addEventListener('click', () => {
-      overlay.remove();
-    });
+    modal.querySelector('.wm-cancel-btn').addEventListener('click', () => overlay.remove());
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
@@ -18647,69 +18626,248 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    */
   finalizeWeaponMasterSelection(weapon, type) {
     const tier = this.getWeaponMasterTier() || 'master';
-    this.character.weaponMaster = {
-      weapon: weapon,
-      type: type,
-      tier: tier,
-      active: false
-    };
+    this.character.weaponMaster = { weapon, type, tier };
+    this.updateWeaponSpecDisplay();
+    this.scheduleAutoSave();
+  },
+
+  // ============================================
+  // UNIFIED WEAPON SPEC ACTIVATION
+  // ============================================
+
+  /**
+   * Toggle a weapon spec button ON/OFF.
+   * Only one can be active at a time. Handles +5% CS, doubled crit, DM step.
+   */
+  toggleWeaponSpec(weapon, type) {
+    const specKey = `${weapon}|${type}`;
+    const wasActive = this.character.activeWeaponSpec === specKey;
+
+    // Always deactivate current first
+    if (this.character.activeWeaponSpec) {
+      this.deactivateWeaponSpec();
+    }
+
+    if (!wasActive) {
+      // Activate this one
+      this.character.activeWeaponSpec = specKey;
+      this.activateWeaponSpec(weapon, type);
+    }
+
     this.updateWeaponSpecDisplay();
     this.scheduleAutoSave();
   },
 
   /**
-   * Toggle weapon master active state
+   * Activate a weapon spec — applies all relevant bonuses
    */
-  toggleWeaponMaster() {
-    if (!this.character.weaponMaster) return;
+  activateWeaponSpec(weapon, type) {
+    const isMeleeOrShield = type === 'Melee' || type === 'Shield';
+    const wm = this.character.weaponMaster;
+    const isMastered = wm && wm.weapon &&
+      wm.weapon.toLowerCase() === weapon.toLowerCase() &&
+      wm.type === type;
+    const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || null) : null;
+
+    // Store pre-activation values for clean revert
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+
+    this.character.preWeaponSpecValues = {
+      combatSkill: skillInput ? skillInput.value : '0',
+      damageMod: dmgCurrent ? dmgCurrent.value : '+0',
+      wpDamageMod: wpDmgCurrent ? wpDmgCurrent.value : ''
+    };
+
+    // 1. +5% Combat Skill (melee/shield only)
+    if (isMeleeOrShield && skillInput) {
+      const current = parseInt(skillInput.value, 10) || 0;
+      skillInput.value = current + 5;
+    }
+
+    // 2. Green styling on Combat Skill
+    if (skillInput) {
+      skillInput.classList.add('damage-boosted');
+      if (isMastered) {
+        skillInput.title = 'Critical doubled (' + (tierData ? tierData.label : 'Weapon Master') + ')';
+      } else {
+        skillInput.title = 'Weapon Specialization: +5% Combat Skill';
+      }
+    }
+
+    // Style the combat skill row
+    const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
+    if (row) {
+      row.classList.add('weapon-spec-active-row');
+    }
+
+    // 3. If mastered: step Damage Modifier for melee weapons
+    if (isMastered && isMeleeOrShield) {
+      // Determine DM steps: Weapon Master = +1, Grand Master = +2
+      const tierOrder = ['master', 'high', 'grand', 'legendary'];
+      const tierIdx = tierOrder.indexOf(wm.tier);
+      const dmSteps = tierIdx >= 2 ? 2 : 1; // Grand+ = 2 steps, Master/High = 1 step
+
+      if (dmgCurrent && dmgCurrent.value) {
+        const steppedUp = this.stepDamageModifier(dmgCurrent.value, dmSteps);
+        dmgCurrent.value = steppedUp;
+        dmgCurrent.classList.add('damage-boosted');
+        dmgCurrent.title = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
+      }
+
+      if (wpDmgCurrent && wpDmgCurrent.value) {
+        const steppedUp = this.stepDamageModifier(wpDmgCurrent.value, dmSteps);
+        wpDmgCurrent.value = steppedUp;
+        wpDmgCurrent.classList.add('damage-boosted');
+        wpDmgCurrent.title = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
+      }
+
+      // Update weapon damage displays
+      if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+        window.WeaponData.updateAllWeaponDamage();
+      }
+      this.applyDamageBoostToWeapons(`${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`);
+    }
+
+    // 4. If mastered: play activation animation
+    if (isMastered && tierData) {
+      this.playWeaponMasterAnimation(weapon, type, tierData);
+    }
+
+    // 5. Set flag for d100 doubled critical
+    this.character.weaponSpecCritDoubled = !!isMastered;
+
+    this.updateCombatQuickRef();
+  },
+
+  /**
+   * Deactivate the current weapon spec — revert all bonuses
+   */
+  deactivateWeaponSpec() {
+    const pre = this.character.preWeaponSpecValues;
+    if (!pre) {
+      this.character.activeWeaponSpec = null;
+      this.character.weaponSpecCritDoubled = false;
+      return;
+    }
+
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+
+    // Restore combat skill
+    if (skillInput) {
+      skillInput.value = pre.combatSkill;
+      skillInput.classList.remove('damage-boosted');
+      skillInput.title = '';
+    }
+
+    // Remove row styling
+    const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
+    if (row) row.classList.remove('weapon-spec-active-row');
+
+    // Restore damage modifiers
+    if (dmgCurrent) {
+      dmgCurrent.value = pre.damageMod;
+      dmgCurrent.classList.remove('damage-boosted');
+      dmgCurrent.title = '';
+    }
+
+    if (wpDmgCurrent) {
+      wpDmgCurrent.value = pre.wpDamageMod;
+      wpDmgCurrent.classList.remove('damage-boosted');
+      wpDmgCurrent.title = '';
+    }
+
+    // Refresh weapon damage displays
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+    this.removeDamageBoostFromWeapons();
+
+    // Clear flags
+    this.character.activeWeaponSpec = null;
+    this.character.weaponSpecCritDoubled = false;
+    delete this.character.preWeaponSpecValues;
+
+    this.updateCombatQuickRef();
+  },
+
+  /**
+   * Restore weapon spec visual state on page load.
+   * Values are already baked into saved data — only re-apply CSS/titles.
+   */
+  restoreWeaponSpecVisuals() {
+    if (!this.character.activeWeaponSpec) return;
     
-    const wasActive = this.character.weaponMaster.active;
-    this.character.weaponMaster.active = !wasActive;
+    const [weapon, type] = this.character.activeWeaponSpec.split('|');
+    const isMeleeOrShield = type === 'Melee' || type === 'Shield';
+    const wm = this.character.weaponMaster;
+    const isMastered = wm && wm.weapon &&
+      wm.weapon.toLowerCase() === weapon.toLowerCase() &&
+      wm.type === type;
+    const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || null) : null;
     
-    if (!wasActive) {
-      // Activating
-      this.playWeaponMasterAnimation();
-      this.applyWeaponMasterCritical();
-    } else {
-      // Deactivating
-      this.removeWeaponMasterCritical();
+    // Green styling on Combat Skill
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    if (skillInput) {
+      skillInput.classList.add('damage-boosted');
+      if (isMastered) {
+        skillInput.title = 'Critical doubled (' + (tierData ? tierData.label : 'Weapon Master') + ')';
+      } else {
+        skillInput.title = 'Weapon Specialization: +5% Combat Skill';
+      }
     }
     
-    this.updateWeaponSpecDisplay();
-    this.scheduleAutoSave();
+    const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
+    if (row) row.classList.add('weapon-spec-active-row');
+    
+    // Green styling on Damage Modifier if mastered melee
+    if (isMastered && isMeleeOrShield && tierData) {
+      const tierOrder = ['master', 'high', 'grand', 'legendary'];
+      const tierIdx = tierOrder.indexOf(wm.tier);
+      const dmSteps = tierIdx >= 2 ? 2 : 1;
+      const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
+      
+      const dmgCurrent = document.getElementById('damage-mod-current');
+      if (dmgCurrent) {
+        dmgCurrent.classList.add('damage-boosted');
+        dmgCurrent.title = tooltipText;
+      }
+      const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+      if (wpDmgCurrent && wpDmgCurrent.value) {
+        wpDmgCurrent.classList.add('damage-boosted');
+        wpDmgCurrent.title = tooltipText;
+      }
+      
+      // Boost weapon damage displays
+      this.applyDamageBoostToWeapons(tooltipText);
+    }
+    
+    // Set doubled crit flag
+    this.character.weaponSpecCritDoubled = !!isMastered;
   },
 
   /**
    * Play activation animation based on tier
    */
-  playWeaponMasterAnimation() {
-    const wm = this.character.weaponMaster;
-    if (!wm) return;
-    
-    const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
-    
-    // Create fullscreen flash overlay
+  playWeaponMasterAnimation(weapon, type, tierData) {
     const flash = document.createElement('div');
-    flash.className = 'wm-activation-flash';
     flash.style.cssText = `
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       z-index: 10002; pointer-events: none;
       background: radial-gradient(circle at center, ${tierData.glowColor} 0%, transparent 70%);
       animation: wmFlash 0.8s ease-out forwards;
     `;
-    
-    // Create centered text popup
+
+    const weaponType = type === 'Ranged' ? 'ranged' : 'melee';
     const textPopup = document.createElement('div');
-    textPopup.className = 'wm-activation-text';
     textPopup.style.cssText = `
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       z-index: 10003; pointer-events: none; text-align: center;
       animation: wmTextReveal 1.2s ease-out forwards;
     `;
-    
-    const weaponType = wm.type === 'Ranged' ? 'ranged' : 'melee';
-    const benefitText = tierData.benefits[weaponType];
-    
     textPopup.innerHTML = `
       <div style="font-size: 2.5rem; margin-bottom: 0.3rem;">${tierData.icon}</div>
       <div style="font-size: 1.4rem; font-weight: bold; color: ${tierData.color};
@@ -18719,18 +18877,17 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       </div>
       <div style="font-size: 0.95rem; color: #fff; margin-top: 0.3rem;
         text-shadow: 0 0 10px rgba(0,0,0,0.8);">
-        ${wm.weapon}
+        ${weapon}
       </div>
       <div style="font-size: 0.75rem; color: #ccc; margin-top: 0.5rem; max-width: 300px;
         text-shadow: 0 0 10px rgba(0,0,0,0.8);">
-        ${benefitText}
+        ${tierData.benefits[weaponType]}
       </div>
     `;
-    
+
     document.body.appendChild(flash);
     document.body.appendChild(textPopup);
-    
-    // Clean up after animation
+
     setTimeout(() => {
       flash.remove();
       textPopup.remove();
@@ -18739,270 +18896,78 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
   /**
    * Calculate critical range for a skill value
-   * Mythras: Critical = ceil(skill / 10), minimum 1
+   * Mythras: Critical = ceil(skill / 10)
    */
   calculateCriticalRange(skillValue) {
     if (!skillValue || skillValue <= 0) return 0;
     return Math.ceil(skillValue / 10);
   },
 
-  /**
-   * Apply weapon master critical range doubling to combat skill display
-   */
-  applyWeaponMasterCritical() {
-    const wm = this.character.weaponMaster;
-    if (!wm || !wm.active) return;
-    
-    const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
-    const skillInput = document.getElementById('combat-skill-1-percent');
-    if (!skillInput) return;
-    
-    const skillValue = parseInt(skillInput.value, 10) || 0;
-    const normalCrit = this.calculateCriticalRange(skillValue);
-    const doubledCrit = normalCrit * 2;
-    
-    // Style the combat skill box
-    const row = skillInput.closest('.combat-skill-row');
-    if (row) {
-      row.classList.add('weapon-master-active');
-      row.style.setProperty('--wm-color', tierData.color);
-      row.style.setProperty('--wm-glow', tierData.glowColor);
-    }
-    
-    skillInput.classList.add('wm-critical-active');
-    skillInput.style.boxShadow = `0 0 8px ${tierData.glowColor}, inset 0 0 4px ${tierData.glowColor}`;
-    skillInput.style.borderColor = tierData.color;
-    
-    // Add or update critical range indicator
-    let critBadge = document.getElementById('wm-crit-badge');
-    if (!critBadge) {
-      critBadge = document.createElement('span');
-      critBadge.id = 'wm-crit-badge';
-      critBadge.className = 'wm-crit-badge';
-      skillInput.parentElement.insertBefore(critBadge, skillInput.nextSibling);
-    }
-    critBadge.textContent = `Crit: 01-${String(doubledCrit).padStart(2, '0')}`;
-    critBadge.title = `${tierData.label}: Critical range doubled from 01-${String(normalCrit).padStart(2, '0')} to 01-${String(doubledCrit).padStart(2, '0')} with ${wm.weapon}`;
-    critBadge.style.color = tierData.color;
-    critBadge.style.display = '';
-  },
-
-  /**
-   * Remove weapon master critical range effect
-   */
-  removeWeaponMasterCritical() {
-    const skillInput = document.getElementById('combat-skill-1-percent');
-    if (!skillInput) return;
-    
-    const row = skillInput.closest('.combat-skill-row');
-    if (row) {
-      row.classList.remove('weapon-master-active');
-      row.style.removeProperty('--wm-color');
-      row.style.removeProperty('--wm-glow');
-    }
-    
-    skillInput.classList.remove('wm-critical-active');
-    skillInput.style.boxShadow = '';
-    skillInput.style.borderColor = '';
-    
-    const critBadge = document.getElementById('wm-crit-badge');
-    if (critBadge) critBadge.style.display = 'none';
-  },
-
-  /**
-   * Update the weapon master button visual state
-   */
-  updateWeaponMasterButtonState() {
-    const btn = document.getElementById('wm-toggle-btn');
-    if (!btn) return;
-    
-    const wm = this.character.weaponMaster;
-    if (!wm) return;
-    
-    const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
-    
-    if (wm.active) {
-      btn.classList.add('wm-active');
-      btn.style.background = `linear-gradient(135deg, ${tierData.color}22, ${tierData.color}44)`;
-      btn.style.borderColor = tierData.color;
-      btn.style.color = tierData.color;
-      btn.style.boxShadow = `0 0 12px ${tierData.glowColor}`;
-      btn.textContent = `${tierData.icon} ${tierData.label} ✦`;
-      btn.title = 'Click to deactivate. ' + tierData.benefits[wm.type === 'Ranged' ? 'ranged' : 'melee'];
-    } else {
-      btn.classList.remove('wm-active');
-      btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
-      btn.style.borderColor = 'rgba(201, 165, 90, 0.3)';
-      btn.style.color = '#999';
-      btn.style.boxShadow = 'none';
-      btn.textContent = `${tierData.icon} ${tierData.label}`;
-      btn.title = 'Double your Critical range with your weapon. Click to activate.';
-    }
-  },
-
   // ============================================
-  // WEAPON SPEC BONUS SYSTEM (+5% / Load)
+  // RANGED SPEC LOAD REDUCTION (AUTOMATIC)
   // ============================================
-
-  /**
-   * Toggle the +5% Combat Skill bonus for a melee/shield specialization
-   * Only one spec bonus can be active at a time
-   */
-  toggleSpecBonus(weapon, type) {
-    const specKey = `${weapon}|${type}`;
-    const wasActive = this.character.activeSpecBonus === specKey;
-    
-    if (wasActive) {
-      // Deactivating
-      this.character.activeSpecBonus = null;
-      this.removeSpecBonusFromCombatSkill();
-    } else {
-      // Deactivating any previous spec bonus first
-      if (this.character.activeSpecBonus) {
-        this.removeSpecBonusFromCombatSkill();
-      }
-      // Activating this one
-      this.character.activeSpecBonus = specKey;
-      this.applySpecBonusToCombatSkill();
-    }
-    
-    this.updateWeaponSpecDisplay();
-    this.scheduleAutoSave();
-  },
-
-  /**
-   * Apply +5% to Combat Skill for active weapon spec
-   */
-  applySpecBonusToCombatSkill() {
-    const skillInput = document.getElementById('combat-skill-1-percent');
-    if (!skillInput) return;
-    
-    // Only apply if not already applied
-    if (skillInput.dataset.specBonusApplied === 'true') return;
-    
-    const currentValue = parseInt(skillInput.value, 10) || 0;
-    skillInput.value = currentValue + 5;
-    skillInput.dataset.specBonusApplied = 'true';
-    skillInput.dataset.originalValueBeforeSpec = String(currentValue);
-    
-    // Visual indicator
-    skillInput.classList.add('spec-bonus-active');
-    
-    // Update crit badge if weapon master also active
-    if (this.character.weaponMaster && this.character.weaponMaster.active) {
-      this.applyWeaponMasterCritical();
-    }
-    
-    this.updateCombatQuickRef();
-    this.scheduleAutoSave();
-  },
-
-  /**
-   * Remove +5% from Combat Skill
-   */
-  removeSpecBonusFromCombatSkill() {
-    const skillInput = document.getElementById('combat-skill-1-percent');
-    if (!skillInput) return;
-    
-    if (skillInput.dataset.specBonusApplied !== 'true') return;
-    
-    const currentValue = parseInt(skillInput.value, 10) || 0;
-    skillInput.value = currentValue - 5;
-    delete skillInput.dataset.specBonusApplied;
-    delete skillInput.dataset.originalValueBeforeSpec;
-    
-    skillInput.classList.remove('spec-bonus-active');
-    
-    // Update crit badge if weapon master also active
-    if (this.character.weaponMaster && this.character.weaponMaster.active) {
-      this.applyWeaponMasterCritical();
-    }
-    
-    this.updateCombatQuickRef();
-    this.scheduleAutoSave();
-  },
 
   /**
    * Apply Load reduction (-1) to all ranged weapons that have a specialization
-   * Called whenever weapon specs change. Tracks original Load values to prevent
-   * double-reduction on re-renders.
    */
   applyRangedSpecLoadReduction() {
     const specs = this.character.weaponSpecializations || [];
     const rangedSpecs = specs
       .filter(s => s.type === 'Ranged')
       .map(s => s.weapon.toLowerCase().replace(/\s*\(thrown\)/i, '').trim());
-    
+
     if (rangedSpecs.length === 0) return;
-    
+
     const rangedBody = document.getElementById('ranged-weapons-body');
     if (!rangedBody) return;
-    
+
     rangedBody.querySelectorAll('tr').forEach(row => {
       const nameInput = row.querySelector('.weapon-name');
       if (!nameInput || !nameInput.value.trim()) return;
-      
+
       const weaponName = nameInput.value.trim().toLowerCase();
-      
-      // Check if this weapon matches any ranged specialization
-      const isSpecialized = rangedSpecs.some(specName => 
+      const isSpecialized = rangedSpecs.some(specName =>
         this._weaponNameMatches(weaponName, specName)
       );
-      
       if (!isSpecialized) return;
-      
-      // Find the Load input (6th input in ranged row: name, hands, damage, dm, range, load)
-      const inputs = row.querySelectorAll('input');
-      // Load field ID pattern: ranged-N-load
+
       let loadInput = null;
-      for (const input of inputs) {
+      for (const input of row.querySelectorAll('input')) {
         if (input.id && input.id.includes('-load')) {
           loadInput = input;
           break;
         }
       }
       if (!loadInput) return;
-      
+
       const currentLoad = loadInput.value.trim();
-      
-      // Don't affect dashes (weapons with no reload)
       if (currentLoad === '-' || currentLoad === '\u2013' || currentLoad === '') return;
-      
-      // Store original if not already stored
       if (!loadInput.dataset.originalLoad) {
         loadInput.dataset.originalLoad = currentLoad;
       }
-      
-      // Only reduce if not already reduced
       if (loadInput.dataset.specReduced === 'true') return;
-      
+
       const loadNum = parseInt(currentLoad, 10);
       if (isNaN(loadNum)) return;
-      
-      const newLoad = Math.max(0, loadNum - 1);
-      loadInput.value = String(newLoad);
+
+      loadInput.value = String(Math.max(0, loadNum - 1));
       loadInput.dataset.specReduced = 'true';
-      
-      // Visual indicator
       loadInput.classList.add('spec-load-reduced');
       loadInput.title = `Load reduced by 1 (Weapon Specialization). Original: ${currentLoad}`;
     });
   },
 
   /**
-   * Restore original Load values for ranged weapons (when spec is removed)
+   * Restore original Load values for ranged weapons
    */
   restoreRangedLoadValues() {
     const rangedBody = document.getElementById('ranged-weapons-body');
     if (!rangedBody) return;
-    
+
     rangedBody.querySelectorAll('tr').forEach(row => {
-      const inputs = row.querySelectorAll('input');
-      for (const input of inputs) {
+      for (const input of row.querySelectorAll('input')) {
         if (input.id && input.id.includes('-load') && input.dataset.specReduced === 'true') {
-          if (input.dataset.originalLoad) {
-            input.value = input.dataset.originalLoad;
-          }
+          if (input.dataset.originalLoad) input.value = input.dataset.originalLoad;
           delete input.dataset.specReduced;
           delete input.dataset.originalLoad;
           input.classList.remove('spec-load-reduced');
@@ -22148,14 +22113,24 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // Critical: 10% of skill value, always rounding UP
     // e.g., 71% skill -> ceil(7.1) = 8, so roll of 8 or less is critical
-    const critThreshold = Math.ceil(targetPct / 10);
+    let critThreshold = Math.ceil(targetPct / 10);
+    
+    // Weapon Master: double critical range for Combat Skill rolls
+    let critDoubled = false;
+    if (this.character.weaponSpecCritDoubled && this.character.activeWeaponSpec) {
+      const normalizedSkill = (skillName || '').toLowerCase().trim();
+      if (normalizedSkill.includes('combat') || normalizedSkill.includes('combat skill')) {
+        critThreshold = critThreshold * 2;
+        critDoubled = true;
+      }
+    }
     
     // Fumble: 99 or 00 (100), but skills over 100% only fumble on 00
     const isFumble = targetPct >= 100 ? (roll === 100) : (roll >= 99);
     
     // Critical must also be a successful roll (roll <= skill)
     if (roll <= critThreshold && roll <= targetPct && !isFumble) {
-      result = 'Critical!';
+      result = critDoubled ? 'Critical! (Doubled)' : 'Critical!';
       resultClass = 'roll-critical';
     } else if (isFumble) {
       result = 'Fumble!';
