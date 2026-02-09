@@ -444,6 +444,7 @@ const App = {
       // Initialize display flags BEFORE any function that might call updateArtfulDodgerDisplay/updateAgileDisplay
       this.artfulDodgerDisplayed = false; // Runtime flag, NOT on this.character
       this.agileDisplayed = false; // Runtime flag, NOT on this.character
+      this._monkQuickBonus = 0; // Runtime flag for Quick movement bonus
       
       // Set up ability effect tracking
       if (this.hasAbility('Artful Dodger')) {
@@ -3473,11 +3474,16 @@ const App = {
           
           // Check Agile display (depends on armor type)
           this.updateAgileDisplay();
+          // Check Monk abilities (depends on unarmored status)
+          this.checkMonkAbilitiesVisibility();
         });
         
         // Track when user manually edits AP
         apInput.addEventListener('input', () => {
           apInput.dataset.autoFilled = 'false';
+        });
+        apInput.addEventListener('blur', () => {
+          this.checkMonkAbilitiesVisibility();
         });
       }
     });
@@ -10216,6 +10222,7 @@ const App = {
     this.checkAnimalCompanionVisibility();
     this.checkShapeChangeVisibility();
     this.checkWeaponSpecVisibility();
+    this.checkMonkAbilitiesVisibility();
     
     // Update weapon master tier (rank may have changed)
     if (this.character.weaponMaster) {
@@ -10322,6 +10329,13 @@ const App = {
       // Add spell (Sorcerer Familiar) - always add if class is Sorcerer at rank 1+
       if (actions.addSpell) {
         this.addSpellIfNotExists(actions.addSpell.rank, actions.addSpell.spell);
+      }
+      
+      // Add professional skills (Monk: Mysticism, Meditation)
+      if (actions.addProfessionalSkills) {
+        for (const skillName of actions.addProfessionalSkills) {
+          this.addProfessionalSkillIfNotExists(skillName);
+        }
       }
     }
     
@@ -10528,6 +10542,50 @@ const App = {
    * Add a language to the first empty language slot
    * Also adds "Language (X)" to Special Abilities for class-granted languages (unless skipAbility is true)
    */
+  /**
+   * Add a professional skill if it doesn't already exist
+   * Sets it to base % (formula-calculated) if empty
+   */
+  addProfessionalSkillIfNotExists(skillName) {
+    const normalized = skillName.toLowerCase().trim();
+    
+    // Check if it already exists in professional skills
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const nameEl = document.getElementById(`prof-skill-${i}-name`);
+      if (nameEl && nameEl.value.trim().toLowerCase() === normalized) {
+        return; // Already exists
+      }
+    }
+    
+    // Find first empty slot
+    for (let i = 0; i < PROFESSIONAL_SKILL_SLOTS; i++) {
+      const nameEl = document.getElementById(`prof-skill-${i}-name`);
+      if (nameEl && !nameEl.value.trim()) {
+        nameEl.value = skillName;
+        
+        // Calculate base % from skill formula
+        const profDefs = (typeof SKILL_DEFINITIONS !== 'undefined') ? SKILL_DEFINITIONS.professional : {};
+        const def = profDefs[normalized];
+        if (def && def.attrs) {
+          let base = 0;
+          for (const attr of def.attrs) {
+            base += parseInt(this.character.attributes[attr]) || 0;
+          }
+          const currentEl = document.getElementById(`prof-skill-${i}-current`);
+          if (currentEl && !currentEl.value) {
+            currentEl.value = base;
+          }
+        }
+        
+        // Trigger blur to populate prereq keys and save
+        nameEl.dispatchEvent(new Event('blur', { bubbles: true }));
+        nameEl.dispatchEvent(new Event('change', { bubbles: true }));
+        this.scheduleAutoSave();
+        return;
+      }
+    }
+  },
+
   addLanguageIfNotExists(languageName, sourceClass = null, skipAbility = false) {
     // Normalize apostrophes for comparison
     const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
@@ -12232,6 +12290,9 @@ const App = {
       
       // Check Agile display (depends on encumbrance status)
       this.updateAgileDisplay();
+      
+      // Check Monk abilities display (depends on encumbrance status)
+      this.checkMonkAbilitiesVisibility();
     }
   },
   
@@ -18426,6 +18487,290 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     return false;
   },
 
+
+  // ============================================
+  // MONK ABILITIES SYSTEM
+  // Handles: Flurry of Blows, Graceful Strike,
+  // Lightning Reflexes, Quick
+  // ============================================
+
+  /**
+   * Check if current character has Monk class
+   */
+  isMonkClass() {
+    const classes = ['class-primary', 'class-secondary', 'class-tertiary'];
+    return classes.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().toLowerCase() === 'monk';
+    });
+  },
+
+  /**
+   * Get the monk's current rank
+   */
+  getMonkRank() {
+    const classFields = [
+      { cls: 'class-primary', rank: 'rank-primary' },
+      { cls: 'class-secondary', rank: 'rank-secondary' },
+      { cls: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    for (const { cls, rank } of classFields) {
+      const classEl = document.getElementById(cls);
+      const rankEl = document.getElementById(rank);
+      if (classEl && classEl.value.trim().toLowerCase() === 'monk') {
+        return parseInt(rankEl?.value, 10) || 0;
+      }
+    }
+    return 0;
+  },
+
+  /**
+   * Check if monk is Extremely Unburdened (ENC < 1/2 STR) and wearing no armor
+   */
+  isMonkExtremelyUnburdened() {
+    const statusEl = document.getElementById('enc-status');
+    const statusName = statusEl?.textContent?.trim() || '';
+    return statusName === 'Extremely Unburdened';
+  },
+
+  /**
+   * Check if monk is wearing no armor (all AP fields are 0)
+   */
+  isMonkUnarmored() {
+    // Check all hit location AP fields (loc-0-ap through loc-9-ap)
+    const apInputs = document.querySelectorAll('.ap-input');
+    for (const field of apInputs) {
+      if (parseInt(field.value, 10) > 0) return false;
+    }
+    return true;
+  },
+
+  /**
+   * Show/hide monk abilities section and update display
+   */
+  checkMonkAbilitiesVisibility() {
+    const section = document.getElementById('monk-abilities-section');
+    const divider = document.getElementById('monk-abilities-divider');
+    if (!section || !divider) return;
+
+    const isMonk = this.isMonkClass();
+    const hasMonkAbility = this.hasAbility('Flurry of Blows') || 
+                           this.hasAbility('Graceful Strike') || 
+                           this.hasAbility('Lightning Reflexes') ||
+                           this.hasAbility('Quick');
+
+    if (isMonk && hasMonkAbility) {
+      section.style.display = '';
+      divider.style.display = '';
+      this.setupMonkAbilitiesToggle();
+      this.updateMonkAbilitiesDisplay();
+    } else {
+      section.style.display = 'none';
+      divider.style.display = 'none';
+      // Remove Quick movement bonus if no longer monk
+      this._removeQuickMovementBonus();
+    }
+  },
+
+  /**
+   * Build and render all monk ability info cards
+   */
+  updateMonkAbilitiesDisplay() {
+    const container = document.getElementById('monk-abilities-cards');
+    if (!container) return;
+
+    const monkRank = this.getMonkRank();
+    const isEU = this.isMonkExtremelyUnburdened();
+    const isUnarmored = this.isMonkUnarmored();
+    const meetsConditions = isEU && isUnarmored;
+
+    // Get Mysticism skill value
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const mysticismBonus = Math.floor(mysticismVal / 10);
+
+    // Get DEX, POW, STR, SIZ for Graceful Strike calc
+    const DEX = parseInt(this.character.attributes.DEX) || 0;
+    const POW = parseInt(this.character.attributes.POW) || 0;
+    const STR = parseInt(this.character.attributes.STR) || 0;
+    const SIZ = parseInt(this.character.attributes.SIZ) || 0;
+    const dexPowTotal = DEX + POW;
+    const strSizTotal = STR + SIZ;
+
+    // Calculate DM from DEX+POW vs STR+SIZ
+    const gracefulBetter = dexPowTotal > strSizTotal;
+
+    const statusColor = meetsConditions ? '#4fc3f7' : '#ff6b6b';
+    const statusIcon = meetsConditions ? '✅' : '❌';
+    const statusText = meetsConditions ? 'Active (Extremely Unburdened, No Armor)' : 'Inactive (requires Extremely Unburdened + No Armor)';
+
+    let html = '';
+
+    // Status indicator
+    html += `
+      <div class="weapon-spec-card" style="border-color: ${statusColor}; background: linear-gradient(135deg, #1a1a2a 0%, #1a2a2a 100%); margin-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem;">
+          <span style="font-size: 1.1rem;">${statusIcon}</span>
+          <span style="color: ${statusColor}; font-size: 0.82rem; font-weight: 600;">Monk Conditions: ${statusText}</span>
+        </div>
+      </div>
+    `;
+
+    // Flurry of Blows
+    if (this.hasAbility('Flurry of Blows')) {
+      html += `
+        <div class="weapon-spec-card" style="border-color: #c9a55a;">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">👊</span>
+            <span class="weapon-spec-card-title">Flurry of Blows</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            Make an immediate follow-up Unarmed attack using a different limb/body part without waiting for next Turn. 
+            Costs 1 Action Point. Chains attacks before defender can respond offensively. 
+            <em>Similar to Flurry Special Effect but does not count as one.</em>
+          </div>
+        </div>
+      `;
+    }
+
+    // Graceful Strike
+    if (this.hasAbility('Graceful Strike')) {
+      const gsActive = meetsConditions && gracefulBetter;
+      const gsColor = gsActive ? '#4fc3f7' : (meetsConditions ? '#999' : '#666');
+      const dmLabel = gsActive ? `DEX+POW (${dexPowTotal})` : `STR+SIZ (${strSizTotal})`;
+      const gsNote = meetsConditions 
+        ? (gracefulBetter 
+          ? `Using DEX+POW (${dexPowTotal}) — better than STR+SIZ (${strSizTotal})`
+          : `STR+SIZ (${strSizTotal}) is equal or better than DEX+POW (${dexPowTotal}) — using normal DM`)
+        : 'Requires Extremely Unburdened + No Armor';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${gsColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">🌊</span>
+            <span class="weapon-spec-card-title">Graceful Strike</span>
+            <span style="font-size: 0.7rem; color: ${gsColor}; margin-left: auto;">${gsActive ? '⚡ ACTIVE' : ''}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Unarmed DM:</strong> ${dmLabel}<br>
+            <span style="color: ${gsColor}; font-size: 0.75rem;">${gsNote}</span><br>
+            <span style="color: #c9a55a; font-size: 0.75rem;">Hands and feet count as <strong>Large</strong> for Attacking and Parrying.</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Lightning Reflexes
+    if (this.hasAbility('Lightning Reflexes')) {
+      const lrBonus = 10 + mysticismBonus;
+      const lrColor = meetsConditions ? '#4fc3f7' : '#666';
+      const lrStatus = meetsConditions ? `+${lrBonus}% to Parry & Evade rolls` : 'Inactive';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${lrColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">⚡</span>
+            <span class="weapon-spec-card-title">Lightning Reflexes</span>
+            <span style="font-size: 0.7rem; color: ${lrColor}; margin-left: auto;">${meetsConditions ? '⚡ ACTIVE' : ''}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Parry (Combat Skill):</strong> <span style="color: ${lrColor};">+10% + 1/10 Mysticism (${mysticismVal}%) = <strong>+${lrBonus}%</strong></span>
+            <span style="color: #999; font-size: 0.72rem;"> — not noted in Combat Skill field</span><br>
+            <strong>Evade:</strong> <span style="color: ${lrColor};"><strong>+${lrBonus}%</strong></span>
+            <span style="color: #999; font-size: 0.72rem;"> — not noted in Evade field</span><br>
+            <span style="color: #c9a55a; font-size: 0.75rem;">May dodge any attack (melee or ranged) without falling prone.</span><br>
+            <span style="color: #888; font-size: 0.72rem;">Bonuses do not count toward skill advancement.</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Quick
+    if (this.hasAbility('Quick')) {
+      const quickBonus = monkRank * 5;
+      const qColor = meetsConditions ? '#4fc3f7' : '#666';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${qColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">💨</span>
+            <span class="weapon-spec-card-title">Quick</span>
+            <span style="font-size: 0.7rem; color: ${qColor}; margin-left: auto;">${meetsConditions ? '⚡ ACTIVE' : ''}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Movement Rate:</strong> <span style="color: ${qColor};"><strong>+${quickBonus} ft</strong></span> (+5 ft × Rank ${monkRank})<br>
+            <span style="color: ${meetsConditions ? '#4fc3f7' : '#888'}; font-size: 0.75rem;">${meetsConditions ? 'Bonus applied to Movement Rate' : 'Requires Extremely Unburdened + No Armor'}</span>
+          </div>
+        </div>
+      `;
+
+      // Apply or remove movement bonus
+      this._applyQuickMovementBonus(meetsConditions ? quickBonus : 0);
+    }
+
+    container.innerHTML = html;
+  },
+
+  /**
+   * Apply Quick movement bonus to the movement-current field
+   */
+  _applyQuickMovementBonus(bonus) {
+    const movField = document.getElementById('movement-current');
+    if (!movField) return;
+
+    const prevBonus = this._monkQuickBonus || 0;
+    if (bonus === prevBonus) return; // No change
+
+    const currentVal = parseInt(movField.value, 10) || 0;
+    // Remove old bonus, add new
+    const newVal = currentVal - prevBonus + bonus;
+    movField.value = newVal;
+    this._monkQuickBonus = bonus;
+
+    if (bonus > 0) {
+      movField.classList.add('artful-dodger-bonus');
+      movField.title = `Quick: +${bonus} ft (Monk Rank ${this.getMonkRank()})`;
+    } else {
+      movField.classList.remove('artful-dodger-bonus');
+      if (movField.title && movField.title.includes('Quick:')) {
+        movField.title = '';
+      }
+    }
+
+    // Recalculate movement display
+    this.updateMovementDisplay();
+  },
+
+  /**
+   * Remove Quick movement bonus (when no longer monk or conditions not met)
+   */
+  _removeQuickMovementBonus() {
+    if (this._monkQuickBonus && this._monkQuickBonus > 0) {
+      this._applyQuickMovementBonus(0);
+    }
+  },
+
+  /**
+   * Setup monk abilities collapse/expand toggle
+   */
+  setupMonkAbilitiesToggle() {
+    const toggleBtn = document.getElementById('monk-abilities-toggle');
+    const content = document.getElementById('monk-abilities-content');
+    if (!toggleBtn || !content) return;
+    if (toggleBtn.dataset.listenerAdded) return;
+    toggleBtn.dataset.listenerAdded = 'true';
+
+    if (this.character.monkAbilitiesCollapsed) {
+      toggleBtn.classList.add('collapsed');
+      content.classList.add('collapsed');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = toggleBtn.classList.toggle('collapsed');
+      content.classList.toggle('collapsed');
+      this.character.monkAbilitiesCollapsed = isCollapsed;
+      this.scheduleAutoSave();
+    });
+  },
 
   // ============================================
   // COMBAT BUFF BASELINE SYSTEM

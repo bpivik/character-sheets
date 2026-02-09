@@ -43,9 +43,9 @@ const ClassAbilities = {
   
   monk: {
     rank1: ["Flurry of Blows", "Forceful Strike", "Graceful Strike", "Lightning Reflexes", "Quick", "Unarmed Proficiency"],
-    // Special: Adds Unarmed weapon with damage scaling by rank
+    // Special: Adds Unarmed weapon with damage scaling by rank, plus Mysticism & Meditation prof skills
     specialActions: {
-      rank1: { addUnarmed: "1d4" },
+      rank1: { addUnarmed: "1d4", addProfessionalSkills: ["Mysticism", "Meditation"] },
       rank2: { changeUnarmedDamage: "1d6" },
       rank3: { changeUnarmedDamage: "1d8" },
       rank4: { changeUnarmedDamage: "1d10" },
