@@ -946,6 +946,64 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  monk: [
+    // Rank 1
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 1, 
+      prereqs: null,
+      summary: "+1 bonus AP for Parry/Evade only (1 reaction per attack)"
+    },
+    { 
+      name: "Fleet of Foot", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Outmaneuver attempts 2 grades easier (Unburdened, Light armor max)"
+    },
+    { 
+      name: "Ki Strike", 
+      rank: 1, 
+      prereqs: "Mysticism 60%; Unarmed 60%",
+      summary: "Unarmed attacks count as magical (+1 at Rank 1, +2 at Rank 2, etc.)"
+    },
+    { 
+      name: "Skirmishing", 
+      rank: 1, 
+      prereqs: "Athletics 50%; Combat Style 50%",
+      summary: "Ranged attacks while running (capped by Athletics)"
+    },
+    { 
+      name: "Slow Fall", 
+      rank: 1, 
+      prereqs: "Mysticism 50%",
+      summary: "Ignore fall damage up to ½ Mysticism in feet (Extremely Unburdened, no armor, near surface)"
+    },
+    { 
+      name: "Spatial Awareness", 
+      rank: 1, 
+      prereqs: "Willpower 50%",
+      summary: "React to attacks from behind via Formidable Perception check (1 AP)"
+    },
+    { 
+      name: "Sweeping Strike", 
+      rank: 1, 
+      prereqs: "Forceful Strike; Combat Style 60%",
+      summary: "Free attack on another target if you drop your opponent (1/round)"
+    },
+    { 
+      name: "Very Agile", 
+      rank: 1, 
+      prereqs: "Mysticism 60%; Evade 60% OR Acrobatics 60%",
+      summary: "+1/10 Mysticism to Initiative (min +5, Extremely Unburdened, no armor)"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+  ],
+  
   // More classes to be added...
 };
 

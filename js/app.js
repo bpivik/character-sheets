@@ -58,6 +58,37 @@ const App = {
         app.checkMonkAbilitiesVisibility();
       }
     },
+    'ki strike': {
+      description: 'Unarmed attacks count as magical weapons',
+      apply: function(app) {
+        app._applyKiStrikeTrait(true);
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app._applyKiStrikeTrait(false);
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
+    'slow fall': {
+      description: 'Ignore fall damage up to ½ Mysticism in feet',
+      apply: function(app) {
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
+    'very agile': {
+      description: '+1/10 Mysticism to Initiative (min +5, Extremely Unburdened + No Armor)',
+      apply: function(app) {
+        app.updateVeryAgileDisplay();
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app.updateVeryAgileDisplay();
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
     'weapon precision': {
       description: 'Use higher of STR+DEX or STR+SIZ for Damage Modifier with finesse weapons',
       // List of weapons that benefit from Weapon Precision
@@ -467,6 +498,8 @@ const App = {
       this.agileDisplayed = false; // Runtime flag, NOT on this.character
       this.lightningReflexesDisplayed = false; // Runtime flag for Lightning Reflexes Evade bonus
       this._lightningReflexesBonus = 0; // Tracked bonus amount (10 + Mysticism/10)
+      this.veryAgileDisplayed = false; // Runtime flag for Very Agile Initiative bonus
+      this._veryAgileBonus = 0; // Tracked bonus amount (max(5, ceil(Mysticism/10)))
       this._monkQuickBonus = 0; // Runtime flag for Quick movement bonus
       
       // Set up ability effect tracking
@@ -476,9 +509,12 @@ const App = {
       if (this.hasAbility('Agile')) {
         this.activeAbilityEffects['agile'] = { active: true };
       }
+      if (this.hasAbility('Very Agile')) {
+        this.activeAbilityEffects['very agile'] = { active: true };
+      }
       
-      // Force recalculate ENC status - this will also call updateArtfulDodgerDisplay
-      // and updateAgileDisplay since isInitializing is now false
+      // Force recalculate ENC status - this will also call updateArtfulDodgerDisplay,
+      // updateAgileDisplay, and updateVeryAgileDisplay since isInitializing is now false
       this.updateTotalEnc();
       
       // Update MP display on spell pages
@@ -2531,8 +2567,13 @@ const App = {
         this.syncProfSkillToMagic(i);
         // If Mysticism changed, update Lightning Reflexes Evade bonus
         const profName = document.getElementById(`prof-skill-${i}-name`)?.value?.trim().toLowerCase() || '';
-        if (profName === 'mysticism' && this.lightningReflexesDisplayed) {
-          this.updateLightningReflexesDisplay();
+        if (profName === 'mysticism') {
+          if (this.lightningReflexesDisplayed) {
+            this.updateLightningReflexesDisplay();
+          }
+          if (this.veryAgileDisplayed) {
+            this.updateVeryAgileDisplay();
+          }
           this.checkMonkAbilitiesVisibility();
         }
         this.scheduleAutoSave();
@@ -3506,6 +3547,8 @@ const App = {
           
           // Check Agile display (depends on armor type)
           this.updateAgileDisplay();
+          // Check Very Agile display (depends on unarmored status)
+          this.updateVeryAgileDisplay();
           // Check Monk abilities (depends on unarmored status)
           this.checkMonkAbilitiesVisibility();
         });
@@ -4668,7 +4711,7 @@ const App = {
     if (!effect) return;
     
     // Skip ENC-dependent abilities during initialization - handled by final setTimeout
-    if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+    if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile' || baseName === 'very agile')) {
       return;
     }
     
@@ -4819,7 +4862,7 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           // Skip ENC-dependent abilities during initialization
-          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile' || baseName === 'very agile')) {
             return;
           }
           const effect = this.ABILITY_EFFECTS[baseName];
@@ -4836,7 +4879,7 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       // Skip ENC-dependent abilities during initialization
-      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile' || baseName === 'very agile')) {
         return;
       }
       const effect = this.ABILITY_EFFECTS[baseName];
@@ -7074,7 +7117,7 @@ const App = {
         if (input.value.trim()) {
           const baseName = input.value.split('(')[0].trim().toLowerCase();
           // Skip ENC-dependent abilities during initialization
-          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+          if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile' || baseName === 'very agile')) {
             return;
           }
           const effect = this.ABILITY_EFFECTS[baseName];
@@ -7092,7 +7135,7 @@ const App = {
     speciesAbilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
       // Skip ENC-dependent abilities during initialization
-      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile')) {
+      if (this.isInitializing && (baseName === 'artful dodger' || baseName === 'agile' || baseName === 'very agile')) {
         return;
       }
       const effect = this.ABILITY_EFFECTS[baseName];
@@ -12342,6 +12385,9 @@ const App = {
       // Check Agile display (depends on encumbrance status)
       this.updateAgileDisplay();
       
+      // Check Very Agile display (depends on Extremely Unburdened + no armor)
+      this.updateVeryAgileDisplay();
+      
       // Check Monk abilities display (depends on encumbrance status)
       this.checkMonkAbilitiesVisibility();
     }
@@ -14126,8 +14172,8 @@ const App = {
         const displayedVal = parseInt(currField.value, 10) || 0;
         currField.value = Math.max(0, displayedVal - 4);
         currField.classList.remove('agile-bonus');
-        currField.title = '';
         this.agileDisplayed = false;
+        this._updateInitBonusTitle(currField);
       }
       return;
     }
@@ -14140,15 +14186,15 @@ const App = {
       const baseVal = parseInt(currField.value, 10) || 0;
       currField.value = baseVal + 4;
       currField.classList.add('agile-bonus');
-      currField.title = '+4 due to Agile';
       this.agileDisplayed = true;
+      this._updateInitBonusTitle(currField);
     } else if (!meetsConditions && this.agileDisplayed) {
       // Remove display bonus
       const displayedVal = parseInt(currField.value, 10) || 0;
       currField.value = Math.max(0, displayedVal - 4);
       currField.classList.remove('agile-bonus');
-      currField.title = '';
       this.agileDisplayed = false;
+      this._updateInitBonusTitle(currField);
     }
     // If conditions match current state, do nothing
   },
@@ -14196,6 +14242,112 @@ const App = {
     }
     
     return false;
+  },
+
+  // ============================================
+  // VERY AGILE ABILITY SYSTEM (MONK)
+  // Adds +1/10 Mysticism (min +5) to Initiative when Extremely Unburdened + No Armor
+  // ============================================
+  
+  updateVeryAgileDisplay() {
+    const hasAbility = this.hasAbility('Very Agile');
+    const currField = document.getElementById('initiative-current');
+    if (!currField) return;
+    
+    // Calculate current bonus: max(5, ceil(Mysticism / 10))
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const currentBonus = Math.max(5, Math.ceil(mysticismVal / 10));
+    
+    // If ability is not present, ensure display is clean
+    if (!hasAbility) {
+      if (this.veryAgileDisplayed) {
+        const prevBonus = this._veryAgileBonus || 0;
+        const displayedVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, displayedVal - prevBonus);
+        currField.classList.remove('agile-bonus');
+        this.veryAgileDisplayed = false;
+        this._veryAgileBonus = 0;
+        this._updateInitBonusTitle(currField);
+      }
+      return;
+    }
+    
+    // Must be Extremely Unburdened and unarmored
+    const isMonk = this.isMonkClass();
+    const isEU = this.isMonkExtremelyUnburdened();
+    const isUnarmored = this.isMonkUnarmored();
+    const meetsConditions = isMonk && isEU && isUnarmored;
+    
+    if (meetsConditions && !this.veryAgileDisplayed) {
+      // Add display bonus
+      const baseVal = parseInt(currField.value, 10) || 0;
+      currField.value = baseVal + currentBonus;
+      currField.classList.add('agile-bonus');
+      this.veryAgileDisplayed = true;
+      this._veryAgileBonus = currentBonus;
+      this._updateInitBonusTitle(currField);
+    } else if (meetsConditions && this.veryAgileDisplayed) {
+      // Already displayed — check if Mysticism changed and bonus needs updating
+      const prevBonus = this._veryAgileBonus || 0;
+      if (currentBonus !== prevBonus) {
+        const displayedVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, displayedVal - prevBonus + currentBonus);
+        this._veryAgileBonus = currentBonus;
+        this._updateInitBonusTitle(currField);
+      }
+    } else if (!meetsConditions && this.veryAgileDisplayed) {
+      // Remove display bonus
+      const prevBonus = this._veryAgileBonus || 0;
+      const displayedVal = parseInt(currField.value, 10) || 0;
+      currField.value = Math.max(0, displayedVal - prevBonus);
+      currField.classList.remove('agile-bonus');
+      this.veryAgileDisplayed = false;
+      this._veryAgileBonus = 0;
+      this._updateInitBonusTitle(currField);
+    }
+  },
+  
+  /**
+   * Update Initiative field title to reflect all active display bonuses
+   */
+  _updateInitBonusTitle(initField) {
+    const parts = [];
+    if (this.agileDisplayed) parts.push('+4 Agile');
+    if (this.veryAgileDisplayed) {
+      const bonus = this._veryAgileBonus || 0;
+      const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+      parts.push(`+${bonus} Very Agile (⌈${mysticismVal}/10⌉, min 5)`);
+    }
+    initField.title = parts.length > 0 ? parts.join(', ') : '';
+  },
+
+  // ============================================
+  // KI STRIKE ABILITY SYSTEM (MONK)
+  // Adds "Magical" to Unarmed weapon traits
+  // ============================================
+  
+  _applyKiStrikeTrait(add) {
+    for (let i = 1; i <= 5; i++) {
+      const nameInput = document.getElementById(`melee-${i}-name`);
+      if (!nameInput || nameInput.value.toLowerCase().trim() !== 'unarmed') continue;
+      
+      const traitsInput = document.getElementById(`melee-${i}-traits`);
+      if (!traitsInput) continue;
+      
+      const currentTraits = traitsInput.value.trim();
+      const hasMagical = currentTraits.toLowerCase().includes('magical');
+      
+      if (add && !hasMagical) {
+        traitsInput.value = currentTraits ? `${currentTraits}, Magical` : 'Magical';
+      } else if (!add && hasMagical) {
+        // Remove "Magical" from traits
+        traitsInput.value = currentTraits
+          .replace(/,?\s*Magical\s*/i, '')
+          .replace(/^\s*,\s*/, '')
+          .trim();
+      }
+      break;
+    }
   },
 
   /**
@@ -18716,7 +18868,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const hasMonkAbility = this.hasAbility('Flurry of Blows') || 
                            this.hasAbility('Graceful Strike') || 
                            this.hasAbility('Lightning Reflexes') ||
-                           this.hasAbility('Quick');
+                           this.hasAbility('Quick') ||
+                           this.hasAbility('Ki Strike') ||
+                           this.hasAbility('Slow Fall') ||
+                           this.hasAbility('Very Agile');
 
     if (isMonk && hasMonkAbility) {
       section.style.display = '';
@@ -18730,6 +18885,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this._removeQuickMovementBonus();
       // Remove Graceful Strike DM override if no longer monk
       this._applyGracefulStrikeDM(false, 0);
+      // Remove Ki Strike trait if no longer monk
+      this._applyKiStrikeTrait(false);
     }
   },
 
@@ -18873,6 +19030,65 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this._applyQuickMovementBonus(meetsConditions ? quickBonus : 0);
     }
 
+    // Ki Strike
+    if (this.hasAbility('Ki Strike')) {
+      const kiRankBonus = monkRank; // +1 at Rank 1, +2 at Rank 2, etc.
+      const kiColor = '#c9a55a';
+      const kiRank4Note = monkRank >= 4 ? '<br><span style="color: #4fc3f7; font-size: 0.72rem;">Rank 4+: Ignore half of target\'s armor on Unarmed attacks (magic bonus never halved)</span>' : '';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${kiColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">✊</span>
+            <span class="weapon-spec-card-title">Ki Strike</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Unarmed = +${kiRankBonus} magical weapon</strong> (Rank ${monkRank})${kiRank4Note}
+          </div>
+        </div>
+      `;
+    }
+
+    // Slow Fall
+    if (this.hasAbility('Slow Fall')) {
+      const sfDistance = Math.ceil(mysticismVal / 2);
+      const sfColor = meetsConditions ? '#4fc3f7' : '#666';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${sfColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">🍃</span>
+            <span class="weapon-spec-card-title">Slow Fall</span>
+            <span style="font-size: 0.7rem; color: ${sfColor}; margin-left: auto;">${meetsConditions ? '⚡ ACTIVE' : ''}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Safe fall distance:</strong> <span style="color: ${sfColor};"><strong>${sfDistance} ft</strong></span> (⌈${mysticismVal}/2⌉)<br>
+            <span style="color: ${meetsConditions ? '#4fc3f7' : '#888'}; font-size: 0.72rem;">${meetsConditions ? 'Must be near a wall, cliff, tree, or similar surface' : 'Requires Extremely Unburdened + No Armor'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Very Agile
+    if (this.hasAbility('Very Agile')) {
+      const vaBonus = Math.max(5, Math.ceil(mysticismVal / 10));
+      const vaColor = meetsConditions ? '#4fc3f7' : '#666';
+
+      html += `
+        <div class="weapon-spec-card" style="border-color: ${vaColor};">
+          <div class="weapon-spec-card-header">
+            <span class="weapon-spec-card-icon">🌀</span>
+            <span class="weapon-spec-card-title">Very Agile</span>
+            <span style="font-size: 0.7rem; color: ${vaColor}; margin-left: auto;">${meetsConditions ? '⚡ ACTIVE' : ''}</span>
+          </div>
+          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
+            <strong>Initiative:</strong> <span style="color: ${vaColor};"><strong>+${vaBonus}</strong></span> (⌈${mysticismVal}/10⌉, min 5)<br>
+            <span style="color: ${meetsConditions ? '#4fc3f7' : '#888'}; font-size: 0.72rem;">${meetsConditions ? 'Applied to Initiative field (hover to see)' : 'Requires Extremely Unburdened + No Armor'}</span>
+          </div>
+        </div>
+      `;
+    }
+
     container.innerHTML = html;
     
     // Apply Graceful Strike DM override to Unarmed weapon
@@ -18880,6 +19096,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this._applyGracefulStrikeDM(meetsConditions && gracefulBetter, dexPowTotal);
     } else {
       this._applyGracefulStrikeDM(false, 0);
+    }
+    
+    // Apply Ki Strike "Magical" trait to Unarmed weapon
+    if (this.hasAbility('Ki Strike')) {
+      this._applyKiStrikeTrait(true);
     }
   },
   
@@ -20438,6 +20659,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // --- INITIATIVE ---
     this.agileDisplayed = false;
+    this.veryAgileDisplayed = false;
+    this._veryAgileBonus = 0;
     this.applyInitiativePenalty(encStatus, fatigue);
     
     // --- MOVEMENT ---
@@ -20446,12 +20669,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // --- ACTION POINTS ---
     this.applyActionPointPenalty(fatigue);
     
-    // --- Re-apply display-only ability bonuses (Artful Dodger, Lightning Reflexes, Agile) ---
+    // --- Re-apply display-only ability bonuses (Artful Dodger, Lightning Reflexes, Agile, Very Agile) ---
     // These were reset when penalties restored base values from originalValue
     if (!this.isInitializing) {
       this.updateArtfulDodgerDisplay();
       this.updateLightningReflexesDisplay();
       this.updateAgileDisplay();
+      this.updateVeryAgileDisplay();
     }
     
     // --- Update combat quick ref ---
