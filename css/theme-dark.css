@@ -1081,6 +1081,13 @@
   color: #5fcf5f !important;
 }
 
+/* Lightning Reflexes bonus - Dark Mode */
+[data-theme="dark"] .lightning-reflexes-bonus {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
 /* Agile bonus - Dark Mode */
 [data-theme="dark"] .agile-bonus {
   background-color: rgba(34, 139, 34, 0.3) !important;

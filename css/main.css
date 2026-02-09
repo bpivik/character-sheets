@@ -1298,6 +1298,13 @@ input.weapon-damage.rage-boosted,
   color: #1a6b1a !important;
 }
 
+/* Lightning Reflexes bonus styling (same green as artful dodger) */
+.lightning-reflexes-bonus {
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
+}
+
 /* Agile bonus styling */
 .agile-bonus {
   background-color: rgba(34, 139, 34, 0.2) !important;

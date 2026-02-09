@@ -37,6 +37,17 @@ const App = {
         app.updateArtfulDodgerDisplay();
       }
     },
+    'lightning reflexes': {
+      description: '+10 Evade (when Extremely Unburdened + No Armor, Monk only)',
+      apply: function(app) {
+        app.updateLightningReflexesDisplay();
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app.updateLightningReflexesDisplay();
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
     'weapon precision': {
       description: 'Use higher of STR+DEX or STR+SIZ for Damage Modifier with finesse weapons',
       // List of weapons that benefit from Weapon Precision
@@ -444,6 +455,7 @@ const App = {
       // Initialize display flags BEFORE any function that might call updateArtfulDodgerDisplay/updateAgileDisplay
       this.artfulDodgerDisplayed = false; // Runtime flag, NOT on this.character
       this.agileDisplayed = false; // Runtime flag, NOT on this.character
+      this.lightningReflexesDisplayed = false; // Runtime flag for Lightning Reflexes Evade bonus
       this._monkQuickBonus = 0; // Runtime flag for Quick movement bonus
       
       // Set up ability effect tracking
@@ -1495,10 +1507,13 @@ const App = {
           setTimeout(() => this.applyAllPenalties(), 10);
         } else {
           // Normal edit - also update originalValue if it exists
-          // For Evade: if Artful Dodger display bonus is active, save base value (minus display bonus)
-          if (skillKey === 'evade' && this.artfulDodgerDisplayed) {
+          // For Evade: if Artful Dodger or Lightning Reflexes display bonus is active, save base value (minus display bonuses)
+          if (skillKey === 'evade' && (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)) {
             const displayedValue = parseInt(e.target.value, 10) || 0;
-            const baseValue = Math.max(0, displayedValue - 10).toString();
+            let bonusToRemove = 0;
+            if (this.artfulDodgerDisplayed) bonusToRemove += 10;
+            if (this.lightningReflexesDisplayed) bonusToRemove += 10;
+            const baseValue = Math.max(0, displayedValue - bonusToRemove).toString();
             if (e.target.dataset.originalValue !== undefined) {
               e.target.dataset.originalValue = baseValue;
             }
@@ -12288,6 +12303,9 @@ const App = {
       // Check Artful Dodger display (depends on encumbrance status)
       this.updateArtfulDodgerDisplay();
       
+      // Check Lightning Reflexes display (depends on Extremely Unburdened + no armor)
+      this.updateLightningReflexesDisplay();
+      
       // Check Agile display (depends on encumbrance status)
       this.updateAgileDisplay();
       
@@ -13515,8 +13533,8 @@ const App = {
       endurance: document.getElementById('endurance-current')?.value || '0',
       willpower: document.getElementById('willpower-current')?.value || '0',
       brawn: document.getElementById('brawn-current')?.value || '0',
-      evade: this.artfulDodgerDisplayed 
-        ? this.getEvadeWithoutArtfulDodger().toString() 
+      evade: (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)
+        ? this.getEvadeWithoutDisplayBonuses().toString() 
         : (document.getElementById('evade-current')?.value || '0')
     };
     
@@ -13599,18 +13617,19 @@ const App = {
       brawnField.classList.add('rage-boosted');
     }
     
-    // Evade -20% (use base value without Artful Dodger display bonus)
+    // Evade -20% (use base value without display bonuses)
     const evadeField = document.getElementById('evade-current');
     if (evadeField) {
-      // Remove Artful Dodger display bonus first if active
-      const baseEvade = this.artfulDodgerDisplayed
-        ? this.getEvadeWithoutArtfulDodger()
+      // Remove display bonuses first if active
+      const baseEvade = (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)
+        ? this.getEvadeWithoutDisplayBonuses()
         : (parseInt(evadeField.value, 10) || 0);
       this.artfulDodgerDisplayed = false;
+      this.lightningReflexesDisplayed = false;
       evadeField.value = Math.max(0, baseEvade - 20);
       evadeField.classList.add('rage-penalized');
-      // Remove Artful Dodger styling during rage (it will be restored when rage ends)
-      evadeField.classList.remove('artful-dodger-bonus');
+      // Remove display bonus styling during rage
+      evadeField.classList.remove('artful-dodger-bonus', 'lightning-reflexes-bonus');
       evadeField.title = '';
     }
     
@@ -13750,6 +13769,10 @@ const App = {
     this.artfulDodgerDisplayed = false;
     this.updateArtfulDodgerDisplay();
     
+    // Re-check Lightning Reflexes display
+    this.lightningReflexesDisplayed = false;
+    this.updateLightningReflexesDisplay();
+    
     // Update UI
     const rageBtn = document.getElementById('btn-rage-toggle');
     const tracker = document.getElementById('rage-tracker');
@@ -13836,10 +13859,11 @@ const App = {
     
     if (evadeField) {
       evadeField.classList.add('rage-penalized');
-      // Remove Artful Dodger styling during rage (it will be restored when rage ends)
-      evadeField.classList.remove('artful-dodger-bonus');
+      // Remove display bonus styling during rage (restored when rage ends)
+      evadeField.classList.remove('artful-dodger-bonus', 'lightning-reflexes-bonus');
       evadeField.title = '';
       this.artfulDodgerDisplayed = false;
+      this.lightningReflexesDisplayed = false;
     }
     
     this.setArtfulDodgerStrikethrough(true);
@@ -13903,8 +13927,8 @@ const App = {
         const displayedVal = parseInt(currField.value, 10) || 0;
         currField.value = Math.max(0, displayedVal - 10);
         currField.classList.remove('artful-dodger-bonus');
-        currField.title = '';
         this.artfulDodgerDisplayed = false;
+        this._updateEvadeBonusTitle(currField);
       }
       return;
     }
@@ -13919,15 +13943,15 @@ const App = {
       const baseVal = parseInt(currField.value, 10) || 0;
       currField.value = baseVal + 10;
       currField.classList.add('artful-dodger-bonus');
-      currField.title = '+10 due to Artful Dodger';
       this.artfulDodgerDisplayed = true;
+      this._updateEvadeBonusTitle(currField);
     } else if (!meetsConditions && this.artfulDodgerDisplayed) {
       // Remove display bonus
       const displayedVal = parseInt(currField.value, 10) || 0;
       currField.value = Math.max(0, displayedVal - 10);
       currField.classList.remove('artful-dodger-bonus');
-      currField.title = '';
       this.artfulDodgerDisplayed = false;
+      this._updateEvadeBonusTitle(currField);
     }
     // If conditions match current state, do nothing
   },
@@ -13936,18 +13960,84 @@ const App = {
    * Get Evade value without Artful Dodger bonus (for EXP improvement)
    */
   getEvadeWithoutArtfulDodger() {
+    return this.getEvadeWithoutDisplayBonuses();
+  },
+  
+  /**
+   * Get Evade value without any display bonuses (Artful Dodger, Lightning Reflexes)
+   */
+  getEvadeWithoutDisplayBonuses() {
     const currField = document.getElementById('evade-current');
     if (!currField) return 0;
     
-    if (this.artfulDodgerDisplayed) {
-      return Math.max(0, (parseInt(currField.value, 10) || 0) - 10);
-    }
-    return parseInt(currField.value, 10) || 0;
+    let val = parseInt(currField.value, 10) || 0;
+    if (this.artfulDodgerDisplayed) val -= 10;
+    if (this.lightningReflexesDisplayed) val -= 10;
+    return Math.max(0, val);
   },
   
   // ============================================
-  // AGILE ABILITY SYSTEM
+  // LIGHTNING REFLEXES ABILITY SYSTEM (MONK)
+  // Adds +10 to Evade when Extremely Unburdened + No Armor
   // ============================================
+  
+  /**
+   * Update Lightning Reflexes Evade display bonus
+   * Called on: ENC change, armor change, ability add/remove
+   */
+  updateLightningReflexesDisplay() {
+    const hasAbility = this.hasAbility('Lightning Reflexes');
+    const currField = document.getElementById('evade-current');
+    if (!currField) return;
+    
+    // Don't apply during rage
+    if (this.character.isRaging) return;
+    
+    // If ability is not present, ensure display is clean
+    if (!hasAbility) {
+      if (this.lightningReflexesDisplayed) {
+        const displayedVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, displayedVal - 10);
+        currField.classList.remove('lightning-reflexes-bonus');
+        // Update title to reflect remaining bonuses
+        this._updateEvadeBonusTitle(currField);
+        this.lightningReflexesDisplayed = false;
+      }
+      return;
+    }
+    
+    // Must be monk, Extremely Unburdened, and unarmored
+    const isMonk = this.isMonkClass();
+    const isEU = this.isMonkExtremelyUnburdened();
+    const isUnarmored = this.isMonkUnarmored();
+    const meetsConditions = isMonk && isEU && isUnarmored;
+    
+    if (meetsConditions && !this.lightningReflexesDisplayed) {
+      // Add display bonus
+      const baseVal = parseInt(currField.value, 10) || 0;
+      currField.value = baseVal + 10;
+      currField.classList.add('lightning-reflexes-bonus');
+      this._updateEvadeBonusTitle(currField);
+      this.lightningReflexesDisplayed = true;
+    } else if (!meetsConditions && this.lightningReflexesDisplayed) {
+      // Remove display bonus
+      const displayedVal = parseInt(currField.value, 10) || 0;
+      currField.value = Math.max(0, displayedVal - 10);
+      currField.classList.remove('lightning-reflexes-bonus');
+      this._updateEvadeBonusTitle(currField);
+      this.lightningReflexesDisplayed = false;
+    }
+  },
+  
+  /**
+   * Update Evade field title to reflect all active display bonuses
+   */
+  _updateEvadeBonusTitle(evadeField) {
+    const parts = [];
+    if (this.artfulDodgerDisplayed) parts.push('+10 Artful Dodger');
+    if (this.lightningReflexesDisplayed) parts.push('+10 Lightning Reflexes');
+    evadeField.title = parts.length > 0 ? parts.join(', ') : '';
+  },
   // Design: Never modify saved data. Store base Initiative in character.derived.
   // Only add +4 bonus to the DISPLAY field. Track display state with agileDisplayed flag.
   
@@ -14020,8 +14110,8 @@ const App = {
     
     // Condition 3: 50%+ in Evade or Acrobatics
     let evadeVal = parseInt(document.getElementById('evade-current')?.value, 10) || 0;
-    if (this.artfulDodgerDisplayed) {
-      evadeVal = this.getEvadeWithoutArtfulDodger();
+    if (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed) {
+      evadeVal = this.getEvadeWithoutDisplayBonuses();
     }
     if (evadeVal >= 50) return true;
     
@@ -20233,6 +20323,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // --- SKILLS ---
     // Reset display bonus flags since penalties restore from base originalValue
     this.artfulDodgerDisplayed = false;
+    this.lightningReflexesDisplayed = false;
     this.applySkillPenalties(encPenaltyPercent, encIsBurdened, encHasPenalty, fatigue);
     
     // --- INITIATIVE ---
@@ -20245,10 +20336,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // --- ACTION POINTS ---
     this.applyActionPointPenalty(fatigue);
     
-    // --- Re-apply display-only ability bonuses (Artful Dodger, Agile) ---
+    // --- Re-apply display-only ability bonuses (Artful Dodger, Lightning Reflexes, Agile) ---
     // These were reset when penalties restored base values from originalValue
     if (!this.isInitializing) {
       this.updateArtfulDodgerDisplay();
+      this.updateLightningReflexesDisplay();
       this.updateAgileDisplay();
     }
     
@@ -24603,9 +24695,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       let current = currentEl?.value || currentEl?.textContent || '0';
       const skillName = standardLabels[skillId] || skillId;
       
-      // For Evade, use the value without Artful Dodger bonus
-      if (skillId === 'evade' && this.artfulDodgerDisplayed) {
-        current = this.getEvadeWithoutArtfulDodger().toString();
+      // For Evade, use the value without display bonuses (Artful Dodger, Lightning Reflexes)
+      if (skillId === 'evade' && (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)) {
+        current = this.getEvadeWithoutDisplayBonuses().toString();
       }
       
       standardContainer.innerHTML += createSkillRow(`standard:${skillId}`, skillName, current, skillName);
