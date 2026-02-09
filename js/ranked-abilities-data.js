@@ -850,6 +850,102 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  mage: [
+    // Rank 1
+    { 
+      name: "Mental Strength I", 
+      rank: 1, 
+      prereqs: "Arcane Casting 60%",
+      summary: "1/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Powerful Concentration", 
+      rank: 1, 
+      prereqs: "Arcane Casting 50%",
+      summary: "Willpower tests to maintain spell Concentration are 1 grade easier"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, slings, etc.)"
+    },
+    
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength II", 
+      rank: 2, 
+      prereqs: "Mental Strength I; Arcane Casting 80%",
+      summary: "As Mental Strength I, but usable 2/day"
+    },
+    { 
+      name: "Ranged Touch", 
+      rank: 2, 
+      prereqs: "Willpower 80%",
+      summary: "Extend Touch-range spells to 30ft; spell counts as 1 Rank higher for memorization"
+    },
+    
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 bonus Action Point for Parry/Evade only (one reaction per attack)"
+    },
+    { 
+      name: "Mental Strength III", 
+      rank: 3, 
+      prereqs: "Mental Strength II; Arcane Casting 100%",
+      summary: "As Mental Strength I, but usable 3/day"
+    },
+    
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength IV", 
+      rank: 4, 
+      prereqs: "Mental Strength III; Arcane Casting 120%",
+      summary: "As Mental Strength I, but usable 4/day"
+    },
+    
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 5, 
+      prereqs: "Defensive Reflexes I",
+      summary: "As Defensive Reflexes I, but usable 2/combat (not vs same attack, no Luck Point combo)"
+    },
+    { 
+      name: "Mental Strength V", 
+      rank: 5, 
+      prereqs: "Mental Strength IV; Arcane Casting 140%",
+      summary: "As Mental Strength I, but usable 5/day"
+    },
+  ],
+  
   // More classes to be added...
 };
 
