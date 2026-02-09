@@ -48,6 +48,16 @@ const App = {
         app.checkMonkAbilitiesVisibility();
       }
     },
+    'graceful strike': {
+      description: 'DEX+POW Damage Modifier for Unarmed if higher (Extremely Unburdened + No Armor)',
+      apply: function(app) {
+        app.checkMonkAbilitiesVisibility();
+      },
+      remove: function(app) {
+        app._applyGracefulStrikeDM(false, 0);
+        app.checkMonkAbilitiesVisibility();
+      }
+    },
     'weapon precision': {
       description: 'Use higher of STR+DEX or STR+SIZ for Damage Modifier with finesse weapons',
       // List of weapons that benefit from Weapon Precision
@@ -14004,7 +14014,7 @@ const App = {
     
     // Calculate current bonus: 10 + floor(Mysticism / 10)
     const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
-    const currentBonus = 10 + Math.floor(mysticismVal / 10);
+    const currentBonus = 10 + Math.ceil(mysticismVal / 10);
     
     // If ability is not present, ensure display is clean
     if (!hasAbility) {
@@ -18688,6 +18698,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       divider.style.display = 'none';
       // Remove Quick movement bonus if no longer monk
       this._removeQuickMovementBonus();
+      // Remove Graceful Strike DM override if no longer monk
+      this._applyGracefulStrikeDM(false, 0);
     }
   },
 
@@ -18705,7 +18717,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     // Get Mysticism skill value
     const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
-    const mysticismBonus = Math.floor(mysticismVal / 10);
+    const mysticismBonus = Math.ceil(mysticismVal / 10);
 
     // Get DEX, POW, STR, SIZ for Graceful Strike calc
     const DEX = parseInt(this.character.attributes.DEX) || 0;
@@ -18755,11 +18767,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (this.hasAbility('Graceful Strike')) {
       const gsActive = meetsConditions && gracefulBetter;
       const gsColor = gsActive ? '#4fc3f7' : (meetsConditions ? '#999' : '#666');
-      const dmLabel = gsActive ? `DEX+POW (${dexPowTotal})` : `STR+SIZ (${strSizTotal})`;
+      
+      // Calculate both DMs for display
+      const normalDM = this.getDamageModifierForSum(strSizTotal);
+      const gracefulDM = this.getDamageModifierForSum(dexPowTotal);
+      const activeDM = gsActive ? gracefulDM : normalDM;
+      
       const gsNote = meetsConditions 
         ? (gracefulBetter 
-          ? `Using DEX+POW (${dexPowTotal}) — better than STR+SIZ (${strSizTotal})`
-          : `STR+SIZ (${strSizTotal}) is equal or better than DEX+POW (${dexPowTotal}) — using normal DM`)
+          ? `Using DEX+POW (${dexPowTotal}) → ${gracefulDM} — better than STR+SIZ (${strSizTotal}) → ${normalDM}`
+          : `STR+SIZ (${strSizTotal}) → ${normalDM} is equal or better than DEX+POW (${dexPowTotal}) → ${gracefulDM} — using normal DM`)
         : 'Requires Extremely Unburdened + No Armor';
 
       html += `
@@ -18770,7 +18787,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             <span style="font-size: 0.7rem; color: ${gsColor}; margin-left: auto;">${gsActive ? '⚡ ACTIVE' : ''}</span>
           </div>
           <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
-            <strong>Unarmed DM:</strong> ${dmLabel}<br>
+            <strong>Unarmed DM:</strong> <span style="color: ${gsColor};"><strong>${activeDM}</strong></span> (${gsActive ? 'DEX+POW' : 'STR+SIZ'})<br>
             <span style="color: ${gsColor}; font-size: 0.75rem;">${gsNote}</span><br>
             <span style="color: #c9a55a; font-size: 0.75rem;">Hands and feet count as <strong>Large</strong> for Attacking and Parrying.</span>
           </div>
@@ -18795,7 +18812,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             <strong>Parry (Combat Skill):</strong> <span style="color: ${lrColor};">+10% + 1/10 Mysticism (${mysticismVal}%) = <strong>+${lrBonus}%</strong></span>
             <span style="color: #999; font-size: 0.72rem;"> — not noted in Combat Skill field</span><br>
             <strong>Evade:</strong> <span style="color: ${lrColor};"><strong>+${lrBonus}%</strong></span>
-            <span style="color: #999; font-size: 0.72rem;"> — not noted in Evade field</span><br>
+            <span style="color: ${meetsConditions ? '#4fc3f7' : '#999'}; font-size: 0.72rem;"> — ${meetsConditions ? 'applied to Evade field (hover to see)' : 'applied when active'}</span><br>
             <span style="color: #c9a55a; font-size: 0.75rem;">May dodge any attack (melee or ranged) without falling prone.</span><br>
             <span style="color: #888; font-size: 0.72rem;">Bonuses do not count toward skill advancement.</span>
           </div>
@@ -18827,6 +18844,60 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
 
     container.innerHTML = html;
+    
+    // Apply Graceful Strike DM override to Unarmed weapon
+    if (this.hasAbility('Graceful Strike')) {
+      this._applyGracefulStrikeDM(meetsConditions && gracefulBetter, dexPowTotal);
+    } else {
+      this._applyGracefulStrikeDM(false, 0);
+    }
+  },
+  
+  /**
+   * Apply or remove Graceful Strike DM override on the Unarmed weapon row
+   * When active, replaces "+DM" with the actual DEX+POW damage modifier
+   */
+  _applyGracefulStrikeDM(active, dexPowTotal) {
+    // Find the Unarmed weapon in melee slots
+    for (let i = 1; i <= 5; i++) {
+      const nameInput = document.getElementById(`melee-${i}-name`);
+      if (!nameInput || nameInput.value.toLowerCase().trim() !== 'unarmed') continue;
+      
+      const damageInput = document.getElementById(`melee-${i}-damage`);
+      if (!damageInput) continue;
+      
+      const currentDamage = damageInput.value.trim();
+      
+      if (active) {
+        const gracefulDM = this.getDamageModifierForSum(dexPowTotal);
+        
+        // Store original damage pattern if not already stored
+        if (!damageInput.dataset.gsOriginalDamage) {
+          damageInput.dataset.gsOriginalDamage = currentDamage;
+        }
+        
+        // Extract the base dice (everything before +DM or before the current DM override)
+        const originalDamage = damageInput.dataset.gsOriginalDamage || currentDamage;
+        const baseDice = originalDamage.replace(/\+DM$/i, '').trim();
+        
+        // Apply DEX+POW DM
+        const newDamage = gracefulDM === '+0' ? baseDice : `${baseDice}${gracefulDM}`;
+        damageInput.value = newDamage;
+        damageInput.classList.add('lightning-reflexes-bonus'); // green styling
+        damageInput.title = `Graceful Strike: DEX+POW (${dexPowTotal}) → DM ${gracefulDM}`;
+      } else {
+        // Restore original "+DM" damage
+        if (damageInput.dataset.gsOriginalDamage) {
+          damageInput.value = damageInput.dataset.gsOriginalDamage;
+          delete damageInput.dataset.gsOriginalDamage;
+        }
+        damageInput.classList.remove('lightning-reflexes-bonus');
+        if (damageInput.title && damageInput.title.includes('Graceful Strike')) {
+          damageInput.title = '';
+        }
+      }
+      break; // Only one Unarmed row
+    }
   },
 
   /**
