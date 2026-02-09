@@ -18175,8 +18175,38 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         const benefitLines = [];
         for (let i = 0; i <= currentTierIdx; i++) {
           const t = this.WEAPON_MASTER_TIERS[tierOrder[i]];
-          benefitLines.push(`<strong>${t.label}:</strong> ${t.benefits[weaponType]}`);
+          let benefitText = t.benefits[weaponType];
+          
+          // Weapon-specific text for Legendary ranged
+          if (tierOrder[i] === 'legendary' && weaponType === 'ranged') {
+            const wmCategory = this._getWeaponMasterCategory(spec.weapon);
+            if (wmCategory === 'crossbow') {
+              benefitText = '+ Reduce Reload by 1 additional point. If Reload reaches 0, weapon readied as Free Action.';
+            } else if (wmCategory === 'bow') {
+              benefitText = '+ Fire 2 arrows at 1 Grade harder (−20% CS), or 3 arrows at 2 Grades harder (−40% CS). Close Range only. Targets within 5 ft of each other.';
+            } else if (wmCategory === 'slinger') {
+              const projName = spec.weapon.toLowerCase().includes('sling') ? 'stones/bullets' : 'knives/daggers';
+              benefitText = `+ Hurl 2 ${projName} at 1 Grade harder (−20% CS), or 3 at 2 Grades harder (−40% CS). Close Range only. Targets within 5 ft of each other.`;
+            }
+          }
+          
+          // Weapon-specific text for Grand Master ranged
+          if (tierOrder[i] === 'grand' && weaponType === 'ranged') {
+            benefitText = '+ Reduce Reload time by 1 additional point. If Reload reaches 0, weapon readied as Free Action.';
+          }
+          
+          benefitLines.push(`<strong>${t.label}:</strong> ${benefitText}`);
         }
+
+        // Show active multi-shot status if applicable
+        const multiShot = this.character.legendaryMultiShot;
+        if (multiShot && multiShot.count > 1 && wm.tier === 'legendary' && weaponType === 'ranged') {
+          const wmCategory = this._getWeaponMasterCategory(spec.weapon);
+          if (wmCategory === 'bow' || wmCategory === 'slinger') {
+            benefitLines.push(`<span style="color: #ff6b6b;">⚡ Active: ${multiShot.count} projectiles (CS ${multiShot.csPenalty}%)</span>`);
+          }
+        }
+
         masteryBenefitsHtml = `
           <div class="benefit-item wm-benefit" style="color: ${tierData.color}; margin-top: 0.3rem; border-top: 1px solid ${tierData.color}33; padding-top: 0.3rem; font-size: 0.78rem;">
             ${benefitLines.join('<br>')}
@@ -18573,6 +18603,41 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Set doubled crit flag
     this.character.weaponSpecCritDoubled = anyMastered;
 
+    // --- Grand Master / Legendary Master Ranged: Reload reduction ---
+    this._clearWeaponMasterReloadReduction();
+    if (anyMastered && wm && wm.type === 'Ranged') {
+      const tierOrder = ['master', 'high', 'grand', 'legendary'];
+      const tierIdx = tierOrder.indexOf(wm.tier);
+      if (tierIdx >= 2) { // Grand or higher
+        const wmCategory = this._getWeaponMasterCategory(wm.weapon);
+        let reloadReduction = 0;
+        if (tierIdx >= 2) reloadReduction += 1; // Grand: -1
+        if (tierIdx >= 3 && wmCategory === 'crossbow') reloadReduction += 1; // Legendary crossbow: -1 more
+        if (reloadReduction > 0) {
+          this._applyWeaponMasterReloadReduction(wm.weapon, reloadReduction, wm.tier);
+        }
+      }
+    }
+
+    // --- Legendary Master Multi-shot CS penalty ---
+    if (anyMastered && wm && wm.type === 'Ranged' && wm.tier === 'legendary') {
+      const wmCategory = this._getWeaponMasterCategory(wm.weapon);
+      if (wmCategory === 'bow' || wmCategory === 'slinger') {
+        const multiShot = this.character.legendaryMultiShot || null;
+        if (multiShot && multiShot.count > 1 && skillInput) {
+          const csPenalty = multiShot.count === 3 ? -40 : -20;
+          let cs = parseInt(skillInput.value, 10) || 0;
+          cs += csPenalty;
+          skillInput.value = cs;
+          const existing = skillInput.title || '';
+          skillInput.title = existing
+            ? existing + ` | Multi-shot (${multiShot.count}): ${csPenalty}%`
+            : `Legendary Master Multi-shot (${multiShot.count}): ${csPenalty}%`;
+          skillInput.classList.add('forceful-penalized');
+        }
+      }
+    }
+
     this.refreshSummaryWidgets();
     this.updateCombatQuickRef();
   },
@@ -18642,6 +18707,163 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     });
   },
 
+  /**
+   * Apply Weapon Master Reload reduction to a specific ranged weapon
+   */
+  _applyWeaponMasterReloadReduction(weaponName, reductionAmount, tierKey) {
+    const targetName = weaponName.toLowerCase().trim();
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (!rangedBody) return;
+
+    const tierData = this.WEAPON_MASTER_TIERS[tierKey] || this.WEAPON_MASTER_TIERS.master;
+
+    rangedBody.querySelectorAll('tr').forEach(row => {
+      const nameInput = row.querySelector('.weapon-name');
+      if (!nameInput) return;
+      const rowName = nameInput.value.trim().toLowerCase();
+      if (!this._weaponNameMatches(rowName, targetName)) return;
+
+      let loadInput = null;
+      for (const input of row.querySelectorAll('input')) {
+        if (input.id && input.id.includes('-load')) {
+          loadInput = input;
+          break;
+        }
+      }
+      if (!loadInput) return;
+
+      const currentLoad = loadInput.value.trim();
+      if (currentLoad === '-' || currentLoad === '\u2013' || currentLoad === '') return;
+
+      // Store original before weapon master reduction
+      if (!loadInput.dataset.wmOriginalLoad) {
+        loadInput.dataset.wmOriginalLoad = currentLoad;
+      }
+
+      const loadNum = parseInt(currentLoad, 10);
+      if (isNaN(loadNum)) return;
+
+      const newLoad = Math.max(0, loadNum - reductionAmount);
+      loadInput.value = String(newLoad);
+      loadInput.dataset.wmReloadReduced = 'true';
+      loadInput.classList.add('damage-boosted');
+      const freeNote = newLoad === 0 ? ' (Free Action!)' : '';
+      loadInput.title = `${tierData.label}: -${reductionAmount} Reload${freeNote}. Original: ${loadInput.dataset.wmOriginalLoad}`;
+    });
+  },
+
+  /**
+   * Clear Weapon Master Reload reductions, restoring originals
+   */
+  _clearWeaponMasterReloadReduction() {
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (!rangedBody) return;
+
+    rangedBody.querySelectorAll('tr').forEach(row => {
+      for (const input of row.querySelectorAll('input')) {
+        if (input.id && input.id.includes('-load') && input.dataset.wmReloadReduced === 'true') {
+          if (input.dataset.wmOriginalLoad) {
+            input.value = input.dataset.wmOriginalLoad;
+          }
+          delete input.dataset.wmReloadReduced;
+          delete input.dataset.wmOriginalLoad;
+          input.classList.remove('damage-boosted');
+          // Preserve spec-load-reduced title if present
+          if (!input.classList.contains('spec-load-reduced')) {
+            input.title = '';
+          }
+        }
+      }
+    });
+  },
+
+  /**
+   * Show Legendary Master multi-shot selection modal
+   */
+  _showLegendaryMultiShotModal(weaponName, category) {
+    const projectileType = category === 'bow' ? 'arrows'
+      : category === 'slinger' ? (weaponName.toLowerCase().includes('sling') ? 'stones/bullets' : 'knives/daggers')
+      : 'projectiles';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8); display: flex; justify-content: center;
+      align-items: center; z-index: 10000;
+    `;
+
+    const tierData = this.WEAPON_MASTER_TIERS.legendary;
+
+    overlay.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #1a1a2a 0%, #2d2a1d 100%);
+        border: 2px solid ${tierData.color}; border-radius: 12px;
+        padding: 1.5rem; max-width: 400px; width: 90%;
+        box-shadow: 0 0 30px ${tierData.glowColor};
+      ">
+        <h3 style="color: ${tierData.color}; margin: 0 0 0.5rem 0; text-align: center;">
+          ${tierData.icon} Legendary Master: Multi-Shot
+        </h3>
+        <p style="color: #ccc; margin-bottom: 1rem; text-align: center; font-size: 0.85rem;">
+          <strong>${weaponName}</strong> — How many ${projectileType} will you fire?<br>
+          <span style="color: #999; font-size: 0.8rem;">Targets must be within Close Range and within 5 feet of each other.</span>
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <button type="button" class="lm-multishot-btn" data-count="1" style="
+            background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+            border: 1px solid rgba(201, 165, 90, 0.3); color: #ddd;
+            padding: 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            text-align: left; transition: all 0.2s ease;
+          ">🎯 <strong>Single shot</strong> — No penalty</button>
+          <button type="button" class="lm-multishot-btn" data-count="2" style="
+            background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+            border: 1px solid rgba(255, 107, 107, 0.3); color: #ddd;
+            padding: 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            text-align: left; transition: all 0.2s ease;
+          ">🏹🏹 <strong>2 ${projectileType}</strong> — Combat Skill −20% (1 Grade harder)</button>
+          <button type="button" class="lm-multishot-btn" data-count="3" style="
+            background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+            border: 1px solid rgba(255, 50, 50, 0.4); color: #ddd;
+            padding: 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            text-align: left; transition: all 0.2s ease;
+          ">🏹🏹🏹 <strong>3 ${projectileType}</strong> — Combat Skill −40% (2 Grades harder)</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Hover effects
+    overlay.querySelectorAll('.lm-multishot-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = 'linear-gradient(135deg, #3a3a4a 0%, #4d4a3d 100%)';
+        btn.style.boxShadow = `0 0 8px ${tierData.glowColor}`;
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
+        btn.style.boxShadow = 'none';
+      });
+      btn.addEventListener('click', () => {
+        const count = parseInt(btn.dataset.count, 10);
+        if (count === 1) {
+          delete this.character.legendaryMultiShot;
+        } else {
+          this.character.legendaryMultiShot = {
+            count: count,
+            csPenalty: count === 3 ? -40 : -20,
+            weapon: weaponName
+          };
+        }
+        document.body.removeChild(overlay);
+        // Recalculate to apply the CS penalty
+        this.recalculateCombatBuffs();
+        this.updateWeaponSpecDisplay();
+        this.scheduleAutoSave();
+      });
+    });
+  },
+
   // ============================================
   // WEAPON MASTER SYSTEM & SPEC ACTIVATION
   // ============================================
@@ -18695,10 +18917,26 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       color: '#ff6b6b',
       glowColor: 'rgba(255, 107, 107, 0.6)',
       benefits: {
-        melee: '+ Weapon +2 Size categories for Parrying.',
-        ranged: '+ Multi-shot: 2 projectiles at -1 Grade, or 3 at -2 Grades (Close Range).'
+        melee: '+ Weapon counts as 2 Size categories larger for Parrying (Large→Enormous, Huge→Colossal, etc.).',
+        ranged: '+ Bows/Slings/Blades: Multi-shot (2 at -1 Grade, 3 at -2 Grades, Close Range). Crossbows: -1 additional Reload.'
       }
     }
+  },
+
+  // Weapon categories for mastery effects
+  WM_CROSSBOWS: ['arbalest', 'hand crossbow', 'heavy crossbow', 'repeating heavy crossbow', 'light crossbow', 'repeating light crossbow'],
+  WM_BOWS: ['composite long bow', 'composite short bow', 'long bow', 'recurve bow', 'short bow'],
+  WM_SLINGS_BLADES: ['sling', 'staff sling', 'dagger (thrown)', 'throwing knife', 'dart'],
+
+  /**
+   * Determine the mastered weapon's category for tier effects
+   */
+  _getWeaponMasterCategory(weaponName) {
+    const name = (weaponName || '').toLowerCase().trim();
+    if (this.WM_CROSSBOWS.some(w => name.includes(w) || w.includes(name))) return 'crossbow';
+    if (this.WM_BOWS.some(w => name.includes(w) || w.includes(name))) return 'bow';
+    if (this.WM_SLINGS_BLADES.some(w => name.includes(w) || w.includes(name))) return 'slinger';
+    return 'other';
   },
 
   /**
@@ -18881,6 +19119,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (wasActive) {
       // Remove from array
       this.character.activeWeaponSpecs.splice(idx, 1);
+      // Clear multi-shot if deactivating the mastered weapon
+      const wm = this.character.weaponMaster;
+      if (wm && wm.weapon && wm.weapon.toLowerCase() === weapon.toLowerCase() && wm.type === type) {
+        delete this.character.legendaryMultiShot;
+      }
     } else {
       // Add to array
       this.character.activeWeaponSpecs.push(specKey);
@@ -18893,6 +19136,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (isMastered && wm.tier) {
         const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
         this.playWeaponMasterAnimation(weapon, type, tierData);
+
+        // Legendary Master multi-shot prompt for bows/slings/blades
+        if (wm.tier === 'legendary' && wm.type === 'Ranged') {
+          const wmCategory = this._getWeaponMasterCategory(wm.weapon);
+          if (wmCategory === 'bow' || wmCategory === 'slinger') {
+            // Defer prompt to after recalculation
+            setTimeout(() => this._showLegendaryMultiShotModal(wm.weapon, wmCategory), 400);
+          }
+        }
       }
     }
 
@@ -18912,6 +19164,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.captureBaselineIfNeeded();
     this.character.activeWeaponSpecs = [];
     this.character.weaponSpecCritDoubled = false;
+    delete this.character.legendaryMultiShot;
     this.recalculateCombatBuffs();
     this.releaseBaselineIfClean();
   },
@@ -18973,6 +19226,50 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
 
     this.character.weaponSpecCritDoubled = anyMastered;
+
+    // Restore Grand/Legendary reload reduction visuals
+    if (anyMastered && wm && wm.type === 'Ranged') {
+      const tierOrder = ['master', 'high', 'grand', 'legendary'];
+      const tierIdx = tierOrder.indexOf(wm.tier);
+      if (tierIdx >= 2) {
+        const wmCategory = this._getWeaponMasterCategory(wm.weapon);
+        let reloadReduction = 0;
+        if (tierIdx >= 2) reloadReduction += 1;
+        if (tierIdx >= 3 && wmCategory === 'crossbow') reloadReduction += 1;
+        if (reloadReduction > 0) {
+          // Re-apply visual tooltip to reload fields
+          const rangedBody = document.getElementById('ranged-weapons-body');
+          if (rangedBody) {
+            const targetName = wm.weapon.toLowerCase().trim();
+            rangedBody.querySelectorAll('tr').forEach(row => {
+              const nameInput = row.querySelector('.weapon-name');
+              if (!nameInput) return;
+              if (!this._weaponNameMatches(nameInput.value.trim().toLowerCase(), targetName)) return;
+              for (const input of row.querySelectorAll('input')) {
+                if (input.id && input.id.includes('-load')) {
+                  input.classList.add('damage-boosted');
+                  const loadVal = parseInt(input.value, 10);
+                  const freeNote = loadVal === 0 ? ' (Free Action!)' : '';
+                  input.title = `${masteredTierData.label}: -${reloadReduction} Reload${freeNote}`;
+                }
+              }
+            });
+          }
+        }
+      }
+    }
+
+    // Restore multi-shot CS penalty visual
+    const multiShot = this.character.legendaryMultiShot;
+    if (multiShot && multiShot.count > 1 && anyMastered && wm && wm.tier === 'legendary' && wm.type === 'Ranged') {
+      if (skillInput) {
+        const existing = skillInput.title || '';
+        skillInput.title = existing
+          ? existing + ` | Multi-shot (${multiShot.count}): ${multiShot.csPenalty}%`
+          : `Legendary Master Multi-shot (${multiShot.count}): ${multiShot.csPenalty}%`;
+        skillInput.classList.add('forceful-penalized');
+      }
+    }
   },
 
   /**
@@ -22673,39 +22970,76 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   _removeWeaponFromEquipment(weaponName) {
     if (!weaponName) return;
     const targetName = weaponName.toLowerCase().trim();
+    let found = false;
     
-    // Search main equipment container
-    const mainContainer = document.getElementById('equipment-container');
-    if (mainContainer) {
-      mainContainer.querySelectorAll('.equipment-row').forEach(row => {
+    // Search both equipment containers: main and sub-container (bags/backpacks)
+    ['equipment-container', 'container-items'].forEach(containerId => {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const rows = Array.from(container.querySelectorAll('.equipment-row'));
+      for (const row of rows) {
         const nameInput = row.querySelector('.equipment-name');
-        if (!nameInput) return;
+        if (!nameInput) continue;
         const rowName = nameInput.value.trim().toLowerCase();
         if (rowName === targetName || this._weaponNameMatches(rowName, targetName)) {
-          row.querySelectorAll('input').forEach(input => { input.value = ''; });
-          row.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+          row.remove();
+          found = true;
         }
-      });
-    }
-    
-    // Search sub-containers (bags, backpacks, etc.)
-    document.querySelectorAll('.container-section').forEach(section => {
-      const itemsContainer = section.querySelector('.container-items');
-      if (!itemsContainer) return;
-      itemsContainer.querySelectorAll('.equipment-row').forEach(row => {
-        const nameInput = row.querySelector('.equipment-name');
-        if (!nameInput) return;
-        const rowName = nameInput.value.trim().toLowerCase();
-        if (rowName === targetName || this._weaponNameMatches(rowName, targetName)) {
-          row.querySelectorAll('input').forEach(input => { input.value = ''; });
-          row.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
-        }
-      });
+      }
     });
     
+    if (found) {
+      // Re-index equipment IDs after removal
+      const mainContainer = document.getElementById('equipment-container');
+      if (mainContainer) {
+        mainContainer.querySelectorAll('.equipment-row').forEach((row, i) => {
+          const nameInput = row.querySelector('.equipment-name');
+          const encInput = row.querySelector('.equipment-enc');
+          if (nameInput) nameInput.id = `equip-${i}-name`;
+          if (encInput) encInput.id = `equip-${i}-enc`;
+        });
+      }
+      const subContainer = document.getElementById('container-items');
+      if (subContainer) {
+        subContainer.querySelectorAll('.equipment-row').forEach((row, i) => {
+          const nameInput = row.querySelector('.equipment-name');
+          const encInput = row.querySelector('.equipment-enc');
+          if (nameInput) nameInput.id = `container-${i}-name`;
+          if (encInput) encInput.id = `container-${i}-enc`;
+        });
+      }
+    }
+    
+    // Also remove from dual-category combat section if applicable
+    const classification = this.classifyWeaponByName(weaponName);
+    if (classification && classification.type === 'dual') {
+      // Remove from the other combat section too
+      ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
+        const body = document.getElementById(bodyId);
+        if (!body) return;
+        const rows = Array.from(body.querySelectorAll('tr'));
+        for (const row of rows) {
+          const nameInput = row.querySelector('.weapon-name');
+          if (!nameInput) continue;
+          const rowName = nameInput.value.trim().toLowerCase();
+          if (rowName === targetName || this._weaponNameMatches(rowName, targetName)) {
+            row.remove();
+          }
+        }
+      });
+      // Re-index both weapon sections
+      this.reindexSection('melee-weapons-body', 'tr');
+      this.reindexSection('ranged-weapons-body', 'tr');
+    }
+    
     // Recalculate encumbrance after removing
-    if (window.EncumbranceData && window.EncumbranceData.recalculateEncumbrance) {
-      window.EncumbranceData.recalculateEncumbrance();
+    if (found) {
+      this.updateTotalEnc();
+      if (window.EncumbranceData && window.EncumbranceData.recalculateEncumbrance) {
+        window.EncumbranceData.recalculateEncumbrance();
+      }
+      this.collectFormData();
+      this.scheduleAutoSave();
     }
   },
   
