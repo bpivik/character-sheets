@@ -456,6 +456,7 @@ const App = {
       this.artfulDodgerDisplayed = false; // Runtime flag, NOT on this.character
       this.agileDisplayed = false; // Runtime flag, NOT on this.character
       this.lightningReflexesDisplayed = false; // Runtime flag for Lightning Reflexes Evade bonus
+      this._lightningReflexesBonus = 0; // Tracked bonus amount (10 + Mysticism/10)
       this._monkQuickBonus = 0; // Runtime flag for Quick movement bonus
       
       // Set up ability effect tracking
@@ -1512,7 +1513,7 @@ const App = {
             const displayedValue = parseInt(e.target.value, 10) || 0;
             let bonusToRemove = 0;
             if (this.artfulDodgerDisplayed) bonusToRemove += 10;
-            if (this.lightningReflexesDisplayed) bonusToRemove += 10;
+            if (this.lightningReflexesDisplayed) bonusToRemove += (this._lightningReflexesBonus || 0);
             const baseValue = Math.max(0, displayedValue - bonusToRemove).toString();
             if (e.target.dataset.originalValue !== undefined) {
               e.target.dataset.originalValue = baseValue;
@@ -2518,6 +2519,12 @@ const App = {
         this.updateProfessionalSkillData(i);
         // Sync to magic page if this is a magic skill
         this.syncProfSkillToMagic(i);
+        // If Mysticism changed, update Lightning Reflexes Evade bonus
+        const profName = document.getElementById(`prof-skill-${i}-name`)?.value?.trim().toLowerCase() || '';
+        if (profName === 'mysticism' && this.lightningReflexesDisplayed) {
+          this.updateLightningReflexesDisplay();
+          this.checkMonkAbilitiesVisibility();
+        }
         this.scheduleAutoSave();
       });
     }
@@ -13626,6 +13633,7 @@ const App = {
         : (parseInt(evadeField.value, 10) || 0);
       this.artfulDodgerDisplayed = false;
       this.lightningReflexesDisplayed = false;
+      this._lightningReflexesBonus = 0;
       evadeField.value = Math.max(0, baseEvade - 20);
       evadeField.classList.add('rage-penalized');
       // Remove display bonus styling during rage
@@ -13864,6 +13872,7 @@ const App = {
       evadeField.title = '';
       this.artfulDodgerDisplayed = false;
       this.lightningReflexesDisplayed = false;
+      this._lightningReflexesBonus = 0;
     }
     
     this.setArtfulDodgerStrikethrough(true);
@@ -13972,7 +13981,7 @@ const App = {
     
     let val = parseInt(currField.value, 10) || 0;
     if (this.artfulDodgerDisplayed) val -= 10;
-    if (this.lightningReflexesDisplayed) val -= 10;
+    if (this.lightningReflexesDisplayed) val -= (this._lightningReflexesBonus || 0);
     return Math.max(0, val);
   },
   
@@ -13993,15 +14002,20 @@ const App = {
     // Don't apply during rage
     if (this.character.isRaging) return;
     
+    // Calculate current bonus: 10 + floor(Mysticism / 10)
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const currentBonus = 10 + Math.floor(mysticismVal / 10);
+    
     // If ability is not present, ensure display is clean
     if (!hasAbility) {
       if (this.lightningReflexesDisplayed) {
+        const prevBonus = this._lightningReflexesBonus || 0;
         const displayedVal = parseInt(currField.value, 10) || 0;
-        currField.value = Math.max(0, displayedVal - 10);
+        currField.value = Math.max(0, displayedVal - prevBonus);
         currField.classList.remove('lightning-reflexes-bonus');
-        // Update title to reflect remaining bonuses
-        this._updateEvadeBonusTitle(currField);
         this.lightningReflexesDisplayed = false;
+        this._lightningReflexesBonus = 0;
+        this._updateEvadeBonusTitle(currField);
       }
       return;
     }
@@ -14015,17 +14029,29 @@ const App = {
     if (meetsConditions && !this.lightningReflexesDisplayed) {
       // Add display bonus
       const baseVal = parseInt(currField.value, 10) || 0;
-      currField.value = baseVal + 10;
+      currField.value = baseVal + currentBonus;
       currField.classList.add('lightning-reflexes-bonus');
-      this._updateEvadeBonusTitle(currField);
       this.lightningReflexesDisplayed = true;
+      this._lightningReflexesBonus = currentBonus;
+      this._updateEvadeBonusTitle(currField);
+    } else if (meetsConditions && this.lightningReflexesDisplayed) {
+      // Already displayed — check if Mysticism changed and bonus needs updating
+      const prevBonus = this._lightningReflexesBonus || 0;
+      if (currentBonus !== prevBonus) {
+        const displayedVal = parseInt(currField.value, 10) || 0;
+        currField.value = Math.max(0, displayedVal - prevBonus + currentBonus);
+        this._lightningReflexesBonus = currentBonus;
+        this._updateEvadeBonusTitle(currField);
+      }
     } else if (!meetsConditions && this.lightningReflexesDisplayed) {
       // Remove display bonus
+      const prevBonus = this._lightningReflexesBonus || 0;
       const displayedVal = parseInt(currField.value, 10) || 0;
-      currField.value = Math.max(0, displayedVal - 10);
+      currField.value = Math.max(0, displayedVal - prevBonus);
       currField.classList.remove('lightning-reflexes-bonus');
-      this._updateEvadeBonusTitle(currField);
       this.lightningReflexesDisplayed = false;
+      this._lightningReflexesBonus = 0;
+      this._updateEvadeBonusTitle(currField);
     }
   },
   
@@ -14035,7 +14061,10 @@ const App = {
   _updateEvadeBonusTitle(evadeField) {
     const parts = [];
     if (this.artfulDodgerDisplayed) parts.push('+10 Artful Dodger');
-    if (this.lightningReflexesDisplayed) parts.push('+10 Lightning Reflexes');
+    if (this.lightningReflexesDisplayed) {
+      const bonus = this._lightningReflexesBonus || 0;
+      parts.push(`+${bonus} Lightning Reflexes`);
+    }
     evadeField.title = parts.length > 0 ? parts.join(', ') : '';
   },
   // Design: Never modify saved data. Store base Initiative in character.derived.
@@ -20324,6 +20353,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Reset display bonus flags since penalties restore from base originalValue
     this.artfulDodgerDisplayed = false;
     this.lightningReflexesDisplayed = false;
+    this._lightningReflexesBonus = 0;
     this.applySkillPenalties(encPenaltyPercent, encIsBurdened, encHasPenalty, fatigue);
     
     // --- INITIATIVE ---
