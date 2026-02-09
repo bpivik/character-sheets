@@ -4028,7 +4028,7 @@ const App = {
             if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
               window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
-              this.syncCombatToEquipment(nameInput.value.trim());
+              this.syncCombatToEquipment(nameInput.value.trim(), 'melee');
               this.scheduleAutoSave();
             }
           });
@@ -4088,7 +4088,7 @@ const App = {
             if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
               window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
-              this.syncCombatToEquipment(nameInput.value.trim());
+              this.syncCombatToEquipment(nameInput.value.trim(), 'ranged');
               this.scheduleAutoSave();
             }
           });
@@ -4143,7 +4143,7 @@ const App = {
         }
         if (window.WeaponData && window.WeaponData.autofillMeleeWeapon) {
           window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
-          this.syncCombatToEquipment(nameInput.value.trim());
+          this.syncCombatToEquipment(nameInput.value.trim(), 'melee');
           this.scheduleAutoSave();
         }
       });
@@ -4229,7 +4229,7 @@ const App = {
         if (window.WeaponData && window.WeaponData.autofillRangedWeapon) {
           window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
-          this.syncCombatToEquipment(nameInput.value.trim());
+          this.syncCombatToEquipment(nameInput.value.trim(), 'ranged');
           this.scheduleAutoSave();
         }
       });
@@ -4376,7 +4376,12 @@ const App = {
         // If it's the base name without a weapon chosen, prompt for selection
         // Don't prompt during initialization (loading saved data)
         if (normalizedName === 'weapon specialization' && !this.isInitializing) {
-          setTimeout(() => this.promptWeaponSpecialization(input), 150);
+          setTimeout(() => {
+            // Guard: ensure input is still in the DOM (not removed by rapid class change)
+            if (input && input.isConnected) {
+              this.promptWeaponSpecialization(input);
+            }
+          }, 150);
         }
       }
     }
@@ -4555,12 +4560,22 @@ const App = {
     if (!abilityName) return;
     
     const baseName = abilityName.split('(')[0].trim().toLowerCase();
+    const fullName = abilityName.toLowerCase().trim();
     
     // Remove from acquiredAbilities
     if (this.character.acquiredAbilities) {
+      // For repeatable abilities (like Weapon Specialization), only remove the exact match
+      const isRepeatable = window.isRepeatableAbility && window.isRepeatableAbility(abilityName);
+      
       this.character.acquiredAbilities = this.character.acquiredAbilities.filter(name => {
+        const trackFullName = name.toLowerCase().trim();
+        if (isRepeatable) {
+          // Exact match only for repeatable abilities
+          return trackFullName !== fullName;
+        }
+        // Base name match for non-repeatable abilities
         const trackBaseName = name.split('(')[0].trim().toLowerCase();
-        return trackBaseName !== baseName && name.toLowerCase() !== abilityName.toLowerCase();
+        return trackBaseName !== baseName && trackFullName !== fullName;
       });
     }
     
@@ -5604,7 +5619,7 @@ const App = {
         
         // Weapon Specialization: prompt for weapon choice
         if (normalizedName === 'weapon specialization') {
-          setTimeout(() => this.promptWeaponSpecialization(input), 100);
+          setTimeout(() => { if (input && input.isConnected) this.promptWeaponSpecialization(input); }, 100);
         }
         
         this.scheduleAutoSave();
@@ -5658,7 +5673,7 @@ const App = {
     
     // Weapon Specialization: prompt for weapon choice
     if (normalizedName === 'weapon specialization' && newInput) {
-      setTimeout(() => this.promptWeaponSpecialization(newInput), 100);
+      setTimeout(() => { if (newInput.isConnected) this.promptWeaponSpecialization(newInput); }, 100);
     }
     
     return !!newInput;
@@ -18213,7 +18228,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
   /**
    * Determine if an item name is a weapon and what type it is.
-   * Returns { isWeapon: true, type: 'melee'|'ranged'|'shield', lookupKey: '...' } or { isWeapon: false }
+   * Returns { isWeapon: true, type: 'melee'|'ranged'|'shield'|'dual', lookupKey: '...' } or { isWeapon: false }
+   * 'dual' means the weapon exists in both melee and ranged databases (e.g., dagger, net, trident)
    */
   classifyWeaponByName(itemName) {
     if (!itemName) return { isWeapon: false };
@@ -18235,24 +18251,32 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       return { isWeapon: true, type: 'shield', lookupKey: lower };
     }
 
-    // Check melee weapon database
-    if (window.WeaponData && window.WeaponData.MELEE_WEAPON_DATA) {
-      const key = window.WeaponData.findWeaponKey ? window.WeaponData.findWeaponKey(lower) : null;
-      if (key) {
-        // Double-check it's not a shield we missed
-        if (shieldNames.has(key)) {
-          return { isWeapon: true, type: 'shield', lookupKey: key };
-        }
-        return { isWeapon: true, type: 'melee', lookupKey: key };
+    // Check both databases
+    let meleeKey = null;
+    let rangedKey = null;
+
+    if (window.WeaponData && window.WeaponData.findWeaponKey) {
+      meleeKey = window.WeaponData.findWeaponKey(lower);
+      if (meleeKey && shieldNames.has(meleeKey)) {
+        return { isWeapon: true, type: 'shield', lookupKey: meleeKey };
       }
     }
 
-    // Check ranged weapon database
-    if (window.WeaponData && window.WeaponData.RANGED_WEAPON_DATA) {
-      const key = window.WeaponData.findRangedWeaponKey ? window.WeaponData.findRangedWeaponKey(lower) : null;
-      if (key) {
-        return { isWeapon: true, type: 'ranged', lookupKey: key };
-      }
+    if (window.WeaponData && window.WeaponData.findRangedWeaponKey) {
+      rangedKey = window.WeaponData.findRangedWeaponKey(lower);
+    }
+
+    // Dual-category weapon (exists in both)
+    if (meleeKey && rangedKey) {
+      return { isWeapon: true, type: 'dual', lookupKey: meleeKey, rangedKey: rangedKey };
+    }
+
+    if (meleeKey) {
+      return { isWeapon: true, type: 'melee', lookupKey: meleeKey };
+    }
+
+    if (rangedKey) {
+      return { isWeapon: true, type: 'ranged', lookupKey: rangedKey };
     }
 
     return { isWeapon: false };
@@ -18395,7 +18419,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     try {
       const classification = this.classifyWeaponByName(itemName);
       if (classification.isWeapon) {
-        this.addWeaponToCombatPage(itemName, classification.type);
+        if (classification.type === 'dual') {
+          // Add to both melee and ranged
+          this.addWeaponToCombatPage(itemName, 'melee');
+          this.addWeaponToCombatPage(itemName, 'ranged');
+        } else {
+          this.addWeaponToCombatPage(itemName, classification.type);
+        }
       }
     } finally {
       this._weaponSyncing = false;
@@ -18403,17 +18433,29 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
-   * Sync: Combat page → Equipment
+   * Sync: Combat page → Equipment (and other combat section for dual weapons)
    * Called when a weapon name is finalized on the combat page (blur)
    * @param {string} weaponName - The weapon name
+   * @param {string} sourceType - 'melee' or 'ranged' (which combat section triggered this)
    */
-  syncCombatToEquipment(weaponName) {
+  syncCombatToEquipment(weaponName, sourceType) {
     if (this._weaponSyncing || this.isInitializing) return;
     if (!weaponName || weaponName.toLowerCase().trim() === 'unarmed') return;
 
     this._weaponSyncing = true;
     try {
+      // Always add to equipment
       this.addWeaponToEquipment(weaponName);
+      
+      // Check if dual-category — if so, add to the OTHER combat section
+      const classification = this.classifyWeaponByName(weaponName);
+      if (classification.type === 'dual' && sourceType) {
+        if (sourceType === 'melee') {
+          this.addWeaponToCombatPage(weaponName, 'ranged');
+        } else if (sourceType === 'ranged') {
+          this.addWeaponToCombatPage(weaponName, 'melee');
+        }
+      }
     } finally {
       this._weaponSyncing = false;
     }
@@ -18430,11 +18472,18 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     this._weaponSyncing = true;
     try {
-      const combatType = type.toLowerCase();
       // Strip "(Thrown)" for equipment name
       const equipName = weaponName.replace(/\s*\(thrown\)/i, '');
 
-      this.addWeaponToCombatPage(equipName, combatType);
+      // Check if this is actually a dual-category weapon
+      const classification = this.classifyWeaponByName(equipName);
+      if (classification.type === 'dual') {
+        this.addWeaponToCombatPage(equipName, 'melee');
+        this.addWeaponToCombatPage(equipName, 'ranged');
+      } else {
+        this.addWeaponToCombatPage(equipName, type.toLowerCase());
+      }
+      
       this.addWeaponToEquipment(equipName);
     } finally {
       this._weaponSyncing = false;
@@ -21913,16 +21962,64 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
       });
       
-      nameInput.addEventListener('blur', () => {
-        if (nameInput.value.trim()) {
-          nameInput.value = this.toTitleCase(nameInput.value.trim());
+      nameInput.addEventListener('focus', () => {
+        nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+      });
+      
+      nameInput.addEventListener('blur', async () => {
+        const currentValue = nameInput.value.trim().toLowerCase();
+        const previousValue = nameInput.dataset.previousValue || '';
+        
+        if (previousValue && (!currentValue || currentValue !== previousValue)) {
+          const removedContainer = this.getContainerIdFromItemName(previousValue);
+          if (removedContainer) {
+            const stillExists = this.containerStillExistsElsewhere(removedContainer, index);
+            if (!stillExists) {
+              const hasItems = this.containerHasItems(removedContainer);
+              if (hasItems) {
+                const handled = await this.handleContainerRemoval(removedContainer, nameInput, previousValue);
+                if (!handled) {
+                  nameInput.value = previousValue;
+                  nameInput.dataset.previousValue = previousValue;
+                  return;
+                }
+              }
+            }
+          }
         }
-        this.updateContainerButtons();
-        this.scheduleAutoSave();
+        
+        nameInput.dataset.previousValue = nameInput.value.trim().toLowerCase();
+        
+        if (nameInput.value.trim()) {
+          let itemName = this.toTitleCase(nameInput.value.trim());
+          const containerId = this.getContainerIdFromItemName(itemName);
+          if (containerId && !itemName.toLowerCase().includes('see below')) {
+            itemName = itemName + ' (See Below)';
+          }
+          nameInput.value = itemName;
+        }
+        
+        if (window.EncumbranceData) {
+          const itemName = nameInput.value;
+          if (itemName.trim() === '') {
+            window.EncumbranceData.clearEquipmentEncIfEmpty('equip', index, itemName);
+          } else {
+            window.EncumbranceData.autofillEquipmentEnc('equip', index, itemName);
+          }
+          this.updateTotalEnc();
+          this.updateContainerButtons();
+          this.scheduleAutoSave();
+        }
+        
+        // Sync weapon to combat page
+        if (nameInput.value.trim()) {
+          this.syncEquipmentToCombat(nameInput.value.trim());
+        }
       });
       
       nameInput.addEventListener('input', () => {
         this.updateTotalEnc();
+        this.updateContainerButtons();
         this.scheduleAutoSave();
       });
       

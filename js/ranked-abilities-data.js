@@ -757,7 +757,6 @@ const RANKED_CLASS_ABILITIES = {
     { 
       name: "Weapon Specialization", 
       rank: 1, 
-      repeatable: true,
       prereqs: "Combat Style 50%",
       summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
     },
