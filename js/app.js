@@ -471,6 +471,14 @@ const App = {
           this.applyWeaponMasterCritical();
         }
       }
+      
+      // Restore spec bonus (+5% Combat Skill) if it was active
+      if (this.character.activeSpecBonus) {
+        this.applySpecBonusToCombatSkill();
+      }
+      
+      // Apply ranged weapon load reductions for specializations
+      this.applyRangedSpecLoadReduction();
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -18031,6 +18039,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Sync weapon to equipment and combat page
     this.syncWeaponSpecToAll(weapon, type);
     
+    // Apply ranged load reduction after sync (weapon is now on the combat page)
+    if (type === 'Ranged') {
+      this.applyRangedSpecLoadReduction();
+    }
+    
     this.scheduleAutoSave();
   },
 
@@ -18055,6 +18068,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     } else {
       section.style.display = 'none';
       if (divider) divider.style.display = 'none';
+      // Clean up spec bonus if active
+      if (this.character.activeSpecBonus) {
+        this.removeSpecBonusFromCombatSkill();
+        this.character.activeSpecBonus = null;
+      }
+      // Restore ranged load values
+      this.restoreRangedLoadValues();
       this.character.weaponSpecializations = [];
     }
 
@@ -18102,6 +18122,19 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     const wm = this.character.weaponMaster;
     const tierData = wm ? (this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master) : null;
+    const activeSpec = this.character.activeSpecBonus || null;
+    
+    // Validate active spec bonus still exists in specializations
+    if (activeSpec) {
+      const [bonusWeapon, bonusType] = activeSpec.split('|');
+      const stillExists = specs.some(s => 
+        s.weapon === bonusWeapon && s.type === bonusType
+      );
+      if (!stillExists) {
+        this.removeSpecBonusFromCombatSkill();
+        this.character.activeSpecBonus = null;
+      }
+    }
 
     let html = '';
     for (const spec of specs) {
@@ -18117,8 +18150,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         wm.weapon.toLowerCase() === spec.weapon.toLowerCase() && 
         wm.type === spec.type;
 
+      // Weapon Master button (Rank 2+)
       const masterBtnHtml = isMastered ? `
-        <button type="button" id="wm-toggle-btn" class="wm-toggle-btn${wm.active ? ' wm-active' : ''}" 
+        <button type="button" class="wm-toggle-btn${wm.active ? ' wm-active' : ''}" data-action="weapon-master"
           title="Double your Critical range with your weapon. Click to activate."
           style="
             padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer;
@@ -18128,7 +18162,27 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             color: ${wm.active ? tierData.color : '#999'};
             box-shadow: ${wm.active ? `0 0 12px ${tierData.glowColor}` : 'none'};
           ">
-          ${tierData.icon} ${tierData.label}${wm.active ? ' ✦' : ''}
+          ${tierData.icon} ${tierData.label}${wm.active ? ' \u2726' : ''}
+        </button>
+      ` : '';
+
+      // Spec Bonus button for melee/shield (+5% Combat Skill toggle)
+      const isMeleeOrShield = spec.type === 'Melee' || spec.type === 'Shield';
+      const specKey = `${spec.weapon}|${spec.type}`;
+      const isSpecActive = activeSpec === specKey;
+      const specBtnHtml = isMeleeOrShield ? `
+        <button type="button" class="spec-bonus-btn${isSpecActive ? ' spec-active' : ''}" 
+          data-action="spec-bonus" data-weapon="${spec.weapon}" data-type="${spec.type}"
+          title="${isSpecActive ? 'Click to deactivate +5% Combat Skill bonus' : '+5% Combat Skill when using this weapon. Click to activate.'}"
+          style="
+            padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer;
+            font-size: 0.7rem; transition: all 0.3s ease; font-weight: bold;
+            background: ${isSpecActive ? 'linear-gradient(135deg, rgba(100, 200, 100, 0.15), rgba(100, 200, 100, 0.3))' : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
+            border: 1px solid ${isSpecActive ? '#6c6' : 'rgba(201, 165, 90, 0.2)'};
+            color: ${isSpecActive ? '#6c6' : '#888'};
+            box-shadow: ${isSpecActive ? '0 0 8px rgba(100, 200, 100, 0.4)' : 'none'};
+          ">
+          ${isSpecActive ? '\u2726 +5%' : '+5%'}
         </button>
       ` : '';
 
@@ -18140,7 +18194,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           <div class="weapon-spec-card-header">
             <span class="weapon-spec-card-icon">${benefitData.icon}</span>
             <span class="weapon-spec-card-title">${title}</span>
-            ${masterBtnHtml}
+            <span class="weapon-spec-card-buttons">
+              ${specBtnHtml}
+              ${masterBtnHtml}
+            </span>
             <span class="weapon-spec-card-type">${spec.type}</span>
           </div>
           <div class="weapon-spec-card-benefits">
@@ -18173,7 +18230,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       `;
       promptDiv.innerHTML = `
         <div style="color: #c9a55a; font-size: 0.85rem; margin-bottom: 0.3rem;">
-          ⚔️ You've earned <strong>Weapon Master</strong>!
+          \u2694\uFE0F You've earned <strong>Weapon Master</strong>!
         </div>
         <button type="button" id="wm-choose-btn" style="
           background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
@@ -18198,19 +18255,30 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
     }
     
-    // Wire up weapon master toggle button
-    const wmBtn = document.getElementById('wm-toggle-btn');
-    if (wmBtn) {
-      wmBtn.addEventListener('click', (e) => {
+    // Wire up all action buttons via event delegation
+    cardsContainer.querySelectorAll('[data-action="weapon-master"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.toggleWeaponMaster();
       });
-    }
+    });
     
-    // Restore critical display if active
+    cardsContainer.querySelectorAll('[data-action="spec-bonus"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const weapon = btn.dataset.weapon;
+        const type = btn.dataset.type;
+        this.toggleSpecBonus(weapon, type);
+      });
+    });
+    
+    // Restore critical display if weapon master active
     if (wm && wm.active) {
       this.applyWeaponMasterCritical();
     }
+    
+    // Apply ranged spec load reductions
+    this.applyRangedSpecLoadReduction();
   },
 
   /**
@@ -18607,7 +18675,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this.removeWeaponMasterCritical();
     }
     
-    this.updateWeaponMasterButtonState();
+    this.updateWeaponSpecDisplay();
     this.scheduleAutoSave();
   },
 
@@ -18770,6 +18838,178 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       btn.textContent = `${tierData.icon} ${tierData.label}`;
       btn.title = 'Double your Critical range with your weapon. Click to activate.';
     }
+  },
+
+  // ============================================
+  // WEAPON SPEC BONUS SYSTEM (+5% / Load)
+  // ============================================
+
+  /**
+   * Toggle the +5% Combat Skill bonus for a melee/shield specialization
+   * Only one spec bonus can be active at a time
+   */
+  toggleSpecBonus(weapon, type) {
+    const specKey = `${weapon}|${type}`;
+    const wasActive = this.character.activeSpecBonus === specKey;
+    
+    if (wasActive) {
+      // Deactivating
+      this.character.activeSpecBonus = null;
+      this.removeSpecBonusFromCombatSkill();
+    } else {
+      // Deactivating any previous spec bonus first
+      if (this.character.activeSpecBonus) {
+        this.removeSpecBonusFromCombatSkill();
+      }
+      // Activating this one
+      this.character.activeSpecBonus = specKey;
+      this.applySpecBonusToCombatSkill();
+    }
+    
+    this.updateWeaponSpecDisplay();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Apply +5% to Combat Skill for active weapon spec
+   */
+  applySpecBonusToCombatSkill() {
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    if (!skillInput) return;
+    
+    // Only apply if not already applied
+    if (skillInput.dataset.specBonusApplied === 'true') return;
+    
+    const currentValue = parseInt(skillInput.value, 10) || 0;
+    skillInput.value = currentValue + 5;
+    skillInput.dataset.specBonusApplied = 'true';
+    skillInput.dataset.originalValueBeforeSpec = String(currentValue);
+    
+    // Visual indicator
+    skillInput.classList.add('spec-bonus-active');
+    
+    // Update crit badge if weapon master also active
+    if (this.character.weaponMaster && this.character.weaponMaster.active) {
+      this.applyWeaponMasterCritical();
+    }
+    
+    this.updateCombatQuickRef();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Remove +5% from Combat Skill
+   */
+  removeSpecBonusFromCombatSkill() {
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    if (!skillInput) return;
+    
+    if (skillInput.dataset.specBonusApplied !== 'true') return;
+    
+    const currentValue = parseInt(skillInput.value, 10) || 0;
+    skillInput.value = currentValue - 5;
+    delete skillInput.dataset.specBonusApplied;
+    delete skillInput.dataset.originalValueBeforeSpec;
+    
+    skillInput.classList.remove('spec-bonus-active');
+    
+    // Update crit badge if weapon master also active
+    if (this.character.weaponMaster && this.character.weaponMaster.active) {
+      this.applyWeaponMasterCritical();
+    }
+    
+    this.updateCombatQuickRef();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Apply Load reduction (-1) to all ranged weapons that have a specialization
+   * Called whenever weapon specs change. Tracks original Load values to prevent
+   * double-reduction on re-renders.
+   */
+  applyRangedSpecLoadReduction() {
+    const specs = this.character.weaponSpecializations || [];
+    const rangedSpecs = specs
+      .filter(s => s.type === 'Ranged')
+      .map(s => s.weapon.toLowerCase().replace(/\s*\(thrown\)/i, '').trim());
+    
+    if (rangedSpecs.length === 0) return;
+    
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (!rangedBody) return;
+    
+    rangedBody.querySelectorAll('tr').forEach(row => {
+      const nameInput = row.querySelector('.weapon-name');
+      if (!nameInput || !nameInput.value.trim()) return;
+      
+      const weaponName = nameInput.value.trim().toLowerCase();
+      
+      // Check if this weapon matches any ranged specialization
+      const isSpecialized = rangedSpecs.some(specName => 
+        this._weaponNameMatches(weaponName, specName)
+      );
+      
+      if (!isSpecialized) return;
+      
+      // Find the Load input (6th input in ranged row: name, hands, damage, dm, range, load)
+      const inputs = row.querySelectorAll('input');
+      // Load field ID pattern: ranged-N-load
+      let loadInput = null;
+      for (const input of inputs) {
+        if (input.id && input.id.includes('-load')) {
+          loadInput = input;
+          break;
+        }
+      }
+      if (!loadInput) return;
+      
+      const currentLoad = loadInput.value.trim();
+      
+      // Don't affect dashes (weapons with no reload)
+      if (currentLoad === '-' || currentLoad === '\u2013' || currentLoad === '') return;
+      
+      // Store original if not already stored
+      if (!loadInput.dataset.originalLoad) {
+        loadInput.dataset.originalLoad = currentLoad;
+      }
+      
+      // Only reduce if not already reduced
+      if (loadInput.dataset.specReduced === 'true') return;
+      
+      const loadNum = parseInt(currentLoad, 10);
+      if (isNaN(loadNum)) return;
+      
+      const newLoad = Math.max(0, loadNum - 1);
+      loadInput.value = String(newLoad);
+      loadInput.dataset.specReduced = 'true';
+      
+      // Visual indicator
+      loadInput.classList.add('spec-load-reduced');
+      loadInput.title = `Load reduced by 1 (Weapon Specialization). Original: ${currentLoad}`;
+    });
+  },
+
+  /**
+   * Restore original Load values for ranged weapons (when spec is removed)
+   */
+  restoreRangedLoadValues() {
+    const rangedBody = document.getElementById('ranged-weapons-body');
+    if (!rangedBody) return;
+    
+    rangedBody.querySelectorAll('tr').forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      for (const input of inputs) {
+        if (input.id && input.id.includes('-load') && input.dataset.specReduced === 'true') {
+          if (input.dataset.originalLoad) {
+            input.value = input.dataset.originalLoad;
+          }
+          delete input.dataset.specReduced;
+          delete input.dataset.originalLoad;
+          input.classList.remove('spec-load-reduced');
+          input.title = '';
+        }
+      }
+    });
   },
 
   // ============================================

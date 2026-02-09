@@ -3422,7 +3422,7 @@ input.skill-input.powerful-concentration-bonus,
 .weapon-spec-card-type {
   font-size: 0.7rem;
   color: #999;
-  margin-left: auto;
+  flex-shrink: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -3467,6 +3467,47 @@ input.skill-input.powerful-concentration-bonus,
 /* ============================================
    WEAPON MASTER SYSTEM
    ============================================ */
+
+/* Spec bonus button (+5% toggle) */
+.spec-bonus-btn {
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.spec-bonus-btn:hover {
+  transform: scale(1.08);
+  filter: brightness(1.2);
+}
+
+.spec-bonus-btn.spec-active {
+  animation: specPulse 2.5s ease-in-out infinite;
+}
+
+/* Weapon spec card buttons container */
+.weapon-spec-card-buttons {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 0.4rem;
+}
+
+/* Combat skill with spec bonus active */
+.spec-bonus-active {
+  outline: 1px solid rgba(100, 200, 100, 0.5) !important;
+}
+
+/* Ranged weapon load reduced indicator */
+.spec-load-reduced {
+  color: #6c6 !important;
+  font-weight: bold;
+}
+
+@keyframes specPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
 
 /* Weapon Master toggle button */
 .wm-toggle-btn {
