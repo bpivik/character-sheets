@@ -14137,19 +14137,13 @@ const App = {
   activateForcefulStrike() {
     if (this.character.isForcefulStrikeActive) return;
     
+    // Capture baseline before any changes
+    this.captureBaselineIfNeeded();
+    
     this.character.isForcefulStrikeActive = true;
     
-    // Store pre-activation values
-    this.character.preForcefulValues = {
-      combatSkill: document.getElementById('combat-skill-1-percent')?.value || '0',
-      damageMod: document.getElementById('damage-mod-current')?.value || '+0',
-      damageModOrig: document.getElementById('damage-mod-original')?.value || '+0',
-      wpDamageMod: document.getElementById('wp-damage-mod-current')?.value || '+0',
-      wpDamageModOrig: document.getElementById('wp-damage-mod-original')?.value || '+0'
-    };
-    
-    // Apply Forceful Strike effects
-    this.applyForcefulStrikeEffects();
+    // Recalculate all buffs from baseline
+    this.recalculateCombatBuffs();
     
     // Update UI
     const toggleBtn = document.getElementById('btn-forceful-toggle');
@@ -14166,73 +14160,6 @@ const App = {
   },
   
   /**
-   * Apply Forceful Strike effects
-   */
-  applyForcefulStrikeEffects() {
-    // Combat Skill -20% (one difficulty grade harder)
-    // Target the main combat skill field (combat-skill-1-percent)
-    const combatField = document.getElementById('combat-skill-1-percent');
-    if (combatField) {
-      const curr = parseInt(combatField.value, 10) || 0;
-      combatField.value = curr - 20;
-      combatField.classList.add('forceful-penalized');
-      combatField.title = 'Forceful Strike: -20% (one grade harder)';
-    }
-    
-    // Damage Mod +2 steps
-    const dmgCurrField = document.getElementById('damage-mod-current');
-    const dmgOrigField = document.getElementById('damage-mod-original');
-    if (dmgCurrField) {
-      let newMod = this.getNextDamageModStep(dmgCurrField.value);
-      newMod = this.getNextDamageModStep(newMod); // +2 steps
-      dmgCurrField.value = newMod;
-      dmgCurrField.classList.add('forceful-boosted');
-      dmgCurrField.title = 'Forceful Strike: +2 steps';
-    }
-    if (dmgOrigField) {
-      let newMod = this.getNextDamageModStep(dmgOrigField.value);
-      newMod = this.getNextDamageModStep(newMod); // +2 steps
-      dmgOrigField.value = newMod;
-      dmgOrigField.classList.add('forceful-boosted');
-    }
-    
-    // Weapon Precision Damage Mod +2 steps (for WP-eligible weapons)
-    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
-    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
-    if (wpDmgCurrField && wpDmgCurrField.value.trim()) {
-      let newMod = this.getNextDamageModStep(wpDmgCurrField.value);
-      newMod = this.getNextDamageModStep(newMod); // +2 steps
-      wpDmgCurrField.value = newMod;
-      wpDmgCurrField.classList.add('forceful-boosted');
-      wpDmgCurrField.title = 'Forceful Strike: +2 steps';
-    }
-    if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
-      let newMod = this.getNextDamageModStep(wpDmgOrigField.value);
-      newMod = this.getNextDamageModStep(newMod); // +2 steps
-      wpDmgOrigField.value = newMod;
-      wpDmgOrigField.classList.add('forceful-boosted');
-    }
-    
-    // Update weapon damage displays to reflect new Damage Modifier
-    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-      window.WeaponData.updateAllWeaponDamage();
-    }
-    
-    // Style all weapon damage fields green
-    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
-    weaponDamageFields.forEach(field => {
-      field.classList.add('forceful-boosted');
-      field.title = 'Increased damage modifier with Forceful Strike';
-    });
-    
-    // Update summary page
-    this.refreshSummaryWidgets();
-    
-    // Update combat quick reference
-    this.updateCombatQuickRef();
-  },
-  
-  /**
    * Deactivate Forceful Strike
    */
   deactivateForcefulStrike() {
@@ -14240,8 +14167,9 @@ const App = {
     
     this.character.isForcefulStrikeActive = false;
     
-    // Remove Forceful Strike effects
-    this.removeForcefulStrikeEffects();
+    // Recalculate all buffs from baseline (will restore DM and CS properly)
+    this.recalculateCombatBuffs();
+    this.releaseBaselineIfClean();
     
     // Update UI
     const toggleBtn = document.getElementById('btn-forceful-toggle');
@@ -14258,68 +14186,8 @@ const App = {
   },
   
   /**
-   * Remove Forceful Strike effects
-   */
-  removeForcefulStrikeEffects() {
-    if (!this.character.preForcefulValues) return;
-    
-    // Restore Combat Skill
-    const combatField = document.getElementById('combat-skill-1-percent');
-    if (combatField) {
-      combatField.value = this.character.preForcefulValues.combatSkill;
-      combatField.classList.remove('forceful-penalized');
-      combatField.title = '';
-    }
-    
-    // Restore Damage Mod
-    const dmgCurrField = document.getElementById('damage-mod-current');
-    const dmgOrigField = document.getElementById('damage-mod-original');
-    if (dmgCurrField) {
-      dmgCurrField.value = this.character.preForcefulValues.damageMod;
-      dmgCurrField.classList.remove('forceful-boosted');
-      dmgCurrField.title = '';
-    }
-    if (dmgOrigField) {
-      dmgOrigField.value = this.character.preForcefulValues.damageModOrig;
-      dmgOrigField.classList.remove('forceful-boosted');
-    }
-    
-    // Restore WP Damage Mod
-    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
-    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
-    if (wpDmgCurrField) {
-      wpDmgCurrField.value = this.character.preForcefulValues.wpDamageMod || wpDmgCurrField.value;
-      wpDmgCurrField.classList.remove('forceful-boosted');
-      wpDmgCurrField.title = '';
-    }
-    if (wpDmgOrigField) {
-      wpDmgOrigField.value = this.character.preForcefulValues.wpDamageModOrig || wpDmgOrigField.value;
-      wpDmgOrigField.classList.remove('forceful-boosted');
-    }
-    
-    // Update weapon damage displays to reflect restored Damage Modifier
-    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
-      window.WeaponData.updateAllWeaponDamage();
-    }
-    
-    // Remove styling from all weapon damage fields
-    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
-    weaponDamageFields.forEach(field => {
-      field.classList.remove('forceful-boosted');
-      field.title = '';
-    });
-    
-    // Update summary page
-    this.refreshSummaryWidgets();
-    
-    // Update combat quick reference
-    this.updateCombatQuickRef();
-    
-    this.character.preForcefulValues = null;
-  },
-  
-  /**
-   * Restore Forceful Strike visual state after page load
+   * Restore Forceful Strike visual state after page load.
+   * Values are already baked into saved data — just re-apply CSS/titles.
    */
   restoreForcefulStrikeState() {
     const toggleBtn = document.getElementById('btn-forceful-toggle');
@@ -14339,7 +14207,10 @@ const App = {
     
     if (combatField) {
       combatField.classList.add('forceful-penalized');
-      combatField.title = 'Forceful Strike: -20% (one grade harder)';
+      const existing = combatField.title || '';
+      combatField.title = existing
+        ? existing + ' | Forceful Strike: -20%'
+        : 'Forceful Strike: -20% (one grade harder)';
     }
     if (dmgCurrField) {
       dmgCurrField.classList.add('forceful-boosted');
@@ -14358,7 +14229,7 @@ const App = {
       wpDmgOrigField.classList.add('forceful-boosted');
     }
     
-    // Style all weapon damage fields green
+    // Style all weapon damage fields
     const weaponDamageFields = document.querySelectorAll('.weapon-damage');
     weaponDamageFields.forEach(field => {
       field.classList.add('forceful-boosted');
@@ -17200,7 +17071,18 @@ const App = {
       return;
     }
     
-    // Check for Weapon Master (targeted to specific weapon only)
+    // Check for Forceful Strike (all weapons)
+    if (this.character.isForcefulStrikeActive) {
+      const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+      weaponDamageFields.forEach(field => {
+        if (field.value.trim()) {
+          field.classList.add('forceful-boosted');
+          field.title = 'Increased damage modifier with Forceful Strike';
+        }
+      });
+    }
+    
+    // Check for Weapon Master (targeted to specific weapon only, on top of forceful)
     if (this.character.activeWeaponSpec && this.character.weaponMaster) {
       const [weapon, type] = this.character.activeWeaponSpec.split('|');
       const wm = this.character.weaponMaster;
@@ -18489,6 +18371,254 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
 
   // ============================================
+  // COMBAT BUFF BASELINE SYSTEM
+  // Tracks true original values before any combat buffs
+  // (Weapon Spec, Weapon Master, Forceful Strike)
+  // ============================================
+
+  /**
+   * Capture the baseline (unbuffed) combat values if not already captured.
+   * Called before any buff is applied.
+   */
+  captureBaselineIfNeeded() {
+    if (this.character.combatBuffBaseline) return;
+
+    this.character.combatBuffBaseline = {
+      combatSkill: document.getElementById('combat-skill-1-percent')?.value || '0',
+      damageMod: document.getElementById('damage-mod-current')?.value || '+0',
+      damageModOrig: document.getElementById('damage-mod-original')?.value || '+0',
+      wpDamageMod: document.getElementById('wp-damage-mod-current')?.value || '',
+      wpDamageModOrig: document.getElementById('wp-damage-mod-original')?.value || ''
+    };
+  },
+
+  /**
+   * Check if any combat buff is still active. If none, release baseline.
+   */
+  releaseBaselineIfClean() {
+    if (!this.character.isForcefulStrikeActive && !this.character.activeWeaponSpec) {
+      delete this.character.combatBuffBaseline;
+    }
+  },
+
+  /**
+   * Recalculate all buffed values from baseline.
+   * Called after any combat buff activates or deactivates.
+   */
+  recalculateCombatBuffs() {
+    const baseline = this.character.combatBuffBaseline;
+    if (!baseline) return;
+
+    const isWeaponSpecActive = !!this.character.activeWeaponSpec;
+    const isForcefulActive = !!this.character.isForcefulStrikeActive;
+    const specKey = this.character.activeWeaponSpec || '';
+    const [specWeapon, specType] = specKey ? specKey.split('|') : ['', ''];
+    const isMeleeOrShield = specType === 'Melee' || specType === 'Shield';
+
+    // --- Combat Skill ---
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    if (skillInput) {
+      let cs = parseInt(baseline.combatSkill, 10) || 0;
+      if (isWeaponSpecActive && isMeleeOrShield) cs += 5;
+      if (isForcefulActive) cs -= 20;
+      skillInput.value = cs;
+
+      // Styling
+      skillInput.classList.remove('damage-boosted', 'forceful-penalized');
+      skillInput.title = '';
+      const row = skillInput.closest('.combat-skill-row');
+      if (row) row.classList.remove('weapon-spec-active-row');
+
+      if (isWeaponSpecActive) {
+        const wm = this.character.weaponMaster;
+        const isMastered = wm && wm.weapon &&
+          wm.weapon.toLowerCase() === specWeapon.toLowerCase() &&
+          wm.type === specType;
+        skillInput.classList.add('damage-boosted');
+        if (isMastered) {
+          const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+          skillInput.title = 'Critical doubled (' + tierData.label + ')';
+        } else {
+          skillInput.title = 'Weapon Specialization: +5% Combat Skill';
+        }
+        if (row) row.classList.add('weapon-spec-active-row');
+      }
+      if (isForcefulActive) {
+        skillInput.classList.add('forceful-penalized');
+        const existing = skillInput.title;
+        skillInput.title = existing
+          ? existing + ' | Forceful Strike: -20%'
+          : 'Forceful Strike: -20% (one grade harder)';
+      }
+    }
+
+    // --- Global Damage Modifier (only Forceful Strike touches these) ---
+    const dmgCurrField = document.getElementById('damage-mod-current');
+    const dmgOrigField = document.getElementById('damage-mod-original');
+    const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
+    const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
+
+    if (isForcefulActive) {
+      if (dmgCurrField) {
+        dmgCurrField.value = this.stepDamageModifier(baseline.damageMod, 2);
+        dmgCurrField.classList.add('forceful-boosted');
+        dmgCurrField.title = 'Forceful Strike: +2 steps';
+      }
+      if (dmgOrigField) {
+        dmgOrigField.value = this.stepDamageModifier(baseline.damageModOrig, 2);
+        dmgOrigField.classList.add('forceful-boosted');
+      }
+      if (wpDmgCurrField && baseline.wpDamageMod.trim()) {
+        wpDmgCurrField.value = this.stepDamageModifier(baseline.wpDamageMod, 2);
+        wpDmgCurrField.classList.add('forceful-boosted');
+        wpDmgCurrField.title = 'Forceful Strike: +2 steps';
+      }
+      if (wpDmgOrigField && baseline.wpDamageModOrig.trim()) {
+        wpDmgOrigField.value = this.stepDamageModifier(baseline.wpDamageModOrig, 2);
+        wpDmgOrigField.classList.add('forceful-boosted');
+      }
+    } else {
+      if (dmgCurrField) {
+        dmgCurrField.value = baseline.damageMod;
+        dmgCurrField.classList.remove('forceful-boosted');
+        dmgCurrField.title = '';
+      }
+      if (dmgOrigField) {
+        dmgOrigField.value = baseline.damageModOrig;
+        dmgOrigField.classList.remove('forceful-boosted');
+      }
+      if (wpDmgCurrField) {
+        wpDmgCurrField.value = baseline.wpDamageMod;
+        wpDmgCurrField.classList.remove('forceful-boosted');
+        wpDmgCurrField.title = '';
+      }
+      if (wpDmgOrigField) {
+        wpDmgOrigField.value = baseline.wpDamageModOrig;
+        wpDmgOrigField.classList.remove('forceful-boosted');
+      }
+    }
+
+    // --- Recalculate all weapon damage from global DM ---
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+
+    // --- Forceful Strike weapon styling (all weapons) ---
+    const weaponDamageFields = document.querySelectorAll('.weapon-damage');
+    if (isForcefulActive) {
+      weaponDamageFields.forEach(field => {
+        if (field.value.trim()) {
+          field.classList.add('forceful-boosted');
+          field.title = 'Increased damage modifier with Forceful Strike';
+        }
+      });
+    } else {
+      weaponDamageFields.forEach(field => {
+        field.classList.remove('forceful-boosted');
+        if (!field.classList.contains('damage-boosted')) field.title = '';
+      });
+    }
+
+    // --- Weapon Master: step ONLY mastered weapon's damage on top ---
+    this._clearWeaponMasterDamageBoost();
+
+    if (isWeaponSpecActive) {
+      const wm = this.character.weaponMaster;
+      const isMastered = wm && wm.weapon &&
+        wm.weapon.toLowerCase() === specWeapon.toLowerCase() &&
+        wm.type === specType;
+
+      if (isMastered && isMeleeOrShield && wm.tier) {
+        const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+        const tierOrder = ['master', 'high', 'grand', 'legendary'];
+        const tierIdx = tierOrder.indexOf(wm.tier);
+        const dmSteps = tierIdx >= 2 ? 2 : 1;
+        const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
+
+        const currentGlobalDM = dmgCurrField ? dmgCurrField.value.trim() : '+0';
+        const masteredDM = this.stepDamageModifier(currentGlobalDM, dmSteps);
+
+        this._applyWeaponMasterDamageStep(specWeapon, currentGlobalDM, masteredDM, tooltipText);
+      }
+
+      this.character.weaponSpecCritDoubled = !!(this.character.weaponMaster &&
+        this.character.weaponMaster.weapon &&
+        this.character.weaponMaster.weapon.toLowerCase() === specWeapon.toLowerCase() &&
+        this.character.weaponMaster.type === specType);
+    } else {
+      this.character.weaponSpecCritDoubled = false;
+    }
+
+    this.refreshSummaryWidgets();
+    this.updateCombatQuickRef();
+  },
+
+  /**
+   * Apply Weapon Master's DM step to a specific weapon's damage field.
+   */
+  _applyWeaponMasterDamageStep(weaponName, currentDM, steppedDM, tooltipText) {
+    const targetName = weaponName.toLowerCase().trim();
+
+    ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      body.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput) return;
+        const rowName = nameInput.value.trim().toLowerCase();
+        if (!this._weaponNameMatches(rowName, targetName)) return;
+
+        const damageField = row.querySelector('.weapon-damage');
+        if (!damageField || !damageField.value.trim()) return;
+
+        damageField.dataset.wmOriginalDamage = damageField.value;
+
+        let newDamage = damageField.value;
+        if (currentDM && currentDM !== '+0') {
+          const dmSuffix = currentDM.startsWith('+') ? currentDM : '+' + currentDM;
+          const steppedSuffix = steppedDM.startsWith('+') ? steppedDM : '+' + steppedDM;
+          const idx = newDamage.lastIndexOf(dmSuffix.replace(/^\+/, ''));
+          if (idx > 0) {
+            const prefix = newDamage.substring(0, idx);
+            const cleanPrefix = prefix.endsWith('+') ? prefix.slice(0, -1) : prefix;
+            newDamage = cleanPrefix + steppedSuffix;
+          }
+        } else if (!currentDM || currentDM === '+0') {
+          if (steppedDM && steppedDM !== '+0') {
+            newDamage = damageField.value + steppedDM;
+          }
+        }
+
+        damageField.value = newDamage;
+        damageField.classList.add('damage-boosted');
+        damageField.title = tooltipText;
+      });
+    });
+  },
+
+  /**
+   * Clear Weapon Master damage boost from all weapons, restoring originals.
+   */
+  _clearWeaponMasterDamageBoost() {
+    ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      body.querySelectorAll('tr').forEach(row => {
+        const damageField = row.querySelector('.weapon-damage');
+        if (!damageField) return;
+        if (damageField.dataset.wmOriginalDamage) {
+          damageField.value = damageField.dataset.wmOriginalDamage;
+          delete damageField.dataset.wmOriginalDamage;
+          damageField.classList.remove('damage-boosted');
+          if (!damageField.classList.contains('forceful-boosted')) {
+            damageField.title = '';
+          }
+        }
+      });
+    });
+  },
+
+  // ============================================
   // WEAPON MASTER SYSTEM & SPEC ACTIVATION
   // ============================================
 
@@ -18715,222 +18845,59 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   // UNIFIED WEAPON SPEC ACTIVATION
   // ============================================
 
-  /**
-   * Toggle a weapon spec button ON/OFF.
-   * Only one can be active at a time. Handles +5% CS, doubled crit, DM step.
-   */
   toggleWeaponSpec(weapon, type) {
     const specKey = `${weapon}|${type}`;
     const wasActive = this.character.activeWeaponSpec === specKey;
 
-    // Always deactivate current first
+    // Capture baseline before any changes
+    this.captureBaselineIfNeeded();
+
+    // Deactivate current
     if (this.character.activeWeaponSpec) {
-      this.deactivateWeaponSpec();
+      this.character.activeWeaponSpec = null;
     }
 
     if (!wasActive) {
-      // Activate this one
       this.character.activeWeaponSpec = specKey;
-      this.activateWeaponSpec(weapon, type);
+
+      // Play animation for mastered weapons
+      const wm = this.character.weaponMaster;
+      const isMastered = wm && wm.weapon &&
+        wm.weapon.toLowerCase() === weapon.toLowerCase() &&
+        wm.type === type;
+      if (isMastered && wm.tier) {
+        const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+        this.playWeaponMasterAnimation(weapon, type, tierData);
+      }
     }
 
+    // Recalculate everything from baseline
+    this.recalculateCombatBuffs();
+    this.releaseBaselineIfClean();
     this.updateWeaponSpecDisplay();
     this.scheduleAutoSave();
   },
 
   /**
-   * Activate a weapon spec — applies all relevant bonuses
-   */
-  activateWeaponSpec(weapon, type) {
-    const isMeleeOrShield = type === 'Melee' || type === 'Shield';
-    const wm = this.character.weaponMaster;
-    const isMastered = wm && wm.weapon &&
-      wm.weapon.toLowerCase() === weapon.toLowerCase() &&
-      wm.type === type;
-    const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || null) : null;
-
-    // Store pre-activation values for clean revert
-    const skillInput = document.getElementById('combat-skill-1-percent');
-
-    this.character.preWeaponSpecValues = {
-      combatSkill: skillInput ? skillInput.value : '0',
-      weaponDamages: {} // Will store per-weapon original damage values
-    };
-
-    // 1. +5% Combat Skill (melee/shield only)
-    if (isMeleeOrShield && skillInput) {
-      const current = parseInt(skillInput.value, 10) || 0;
-      skillInput.value = current + 5;
-    }
-
-    // 2. Green styling on Combat Skill
-    if (skillInput) {
-      skillInput.classList.add('damage-boosted');
-      if (isMastered) {
-        skillInput.title = 'Critical doubled (' + (tierData ? tierData.label : 'Weapon Master') + ')';
-      } else {
-        skillInput.title = 'Weapon Specialization: +5% Combat Skill';
-      }
-    }
-
-    // Style the combat skill row
-    const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
-    if (row) {
-      row.classList.add('weapon-spec-active-row');
-    }
-
-    // 3. If mastered melee: step ONLY the mastered weapon's damage on combat page
-    if (isMastered && isMeleeOrShield && tierData) {
-      const tierOrder = ['master', 'high', 'grand', 'legendary'];
-      const tierIdx = tierOrder.indexOf(wm.tier);
-      const dmSteps = tierIdx >= 2 ? 2 : 1;
-      const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
-
-      // Get the current global DM and the stepped version
-      const dmgCurrent = document.getElementById('damage-mod-current');
-      const currentDM = dmgCurrent ? dmgCurrent.value.trim() : '+0';
-      const steppedDM = this.stepDamageModifier(currentDM, dmSteps);
-
-      // Find the mastered weapon on combat page and swap its DM portion
-      this._stepSpecificWeaponDamage(weapon, currentDM, steppedDM, tooltipText);
-    }
-
-    // 4. If mastered: play activation animation
-    if (isMastered && tierData) {
-      this.playWeaponMasterAnimation(weapon, type, tierData);
-    }
-
-    // 5. Set flag for d100 doubled critical
-    this.character.weaponSpecCritDoubled = !!isMastered;
-
-    this.updateCombatQuickRef();
-  },
-
-  /**
-   * Step a specific weapon's damage on the combat page by swapping
-   * the DM portion from currentDM to steppedDM.
-   */
-  _stepSpecificWeaponDamage(weaponName, currentDM, steppedDM, tooltipText) {
-    const targetName = weaponName.toLowerCase().trim();
-
-    ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
-      const body = document.getElementById(bodyId);
-      if (!body) return;
-      body.querySelectorAll('tr').forEach(row => {
-        const nameInput = row.querySelector('.weapon-name');
-        if (!nameInput) return;
-        const rowName = nameInput.value.trim().toLowerCase();
-        if (!this._weaponNameMatches(rowName, targetName)) return;
-
-        const damageField = row.querySelector('.weapon-damage');
-        if (!damageField || !damageField.value.trim()) return;
-
-        // Store original value for revert
-        const originalDamage = damageField.value.trim();
-        const fieldId = damageField.id || rowName;
-        this.character.preWeaponSpecValues.weaponDamages[fieldId] = originalDamage;
-
-        // Replace the DM portion in the damage string
-        // e.g., "1d8+1d2" → if currentDM is "+1d2" and steppedDM is "+1d4" → "1d8+1d4"
-        let newDamage = originalDamage;
-        if (currentDM && currentDM !== '+0' && originalDamage.includes(currentDM.replace(/^\+/, ''))) {
-          // Strip the current DM suffix and add the stepped one
-          const dmSuffix = currentDM.startsWith('+') ? currentDM : '+' + currentDM;
-          const steppedSuffix = steppedDM.startsWith('+') ? steppedDM : '+' + steppedDM;
-          const idx = originalDamage.lastIndexOf(dmSuffix.replace(/^\+/, ''));
-          if (idx > 0) {
-            // Check if preceded by + or -
-            const prefix = originalDamage.substring(0, idx);
-            const cleanPrefix = prefix.endsWith('+') ? prefix.slice(0, -1) : prefix;
-            newDamage = cleanPrefix + steppedSuffix;
-          }
-        } else if (currentDM === '+0' || !currentDM) {
-          // No DM currently applied, just append the stepped DM
-          if (steppedDM && steppedDM !== '+0') {
-            newDamage = originalDamage + steppedDM;
-          }
-        }
-
-        damageField.value = newDamage;
-        damageField.classList.add('damage-boosted');
-        damageField.title = tooltipText;
-      });
-    });
-  },
-
-  /**
-   * Deactivate the current weapon spec — revert all bonuses
+   * Deactivate the current weapon spec via the baseline system
    */
   deactivateWeaponSpec() {
-    const pre = this.character.preWeaponSpecValues;
-    const activeKey = this.character.activeWeaponSpec;
-    if (!pre) {
-      this.character.activeWeaponSpec = null;
-      this.character.weaponSpecCritDoubled = false;
-      return;
-    }
-
-    const skillInput = document.getElementById('combat-skill-1-percent');
-
-    // Restore combat skill
-    if (skillInput) {
-      skillInput.value = pre.combatSkill;
-      skillInput.classList.remove('damage-boosted');
-      skillInput.title = '';
-    }
-
-    // Remove row styling
-    const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
-    if (row) row.classList.remove('weapon-spec-active-row');
-
-    // Restore per-weapon damage values
-    if (pre.weaponDamages) {
-      for (const [fieldId, originalDamage] of Object.entries(pre.weaponDamages)) {
-        const field = document.getElementById(fieldId);
-        if (field) {
-          field.value = originalDamage;
-          field.classList.remove('damage-boosted');
-          field.title = '';
-        } else {
-          // fieldId might be the weapon name — search by name
-          ['melee-weapons-body', 'ranged-weapons-body'].forEach(bodyId => {
-            const body = document.getElementById(bodyId);
-            if (!body) return;
-            body.querySelectorAll('tr').forEach(r => {
-              const nameInput = r.querySelector('.weapon-name');
-              const damageField = r.querySelector('.weapon-damage');
-              if (nameInput && damageField && this._weaponNameMatches(nameInput.value.trim().toLowerCase(), fieldId)) {
-                damageField.value = originalDamage;
-                damageField.classList.remove('damage-boosted');
-                damageField.title = '';
-              }
-            });
-          });
-        }
-      }
-    }
-
-    // Also clean up any lingering boost on the specific weapon
-    if (activeKey) {
-      const [weaponName] = activeKey.split('|');
-      this.removeDamageBoostFromSpecificWeapon(weaponName);
-    }
-
-    // Clear flags
+    if (!this.character.activeWeaponSpec) return;
+    this.captureBaselineIfNeeded(); // Ensure baseline exists
     this.character.activeWeaponSpec = null;
     this.character.weaponSpecCritDoubled = false;
-    delete this.character.preWeaponSpecValues;
-
-    this.updateCombatQuickRef();
+    this.recalculateCombatBuffs();
+    this.releaseBaselineIfClean();
   },
 
   /**
    * Restore weapon spec visual state on page load.
-   * Values are already baked into saved data — only re-apply CSS/titles.
+   * Values are already baked into saved data. Re-apply CSS/titles and crit flag.
+   * The baseline should also already be saved.
    */
   restoreWeaponSpecVisuals() {
     if (!this.character.activeWeaponSpec) return;
-    
+
     const [weapon, type] = this.character.activeWeaponSpec.split('|');
     const isMeleeOrShield = type === 'Melee' || type === 'Shield';
     const wm = this.character.weaponMaster;
@@ -18938,7 +18905,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       wm.weapon.toLowerCase() === weapon.toLowerCase() &&
       wm.type === type;
     const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || null) : null;
-    
+
     // Green styling on Combat Skill
     const skillInput = document.getElementById('combat-skill-1-percent');
     if (skillInput) {
@@ -18948,23 +18915,25 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       } else {
         skillInput.title = 'Weapon Specialization: +5% Combat Skill';
       }
+      // If Forceful Strike is also active, add its class too
+      if (this.character.isForcefulStrikeActive) {
+        skillInput.classList.add('forceful-penalized');
+        skillInput.title += ' | Forceful Strike: -20%';
+      }
     }
-    
+
     const row = skillInput ? skillInput.closest('.combat-skill-row') : null;
     if (row) row.classList.add('weapon-spec-active-row');
-    
-    // Green styling on ONLY the mastered weapon's damage field (not global DM)
+
+    // Weapon Master specific weapon damage boost
     if (isMastered && isMeleeOrShield && tierData) {
       const tierOrder = ['master', 'high', 'grand', 'legendary'];
       const tierIdx = tierOrder.indexOf(wm.tier);
       const dmSteps = tierIdx >= 2 ? 2 : 1;
-      const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} Damage Modifier`;
-      
-      // Only highlight the specific weapon's damage on the combat page
+      const tooltipText = `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`;
       this.applyDamageBoostToSpecificWeapon(weapon, tooltipText);
     }
-    
-    // Set doubled crit flag
+
     this.character.weaponSpecCritDoubled = !!isMastered;
   },
 
