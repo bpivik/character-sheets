@@ -18957,12 +18957,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const fighterRank = this.getFighterRank();
     if (fighterRank < 2) return null;
 
-    const combatSkill = this.getSkillValueByName('Combat Style') || 0;
-
+    // Tier is determined purely by rank — rank advancement already requires
+    // the Combat Skill prereqs (70%/90%/110%/130%), so no need to double-check
     const tiers = ['legendary', 'grand', 'high', 'master'];
     for (const tierKey of tiers) {
       const tier = this.WEAPON_MASTER_TIERS[tierKey];
-      if (fighterRank >= tier.rank && combatSkill >= tier.prereqSkill) {
+      if (fighterRank >= tier.rank) {
         return tierKey;
       }
     }
