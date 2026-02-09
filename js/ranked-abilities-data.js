@@ -760,6 +760,94 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Combat Style 50%",
       summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
     },
+    // Rank 2
+    { 
+      name: "Brute Strength", 
+      rank: 2, 
+      prereqs: null,
+      summary: "1/day per Rank: Brawn one Grade easier for a single action (costs 1 Fatigue)"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Sweeping Strike", 
+      rank: 2, 
+      prereqs: "Forceful Strike; Combat Style 60%",
+      summary: "If you drop an opponent, free attack on another target within reach (1/round)"
+    },
+    { 
+      name: "Weapon Specialization", 
+      rank: 2, 
+      prereqs: "Combat Style 70%",
+      summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
+    },
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 bonus Action Point for Reactive Actions (Parry/Evade). One reaction per incident."
+    },
+    { 
+      name: "Greater Sweeping Strike", 
+      rank: 3, 
+      prereqs: "Sweeping Strike; Combat Style 70%",
+      summary: "Sweeping Strike against ALL enemies in range (each attack must drop opponent)"
+    },
+    { 
+      name: "Weapon Specialization", 
+      rank: 3, 
+      prereqs: "Combat Style 90%",
+      summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
+    },
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Greater Brute Strength", 
+      rank: 4, 
+      prereqs: "Brute Strength",
+      summary: "2/day: Brawn one Grade easier. First use costs no Fatigue, second costs 1 Fatigue."
+    },
+    { 
+      name: "Weapon Specialization", 
+      rank: 4, 
+      prereqs: "Combat Style 110%",
+      summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
+    },
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 5, 
+      prereqs: "Defensive Reflexes I",
+      summary: "May use Defensive Reflexes twice per combat. Cannot re-roll same attack or combine with Luck Point."
+    },
+    { 
+      name: "Weapon Specialization", 
+      rank: 5, 
+      prereqs: "Combat Style 130%",
+      summary: "Specialize in another weapon or shield (+5% Combat Skill, +1 AP Parry, or ranged benefits)"
+    },
   ],
   
   // More classes to be added...

@@ -462,6 +462,15 @@ const App = {
       
       // Highlight specialized weapons on combat page
       this.highlightSpecializedWeapons();
+      
+      // Restore weapon master state (tier update + critical display)
+      if (this.character.weaponMaster) {
+        this.updateWeaponMasterTier();
+        this.updateWeaponSpecDisplay();
+        if (this.character.weaponMaster.active) {
+          this.applyWeaponMasterCritical();
+        }
+      }
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -1527,6 +1536,10 @@ const App = {
               // No penalty, original = current
               field.dataset.originalValue = field.value;
             }
+          }
+          // Update weapon master critical badge if active
+          if (fieldId === 'combat-skill-1-percent' && this.character.weaponMaster && this.character.weaponMaster.active) {
+            this.applyWeaponMasterCritical();
           }
           this.updateCombatQuickRef();
           this.scheduleAutoSave();
@@ -4383,6 +4396,8 @@ const App = {
             }
           }, 150);
         }
+      } else if (['weapon master', 'high master', 'grand master', 'legendary master'].includes(normalizedName)) {
+        this.checkWeaponMasterProgression(abilityName);
       }
     }
     
@@ -10195,6 +10210,21 @@ const App = {
     this.checkAnimalCompanionVisibility();
     this.checkShapeChangeVisibility();
     this.checkWeaponSpecVisibility();
+    
+    // Update weapon master tier (rank may have changed)
+    if (this.character.weaponMaster) {
+      const newTier = this.getWeaponMasterTier();
+      if (newTier) {
+        this.character.weaponMaster.tier = newTier;
+      } else {
+        // No longer qualifies — deactivate
+        if (this.character.weaponMaster.active) {
+          this.character.weaponMaster.active = false;
+          this.removeWeaponMasterCritical();
+        }
+      }
+      this.updateWeaponSpecDisplay();
+    }
   },
   
   /**
@@ -11156,6 +11186,17 @@ const App = {
           }
         });
         this.reindexSpellRows('rank1');
+      }
+    }
+    
+    // Remove Fighter's Weapon Master data
+    if (classKey === 'fighter') {
+      if (this.character.weaponMaster) {
+        // Deactivate first if active
+        if (this.character.weaponMaster.active) {
+          this.removeWeaponMasterCritical();
+        }
+        delete this.character.weaponMaster;
       }
     }
   },
@@ -18059,6 +18100,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       return;
     }
 
+    const wm = this.character.weaponMaster;
+    const tierData = wm ? (this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master) : null;
+
     let html = '';
     for (const spec of specs) {
       const benefitData = this.getWeaponSpecBenefits(spec.type);
@@ -18068,11 +18112,35 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         ? 'Shield Specialization'
         : spec.weapon;
 
+      // Check if this weapon is the weapon master weapon
+      const isMastered = wm && wm.weapon && 
+        wm.weapon.toLowerCase() === spec.weapon.toLowerCase() && 
+        wm.type === spec.type;
+
+      const masterBtnHtml = isMastered ? `
+        <button type="button" id="wm-toggle-btn" class="wm-toggle-btn${wm.active ? ' wm-active' : ''}" 
+          title="Double your Critical range with your weapon. Click to activate."
+          style="
+            padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer;
+            font-size: 0.75rem; transition: all 0.3s ease;
+            background: ${wm.active ? `linear-gradient(135deg, ${tierData.color}22, ${tierData.color}44)` : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
+            border: 1px solid ${wm.active ? tierData.color : 'rgba(201, 165, 90, 0.3)'};
+            color: ${wm.active ? tierData.color : '#999'};
+            box-shadow: ${wm.active ? `0 0 12px ${tierData.glowColor}` : 'none'};
+          ">
+          ${tierData.icon} ${tierData.label}${wm.active ? ' ✦' : ''}
+        </button>
+      ` : '';
+
+      const masteredClass = isMastered ? ' weapon-mastered' : '';
+      const masteredBorder = isMastered ? `border-color: ${tierData.color}; box-shadow: 0 0 8px ${tierData.glowColor};` : '';
+
       html += `
-        <div class="weapon-spec-card">
+        <div class="weapon-spec-card${masteredClass}" style="${masteredBorder}">
           <div class="weapon-spec-card-header">
             <span class="weapon-spec-card-icon">${benefitData.icon}</span>
             <span class="weapon-spec-card-title">${title}</span>
+            ${masterBtnHtml}
             <span class="weapon-spec-card-type">${spec.type}</span>
           </div>
           <div class="weapon-spec-card-benefits">
@@ -18081,12 +18149,68 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
                 <strong>${b.label}:</strong> ${b.text}
               </div>
             `).join('')}
+            ${isMastered && tierData ? `
+              <div class="benefit-item wm-benefit" style="color: ${tierData.color}; margin-top: 0.3rem; border-top: 1px solid ${tierData.color}33; padding-top: 0.3rem;">
+                <strong>${tierData.label}:</strong> ${tierData.benefits[spec.type === 'Ranged' ? 'ranged' : 'melee']}
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
     }
 
     cardsContainer.innerHTML = html;
+    
+    // Show "Choose Weapon Master" prompt if they have the ability but haven't chosen
+    const hasWmAbility = this.hasAbility('Weapon Master');
+    const nonShieldSpecs = specs.filter(s => s.type !== 'Shield');
+    if (hasWmAbility && (!wm || !wm.weapon) && nonShieldSpecs.length > 0) {
+      const promptDiv = document.createElement('div');
+      promptDiv.style.cssText = `
+        text-align: center; padding: 0.6rem; margin-top: 0.5rem;
+        background: linear-gradient(135deg, rgba(201, 165, 90, 0.08), rgba(201, 165, 90, 0.15));
+        border: 1px dashed rgba(201, 165, 90, 0.4); border-radius: 6px;
+      `;
+      promptDiv.innerHTML = `
+        <div style="color: #c9a55a; font-size: 0.85rem; margin-bottom: 0.3rem;">
+          ⚔️ You've earned <strong>Weapon Master</strong>!
+        </div>
+        <button type="button" id="wm-choose-btn" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid #c9a55a; color: #c9a55a; padding: 0.4rem 0.8rem;
+          border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+          transition: all 0.2s ease;
+        ">Choose Your Weapon Master</button>
+      `;
+      cardsContainer.appendChild(promptDiv);
+      
+      const chooseBtn = document.getElementById('wm-choose-btn');
+      if (chooseBtn) {
+        chooseBtn.addEventListener('mouseenter', () => {
+          chooseBtn.style.background = 'linear-gradient(135deg, #3a3a4a 0%, #4d4a3d 100%)';
+          chooseBtn.style.boxShadow = '0 0 10px rgba(201, 165, 90, 0.3)';
+        });
+        chooseBtn.addEventListener('mouseleave', () => {
+          chooseBtn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
+          chooseBtn.style.boxShadow = 'none';
+        });
+        chooseBtn.addEventListener('click', () => this.promptWeaponMasterSelection());
+      }
+    }
+    
+    // Wire up weapon master toggle button
+    const wmBtn = document.getElementById('wm-toggle-btn');
+    if (wmBtn) {
+      wmBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleWeaponMaster();
+      });
+    }
+    
+    // Restore critical display if active
+    if (wm && wm.active) {
+      this.applyWeaponMasterCritical();
+    }
   },
 
   /**
@@ -18217,6 +18341,435 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (combatName === baseSpec || stripped === baseSpec) return true;
 
     return false;
+  },
+
+  // ============================================
+  // WEAPON MASTER SYSTEM
+  // ============================================
+
+  /**
+   * Weapon Master tier definitions
+   * Each tier adds cumulative benefits on top of previous tiers
+   */
+  WEAPON_MASTER_TIERS: {
+    master: {
+      rank: 2,
+      label: 'Weapon Master',
+      icon: '⚔️',
+      prereqSkill: 70,
+      color: '#c9a55a',        // Gold
+      glowColor: 'rgba(201, 165, 90, 0.6)',
+      animationClass: 'wm-activate-master',
+      benefits: {
+        melee: 'Double Critical range. +1 step Damage Modifier.',
+        ranged: 'Double Critical range. DM bonus applies at Close Range.'
+      }
+    },
+    high: {
+      rank: 3,
+      label: 'High Master',
+      icon: '🗡️',
+      prereqSkill: 90,
+      color: '#7fb8e0',        // Steel blue
+      glowColor: 'rgba(127, 184, 224, 0.6)',
+      animationClass: 'wm-activate-high',
+      benefits: {
+        melee: '+ Riposte after Parry (one Grade harder). Weapon +1 Size for Parrying.',
+        ranged: '+ Marksman: shift Hit Location to adjacent location at Close Range.'
+      }
+    },
+    grand: {
+      rank: 4,
+      label: 'Grand Master',
+      icon: '👑',
+      prereqSkill: 110,
+      color: '#d4a0e0',        // Royal purple
+      glowColor: 'rgba(212, 160, 224, 0.6)',
+      animationClass: 'wm-activate-grand',
+      benefits: {
+        melee: '+ Additional +1 step Damage Modifier (total +2 grades).',
+        ranged: '+ Reduce Reload time by 1. If 0, weapon readied as Free Action.'
+      }
+    },
+    legendary: {
+      rank: 5,
+      label: 'Legendary Master',
+      icon: '🌟',
+      prereqSkill: 130,
+      color: '#ff6b6b',        // Crimson
+      glowColor: 'rgba(255, 107, 107, 0.6)',
+      animationClass: 'wm-activate-legendary',
+      benefits: {
+        melee: '+ Weapon +2 Size categories for Parrying.',
+        ranged: '+ Multi-shot: 2 projectiles at -1 Grade, or 3 at -2 Grades (Close Range).'
+      }
+    }
+  },
+
+  /**
+   * Get the current Weapon Master tier based on rank and combat skill
+   */
+  getWeaponMasterTier() {
+    if (!this.character.weaponMaster) return null;
+    
+    // Get fighter rank
+    const fighterRank = this.getFighterRank();
+    if (fighterRank < 2) return null;
+    
+    const combatSkill = this.getSkillValueByName('Combat Style') || 0;
+    
+    // Check from highest tier down
+    const tiers = ['legendary', 'grand', 'high', 'master'];
+    for (const tierKey of tiers) {
+      const tier = this.WEAPON_MASTER_TIERS[tierKey];
+      if (fighterRank >= tier.rank && combatSkill >= tier.prereqSkill) {
+        return tierKey;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Get fighter rank from current classes
+   */
+  getFighterRank() {
+    const classes = this.character.classes || [];
+    for (const cls of classes) {
+      if (cls.name && cls.name.toLowerCase() === 'fighter') {
+        return parseInt(cls.rank, 10) || 0;
+      }
+    }
+    return 0;
+  },
+
+  /**
+   * Check if Weapon Master should be prompted or updated
+   * Called when Weapon Master / High Master / Grand Master / Legendary Master is auto-added
+   */
+  checkWeaponMasterProgression(abilityName) {
+    const normalized = abilityName.toLowerCase().trim();
+    const masterAbilities = ['weapon master', 'high master', 'grand master', 'legendary master'];
+    if (!masterAbilities.includes(normalized)) return;
+    
+    // If no weapon master weapon chosen yet, prompt selection
+    if (!this.character.weaponMaster || !this.character.weaponMaster.weapon) {
+      if (normalized === 'weapon master') {
+        const specs = this.character.weaponSpecializations || [];
+        if (specs.length > 0 && !this.isInitializing) {
+          setTimeout(() => this.promptWeaponMasterSelection(), 200);
+        }
+      }
+      return;
+    }
+    
+    // Already have a weapon chosen — update the tier
+    this.updateWeaponMasterTier();
+    this.updateWeaponSpecDisplay();
+  },
+
+  /**
+   * Update the stored tier based on current rank/skill
+   */
+  updateWeaponMasterTier() {
+    if (!this.character.weaponMaster) return;
+    const newTier = this.getWeaponMasterTier();
+    if (newTier && newTier !== this.character.weaponMaster.tier) {
+      this.character.weaponMaster.tier = newTier;
+      this.scheduleAutoSave();
+    }
+  },
+
+  /**
+   * Prompt user to select which weapon to master
+   */
+  promptWeaponMasterSelection() {
+    const specs = (this.character.weaponSpecializations || []).filter(s => s.type !== 'Shield');
+    if (specs.length === 0) return;
+    
+    // Don't prompt if already chosen
+    if (this.character.weaponMaster && this.character.weaponMaster.weapon) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay weapon-master-modal-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); display: flex; justify-content: center;
+      align-items: center; z-index: 10001; animation: fadeIn 0.3s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'weapon-master-modal';
+    modal.style.cssText = `
+      background: linear-gradient(135deg, #1a1a2a 0%, #2d2a1d 100%);
+      border: 2px solid #c9a55a; border-radius: 12px;
+      padding: 1.5rem; max-width: 460px; width: 90%;
+      box-shadow: 0 0 40px rgba(201, 165, 90, 0.4), inset 0 0 20px rgba(201, 165, 90, 0.05);
+      animation: scaleIn 0.3s ease;
+    `;
+
+    let weaponButtons = '';
+    for (const spec of specs) {
+      const icon = spec.type === 'Ranged' ? '🏹' : '⚔️';
+      weaponButtons += `
+        <button type="button" class="wm-weapon-btn" data-weapon="${spec.weapon}" data-type="${spec.type}" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid rgba(201, 165, 90, 0.3); color: #ddd;
+          padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer;
+          text-align: left; transition: all 0.2s ease; font-size: 0.9rem;
+          width: 100%;
+        ">${icon} <strong>${spec.weapon}</strong> <span style="color:#999;font-size:0.8rem;">(${spec.type})</span></button>
+      `;
+    }
+
+    modal.innerHTML = `
+      <div style="text-align:center; margin-bottom: 0.5rem;">
+        <span style="font-size: 2rem;">⚔️</span>
+      </div>
+      <h3 style="color: #c9a55a; margin: 0 0 0.5rem 0; text-align: center; font-size: 1.1rem;">
+        Weapon Master
+      </h3>
+      <p style="color: #ccc; margin-bottom: 0.5rem; text-align: center; font-size: 0.85rem;">
+        Choose <strong>one weapon</strong> to master. This choice is permanent — you may only have Weapon Master in a single weapon.
+      </p>
+      <p style="color: #999; margin-bottom: 1rem; text-align: center; font-size: 0.75rem; font-style: italic;">
+        Doubles your Critical range when using this weapon. Melee weapons also gain a Damage Modifier improvement.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        ${weaponButtons}
+      </div>
+      <div style="text-align: center; margin-top: 0.75rem;">
+        <button type="button" class="wm-cancel-btn" style="
+          background: transparent; border: 1px solid #666; color: #999;
+          padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        ">Decide Later</button>
+      </div>
+    `;
+
+    // Hover effects
+    modal.querySelectorAll('.wm-weapon-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = '#c9a55a';
+        btn.style.transform = 'translateX(5px)';
+        btn.style.boxShadow = '0 0 10px rgba(201, 165, 90, 0.3)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = 'rgba(201, 165, 90, 0.3)';
+        btn.style.transform = 'translateX(0)';
+        btn.style.boxShadow = 'none';
+      });
+      btn.addEventListener('click', () => {
+        const weapon = btn.dataset.weapon;
+        const type = btn.dataset.type;
+        this.finalizeWeaponMasterSelection(weapon, type);
+        overlay.remove();
+      });
+    });
+
+    // Cancel
+    modal.querySelector('.wm-cancel-btn').addEventListener('click', () => {
+      overlay.remove();
+    });
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  },
+
+  /**
+   * Finalize weapon master selection
+   */
+  finalizeWeaponMasterSelection(weapon, type) {
+    const tier = this.getWeaponMasterTier() || 'master';
+    this.character.weaponMaster = {
+      weapon: weapon,
+      type: type,
+      tier: tier,
+      active: false
+    };
+    this.updateWeaponSpecDisplay();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Toggle weapon master active state
+   */
+  toggleWeaponMaster() {
+    if (!this.character.weaponMaster) return;
+    
+    const wasActive = this.character.weaponMaster.active;
+    this.character.weaponMaster.active = !wasActive;
+    
+    if (!wasActive) {
+      // Activating
+      this.playWeaponMasterAnimation();
+      this.applyWeaponMasterCritical();
+    } else {
+      // Deactivating
+      this.removeWeaponMasterCritical();
+    }
+    
+    this.updateWeaponMasterButtonState();
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Play activation animation based on tier
+   */
+  playWeaponMasterAnimation() {
+    const wm = this.character.weaponMaster;
+    if (!wm) return;
+    
+    const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+    
+    // Create fullscreen flash overlay
+    const flash = document.createElement('div');
+    flash.className = 'wm-activation-flash';
+    flash.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10002; pointer-events: none;
+      background: radial-gradient(circle at center, ${tierData.glowColor} 0%, transparent 70%);
+      animation: wmFlash 0.8s ease-out forwards;
+    `;
+    
+    // Create centered text popup
+    const textPopup = document.createElement('div');
+    textPopup.className = 'wm-activation-text';
+    textPopup.style.cssText = `
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 10003; pointer-events: none; text-align: center;
+      animation: wmTextReveal 1.2s ease-out forwards;
+    `;
+    
+    const weaponType = wm.type === 'Ranged' ? 'ranged' : 'melee';
+    const benefitText = tierData.benefits[weaponType];
+    
+    textPopup.innerHTML = `
+      <div style="font-size: 2.5rem; margin-bottom: 0.3rem;">${tierData.icon}</div>
+      <div style="font-size: 1.4rem; font-weight: bold; color: ${tierData.color};
+        text-shadow: 0 0 20px ${tierData.glowColor}, 0 0 40px ${tierData.glowColor};
+        letter-spacing: 2px; text-transform: uppercase;">
+        ${tierData.label}
+      </div>
+      <div style="font-size: 0.95rem; color: #fff; margin-top: 0.3rem;
+        text-shadow: 0 0 10px rgba(0,0,0,0.8);">
+        ${wm.weapon}
+      </div>
+      <div style="font-size: 0.75rem; color: #ccc; margin-top: 0.5rem; max-width: 300px;
+        text-shadow: 0 0 10px rgba(0,0,0,0.8);">
+        ${benefitText}
+      </div>
+    `;
+    
+    document.body.appendChild(flash);
+    document.body.appendChild(textPopup);
+    
+    // Clean up after animation
+    setTimeout(() => {
+      flash.remove();
+      textPopup.remove();
+    }, 1500);
+  },
+
+  /**
+   * Calculate critical range for a skill value
+   * Mythras: Critical = ceil(skill / 10), minimum 1
+   */
+  calculateCriticalRange(skillValue) {
+    if (!skillValue || skillValue <= 0) return 0;
+    return Math.ceil(skillValue / 10);
+  },
+
+  /**
+   * Apply weapon master critical range doubling to combat skill display
+   */
+  applyWeaponMasterCritical() {
+    const wm = this.character.weaponMaster;
+    if (!wm || !wm.active) return;
+    
+    const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    if (!skillInput) return;
+    
+    const skillValue = parseInt(skillInput.value, 10) || 0;
+    const normalCrit = this.calculateCriticalRange(skillValue);
+    const doubledCrit = normalCrit * 2;
+    
+    // Style the combat skill box
+    const row = skillInput.closest('.combat-skill-row');
+    if (row) {
+      row.classList.add('weapon-master-active');
+      row.style.setProperty('--wm-color', tierData.color);
+      row.style.setProperty('--wm-glow', tierData.glowColor);
+    }
+    
+    skillInput.classList.add('wm-critical-active');
+    skillInput.style.boxShadow = `0 0 8px ${tierData.glowColor}, inset 0 0 4px ${tierData.glowColor}`;
+    skillInput.style.borderColor = tierData.color;
+    
+    // Add or update critical range indicator
+    let critBadge = document.getElementById('wm-crit-badge');
+    if (!critBadge) {
+      critBadge = document.createElement('span');
+      critBadge.id = 'wm-crit-badge';
+      critBadge.className = 'wm-crit-badge';
+      skillInput.parentElement.insertBefore(critBadge, skillInput.nextSibling);
+    }
+    critBadge.textContent = `Crit: 01-${String(doubledCrit).padStart(2, '0')}`;
+    critBadge.title = `${tierData.label}: Critical range doubled from 01-${String(normalCrit).padStart(2, '0')} to 01-${String(doubledCrit).padStart(2, '0')} with ${wm.weapon}`;
+    critBadge.style.color = tierData.color;
+    critBadge.style.display = '';
+  },
+
+  /**
+   * Remove weapon master critical range effect
+   */
+  removeWeaponMasterCritical() {
+    const skillInput = document.getElementById('combat-skill-1-percent');
+    if (!skillInput) return;
+    
+    const row = skillInput.closest('.combat-skill-row');
+    if (row) {
+      row.classList.remove('weapon-master-active');
+      row.style.removeProperty('--wm-color');
+      row.style.removeProperty('--wm-glow');
+    }
+    
+    skillInput.classList.remove('wm-critical-active');
+    skillInput.style.boxShadow = '';
+    skillInput.style.borderColor = '';
+    
+    const critBadge = document.getElementById('wm-crit-badge');
+    if (critBadge) critBadge.style.display = 'none';
+  },
+
+  /**
+   * Update the weapon master button visual state
+   */
+  updateWeaponMasterButtonState() {
+    const btn = document.getElementById('wm-toggle-btn');
+    if (!btn) return;
+    
+    const wm = this.character.weaponMaster;
+    if (!wm) return;
+    
+    const tierData = this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master;
+    
+    if (wm.active) {
+      btn.classList.add('wm-active');
+      btn.style.background = `linear-gradient(135deg, ${tierData.color}22, ${tierData.color}44)`;
+      btn.style.borderColor = tierData.color;
+      btn.style.color = tierData.color;
+      btn.style.boxShadow = `0 0 12px ${tierData.glowColor}`;
+      btn.textContent = `${tierData.icon} ${tierData.label} ✦`;
+      btn.title = 'Click to deactivate. ' + tierData.benefits[wm.type === 'Ranged' ? 'ranged' : 'melee'];
+    } else {
+      btn.classList.remove('wm-active');
+      btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
+      btn.style.borderColor = 'rgba(201, 165, 90, 0.3)';
+      btn.style.color = '#999';
+      btn.style.boxShadow = 'none';
+      btn.textContent = `${tierData.icon} ${tierData.label}`;
+      btn.title = 'Double your Critical range with your weapon. Click to activate.';
+    }
   },
 
   // ============================================

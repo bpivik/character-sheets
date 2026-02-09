@@ -3465,6 +3465,115 @@ input.skill-input.powerful-concentration-bonus,
 }
 
 /* ============================================
+   WEAPON MASTER SYSTEM
+   ============================================ */
+
+/* Weapon Master toggle button */
+.wm-toggle-btn {
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.wm-toggle-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+.wm-toggle-btn.wm-active {
+  animation: wmPulse 2s ease-in-out infinite;
+}
+
+/* Mastered weapon card highlight */
+.weapon-spec-card.weapon-mastered {
+  transition: all 0.3s ease;
+}
+
+/* Critical range badge next to combat skill */
+.wm-crit-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  margin-left: 0.3rem;
+  animation: wmBadgeGlow 2s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+/* Combat skill row when weapon master is active */
+.combat-skill-row.weapon-master-active {
+  background: linear-gradient(90deg, 
+    rgba(var(--wm-rgb, 201, 165, 90), 0.08) 0%,
+    rgba(var(--wm-rgb, 201, 165, 90), 0.15) 50%,
+    rgba(var(--wm-rgb, 201, 165, 90), 0.08) 100%
+  ) !important;
+  border-radius: 4px;
+  position: relative;
+}
+
+.combat-skill-row.weapon-master-active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 1px solid var(--wm-color, #c9a55a);
+  border-radius: 4px;
+  pointer-events: none;
+  animation: wmRowPulse 2.5s ease-in-out infinite;
+}
+
+/* Weapon master benefit line in spec card */
+.wm-benefit {
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* ---- Animations ---- */
+
+@keyframes wmPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes wmBadgeGlow {
+  0%, 100% { opacity: 1; text-shadow: none; }
+  50% { opacity: 0.85; text-shadow: 0 0 6px currentColor; }
+}
+
+@keyframes wmRowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes wmFlash {
+  0% { opacity: 0; }
+  15% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+@keyframes wmTextReveal {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  35% { transform: translate(-50%, -50%) scale(1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-20px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================
    SYRIN SPECIES ABILITIES SECTION
    ============================================ */
 .syrin-abilities-row {
