@@ -2865,6 +2865,16 @@ const App = {
           const containerId = this.getContainerIdFromItemName(itemName);
           if (containerId && !itemName.toLowerCase().includes('see below')) {
             itemName = itemName + ' (See Below)';
+            
+            // Check if this new container upgrades an existing one with items
+            // e.g., adding "Reinforced Backpack" when "Backpack" has items
+            const upgradeMap = {
+              'reinforced-backpack': 'backpack'
+            };
+            const oldContainerId = upgradeMap[containerId];
+            if (oldContainerId && this.containerHasItems(oldContainerId)) {
+              this.transferContainerItems(oldContainerId, containerId);
+            }
           }
           
           nameInput.value = itemName;
@@ -2940,7 +2950,10 @@ const App = {
       const input = document.getElementById(`equip-${i}-name`);
       if (input && input.value.trim()) {
         const itemName = input.value.trim().toLowerCase();
-        if (config.triggers.some(trigger => itemName.includes(trigger))) {
+        // Use getContainerIdFromItemName to get exact container ID 
+        // (handles "reinforced backpack" vs "backpack" distinction)
+        const foundId = this.getContainerIdFromItemName(itemName);
+        if (foundId === containerId) {
           return true;
         }
       }
@@ -24838,6 +24851,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           const containerId = this.getContainerIdFromItemName(itemName);
           if (containerId && !itemName.toLowerCase().includes('see below')) {
             itemName = itemName + ' (See Below)';
+            
+            // Check if this new container upgrades an existing one with items
+            const upgradeMap = { 'reinforced-backpack': 'backpack' };
+            const oldContainerId = upgradeMap[containerId];
+            if (oldContainerId && this.containerHasItems(oldContainerId)) {
+              this.transferContainerItems(oldContainerId, containerId);
+            }
           }
           nameInput.value = itemName;
         }
@@ -25412,6 +25432,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         const containerId = this.getContainerIdFromItemName(itemName);
         if (containerId && !itemName.toLowerCase().includes('see below')) {
           itemName = itemName + ' (See Below)';
+          
+          // Check if this new container upgrades an existing one with items
+          const upgradeMap = { 'reinforced-backpack': 'backpack' };
+          const oldContainerId = upgradeMap[containerId];
+          if (oldContainerId && this.containerHasItems(oldContainerId)) {
+            this.transferContainerItems(oldContainerId, containerId);
+          }
         }
         nameInput.value = itemName;
       }
