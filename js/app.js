@@ -24652,26 +24652,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Show d100 roll result overlay
    */
   showD100Result(skillName, targetPct, roll, result, resultClass) {
+    const isFumble = resultClass === 'roll-fumble';
+    
     // Create or get overlay
     let overlay = document.getElementById('d100-result-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'd100-result-overlay';
       overlay.className = 'damage-result-overlay';
-      overlay.innerHTML = `
-        <div class="damage-result-content d100-result-content">
-          <div class="d100-skill-name"></div>
-          <div class="d100-target"></div>
-          <div class="d100-roll"></div>
-          <div class="d100-result"></div>
-          <button class="damage-close">OK</button>
-        </div>
-      `;
       document.body.appendChild(overlay);
-      
-      overlay.querySelector('.damage-close').addEventListener('click', () => {
-        overlay.classList.remove('visible');
-      });
       
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
@@ -24680,15 +24669,170 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       });
     }
     
-    overlay.querySelector('.d100-skill-name').textContent = skillName;
-    overlay.querySelector('.d100-target').textContent = `Target: ${targetPct}%`;
-    overlay.querySelector('.d100-roll').textContent = roll.toString().padStart(2, '0');
-    
-    const resultEl = overlay.querySelector('.d100-result');
-    resultEl.textContent = result;
-    resultEl.className = 'd100-result ' + resultClass;
+    if (isFumble) {
+      overlay.innerHTML = `
+        <div class="damage-result-content d100-result-content d100-fumble-content">
+          <div class="d100-skill-name">${skillName}</div>
+          <div class="d100-target">Target: ${targetPct}%</div>
+          <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
+          <div class="d100-result roll-fumble">Fumble!</div>
+          <div class="d100-fumble-text">
+            Fumbled skills gain a free increase of 1%. It is a truism that we learn more from our mistakes than our successes, and this represents the reflection a character undergoes following a disastrous failure. Multiple fumbles of the same skill do not stack.
+          </div>
+          <div class="d100-fumble-question">Would you like to automatically add a point to this skill or do it yourself?</div>
+          <div class="d100-fumble-buttons">
+            <button class="damage-close d100-fumble-btn" id="d100-fumble-auto">Add Automatically</button>
+            <button class="damage-close d100-fumble-btn d100-fumble-manual" id="d100-fumble-manual">Do It Myself</button>
+          </div>
+        </div>
+      `;
+      
+      overlay.querySelector('#d100-fumble-auto').addEventListener('click', () => {
+        this.applyFumbleIncrease(skillName);
+        overlay.classList.remove('visible');
+      });
+      
+      overlay.querySelector('#d100-fumble-manual').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+    } else {
+      overlay.innerHTML = `
+        <div class="damage-result-content d100-result-content">
+          <div class="d100-skill-name">${skillName}</div>
+          <div class="d100-target">Target: ${targetPct}%</div>
+          <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
+          <div class="d100-result ${resultClass}">${result}</div>
+          <button class="damage-close">OK</button>
+        </div>
+      `;
+      
+      overlay.querySelector('.damage-close').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+    }
     
     overlay.classList.add('visible');
+  },
+  
+  /**
+   * Apply +1% fumble increase to a skill by name
+   */
+  applyFumbleIncrease(skillName) {
+    const normalizedName = skillName.toLowerCase().trim();
+    let found = false;
+    
+    // Search Standard Skills
+    document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
+      const name = (row.querySelector('.skill-name')?.textContent || '').toLowerCase().trim();
+      if (name === normalizedName) {
+        const input = row.querySelector('.skill-input');
+        if (input) {
+          input.value = (parseInt(input.value) || 0) + 1;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          this._flashFumbleIncrease(input);
+          found = true;
+        }
+      }
+    });
+    
+    if (found) { this.scheduleAutoSave(); return; }
+    
+    // Search Professional Skills
+    document.querySelectorAll('.professional-skill-row').forEach(row => {
+      const name = (row.querySelector('.prof-skill-name')?.value || '').toLowerCase().trim();
+      if (name === normalizedName) {
+        const input = row.querySelector('.prof-skill-current');
+        if (input) {
+          input.value = (parseInt(input.value) || 0) + 1;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          this._flashFumbleIncrease(input);
+          found = true;
+        }
+      }
+    });
+    
+    if (found) { this.scheduleAutoSave(); return; }
+    
+    // Search Alignment rows
+    document.querySelectorAll('.alignment-section .belief-row').forEach(row => {
+      const name = (row.querySelector('.belief-name')?.value || '').toLowerCase().trim();
+      if (name === normalizedName) {
+        const input = row.querySelector('.belief-input');
+        if (input) {
+          input.value = (parseInt(input.value) || 0) + 1;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          this._flashFumbleIncrease(input);
+          found = true;
+        }
+      }
+    });
+    
+    if (found) { this.scheduleAutoSave(); return; }
+    
+    // Search Passions
+    document.querySelectorAll('#passions-container .belief-row').forEach(row => {
+      const name = (row.querySelector('.belief-name')?.value || '').toLowerCase().trim();
+      if (name === normalizedName) {
+        const input = row.querySelector('.belief-input');
+        if (input) {
+          input.value = (parseInt(input.value) || 0) + 1;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          this._flashFumbleIncrease(input);
+          found = true;
+        }
+      }
+    });
+    
+    if (found) { this.scheduleAutoSave(); return; }
+    
+    // Search Oaths
+    document.querySelectorAll('#oaths-container .belief-row').forEach(row => {
+      const name = (row.querySelector('.belief-name')?.value || '').toLowerCase().trim();
+      if (name === normalizedName) {
+        const input = row.querySelector('.belief-input');
+        if (input) {
+          input.value = (parseInt(input.value) || 0) + 1;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          this._flashFumbleIncrease(input);
+          found = true;
+        }
+      }
+    });
+    
+    if (found) { this.scheduleAutoSave(); return; }
+    
+    // Search Combat Skills
+    document.querySelectorAll('.combat-skill-row').forEach(row => {
+      const nameEl = row.querySelector('.combat-skill-name');
+      const name = (nameEl?.tagName === 'INPUT' ? nameEl.value : nameEl?.textContent || '').toLowerCase().trim();
+      if (name === normalizedName) {
+        const input = row.querySelector('.combat-skill-percent');
+        if (input) {
+          input.value = (parseInt(input.value) || 0) + 1;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          this._flashFumbleIncrease(input);
+          found = true;
+        }
+      }
+    });
+    
+    if (found) this.scheduleAutoSave();
+  },
+  
+  /**
+   * Flash highlight on an input that received a fumble increase
+   */
+  _flashFumbleIncrease(input) {
+    const origBg = input.style.background;
+    const origColor = input.style.color;
+    input.style.background = '#4caf50';
+    input.style.color = '#fff';
+    input.style.transition = 'background 0.3s, color 0.3s';
+    setTimeout(() => {
+      input.style.background = origBg || '';
+      input.style.color = origColor || '';
+      setTimeout(() => { input.style.transition = ''; }, 300);
+    }, 1200);
   },
 
   /**
