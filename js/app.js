@@ -29238,21 +29238,33 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const [type, id] = skillId.split(':');
     let el = null;
     
-    // Special handling for Evade with Artful Dodger display bonus
-    if (type === 'standard' && id === 'evade' && this.artfulDodgerDisplayed) {
-      // Remove display bonus, set new base value, then re-apply display bonus
+    // Special handling for Evade with display bonuses (Artful Dodger, Lightning Reflexes)
+    const hasEvadeDisplayBonus = type === 'standard' && id === 'evade' && 
+      (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed);
+    
+    if (hasEvadeDisplayBonus) {
+      // Remove display bonuses, set new base value, then re-apply
       el = document.getElementById('evade-current');
       if (el) {
-        // Remove display bonus first
-        this.artfulDodgerDisplayed = false;
-        el.classList.remove('artful-dodger-bonus');
+        // Remove Artful Dodger display bonus if present
+        if (this.artfulDodgerDisplayed) {
+          this.artfulDodgerDisplayed = false;
+          el.classList.remove('artful-dodger-bonus');
+        }
+        // Remove Lightning Reflexes display bonus if present
+        if (this.lightningReflexesDisplayed) {
+          this.lightningReflexesDisplayed = false;
+          el.classList.remove('lightning-reflexes-bonus');
+          this._lightningReflexesBonus = 0;
+        }
         el.title = '';
         el.value = newValue;
         el.dataset.originalValue = newValue;
         this.character.standardSkills[this.camelCase(id)] = newValue.toString();
-        // Re-apply display bonus
+        // Re-apply display bonuses
         this.updateArtfulDodgerDisplay();
-        console.log(`Updated ${skillId} to ${newValue} (Artful Dodger display re-applied)`);
+        this.updateLightningReflexesDisplay();
+        console.log(`Updated ${skillId} to ${newValue} (Evade display bonuses re-applied)`);
       }
     } else if (type === 'standard') {
       // Standard skills use {id}-current, except unarmed which uses unarmed-percent
@@ -29281,7 +29293,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       el = document.getElementById(`oath-${id}-current`);
     }
     
-    if (el && !(type === 'standard' && id === 'evade' && this.artfulDodgerDisplayed)) {
+    if (el && !hasEvadeDisplayBonus) {
       el.value = newValue;
       // Dispatch input event to trigger any listeners
       el.dispatchEvent(new Event('input', { bubbles: true }));
