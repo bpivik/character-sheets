@@ -2232,7 +2232,7 @@ const App = {
       btn.type = 'button';
       btn.className = 'skill-info-btn';
       btn.title = 'Skill info';
-      btn.textContent = '\u2139';
+      btn.textContent = 'ℹ';
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
