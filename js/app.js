@@ -14719,7 +14719,14 @@ const App = {
           this.scheduleAutoSave();
           
           const remaining = this.character.defReflexesUsesRemaining;
-          alert(`🛡️ Defensive Reflexes used!\n\n+1 bonus Action Point for this Reactive Action (Parry/Evade).\n\n${remaining} use${remaining !== 1 ? 's' : ''} remaining this combat.`);
+          this.showResultModal('🛡️ Defensive Reflexes', `
+            <div style="text-align: center; padding: 1rem 0;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️</div>
+              <div style="font-size: 1.1rem; font-weight: bold; color: #4fc3f7; margin-bottom: 0.5rem;">Defensive Reflexes Used!</div>
+              <div style="font-size: 0.9rem; color: #e0e0e0;">+1 bonus Action Point for this Reactive Action (Parry/Evade)</div>
+              <div style="font-size: 0.85rem; color: #999; margin-top: 0.75rem;">${remaining} use${remaining !== 1 ? 's' : ''} remaining this combat.</div>
+            </div>
+          `);
         }
       });
       btn.dataset.listenerAttached = 'true';
@@ -15012,19 +15019,25 @@ const App = {
     } else {
       // Activate — save current AP values and set all to 10
       if (this.character.perfectionRoundsRemaining <= 0) {
-        alert('No Perfection rounds remaining today.');
+        this.showResultModal('✨ Perfection', '<div style="text-align: center; padding: 1rem 0; color: #f44336;">No Perfection rounds remaining today.</div>');
         return;
       }
       this._applyPerfectionAP();
       this.character.perfectionActive = true;
       
-      alert(
-        `✨ Perfection Activated!\n\n` +
-        `• All Hit Locations now have 10 AP (magical armor)\n` +
-        `• You are immune to Charm spells\n` +
-        `• You have ${this.character.perfectionRoundsRemaining} Combat Rounds remaining today\n\n` +
-        `Press the Perfection button again to deactivate.`
-      );
+      this.showResultModal('✨ Perfection Activated', `
+        <div style="text-align: center; padding: 1rem 0;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✨</div>
+          <div style="font-size: 0.9rem; color: #e0e0e0; line-height: 1.6;">
+            All Hit Locations now have <strong style="color: #b388ff;">10 AP</strong> (magical armor)<br>
+            You are immune to Charm spells<br>
+            <span style="color: #ffab00;">You have ${this.character.perfectionRoundsRemaining} Combat Rounds to use Perfection.</span>
+          </div>
+          <div style="font-size: 0.8rem; color: #999; margin-top: 0.75rem;">
+            When you wish, you may press the Perfection button again to stop.
+          </div>
+        </div>
+      `);
       
       this.initPerfection();
       this.scheduleAutoSave();
@@ -16213,15 +16226,67 @@ const App = {
     const roll = Math.floor(Math.random() * 100) + 1;
     const enduranceVal = parseInt(document.getElementById('endurance-current')?.value, 10) || 0;
     
+    let resultHTML;
     if (roll === 100) {
-      alert(`🎲 Pain Control Endurance Roll: ${roll}\n\n❌ FUMBLE! The only way to fail Pain Control.\n\nEndurance: ${enduranceVal}%`);
+      resultHTML = `
+        <div style="text-align: center; padding: 1rem 0;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎲</div>
+          <div style="font-size: 1.3rem; font-weight: bold; color: #f44336; margin-bottom: 0.5rem;">FUMBLE!</div>
+          <div style="font-size: 1.1rem; color: #e0e0e0;">Roll: <strong>${roll}</strong></div>
+          <div style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">The only way to fail Pain Control.</div>
+          <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">Endurance: ${enduranceVal}%</div>
+        </div>`;
     } else {
-      // Determine success level
-      let level = 'Success';
       const crit = Math.max(1, Math.floor(enduranceVal / 20));
-      if (roll <= crit) level = 'Critical Success';
-      alert(`🎲 Pain Control Endurance Roll: ${roll}\n\n✅ Automatic ${level}!\n\nPain Control treats all Endurance rolls vs injury as Automatic Successes.\n\nEndurance: ${enduranceVal}%`);
+      const isCrit = roll <= crit;
+      resultHTML = `
+        <div style="text-align: center; padding: 1rem 0;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎲</div>
+          <div style="font-size: 1.3rem; font-weight: bold; color: ${isCrit ? '#ffab00' : '#4caf50'}; margin-bottom: 0.5rem;">
+            Automatic ${isCrit ? 'Critical Success' : 'Success'}!
+          </div>
+          <div style="font-size: 1.1rem; color: #e0e0e0;">Roll: <strong>${roll}</strong></div>
+          <div style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem;">Pain Control treats all Endurance rolls vs injury as Automatic Successes.</div>
+          <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">Endurance: ${enduranceVal}%</div>
+        </div>`;
     }
+    
+    this.showResultModal('🎲 Pain Control — Endurance Roll', resultHTML);
+  },
+  
+  /**
+   * Generic result modal for ability rolls
+   */
+  showResultModal(title, bodyHTML) {
+    let modal = document.getElementById('result-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'result-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 380px;">
+        <div class="modal-header">
+          <h3>${title}</h3>
+          <button class="modal-close" id="result-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          ${bodyHTML}
+        </div>
+        <div class="modal-footer" style="text-align: center;">
+          <button class="btn btn-primary" id="result-modal-ok">OK</button>
+        </div>
+      </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    
+    const closeModal = () => modal.classList.add('hidden');
+    modal.querySelector('#result-modal-close').addEventListener('click', closeModal);
+    modal.querySelector('#result-modal-ok').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   },
 
   // ============================================

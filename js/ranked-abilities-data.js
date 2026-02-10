@@ -1099,8 +1099,8 @@ const RANKED_CLASS_ABILITIES = {
     { 
       name: "Quivering Palm", 
       rank: 4, 
-      prereqs: "Mysticism 110%; 10 Experience Rolls",
-      summary: "Kill with a touch — 1/week, Extremely Unburdened + No Armor"
+      prereqs: "Mysticism 110%",
+      summary: "Kill with a touch — 1/week, Extremely Unburdened + No Armor (costs 10 EXP Rolls)"
     },
     // Rank 5
     { 
