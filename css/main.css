@@ -2290,6 +2290,111 @@ input.weapon-damage.rage-boosted,
   text-shadow: 0 0 6px rgba(125, 204, 125, 0.3);
 }
 
+/* ========================================
+   SPECIES ENEMY SECTION
+   ======================================== */
+.species-enemy-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #2a1a1a 0%, #352a1a 100%);
+  border: 2px solid #8a6a3a;
+  border-radius: 6px;
+}
+
+.species-enemy-section .section-header {
+  color: #d4a04a;
+  text-shadow: 0 0 10px rgba(212, 160, 74, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.species-enemy-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  text-align: center;
+}
+
+.species-enemy-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.se-enemy-tag {
+  background: linear-gradient(135deg, #3a2a1a, #4a3a2a);
+  color: #d4a04a;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(212, 160, 74, 0.3);
+}
+
+.btn-species-enemy {
+  background: linear-gradient(135deg, #3a2a1a, #5a4a2a);
+  color: #d4a04a;
+  border: 1px solid #8a6a3a;
+  padding: 0.4rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-species-enemy:hover {
+  background: linear-gradient(135deg, #4a3a2a, #6a5a3a);
+  box-shadow: 0 0 12px rgba(212, 160, 74, 0.3);
+  transform: translateY(-1px);
+}
+
+.se-active-btn {
+  background: linear-gradient(135deg, #4a5a2a, #5a6a3a) !important;
+  border-color: #7dcc7d !important;
+  color: #aaffaa !important;
+  box-shadow: 0 0 15px rgba(125, 204, 125, 0.4) !important;
+  animation: sePulse 2s ease-in-out infinite;
+}
+
+@keyframes sePulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+}
+
+/* Species Enemy animation */
+.species-enemy-anim {
+  background: radial-gradient(circle, rgba(125, 204, 125, 0.2) 0%, transparent 70%);
+}
+
+.species-enemy-anim .se-icon {
+  font-size: 3rem;
+  animation: aimZoom 1.5s ease-out forwards;
+}
+
+.species-enemy-anim .se-text {
+  color: #7dcc7d;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
+  animation: fadeInUp 0.5s ease-out 0.3s both;
+}
+
+/* Species Enemy boosted fields */
+.se-boosted {
+  box-shadow: 0 0 6px rgba(125, 204, 125, 0.5) !important;
+  border-color: #4a8a4a !important;
+  background: rgba(125, 204, 125, 0.08) !important;
+}
+
+/* Global green tint when Species Enemy active */
+.species-enemy-active-mode .skill-row,
+.species-enemy-active-mode .combat-skill-row {
+  background: rgba(125, 204, 125, 0.04);
+}
+
 /* Lay on Hands Section */
 .lay-on-hands-section {
   padding: 0.5rem;

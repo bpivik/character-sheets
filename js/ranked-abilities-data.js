@@ -1254,6 +1254,70 @@ const RANKED_CLASS_ABILITIES = {
   ],
   
   // More classes to be added...
+
+  ranger: [
+    // Rank 1
+    { 
+      name: "Animal Empathy", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use Influence vs Willpower to calm/befriend natural animals (max 1/10th Influence)"
+    },
+    { 
+      name: "Artful Dodger", 
+      rank: 1, 
+      prereqs: "Evade 50%",
+      summary: "+10% Evade when Unburdened & Light armor; dodge melee without falling prone"
+    },
+    { 
+      name: "Camouflage", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Perception rolls to spot you in natural terrain are 1 Difficulty Grade harder"
+    },
+    { 
+      name: "Forceful Strike", 
+      rank: 1, 
+      prereqs: "Brawn 50%; Combat Style 50%",
+      summary: "Make attack 1 Grade harder to increase Damage Modifier by 2 steps"
+    },
+    { 
+      name: "Just a Scratch", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "Once/day, regain HP equal to Healing Rate in one Hit Location (not Major Wounds)"
+    },
+    { 
+      name: "Second Wind", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "Once/day after 1hr rest, recover up to 3 levels of Fatigue"
+    },
+    { 
+      name: "Skirmishing", 
+      rank: 1, 
+      prereqs: "Athletics 50%; Combat Style 50%",
+      summary: "Launch ranged attacks while running (not sprinting); capped by Athletics skill"
+    },
+    { 
+      name: "Species Enemy I", 
+      rank: 1, 
+      prereqs: null,
+      summary: "+10% to all skill rolls vs chosen enemy; +1 Damage Bonus step"
+    },
+    { 
+      name: "Sweeping Strike", 
+      rank: 1, 
+      prereqs: "Forceful Strike; Combat Style 60%",
+      summary: "If you drop a foe, free attack on another target within reach (1/Round)"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+  ],
 };
 
 /**

@@ -521,6 +521,7 @@ const App = {
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
+    this.checkSpeciesEnemyVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -1938,6 +1939,10 @@ const App = {
           if (this._holyStrikeUsedThisRoll) {
             this._holyStrikeUsedThisRoll = false;
             this.deactivateHolyStrike();
+          }
+          // Deactivate Species Enemy after damage roll (if combat was rolled first)
+          if (this.character.speciesEnemyActive && this.character.speciesEnemyCombatRolled) {
+            this.deactivateSpeciesEnemy();
           }
         }
       }
@@ -4882,6 +4887,7 @@ const App = {
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
+    this.checkSpeciesEnemyVisibility();
       } else if (normalizedName.startsWith('mental strength')) {
         this.checkMentalStrengthVisibility();
       } else if (normalizedName === 'turn undead') {
@@ -4928,6 +4934,16 @@ const App = {
             }
           }, 150);
         }
+      } else if (normalizedName.match(/^species enem(y|ies)\s*(i{1,3}|iv|v|\d)?$/i) && !this.isInitializing) {
+        // Species Enemy without a parenthesized species — prompt for name
+        if (!normalizedName.includes('(')) {
+          setTimeout(() => {
+            if (input && input.isConnected) {
+              this.promptSpeciesEnemy(input);
+            }
+          }, 150);
+        }
+        this.checkSpeciesEnemyVisibility();
       }
     }
     
@@ -5081,6 +5097,12 @@ const App = {
       } else {
         this.promptWeaponSpecialization(input);
       }
+      return;
+    }
+    
+    // Special handling for Species Enemy - prompt for species name
+    if (normalizedValue.match(/^species enem(y|ies)\s*(i{1,3}|iv|v|\d)?$/) && !normalizedValue.includes('(')) {
+      this.promptSpeciesEnemy(input);
       return;
     }
     
@@ -6199,6 +6221,7 @@ const App = {
         if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
+    this.checkSpeciesEnemyVisibility();
         
         // Check if Turn Undead section should now be visible
         if (normalizedName === 'turn undead') {
@@ -6225,6 +6248,13 @@ const App = {
                 this.promptWeaponSpecialization(input);
               }
             }
+          }, 100);
+        }
+        
+        // Species Enemy: prompt for species name
+        if (normalizedName.match(/^species enem(y|ies)\s*(i{1,3}|iv|v|\d)?$/) && !normalizedName.includes('(')) {
+          setTimeout(() => {
+            if (input && input.isConnected) this.promptSpeciesEnemy(input);
           }, 100);
         }
         
@@ -6270,6 +6300,7 @@ const App = {
     if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
+    this.checkSpeciesEnemyVisibility();
     
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
@@ -6296,6 +6327,13 @@ const App = {
             this.promptWeaponSpecialization(newInput);
           }
         }
+      }, 100);
+    }
+    
+    // Species Enemy: prompt for species name
+    if (normalizedName.match(/^species enem(y|ies)\s*(i{1,3}|iv|v|\d)?$/) && !normalizedName.includes('(') && newInput) {
+      setTimeout(() => {
+        if (newInput.isConnected) this.promptSpeciesEnemy(newInput);
       }, 100);
     }
     
@@ -10830,6 +10868,7 @@ const App = {
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
+    this.checkSpeciesEnemyVisibility();
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
@@ -13509,6 +13548,12 @@ const App = {
     if (this.character.improvedAimActive) {
       this.deactivateImprovedAim();
       messages.push(`<strong>Improved Aim:</strong> Deactivated`);
+    }
+
+    // Deactivate Species Enemy on Long Rest
+    if (this.character.speciesEnemyActive) {
+      this.deactivateSpeciesEnemy();
+      messages.push(`<strong>Species Enemy:</strong> Deactivated`);
     }
 
     const mentalStrengthLevel = this.getMentalStrengthLevel();
@@ -17900,6 +17945,330 @@ const App = {
     if (btn) {
       btn.textContent = '🎯 Aim ACTIVE — Click to Deactivate';
       btn.classList.add('improved-aim-active-btn');
+    }
+  },
+
+  // ============================================
+  // SPECIES ENEMY ABILITY (RANGER)
+  // Button that activates +10% all skills, +1 DM step
+  // ============================================
+
+  /**
+   * Prompt user to enter species enemy name
+   */
+  promptSpeciesEnemy(inputField) {
+    let modal = document.getElementById('species-enemy-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'species-enemy-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content">
+        <div class="modal-header">
+          <h3>🎯 Species Enemy</h3>
+          <button class="modal-close" id="se-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.85rem;">Enter the species you have dedicated yourself to fighting:</p>
+          <input type="text" id="se-species-input" placeholder="e.g., Goblins, Orcs, Undead..." 
+                 style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-top: 0.5rem; border: 1px solid #555; background: #2a2a3a; color: #eee; border-radius: 4px; box-sizing: border-box;">
+          <p style="font-size: 0.72rem; color: #999; margin-top: 0.5rem;">
+            Common species enemies include bugbears, ettins, giants, gnolls, goblins, hobgoblins, kobolds, ogres, orcs, trolls, and undead.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="se-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="se-accept">Accept</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('se-modal-close').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('se-cancel').addEventListener('click', () => {
+      modal.classList.add('hidden');
+      // Remove if they didn't pick a species
+      if (inputField) {
+        const val = inputField.value.toLowerCase().trim();
+        if (val.match(/^species enem(y|ies)\s*(i{1,3}|iv|v|\d)?$/) && !val.includes('(')) {
+          inputField.value = '';
+          this.syncClassAbilitiesToCharacter();
+          this.scheduleAutoSave();
+        }
+      }
+    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+    const speciesInput = document.getElementById('se-species-input');
+    document.getElementById('se-accept').addEventListener('click', () => {
+      const species = speciesInput.value.trim();
+      if (!species) {
+        speciesInput.style.borderColor = '#ff4444';
+        return;
+      }
+
+      if (inputField) {
+        // Get the current ability tier from the value
+        const currentVal = inputField.value.trim();
+        // Build display name with species in parentheses
+        inputField.value = `${currentVal} (${species})`;
+        inputField.dataset.previousValue = inputField.value;
+        this.updateAbilityTooltip(inputField);
+        this.syncClassAbilitiesToCharacter();
+        this.checkSpeciesEnemyVisibility();
+        this.scheduleAutoSave();
+      }
+
+      modal.classList.add('hidden');
+    });
+
+    modal.classList.remove('hidden');
+    setTimeout(() => speciesInput.focus(), 100);
+  },
+
+  /**
+   * Check if character has any Species Enemy ability and show/hide button section
+   */
+  checkSpeciesEnemyVisibility() {
+    const section = document.getElementById('species-enemy-section');
+    if (!section) return;
+
+    const enemies = this._getSpeciesEnemies();
+    if (enemies.length > 0) {
+      section.style.display = '';
+      // Update header: singular or plural
+      const header = document.getElementById('species-enemy-header');
+      if (header) {
+        header.textContent = enemies.length === 1 ? '🎯 Species Enemy' : '🎯 Species Enemies';
+      }
+      // Update enemy list display
+      const listEl = document.getElementById('species-enemy-list');
+      if (listEl) {
+        listEl.innerHTML = enemies.map(e =>
+          `<span class="se-enemy-tag">${e}</span>`
+        ).join('');
+      }
+      this._setupSpeciesEnemyButton();
+      // Restore active state
+      if (this.character.speciesEnemyActive) {
+        this._applySpeciesEnemyVisuals();
+      }
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  /**
+   * Parse species enemies from class abilities
+   */
+  _getSpeciesEnemies() {
+    const enemies = [];
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return enemies;
+    for (const input of container.querySelectorAll('.class-ability-input')) {
+      const val = input.value.trim();
+      const match = val.match(/^Species Enem(?:y|ies)\s*(?:I{1,3}|IV|V|\d)?\s*\(([^)]+)\)/i);
+      if (match) enemies.push(match[1].trim());
+    }
+    return enemies;
+  },
+
+  _setupSpeciesEnemyButton() {
+    const btn = document.getElementById('btn-species-enemy');
+    if (!btn || btn.dataset.listenerAttached) return;
+    btn.dataset.listenerAttached = 'true';
+    btn.addEventListener('click', () => this.toggleSpeciesEnemy());
+  },
+
+  toggleSpeciesEnemy() {
+    if (this.character.speciesEnemyActive) {
+      this.deactivateSpeciesEnemy();
+    } else {
+      this.activateSpeciesEnemy();
+    }
+  },
+
+  /**
+   * Damage modifier ranking for step increases
+   */
+  _DM_RANKING: [
+    '-1d8', '-1d6', '-1d4', '-1d2', '+0',
+    '+1d2', '+1d4', '+1d6', '+1d8', '+1d10', '+1d12',
+    '+2d6', '+1d8+1d6', '+2d8', '+1d10+1d8', '+2d10',
+    '+2d10+1d2', '+2d10+1d4', '+2d10+1d6', '+2d10+1d8', '+2d10+1d10', '+2d10+1d12', '+3d10'
+  ],
+
+  _stepDamageModifier(currentMod, steps) {
+    const idx = this._DM_RANKING.indexOf(currentMod);
+    if (idx === -1) return currentMod; // unknown, don't change
+    const newIdx = Math.max(0, Math.min(this._DM_RANKING.length - 1, idx + steps));
+    return this._DM_RANKING[newIdx];
+  },
+
+  activateSpeciesEnemy() {
+    // Animation
+    const section = document.getElementById('species-enemy-section');
+    if (section) {
+      const animOverlay = document.createElement('div');
+      animOverlay.className = 'ability-anim-overlay species-enemy-anim';
+      animOverlay.innerHTML = `
+        <div class="se-icon">🎯</div>
+        <div class="se-text">Species Enemy!</div>
+      `;
+      section.style.position = 'relative';
+      section.appendChild(animOverlay);
+      setTimeout(() => animOverlay.remove(), 1500);
+    }
+
+    // Store original values for all skill inputs
+    this.character.preSpeciesEnemySkills = {};
+
+    // Boost ALL standard skills
+    const skillSelectors = [
+      '#standard-skills .skill-input',
+      '#professional-skills .skill-input',
+      '#combat-skill-1-percent',
+      '#unarmed-percent'
+    ];
+    skillSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(input => {
+        if (!input.id) return;
+        const val = parseInt(input.value, 10);
+        if (isNaN(val) || val === 0) return;
+        this.character.preSpeciesEnemySkills[input.id] = val;
+        input.value = val + 10;
+        input.classList.add('se-boosted');
+      });
+    });
+
+    // Also boost magic skills if present
+    ['channel-percent', 'piety-percent', 'arcane-casting-percent', 'arcane-knowledge-percent',
+     'musicianship-percent', 'arcane-sorcery-percent', 'sorcerous-wisdom-percent'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input && parseInt(input.value, 10) > 0) {
+        this.character.preSpeciesEnemySkills[id] = parseInt(input.value, 10);
+        input.value = parseInt(input.value, 10) + 10;
+        input.classList.add('se-boosted');
+      }
+    });
+
+    // +1 step to Damage Modifier
+    const dmField = document.getElementById('damage-mod-current');
+    if (dmField) {
+      const currentDM = dmField.value.trim();
+      this.character.preSpeciesEnemyDM = currentDM;
+      dmField.value = this._stepDamageModifier(currentDM, 1);
+      dmField.classList.add('se-boosted');
+    }
+
+    // Green highlight on body
+    document.body.classList.add('species-enemy-active-mode');
+
+    this.character.speciesEnemyActive = true;
+    this.character.speciesEnemyCombatRolled = false;
+
+    // Update button
+    const btn = document.getElementById('btn-species-enemy');
+    if (btn) {
+      btn.textContent = '🎯 Species Enemy ACTIVE — Click to Deactivate';
+      btn.classList.add('se-active-btn');
+    }
+
+    // Refresh combat summary
+    this.refreshSummaryWidget('combat');
+
+    // Show modal
+    setTimeout(() => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;';
+      const modal = document.createElement('div');
+      modal.style.cssText = 'background:linear-gradient(135deg,#1a2a1a,#2a3a1a);border:2px solid #5a8a3a;border-radius:12px;padding:1.5rem;max-width:420px;width:90%;text-align:left;';
+      modal.innerHTML = `
+        <h3 style="color:#7dcc7d;margin:0 0 0.75rem 0;text-align:center;">🎯 Species Enemy Activated</h3>
+        <p style="color:#ddd;font-size:0.9rem;line-height:1.5;">
+          You're facing a <strong style="color:#7dcc7d;">Species Enemy</strong> and all your skill rolls are increased by <strong>+10%</strong> for the next roll. This could be for:
+        </p>
+        <ul style="color:#ccc;font-size:0.85rem;line-height:1.6;margin:0.5rem 0;">
+          <li><strong>Combat Skill</strong> for both attacking and defending</li>
+          <li><strong>Track</strong> when following their trail</li>
+          <li><strong>Perception</strong> when spotting an ambush</li>
+          <li><strong>Lore</strong> when identifying specific information</li>
+        </ul>
+        <p style="color:#ddd;font-size:0.9rem;margin-top:0.5rem;">The skill used is your choice. <strong>Damage Modifier also increased by one step.</strong></p>
+        <p style="color:#999;font-size:0.78rem;margin-top:0.75rem;">
+          Bonuses deactivate after your next skill roll. If you roll Combat Skill, bonuses remain active until you also roll damage.
+        </p>
+        <div style="text-align:center;margin-top:1rem;">
+          <button type="button" style="background:#3a6a3a;color:#aaffaa;border:1px solid #4a8a4a;padding:0.4rem 1.5rem;border-radius:5px;cursor:pointer;font-size:0.85rem;">OK</button>
+        </div>
+      `;
+      modal.querySelector('button').addEventListener('click', () => document.body.removeChild(overlay));
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) document.body.removeChild(overlay); });
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    }, 500);
+
+    this.scheduleAutoSave();
+  },
+
+  deactivateSpeciesEnemy() {
+    // Restore all skill values
+    const saved = this.character.preSpeciesEnemySkills || {};
+    for (const [id, val] of Object.entries(saved)) {
+      const input = document.getElementById(id);
+      if (input) {
+        input.value = val;
+        input.classList.remove('se-boosted');
+      }
+    }
+
+    // Restore damage modifier
+    const dmField = document.getElementById('damage-mod-current');
+    if (dmField && this.character.preSpeciesEnemyDM !== undefined) {
+      dmField.value = this.character.preSpeciesEnemyDM;
+      dmField.classList.remove('se-boosted');
+    }
+
+    // Remove green mode
+    document.body.classList.remove('species-enemy-active-mode');
+
+    delete this.character.preSpeciesEnemySkills;
+    delete this.character.preSpeciesEnemyDM;
+    this.character.speciesEnemyActive = false;
+    this.character.speciesEnemyCombatRolled = false;
+
+    // Update button
+    const btn = document.getElementById('btn-species-enemy');
+    if (btn) {
+      btn.textContent = '🎯 Activate Species Enemy';
+      btn.classList.remove('se-active-btn');
+    }
+
+    // Refresh combat summary
+    this.refreshSummaryWidget('combat');
+
+    this.scheduleAutoSave();
+  },
+
+  _applySpeciesEnemyVisuals() {
+    // Re-add green highlights to boosted fields
+    const saved = this.character.preSpeciesEnemySkills || {};
+    for (const id of Object.keys(saved)) {
+      const input = document.getElementById(id);
+      if (input) input.classList.add('se-boosted');
+    }
+    const dmField = document.getElementById('damage-mod-current');
+    if (dmField && this.character.preSpeciesEnemyDM !== undefined) {
+      dmField.classList.add('se-boosted');
+    }
+    document.body.classList.add('species-enemy-active-mode');
+    const btn = document.getElementById('btn-species-enemy');
+    if (btn) {
+      btn.textContent = '🎯 Species Enemy ACTIVE — Click to Deactivate';
+      btn.classList.add('se-active-btn');
     }
   },
 
@@ -26250,6 +26619,17 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         this.deactivateImprovedAim();
       }
     }
+
+    // Species Enemy: deactivate after a roll
+    if (this.character.speciesEnemyActive) {
+      if (isCombatSkillRoll) {
+        // Combat skill rolled — keep active until damage is rolled
+        this.character.speciesEnemyCombatRolled = true;
+      } else {
+        // Non-combat roll — deactivate immediately
+        this.deactivateSpeciesEnemy();
+      }
+    }
   },
 
   /**
@@ -30249,6 +30629,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
+    this.checkSpeciesEnemyVisibility();
     this.checkMentalStrengthVisibility();
     this.checkTurnUndeadVisibility();
     this.checkMonkAbilitiesVisibility();
