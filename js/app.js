@@ -2102,7 +2102,7 @@ const App = {
     document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
       if (row.querySelector('.d100-btn')) return;
       
-      const skillName = row.querySelector('.skill-name')?.textContent || '';
+      const skillName = (row.querySelector('.skill-name')?.textContent || '').replace(/\u2139/g, '').trim();
       const skillInput = row.querySelector('.skill-input');
       const encIndicator = row.querySelector('.enc-indicator');
       
@@ -2225,55 +2225,65 @@ const App = {
    * Add ℹ info buttons to standard skill rows that have SKILL_INFO entries
    */
   addSkillInfoButtons() {
+    console.log('[SkillInfo] addSkillInfoButtons called, SKILL_INFO exists:', typeof SKILL_INFO !== 'undefined');
     if (typeof SKILL_INFO === 'undefined') return;
-    
-    const createInfoBtn = (skillKey) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'skill-info-btn';
-      btn.title = 'Skill info';
-      btn.textContent = 'ℹ';
-      btn.addEventListener('click', (e) => {
+    console.log('[SkillInfo] SKILL_INFO keys:', Object.keys(SKILL_INFO).length);
+
+    const self = this;
+    function makeBtn(key) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'skill-info-btn';
+      b.title = 'Skill info';
+      b.textContent = String.fromCharCode(0x2139);
+      b.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        this.showSkillInfo(skillKey);
+        self.showSkillInfo(key);
       });
-      return btn;
-    };
-    
-    // Standard skill rows on Character page - put in .prereq-keys cell
-    document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
-      if (row.querySelector('.skill-info-btn')) return;
+      return b;
+    }
+
+    // Standard skill rows - insert into .skill-name span
+    const stdRows = document.querySelectorAll('.standard-skills .skill-row');
+    console.log('[SkillInfo] Found', stdRows.length, 'standard skill rows');
+    let added = 0;
+    for (let i = 0; i < stdRows.length; i++) {
+      const row = stdRows[i];
+      if (row.querySelector('.skill-info-btn')) continue;
       const skillKey = row.dataset.skill;
-      if (!skillKey || !SKILL_INFO[skillKey]) return;
-      
-      const prereqKeys = row.querySelector('.prereq-keys');
-      if (prereqKeys) {
-        prereqKeys.appendChild(createInfoBtn(skillKey));
+      if (!skillKey || !SKILL_INFO[skillKey]) continue;
+      const nameSpan = row.querySelector('.skill-name');
+      if (nameSpan) {
+        nameSpan.insertBefore(makeBtn(skillKey), nameSpan.firstChild);
+        added++;
       }
-    });
-    
-    // Combat skill rows on Combat page - also in .prereq-keys cell
-    document.querySelectorAll('.combat-skill-row').forEach(row => {
-      if (row.querySelector('.skill-info-btn')) return;
-      
+    }
+    console.log('[SkillInfo] Added', added, 'standard skill info buttons');
+
+    // Combat skill rows - insert into row before name element
+    const combatRows = document.querySelectorAll('.combat-skill-row');
+    console.log('[SkillInfo] Found', combatRows.length, 'combat skill rows');
+    let combatAdded = 0;
+    for (let j = 0; j < combatRows.length; j++) {
+      const row = combatRows[j];
+      if (row.querySelector('.skill-info-btn')) continue;
       const nameEl = row.querySelector('.combat-skill-name');
-      if (!nameEl) return;
-      
-      const nameText = (nameEl.tagName === 'INPUT' ? nameEl.value : nameEl.textContent || '').toLowerCase().trim();
-      let skillKey = null;
-      if (nameText === 'unarmed') {
-        skillKey = 'unarmed';
-      } else if (SKILL_INFO['combat skill']) {
-        skillKey = 'combat skill';
-      }
-      if (!skillKey) return;
-      
-      const prereqKeys = row.querySelector('.prereq-keys');
-      if (prereqKeys) {
-        prereqKeys.appendChild(createInfoBtn(skillKey));
-      }
-    });
+      if (!nameEl) continue;
+      const rawName = (nameEl.tagName === 'INPUT' ? nameEl.value : nameEl.textContent || '').toLowerCase().trim();
+      let key = null;
+      if (rawName === 'unarmed') { key = 'unarmed'; }
+      else if (rawName.length > 0) { key = 'combat skill'; }
+      if (!key || !SKILL_INFO[key]) continue;
+      // Wrap button + name in a flex container to avoid breaking grid
+      const wrapper = document.createElement('span');
+      wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+      nameEl.parentNode.insertBefore(wrapper, nameEl);
+      wrapper.appendChild(makeBtn(key));
+      wrapper.appendChild(nameEl);
+      combatAdded++;
+    }
+    console.log('[SkillInfo] Added', combatAdded, 'combat skill info buttons');
   },
   
     /**
@@ -24891,7 +24901,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // Search Standard Skills
     document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
-      const name = (row.querySelector('.skill-name')?.textContent || '').toLowerCase().trim();
+      const name = (row.querySelector('.skill-name')?.textContent || '').replace(/\u2139/g, '').toLowerCase().trim();
       if (name === normalizedName) {
         const input = row.querySelector('.skill-input');
         if (input) {
