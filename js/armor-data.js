@@ -67,6 +67,35 @@ const ArmorData = {
     }
     
     return null;
+  },
+  
+  /**
+   * Check if armor is classified as Light (AP ≤ 4) or non-armor (robes, clothing, none).
+   * Per the Player's Handbook Armor Table:
+   *   Light: Furs/Hides(1), Leather/Padded/Quilted(2), Studded Leather/Ring Mail(3), Brigandine/Scale/Laminated(4)
+   *   Heavy: Chain Mail(5), Splint/Banded(6), Plate Mail(7), Full Plate(8)
+   * @param {string} armorName - The armor name/type
+   * @returns {boolean} - true if light armor, no armor, or unrecognized empty string
+   */
+  isLightArmor(armorName) {
+    const normalized = this.normalize(armorName);
+    if (!normalized || normalized === 'none') return true; // No armor = fine
+    const ap = this.getAP(armorName);
+    if (ap === null) return true; // Unrecognized armor treated as non-restrictive (edge case)
+    return ap <= 4;
+  },
+  
+  /**
+   * Check if armor is classified as Heavy (AP ≥ 5).
+   * @param {string} armorName - The armor name/type
+   * @returns {boolean} - true if heavy armor
+   */
+  isHeavyArmor(armorName) {
+    const normalized = this.normalize(armorName);
+    if (!normalized || normalized === 'none') return false;
+    const ap = this.getAP(armorName);
+    if (ap === null) return false;
+    return ap >= 5;
   }
 };
 

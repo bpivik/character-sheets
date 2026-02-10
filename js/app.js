@@ -3976,6 +3976,14 @@ const App = {
         apInput.addEventListener('input', () => {
           apInput.dataset.autoFilled = 'false';
         });
+        
+        // Immediately re-verify ability conditions when armor text changes (not just on blur)
+        armorInput.addEventListener('input', () => {
+          this.updateArtfulDodgerDisplay();
+          this.updateAgileDisplay();
+          this.updateVeryAgileDisplay();
+          this.checkMonkAbilitiesVisibility();
+        });
         apInput.addEventListener('blur', () => {
           this.checkMonkAbilitiesVisibility();
         });
@@ -7662,6 +7670,9 @@ const App = {
     // Re-apply ability effects (Artful Dodger, Weapon Precision, etc.)
     // These modify calculated values and need to be reapplied after base recalculation
     this.reapplyAbilityEffects();
+    
+    // After recalculation, ensure DM current matches the new original if no ability is stepping it
+    this.resetDamageModToOriginalIfClean();
   },
   
   /**
@@ -14526,6 +14537,9 @@ const App = {
     this.refreshSummaryWidgets();
     
     this.character.preRageValues = null;
+    
+    // Ensure DM current matches original now that rage is over
+    this.resetDamageModToOriginalIfClean();
   },
   
   /**
@@ -14717,17 +14731,13 @@ const App = {
     const statusName = statusEl?.textContent?.trim() || 'Unburdened';
     const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
     
-    // Check armor condition: Light armor or less
+    // Check armor condition: Light armor or less (using ArmorData classification)
     let isLightOrLess = true;
     if (isUnburdened) {
-      const lightArmorTypes = [
-        '', 'none', 'furs', 'hides', 'furs/hides', 'soft leather', 'hard leather', 
-        'leather', 'linen', 'padded', 'ring', 'ringmail', 'ring mail'
-      ];
       const armorFields = document.querySelectorAll('[id$="-armor"]');
       for (const field of armorFields) {
-        const armorName = (field.value || '').toLowerCase().trim();
-        if (armorName && !lightArmorTypes.some(type => armorName.includes(type))) {
+        const armorName = (field.value || '').trim();
+        if (armorName && window.ArmorData && window.ArmorData.isHeavyArmor(armorName)) {
           isLightOrLess = false;
           break;
         }
@@ -14927,16 +14937,12 @@ const App = {
     const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
     if (!isUnburdened) return false;
     
-    // Condition 2: Light armor or less
-    const lightArmorTypes = [
-      '', 'none', 'furs', 'hides', 'furs/hides', 'soft leather', 'hard leather', 
-      'leather', 'linen', 'padded', 'ring', 'ringmail', 'ring mail'
-    ];
+    // Condition 2: Light armor or less (using ArmorData classification)
     const armorFields = document.querySelectorAll('[id$="-armor"]');
     for (const field of armorFields) {
-      const armorName = (field.value || '').toLowerCase().trim();
-      if (armorName && !lightArmorTypes.some(type => armorName.includes(type))) {
-        return false; // Non-light armor found
+      const armorName = (field.value || '').trim();
+      if (armorName && window.ArmorData && window.ArmorData.isHeavyArmor(armorName)) {
+        return false; // Heavy armor found
       }
     }
     
@@ -18377,6 +18383,9 @@ const App = {
     this.refreshSummaryWidget('combat');
 
     this.scheduleAutoSave();
+    
+    // Ensure DM current matches original now that Species Enemy is over
+    this.resetDamageModToOriginalIfClean();
   },
 
   _applySpeciesEnemyVisuals() {
@@ -19375,6 +19384,9 @@ const App = {
     
     this.updateHolySmiteDisplay();
     this.scheduleAutoSave();
+    
+    // Ensure DM current matches original now that Holy Smite is over
+    this.resetDamageModToOriginalIfClean();
   },
   
   /**
@@ -20401,6 +20413,9 @@ const App = {
     
     this.updateDivingStrikeDisplay();
     this.scheduleAutoSave();
+    
+    // Ensure DM current matches original now that Diving Strike is over
+    this.resetDamageModToOriginalIfClean();
   },
   
   /**
@@ -20548,6 +20563,54 @@ const App = {
         const dmSteps = tierOrder.indexOf(wm.tier) >= 2 ? 2 : 1;
         this.applyDamageBoostToSpecificWeapon(wm.weapon, `${tierData.label}: +${dmSteps} step${dmSteps > 1 ? 's' : ''} DM`);
       }
+    }
+  },
+  
+  /**
+   * Check if any damage-modifier-stepping ability is currently active.
+   * If none are active, reset damage-mod-current (and WP variant) to match their originals.
+   * This prevents stale captured values from leaving current out of sync with original
+   * after abilities deactivate while characteristics may have changed.
+   */
+  resetDamageModToOriginalIfClean() {
+    // Check all abilities that step the global damage modifier
+    const isRaging = !!this.character.isRaging;
+    const isForceful = !!this.character.isForcefulStrikeActive;
+    const isHolySmite = !!this.character.isHolySmiteActive;
+    const isDivingStrike = !!this.character.isDivingStrikeActive;
+    const isSpeciesEnemy = !!this.character.speciesEnemyActive;
+    
+    // If any DM-stepping ability is still active, don't reset
+    if (isRaging || isForceful || isHolySmite || isDivingStrike || isSpeciesEnemy) {
+      return;
+    }
+    
+    // No DM-stepping ability is active — sync current to original
+    const dmgOrigField = document.getElementById('damage-mod-original');
+    const dmgCurrField = document.getElementById('damage-mod-current');
+    if (dmgOrigField && dmgCurrField) {
+      const origVal = dmgOrigField.value.trim();
+      if (origVal && dmgCurrField.value.trim() !== origVal) {
+        dmgCurrField.value = origVal;
+        this.character.derived.damageModCurrent = origVal;
+      }
+    }
+    
+    // WP Damage Mod
+    const wpOrigField = document.getElementById('wp-damage-mod-original');
+    const wpCurrField = document.getElementById('wp-damage-mod-current');
+    if (wpOrigField && wpCurrField) {
+      const origVal = wpOrigField.value.trim();
+      const currVal = wpCurrField.value.trim();
+      // Only sync if WP row is visible/active (has a value in original)
+      if (origVal && currVal !== origVal) {
+        wpCurrField.value = origVal;
+      }
+    }
+    
+    // Update weapon damage displays
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
     }
   },
   
@@ -22674,6 +22737,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     this.refreshSummaryWidgets();
     this.updateCombatQuickRef();
+    
+    // After all combat buffs are recalculated, ensure DM current matches original if nothing is active
+    this.resetDamageModToOriginalIfClean();
   },
 
   /**
