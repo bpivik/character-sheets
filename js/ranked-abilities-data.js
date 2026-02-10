@@ -1191,6 +1191,66 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: null,
       summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
     },
+    // Rank 2
+    { 
+      name: "Call War Horse", 
+      rank: 2, 
+      prereqs: "Oath 70%; Willpower 70%",
+      summary: "Summon a warhorse; if killed, wait 1 year + 2 EXP Rolls to call another"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 bonus Action Point for Reactive Actions (Parry/Evade)"
+    },
+    { 
+      name: "Greater Sweeping Strike", 
+      rank: 2, 
+      prereqs: "Sweeping Strike; Combat Style 70%",
+      replaces: "Sweeping Strike",
+      summary: "As Sweeping Strike, but attack ALL enemies in reach if each drops"
+    },
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Circle of Power (Holy Weapon Only)", 
+      rank: 3, 
+      prereqs: "Willpower 90%",
+      summary: "Holy weapon creates 10ft circle suppressing hostile magic ≤ Channel/10 Magnitude"
+    },
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes I",
+      replaces: "Defensive Reflexes I",
+      summary: "May use Defensive Reflexes twice per combat (no re-roll vs same attack, no Luck combo)"
+    },
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
   ],
   
   // More classes to be added...

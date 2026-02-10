@@ -519,6 +519,7 @@ const App = {
     this.checkDetectEvilVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
+    this.checkCircleOfPowerVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -4878,6 +4879,7 @@ const App = {
     this.checkDetectEvilVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
+    this.checkCircleOfPowerVisibility();
       } else if (normalizedName.startsWith('mental strength')) {
         this.checkMentalStrengthVisibility();
       } else if (normalizedName === 'turn undead') {
@@ -6184,6 +6186,7 @@ const App = {
         if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
         if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
         if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
+    this.checkCircleOfPowerVisibility();
         
         // Check if Turn Undead section should now be visible
         if (normalizedName === 'turn undead') {
@@ -6245,6 +6248,7 @@ const App = {
     if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
     if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
     if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
+    this.checkCircleOfPowerVisibility();
     
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
@@ -10795,6 +10799,7 @@ const App = {
     this.checkDetectEvilVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
+    this.checkCircleOfPowerVisibility();
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
@@ -17679,6 +17684,39 @@ const App = {
     document.querySelectorAll('.divine-prot-row').forEach(el => {
       el.classList.remove('divine-prot-row');
     });
+  },
+
+  // ============================================
+  // CIRCLE OF POWER ABILITY (PALADIN)
+  // Informational box showing Channel/10 suppression
+  // ============================================
+
+  checkCircleOfPowerVisibility() {
+    const section = document.getElementById('circle-of-power-section');
+    if (!section) return;
+    if (this.hasAbility('Circle of Power') || this.hasAbility('Circle of Power (Holy Weapon Only)')) {
+      section.style.display = '';
+      this.updateCircleOfPowerDisplay();
+      // Listen for Channel changes
+      const channelEl = document.getElementById('channel-percent');
+      if (channelEl && !channelEl.dataset.copListenerAttached) {
+        channelEl.addEventListener('input', () => this.updateCircleOfPowerDisplay());
+        channelEl.dataset.copListenerAttached = 'true';
+      }
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  updateCircleOfPowerDisplay() {
+    const channelEl = document.getElementById('channel-percent');
+    const channelValue = parseInt(channelEl?.value, 10) || 0;
+    const magnitude = Math.ceil(channelValue / 10);
+
+    const magEl = document.getElementById('cop-magnitude-value');
+    const chanEl = document.getElementById('cop-channel-value');
+    if (magEl) magEl.textContent = magnitude;
+    if (chanEl) chanEl.textContent = channelValue;
   },
 
   // ============================================
@@ -29828,6 +29866,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkDetectEvilVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
+    this.checkCircleOfPowerVisibility();
     this.checkMentalStrengthVisibility();
     this.checkTurnUndeadVisibility();
     this.checkMonkAbilitiesVisibility();

@@ -2117,6 +2117,71 @@ input.weapon-damage.rage-boosted,
   100% { transform: scale(1.12); }
 }
 
+/* ========================================
+   CIRCLE OF POWER SECTION
+   ======================================== */
+.circle-of-power-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a2d 0%, #25254a 100%);
+  border: 2px solid #5588cc;
+  border-radius: 6px;
+}
+
+.circle-of-power-section .section-header {
+  color: #77bbff;
+  text-shadow: 0 0 10px rgba(119, 187, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.circle-of-power-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  text-align: center;
+}
+
+.cop-label {
+  color: #99aacc;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.circle-of-power-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cop-text {
+  color: #aabbdd;
+  font-size: 0.78rem;
+}
+
+.cop-magnitude {
+  display: inline-block;
+  background: linear-gradient(135deg, #2a3a6a, #3a4a8a);
+  color: #77bbff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #5588cc;
+  min-width: 2rem;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(119, 187, 255, 0.5);
+}
+
+.circle-of-power-note {
+  margin-top: 0.1rem;
+}
+
+.cop-formula {
+  color: #778899;
+  font-size: 0.68rem;
+}
+
 /* Lay on Hands Section */
 .lay-on-hands-section {
   padding: 0.5rem;
