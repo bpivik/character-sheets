@@ -3964,6 +3964,8 @@ const App = {
           
           // Check Agile display (depends on armor type)
           this.updateAgileDisplay();
+          // Check Artful Dodger display (depends on armor type)
+          this.updateArtfulDodgerDisplay();
           // Check Very Agile display (depends on unarmored status)
           this.updateVeryAgileDisplay();
           // Check Monk abilities (depends on unarmored status)
@@ -4606,6 +4608,8 @@ const App = {
               window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
               this.syncCombatToEquipment(nameInput.value.trim(), 'ranged');
+              // Apply load reduction after autofill sets the base load value
+              this.applyRangedSpecLoadReduction();
               this.scheduleAutoSave();
             }
           });
@@ -4747,6 +4751,8 @@ const App = {
           window.WeaponData.autofillRangedWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
           this.syncCombatToEquipment(nameInput.value.trim(), 'ranged');
+          // Apply load reduction after autofill sets the base load value
+          this.applyRangedSpecLoadReduction();
           this.scheduleAutoSave();
         }
       });
@@ -6997,6 +7003,11 @@ const App = {
           if (field === 'damage' && input && weapon.baseDamage) {
             input.dataset.baseDamage = weapon.baseDamage;
           }
+          // Restore original load: use the saved original so reduction applies cleanly
+          if (field === 'load' && input && weapon.originalLoad) {
+            input.value = weapon.originalLoad;
+            input.dataset.originalLoad = weapon.originalLoad;
+          }
         });
         // Restore userModified flag
         if (nameInput && weapon.userModified) {
@@ -7300,6 +7311,10 @@ const App = {
             // Save baseDamage data attribute for damage field
             if (field === 'damage' && input?.dataset?.baseDamage) {
               weapon.baseDamage = input.dataset.baseDamage;
+            }
+            // Save original (unreduced) load value if spec-reduced
+            if (field === 'load' && input?.dataset?.originalLoad) {
+              weapon.originalLoad = input.dataset.originalLoad;
             }
           });
           // Save userModified flag
@@ -14697,10 +14712,29 @@ const App = {
       return;
     }
     
-    // Check conditions (must be Unburdened)
+    // Check conditions (must be Unburdened AND wearing no heavier than Light armor)
     const statusEl = document.getElementById('enc-status');
     const statusName = statusEl?.textContent?.trim() || 'Unburdened';
-    const meetsConditions = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
+    const isUnburdened = (statusName === 'Unburdened' || statusName === 'Extremely Unburdened');
+    
+    // Check armor condition: Light armor or less
+    let isLightOrLess = true;
+    if (isUnburdened) {
+      const lightArmorTypes = [
+        '', 'none', 'furs', 'hides', 'furs/hides', 'soft leather', 'hard leather', 
+        'leather', 'linen', 'padded', 'ring', 'ringmail', 'ring mail'
+      ];
+      const armorFields = document.querySelectorAll('[id$="-armor"]');
+      for (const field of armorFields) {
+        const armorName = (field.value || '').toLowerCase().trim();
+        if (armorName && !lightArmorTypes.some(type => armorName.includes(type))) {
+          isLightOrLess = false;
+          break;
+        }
+      }
+    }
+    
+    const meetsConditions = isUnburdened && isLightOrLess;
     
     if (meetsConditions && !this.artfulDodgerDisplayed) {
       // Add display bonus
@@ -18229,6 +18263,19 @@ const App = {
       dmField.classList.add('se-boosted');
     }
 
+    // +1 step to Weapon Precision Damage Modifier if present
+    const wpDmField = document.getElementById('wp-damage-mod-current');
+    if (wpDmField && wpDmField.value.trim()) {
+      this.character.preSpeciesEnemyWPDM = wpDmField.value.trim();
+      wpDmField.value = this._stepDamageModifier(wpDmField.value.trim(), 1);
+      wpDmField.classList.add('se-boosted');
+    }
+
+    // Update weapon damage displays on combat page
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+
     // Green highlight on body
     document.body.classList.add('species-enemy-active-mode');
 
@@ -18298,11 +18345,24 @@ const App = {
       dmField.classList.remove('se-boosted');
     }
 
+    // Restore WP damage modifier
+    const wpDmField = document.getElementById('wp-damage-mod-current');
+    if (wpDmField && this.character.preSpeciesEnemyWPDM !== undefined) {
+      wpDmField.value = this.character.preSpeciesEnemyWPDM;
+      wpDmField.classList.remove('se-boosted');
+    }
+
+    // Update weapon damage displays on combat page
+    if (window.WeaponData && window.WeaponData.updateAllWeaponDamage) {
+      window.WeaponData.updateAllWeaponDamage();
+    }
+
     // Remove green mode
     document.body.classList.remove('species-enemy-active-mode');
 
     delete this.character.preSpeciesEnemySkills;
     delete this.character.preSpeciesEnemyDM;
+    delete this.character.preSpeciesEnemyWPDM;
     this.character.speciesEnemyActive = false;
     this.character.speciesEnemyCombatRolled = false;
 
@@ -18329,6 +18389,10 @@ const App = {
     const dmField = document.getElementById('damage-mod-current');
     if (dmField && this.character.preSpeciesEnemyDM !== undefined) {
       dmField.classList.add('se-boosted');
+    }
+    const wpDmField = document.getElementById('wp-damage-mod-current');
+    if (wpDmField && this.character.preSpeciesEnemyWPDM !== undefined) {
+      wpDmField.classList.add('se-boosted');
     }
     document.body.classList.add('species-enemy-active-mode');
     const btn = document.getElementById('btn-species-enemy');
@@ -23354,11 +23418,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const loadNum = parseInt(currentLoad, 10);
       if (isNaN(loadNum)) return;
 
-      loadInput.value = String(Math.max(0, loadNum - 1));
+      // Ranger Ranged Specialization: Faster Reload reduces by 2
+      // Regular ranged weapon spec reduces by 1
+      const reduction = hasRangerRangedSpec ? 2 : 1;
+      loadInput.value = String(Math.max(0, loadNum - reduction));
       loadInput.dataset.specReduced = 'true';
       loadInput.classList.add('spec-load-reduced');
       const specLabel = hasRangerRangedSpec ? 'Ranger Ranged Specialization' : 'Weapon Specialization';
-      loadInput.title = `Load reduced by 1 (${specLabel}). Original: ${currentLoad}`;
+      loadInput.title = `Load reduced by ${reduction} (${specLabel}). Original: ${currentLoad}`;
     });
   },
 
@@ -23533,6 +23600,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
 
     this.highlightSpecializedWeapons();
+    // Apply load reduction after weapon sync
+    this.applyRangedSpecLoadReduction();
     this.scheduleAutoSave();
   },
 
