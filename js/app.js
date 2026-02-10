@@ -406,6 +406,9 @@ const App = {
     // Add dice buttons to skill rows (after dynamic content is generated)
     this.addSkillDiceButtons();
     
+    // Add ℹ info buttons to skill rows
+    this.addSkillInfoButtons();
+    
     // Ensure Unarmed is always present as a melee weapon
     this.ensureUnarmedWeapon();
     
@@ -2216,6 +2219,125 @@ const App = {
         }
       }
     });
+  },
+  
+  /**
+   * Add ℹ info buttons to standard skill rows that have SKILL_INFO entries
+   */
+  addSkillInfoButtons() {
+    if (typeof SKILL_INFO === 'undefined') return;
+    
+    // Standard skill rows on Character page
+    document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
+      if (row.querySelector('.skill-info-btn')) return; // already added
+      const skillKey = row.dataset.skill;
+      if (!skillKey || !SKILL_INFO[skillKey]) return;
+      
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'skill-info-btn';
+      btn.title = 'Skill info';
+      btn.textContent = 'ℹ';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showSkillInfo(skillKey);
+      });
+      
+      // Insert before the skill-name span
+      const skillName = row.querySelector('.skill-name');
+      if (skillName) {
+        row.insertBefore(btn, skillName);
+      }
+    });
+  },
+  
+  /**
+   * Show skill info modal (reuses attr-info overlay)
+   */
+  showSkillInfo(skillKey) {
+    if (typeof SKILL_INFO === 'undefined') return;
+    const info = SKILL_INFO[skillKey];
+    if (!info) return;
+    
+    // Build description — handle Evade's dynamic description
+    let descHTML;
+    if (info.getDescription) {
+      const hasAD = !!(this.artfulDodgerDisplayed || (this.activeAbilityEffects && this.activeAbilityEffects['artful dodger']));
+      descHTML = info.getDescription(hasAD);
+    } else {
+      descHTML = info.description || '';
+    }
+    
+    // Add outcomes section if any exist
+    const hasOutcomes = info.critical || info.failure || info.fumble;
+    if (hasOutcomes) {
+      descHTML += '<hr style="border:none;border-top:1px solid var(--border-light);margin:0.75rem 0;">';
+      descHTML += '<div class="skill-outcomes">';
+      if (info.critical) {
+        descHTML += `<div class="skill-outcome"><span class="outcome-label outcome-critical">Critical</span> <span class="outcome-text">${info.critical}</span></div>`;
+      }
+      if (info.failure) {
+        descHTML += `<div class="skill-outcome"><span class="outcome-label outcome-failure">Failure</span> <span class="outcome-text">${info.failure}</span></div>`;
+      }
+      if (info.fumble) {
+        descHTML += `<div class="skill-outcome"><span class="outcome-label outcome-fumble">Fumble</span> <span class="outcome-text">${info.fumble}</span></div>`;
+      }
+      descHTML += '</div>';
+    }
+    
+    // Reuse the attribute info overlay system
+    this.showAttributeInfo({
+      _skillInfoOverride: true,
+      title: info.title,
+      content: descHTML
+    });
+  },
+  
+  /**
+   * Look up d100 outcome text for a skill and result type
+   * Returns null if no specific outcome is defined.
+   */
+  getSkillOutcome(skillName, resultClass) {
+    if (typeof SKILL_INFO === 'undefined') return null;
+    
+    const normalized = (skillName || '').toLowerCase().trim();
+    
+    // Direct key match first (e.g. "athletics", "first-aid")
+    let info = SKILL_INFO[normalized] || SKILL_INFO[normalized.replace(/\s+/g, '-')];
+    
+    // Try matching "Unarmed" specifically
+    if (!info && normalized === 'unarmed') {
+      info = SKILL_INFO['unarmed'];
+    }
+    
+    // If it looks like a combat skill (contains "combat" or matches weapon names), use combat skill
+    if (!info && (normalized.includes('combat') || normalized.startsWith('combat skill'))) {
+      info = SKILL_INFO['combat skill'];
+    }
+    
+    // For any combat skill on combat page that isn't a standard/prof skill, try combat skill
+    if (!info) {
+      // Check if this is a combat skill by seeing if it's listed in combat skill rows
+      const combatRows = document.querySelectorAll('.combat-skill-row');
+      for (const row of combatRows) {
+        const nameEl = row.querySelector('.combat-skill-name');
+        const rowName = (nameEl?.tagName === 'INPUT' ? nameEl.value : nameEl?.textContent || '').toLowerCase().trim();
+        if (rowName === normalized && normalized !== 'unarmed') {
+          info = SKILL_INFO['combat skill'];
+          break;
+        }
+      }
+    }
+    
+    if (!info) return null;
+    
+    // Map result class to outcome property
+    if (resultClass === 'roll-critical' && info.critical) return info.critical;
+    if (resultClass === 'roll-failure' && info.failure) return info.failure;
+    if (resultClass === 'roll-fumble' && info.fumble) return info.fumble;
+    
+    return null;
   },
   
   /**
@@ -5576,7 +5698,13 @@ const App = {
    * Show attribute info modal
    */
   showAttributeInfo(attrKey) {
-    const info = this.ATTRIBUTE_INFO[attrKey];
+    // Accept either a string key (lookup in ATTRIBUTE_INFO) or an object with title/content
+    let info;
+    if (typeof attrKey === 'object' && attrKey._skillInfoOverride) {
+      info = attrKey;
+    } else {
+      info = this.ATTRIBUTE_INFO[attrKey];
+    }
     if (!info) return;
 
     // Get or create the popup overlay (reuse ability detail structure)
@@ -24654,6 +24782,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   showD100Result(skillName, targetPct, roll, result, resultClass) {
     const isFumble = resultClass === 'roll-fumble';
     
+    // Look up skill-specific outcome text
+    const outcomeText = this.getSkillOutcome(skillName, resultClass);
+    const outcomeHTML = outcomeText
+      ? `<div class="d100-outcome-text">${outcomeText}</div>`
+      : '';
+    
     // Create or get overlay
     let overlay = document.getElementById('d100-result-overlay');
     if (!overlay) {
@@ -24661,13 +24795,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       overlay.id = 'd100-result-overlay';
       overlay.className = 'damage-result-overlay';
       document.body.appendChild(overlay);
-      
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          overlay.classList.remove('visible');
-        }
-      });
     }
+    
+    // Store fumble state so click-outside handler knows whether to close
+    overlay.dataset.fumble = isFumble ? 'true' : 'false';
+    
+    // Remove old click handler and add fresh one
+    const newOverlay = overlay.cloneNode(false);
+    overlay.parentNode.replaceChild(newOverlay, overlay);
+    overlay = newOverlay;
+    
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay && overlay.dataset.fumble !== 'true') {
+        overlay.classList.remove('visible');
+      }
+    });
     
     if (isFumble) {
       overlay.innerHTML = `
@@ -24676,6 +24818,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           <div class="d100-target">Target: ${targetPct}%</div>
           <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
           <div class="d100-result roll-fumble">Fumble!</div>
+          ${outcomeHTML}
           <div class="d100-fumble-text">
             Fumbled skills gain a free increase of 1%. It is a truism that we learn more from our mistakes than our successes, and this represents the reflection a character undergoes following a disastrous failure. Multiple fumbles of the same skill do not stack.
           </div>
@@ -24702,6 +24845,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           <div class="d100-target">Target: ${targetPct}%</div>
           <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
           <div class="d100-result ${resultClass}">${result}</div>
+          ${outcomeHTML}
           <button class="damage-close">OK</button>
         </div>
       `;
