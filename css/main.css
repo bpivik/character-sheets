@@ -770,22 +770,29 @@ select:focus {
 
 /* Initiative dice button (inside label) */
 .btn-init-roll {
-  background: var(--accent-color, #8b7355);
-  border: 1px solid var(--border-gold, #c4a265);
-  border-radius: 4px;
+  background: none;
+  border: none;
   cursor: pointer;
-  font-size: 0.7rem;
-  padding: 0.1rem 0.25rem;
+  padding: 0;
   line-height: 1;
-  opacity: 0.75;
+  opacity: 0.8;
   transition: opacity 0.2s, transform 0.15s;
   flex-shrink: 0;
-  margin-left: 0.15rem;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-init-roll:hover {
   opacity: 1;
-  transform: scale(1.15);
+  transform: scale(1.2);
+}
+
+.d10-init-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-color, #8b7355);
 }
 
 .derived-attributes .derived-row:last-of-type {
@@ -1274,6 +1281,26 @@ select:focus {
   text-decoration: line-through;
   color: #888;
   background: #f0f0f0;
+}
+
+/* Artful Dodger inactive state (heavy armor or overencumbered) */
+.class-ability-input.ad-inactive {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.class-ability-info-btn.ad-warning {
+  background: #fff3e0;
+  border-color: #e65100;
+  color: #e65100;
+  font-size: 0.65rem;
+  font-weight: bold;
+  cursor: help;
+}
+
+.class-ability-info-btn.ad-warning:hover {
+  background: #e65100;
+  color: white;
 }
 
 /* Rage boosted/penalized skill indicators */
@@ -9132,6 +9159,30 @@ input.combat-skill-percent.damage-boosted {
   font-style: italic;
   color: var(--text-secondary);
   margin-top: 0.25rem;
+}
+
+/* Rank 1 Paladin/Ranger cannot cast magic note */
+.rank1-spell-note {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #fff8e1;
+  border: 1px solid #f9a825;
+  border-left: 4px solid #e65100;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #4e342e;
+}
+
+.rank1-spell-note-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.rank1-spell-note-text {
+  line-height: 1.4;
 }
 
 /* Spell Actions */

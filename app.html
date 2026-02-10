@@ -337,7 +337,7 @@
                   <input type="number" id="healing-rate-current" class="derived-input" placeholder="">
                 </div>
                 <div class="derived-row has-original">
-                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="initiative">ℹ</button>Initiative <button type="button" class="btn-init-roll" id="btn-init-roll" title="Roll d10 for Initiative">🎲</button></span>
+                  <span class="derived-label"><button type="button" class="attr-info-btn" data-attr="initiative">ℹ</button>Initiative <button type="button" class="btn-init-roll" id="btn-init-roll" title="Roll d10 for Initiative"><img src="images/d10-init.svg" alt="d10" class="d10-init-icon"></button></span>
                   <input type="number" id="initiative-original" class="derived-input derived-readonly" readonly>
                   <input type="number" id="initiative-current" class="derived-input" placeholder="">
                 </div>
@@ -1989,6 +1989,12 @@
           </table>
           <p class="syrin-note syrin-only">Syrin may not become Mages or Sorcerers</p>
         </section>
+
+        <!-- Rank 1 Paladin/Ranger cannot cast magic note -->
+        <div class="rank1-spell-note" id="rank1-spell-note" style="display: none;">
+          <span class="rank1-spell-note-icon">🚫</span>
+          <span class="rank1-spell-note-text" id="rank1-spell-note-text"></span>
+        </div>
 
         <!-- Spell Lists -->
         <div class="spell-columns">

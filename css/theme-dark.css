@@ -621,6 +621,35 @@
   border-color: #8d6e63;
 }
 
+/* Artful Dodger inactive */
+[data-theme="dark"] .class-ability-input.ad-inactive {
+  color: #666;
+}
+
+[data-theme="dark"] .class-ability-info-btn.ad-warning {
+  background: #3e2723;
+  border-color: #ff6d00;
+  color: #ff6d00;
+}
+
+[data-theme="dark"] .class-ability-info-btn.ad-warning:hover {
+  background: #ff6d00;
+  color: #fff;
+}
+
+/* Rank 1 spell note */
+[data-theme="dark"] .rank1-spell-note {
+  background: #3e2723;
+  border-color: #8d6e63;
+  border-left-color: #ff6d00;
+  color: #d7ccc8;
+}
+
+/* Initiative d10 icon */
+[data-theme="dark"] .d10-init-icon {
+  color: #c4a265;
+}
+
 /* Field disabled */
 [data-theme="dark"] .field-disabled {
   background-color: #1a1a1a !important;

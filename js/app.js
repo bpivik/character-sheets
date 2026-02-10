@@ -1331,6 +1331,9 @@ const App = {
             this.updateBerserkRageDisplay();
           }
           
+          // Update Rank 1 spell note for Paladin/Ranger
+          this.updateRank1SpellNote();
+          
           this.scheduleAutoSave();
         };
         field.addEventListener('input', handleRankChange);
@@ -8707,6 +8710,45 @@ const App = {
         document.querySelector('.tab-btn[data-page="main"]')?.classList.add('active');
       }
     }
+    
+    // Update Rank 1 spell note for Paladin/Ranger
+    this.updateRank1SpellNote();
+  },
+  
+  /**
+   * Show/hide a note on the spell page when Paladin or Ranger is at Rank 1
+   * (they cannot cast magic until Rank 2)
+   */
+  updateRank1SpellNote() {
+    const noteEl = document.getElementById('rank1-spell-note');
+    const textEl = document.getElementById('rank1-spell-note-text');
+    if (!noteEl || !textEl) return;
+    
+    // Check each class slot for Paladin or Ranger at Rank 1
+    const slots = ['primary', 'secondary', 'tertiary'];
+    let paladinAtRank1 = false;
+    let rangerAtRank1 = false;
+    
+    slots.forEach(slot => {
+      const className = (document.getElementById(`class-${slot}`)?.value || '').trim().toLowerCase();
+      const rank = parseInt(document.getElementById(`rank-${slot}`)?.value, 10) || 0;
+      
+      if (className === 'paladin' && rank === 1) paladinAtRank1 = true;
+      if (className === 'ranger' && rank === 1) rangerAtRank1 = true;
+    });
+    
+    if (paladinAtRank1 && rangerAtRank1) {
+      textEl.textContent = 'Paladins and Rangers cannot cast magic until Rank 2.';
+      noteEl.style.display = '';
+    } else if (paladinAtRank1) {
+      textEl.textContent = 'Paladins cannot cast magic until Rank 2.';
+      noteEl.style.display = '';
+    } else if (rangerAtRank1) {
+      textEl.textContent = 'Rangers cannot cast magic until Rank 2.';
+      noteEl.style.display = '';
+    } else {
+      noteEl.style.display = 'none';
+    }
   },
   
   /**
@@ -14878,6 +14920,17 @@ const App = {
       if (input.value.toLowerCase().trim() === 'artful dodger') {
         if (strikethrough) {
           input.classList.add('rage-disabled');
+          // Remove ad-inactive styling when rage takes over
+          input.classList.remove('ad-inactive');
+          const row = input.closest('.class-ability-row');
+          if (row) {
+            const infoBtn = row.querySelector('.class-ability-info-btn');
+            if (infoBtn && infoBtn.classList.contains('ad-warning')) {
+              infoBtn.classList.remove('ad-warning');
+              infoBtn.innerHTML = 'ℹ';
+              infoBtn.title = 'Click for ability details';
+            }
+          }
         } else {
           input.classList.remove('rage-disabled');
         }
@@ -14946,6 +14999,89 @@ const App = {
       this._updateEvadeBonusTitle(currField);
     }
     // If conditions match current state, do nothing
+    
+    // Update the ability row UI (strikethrough + warning) — but NOT during rage (rage has its own styling)
+    if (!this.character.isRaging) {
+      this.updateArtfulDodgerAbilityUI(meetsConditions, isUnburdened, isLightOrLess);
+    }
+  },
+  
+  /**
+   * Update the Artful Dodger ability row visual state
+   * When inactive: strikethrough text, replace info button with warning icon
+   * When active: normal text, restore info button
+   */
+  updateArtfulDodgerAbilityUI(isActive, isUnburdened, isLightArmor) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    
+    const inputs = container.querySelectorAll('.class-ability-input');
+    for (const input of inputs) {
+      if (input.value.toLowerCase().trim() !== 'artful dodger') continue;
+      
+      const row = input.closest('.class-ability-row');
+      if (!row) continue;
+      
+      const infoBtn = row.querySelector('.class-ability-info-btn');
+      if (!infoBtn) continue;
+      
+      if (isActive) {
+        // Conditions met — restore normal appearance
+        input.classList.remove('ad-inactive');
+        infoBtn.classList.remove('ad-warning');
+        infoBtn.innerHTML = 'ℹ';
+        infoBtn.title = 'Click for ability details';
+        // Re-bind original click handler (show ability detail)
+        infoBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showAbilityDetail('Artful Dodger');
+        };
+      } else {
+        // Conditions NOT met — strikethrough + warning
+        input.classList.add('ad-inactive');
+        infoBtn.classList.add('ad-warning');
+        infoBtn.innerHTML = '⚠';
+        
+        // Build reason string
+        const reasons = [];
+        if (!isUnburdened) reasons.push('carrying too many Things');
+        if (!isLightArmor) reasons.push('wearing heavy armor');
+        const reasonText = reasons.join(' and ');
+        
+        infoBtn.title = `Artful Dodger is inactive: You are ${reasonText}. Once resolved, Artful Dodger will activate automatically.`;
+        
+        // Click shows a modal with the full explanation
+        infoBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showArtfulDodgerWarningModal(isUnburdened, isLightArmor);
+        };
+      }
+      
+      break; // Only one Artful Dodger row
+    }
+  },
+  
+  /**
+   * Show a modal explaining why Artful Dodger is inactive
+   */
+  showArtfulDodgerWarningModal(isUnburdened, isLightArmor) {
+    const reasons = [];
+    if (!isUnburdened) reasons.push('<li>You are carrying too many Things (must be Unburdened — Things &lt; STR)</li>');
+    if (!isLightArmor) reasons.push('<li>You are wearing heavy armor (must be Light armor or less — AP ≤ 4)</li>');
+    
+    const content = `
+      <div style="text-align: left;">
+        <p><strong>Artful Dodger is currently inactive</strong> because:</p>
+        <ul style="margin: 0.5rem 0 0.8rem 1.2rem; line-height: 1.6;">
+          ${reasons.join('')}
+        </ul>
+        <p>Once you've removed the armor or dropped some Things, Artful Dodger will activate automatically and restore your +10% Evade bonus.</p>
+      </div>
+    `;
+    
+    this.showPrereqModal('⚠️ Artful Dodger Inactive', content);
   },
   
   /**
