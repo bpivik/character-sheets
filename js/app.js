@@ -4896,7 +4896,12 @@ const App = {
           setTimeout(() => {
             // Guard: ensure input is still in the DOM (not removed by rapid class change)
             if (input && input.isConnected) {
-              this.promptWeaponSpecialization(input);
+              // Check if character is a ranger — use ranger-specific prompt
+              if (this.getCurrentClasses().includes('ranger')) {
+                this.promptRangerWeaponSpecialization(input);
+              } else {
+                this.promptWeaponSpecialization(input);
+              }
             }
           }, 150);
         }
@@ -5069,7 +5074,11 @@ const App = {
     // Special handling for Weapon Specialization - show selection modal
     // Only trigger if they typed the base name without a specific weapon
     if (normalizedValue === 'weapon specialization') {
-      this.promptWeaponSpecialization(input);
+      if (this.getCurrentClasses().includes('ranger')) {
+        this.promptRangerWeaponSpecialization(input);
+      } else {
+        this.promptWeaponSpecialization(input);
+      }
       return;
     }
     
@@ -6205,7 +6214,15 @@ const App = {
         
         // Weapon Specialization: prompt for weapon choice
         if (normalizedName === 'weapon specialization') {
-          setTimeout(() => { if (input && input.isConnected) this.promptWeaponSpecialization(input); }, 100);
+          setTimeout(() => {
+            if (input && input.isConnected) {
+              if (this.getCurrentClasses().includes('ranger')) {
+                this.promptRangerWeaponSpecialization(input);
+              } else {
+                this.promptWeaponSpecialization(input);
+              }
+            }
+          }, 100);
         }
         
         this.scheduleAutoSave();
@@ -6267,7 +6284,15 @@ const App = {
     
     // Weapon Specialization: prompt for weapon choice
     if (normalizedName === 'weapon specialization' && newInput) {
-      setTimeout(() => { if (newInput.isConnected) this.promptWeaponSpecialization(newInput); }, 100);
+      setTimeout(() => {
+        if (newInput.isConnected) {
+          if (this.getCurrentClasses().includes('ranger')) {
+            this.promptRangerWeaponSpecialization(newInput);
+          } else {
+            this.promptWeaponSpecialization(newInput);
+          }
+        }
+      }, 100);
     }
     
     return !!newInput;
@@ -20527,9 +20552,169 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             { label: 'Enhanced Parrying', text: 'All shields you wield count as one Size category larger for the purpose of Parrying damage. For example, a Large shield counts as Huge, a Huge shield counts as Enormous, and an Enormous shield counts as Colossal.' }
           ]
         };
+      case 'Dual Weapon':
+        return {
+          icon: '⚔️',
+          benefits: [
+            { label: 'Dual Wield Without Penalty', text: 'You may wield a melee weapon in each hand without penalty. The usual restriction that the offhand weapon must be shorter does not apply, though many rangers prefer a shorter offhand weapon for versatility. Alternatively, your offhand "weapon" may be a shield.' },
+            { label: 'Extra Action Point', text: 'When wielding two weapons, you gain an extra Action Point, which may be used in one of two ways:' },
+            { label: '• Parry', text: 'Use the extra Action Point to Parry one additional attack.' },
+            { label: '• Bonus Attack', text: 'Use the extra Action Point to make one additional attack with your offhand weapon. This attack suffers no penalty and may achieve any Special Effect allowed by your main hand weapon.' }
+          ]
+        };
+      case 'Ranger Ranged':
+        return {
+          icon: '🏹',
+          benefits: [
+            { label: 'Quick Shot', text: 'If you are not surprised, you may automatically fire first at the beginning of combat, before rolling for Initiative, provided your weapon and ammo are readied.' },
+            { label: 'Improved Aim', text: "When attacking a target within the weapon's Effective Range, Aiming requires only 1 Turn to steady the weapon, rather than a full Round, and makes the following attack 1 Difficulty Grade easier. Attacks beyond Effective Range follow the standard aiming rules." },
+            { label: 'Critical Strike', text: 'Your Critical chance is improved to 1/5th of your final modified skill (20%, or Skill ×0.2) instead of the usual 1/10th.' },
+            { label: 'Faster Reload', text: 'You may reduce the Reload time of any ranged weapon by 2. If the weapon\'s Reload time is reduced to 0, it can be readied as a Free Action.' }
+          ]
+        };
       default:
         return null;
     }
+  },
+
+  /**
+   * Prompt ranger to select Dual Weapon or Ranged specialization
+   * Unlike the normal weapon spec, this doesn't require choosing a specific weapon
+   */
+  promptRangerWeaponSpecialization(abilityInput) {
+    if (this._weaponSpecPromptOpen) return;
+    if (this._weaponSpecPromptCooldown && Date.now() - this._weaponSpecPromptCooldown < 500) return;
+    this._weaponSpecPromptOpen = true;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay weapon-spec-modal-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8); display: flex; justify-content: center;
+      align-items: center; z-index: 10000;
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'weapon-spec-modal';
+    modal.style.cssText = `
+      background: linear-gradient(135deg, #1a2a1a 0%, #2d3a1d 100%);
+      border: 2px solid #5a8a3a; border-radius: 12px;
+      padding: 1.5rem; max-width: 460px; width: 90%;
+      box-shadow: 0 0 30px rgba(90, 138, 58, 0.3); max-height: 85vh; overflow-y: auto;
+    `;
+
+    modal.innerHTML = `
+      <h3 style="color: #7dcc7d; margin: 0 0 0.5rem 0; text-align: center;">
+        🏹 Ranger Weapon Specialization
+      </h3>
+      <p style="color: #aaa; margin-bottom: 0.75rem; text-align: center; font-size: 0.82rem;">
+        This choice defines the rest of your career. Choose carefully:
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <button type="button" class="ranger-spec-btn" data-type="Dual Weapon" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid rgba(90, 138, 58, 0.3); color: #ddd;
+          padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer;
+          text-align: left; transition: all 0.2s ease; font-size: 0.85rem;
+        ">
+          <strong style="color:#c9a55a;">⚔️ Dual Weapon Specialization</strong><br>
+          <span style="font-size:0.75rem;color:#999;">Wield two weapons without penalty. Gain +1 AP for Parry or bonus offhand attack.</span>
+        </button>
+        <button type="button" class="ranger-spec-btn" data-type="Ranger Ranged" style="
+          background: linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%);
+          border: 1px solid rgba(90, 138, 58, 0.3); color: #ddd;
+          padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer;
+          text-align: left; transition: all 0.2s ease; font-size: 0.85rem;
+        ">
+          <strong style="color:#c9a55a;">🏹 Ranged Weapon Specialization</strong><br>
+          <span style="font-size:0.75rem;color:#999;">Quick Shot, Improved Aim, Critical Strike (1/5th skill), Faster Reload (−2). All ranged weapons.</span>
+        </button>
+      </div>
+      <div style="text-align: center; margin-top: 0.75rem;">
+        <button type="button" class="spec-cancel-btn" style="
+          background: transparent; border: 1px solid #666; color: #999;
+          padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        ">Cancel</button>
+      </div>
+    `;
+
+    // Hover effects
+    modal.querySelectorAll('.ranger-spec-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = 'rgba(90, 138, 58, 0.6)';
+        btn.style.transform = 'translateX(5px)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = 'rgba(90, 138, 58, 0.3)';
+        btn.style.transform = 'translateX(0)';
+      });
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        this._finalizeRangerWeaponSpec(overlay, abilityInput, type);
+      });
+    });
+
+    // Cancel
+    modal.querySelector('.spec-cancel-btn').addEventListener('click', () => {
+      this._weaponSpecPromptOpen = false;
+      this._weaponSpecPromptCooldown = Date.now();
+      if (abilityInput) {
+        const row = abilityInput.closest('.class-ability-row');
+        if (row) row.remove();
+        this.reindexClassAbilityRows();
+        this.syncClassAbilitiesToCharacter();
+      }
+      document.body.removeChild(overlay);
+    });
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  },
+
+  /**
+   * Finalize the ranger weapon specialization choice
+   */
+  _finalizeRangerWeaponSpec(overlay, abilityInput, type) {
+    this._weaponSpecPromptOpen = false;
+    this._weaponSpecPromptCooldown = Date.now();
+
+    const displayName = type === 'Dual Weapon'
+      ? 'Weapon Specialization (Dual Weapon)'
+      : 'Weapon Specialization (Ranged)';
+    const weaponName = type === 'Dual Weapon' ? 'Dual Weapon' : 'All Ranged Weapons';
+
+    // Update the ability input
+    if (abilityInput) {
+      abilityInput.value = displayName;
+      abilityInput.dataset.previousValue = displayName;
+      const row = abilityInput.closest('.class-ability-row');
+      if (row) {
+        const infoBtn = row.querySelector('.class-ability-info-btn');
+        if (infoBtn) infoBtn.style.display = '';
+      }
+    }
+
+    // Save to character data
+    if (!this.character.weaponSpecializations) {
+      this.character.weaponSpecializations = [];
+    }
+    const exists = this.character.weaponSpecializations.some(
+      s => s.type === type && s.weapon === weaponName
+    );
+    if (!exists) {
+      this.character.weaponSpecializations.push({ type, weapon: weaponName });
+    }
+
+    // Store the ranger-specific choice
+    this.character.rangerWeaponSpecType = type;
+
+    // Close overlay
+    document.body.removeChild(overlay);
+
+    // Update UI
+    this.checkWeaponSpecVisibility();
+    this.syncClassAbilitiesToCharacter();
+    this.scheduleAutoSave();
   },
 
   /**
@@ -20834,9 +21019,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const match = value.match(/^Weapon Specialization\s*\(([^)]+)\)/i);
       if (match) {
         const innerVal = match[1].trim();
-        if (innerVal.toLowerCase() === 'shield') {
+        const innerLower = innerVal.toLowerCase();
+        if (innerLower === 'shield') {
           specs.push({ type: 'Shield', weapon: 'Shield' });
-        } else if (this.WEAPON_SPEC_RANGED_WEAPONS.some(w => w.toLowerCase() === innerVal.toLowerCase())) {
+        } else if (innerLower === 'dual weapon') {
+          specs.push({ type: 'Dual Weapon', weapon: 'Dual Weapon' });
+        } else if (innerLower === 'ranged' && this.getCurrentClasses().includes('ranger')) {
+          // Ranger's broad ranged spec (all ranged weapons)
+          specs.push({ type: 'Ranger Ranged', weapon: 'All Ranged Weapons' });
+        } else if (this.WEAPON_SPEC_RANGED_WEAPONS.some(w => w.toLowerCase() === innerLower)) {
           specs.push({ type: 'Ranged', weapon: innerVal });
         } else {
           specs.push({ type: 'Melee', weapon: innerVal });
@@ -20881,8 +21072,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const benefitData = this.getWeaponSpecBenefits(spec.type);
       if (!benefitData) continue;
 
-      const title = spec.type === 'Shield' ? 'Shield Specialization' : spec.weapon;
+      const title = spec.type === 'Shield' ? 'Shield Specialization'
+        : spec.type === 'Dual Weapon' ? 'Dual Weapon Specialization'
+        : spec.type === 'Ranger Ranged' ? 'Ranged Weapon Specialization'
+        : spec.weapon;
       const isMeleeOrShield = spec.type === 'Melee' || spec.type === 'Shield';
+      const isRangerSpec = spec.type === 'Dual Weapon' || spec.type === 'Ranger Ranged';
 
       // Determine if this weapon is the mastered weapon
       const isMastered = wm && wm.weapon &&
@@ -20893,7 +21088,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const tierData = (isMastered && wm.tier) ? (this.WEAPON_MASTER_TIERS[wm.tier] || this.WEAPON_MASTER_TIERS.master) : null;
 
       // Show button for melee/shield always, ranged only if mastered
-      const showButton = isMeleeOrShield || isMastered;
+      // Ranger specs (Dual Weapon/Ranger Ranged) are always-on passives — no toggle
+      const showButton = !isRangerSpec && (isMeleeOrShield || isMastered);
 
       // Button label and icon
       let btnLabel, btnIcon, btnColor, btnGlow;
