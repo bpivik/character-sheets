@@ -178,7 +178,6 @@ select:focus {
   padding: 1.5rem 2rem;
   background: var(--bg-parchment);
   min-height: calc(100vh - 60px);
-  overflow-x: auto;
 }
 
 .page-title {
@@ -620,10 +619,9 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 1.1fr) minmax(340px, 1.4fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: start;
-  min-width: 960px;
 }
 
 .column-left {
@@ -9598,6 +9596,17 @@ input.combat-skill-percent.damage-boosted {
    Responsive Design
    ============================================ */
 @media (max-width: 1100px) {
+  .main-content-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .column-right {
+    grid-column: span 2;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+  
   .sheet-header {
     grid-template-columns: 1fr 1fr;
   }
@@ -9609,9 +9618,17 @@ input.combat-skill-percent.damage-boosted {
     padding-top: 0.5rem;
     border-top: 1px solid var(--border-light);
   }
+  
+  .abilities-sections-container {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 800px) {
+  .page-content {
+    padding: 1rem;
+  }
+  
   .sheet-navigation {
     flex-direction: column;
     gap: 0.5rem;
@@ -9627,12 +9644,26 @@ input.combat-skill-percent.damage-boosted {
     justify-content: center;
   }
   
+  .main-content-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .column-right {
+    grid-column: auto;
+  }
+  
   .sheet-header {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
   
   .header-logo {
     grid-column: auto;
+  }
+  
+  .attributes-row {
+    flex-direction: column;
   }
   
   .combat-header-grid,
@@ -9642,6 +9673,32 @@ input.combat-skill-percent.damage-boosted {
   
   .spell-columns {
     grid-template-columns: 1fr;
+  }
+  
+  .ability-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .class-abilities-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-content {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .class-abilities-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .money-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .sheet-header {
+    gap: 0.75rem;
   }
 }
 
