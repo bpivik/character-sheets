@@ -14706,12 +14706,10 @@ const App = {
         const mSiz = Math.floor(mysVal / 4);
         
         this.showConfirmModal('💀 Quivering Palm', `
-          <div style="padding: 0.5rem 0;">
-            <div style="text-align: center; font-size: 2rem; margin-bottom: 0.5rem;">💀</div>
-            <div style="font-size: 0.95rem; color: #e0e0e0; text-align: center; margin-bottom: 0.75rem;">
-              You initiate vibrations in your hand.
-            </div>
-            <div style="font-size: 0.85rem; color: #ccc; line-height: 1.7; padding-left: 0.5rem;">
+          <div class="modal-confirm-body">
+            <div class="confirm-icon">💀</div>
+            <div class="confirm-text">You initiate vibrations in your hand.</div>
+            <div class="confirm-details">
               • You have <strong>3 Melee Rounds</strong> to touch your target<br>
               • Max target SIZ: <strong>${mSiz}</strong><br>
               • You have <strong>${days} days</strong> to trigger the death<br>
@@ -14927,21 +14925,21 @@ const App = {
     } else {
       // Activate — save current AP values and set all to 10
       if (this.character.perfectionRoundsRemaining <= 0) {
-        this.showResultModal('✨ Perfection', '<div style="text-align: center; padding: 1rem 0; color: #f44336;">No Perfection rounds remaining today.</div>');
+        this.showResultModal('✨ Perfection', '<div class="modal-result-body"><div class="result-title failure">No Perfection rounds remaining today.</div></div>');
         return;
       }
       this._applyPerfectionAP();
       this.character.perfectionActive = true;
       
       this.showResultModal('✨ Perfection Activated', `
-        <div style="text-align: center; padding: 1rem 0;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✨</div>
-          <div style="font-size: 0.9rem; color: #e0e0e0; line-height: 1.6;">
-            All Hit Locations now have <strong style="color: #b388ff;">10 AP</strong> (magical armor)<br>
+        <div class="modal-result-body">
+          <div class="result-icon">✨</div>
+          <div class="result-text" style="line-height: 1.6;">
+            All Hit Locations now have <strong style="color: #6a1b9a;">10 AP</strong> (magical armor)<br>
             You are immune to Charm spells<br>
-            <span style="color: #ffab00;">You have ${this.character.perfectionRoundsRemaining} Combat Rounds to use Perfection.</span>
+            <strong style="color: #b8860b;">You have ${this.character.perfectionRoundsRemaining} Combat Rounds to use Perfection.</strong>
           </div>
-          <div style="font-size: 0.8rem; color: #999; margin-top: 0.75rem;">
+          <div class="result-meta">
             When you wish, you may press the Perfection button again to stop.
           </div>
         </div>
@@ -16137,25 +16135,25 @@ const App = {
     let resultHTML;
     if (roll === 100) {
       resultHTML = `
-        <div style="text-align: center; padding: 1rem 0;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎲</div>
-          <div style="font-size: 1.3rem; font-weight: bold; color: #f44336; margin-bottom: 0.5rem;">FUMBLE!</div>
-          <div style="font-size: 1.1rem; color: #e0e0e0;">Roll: <strong>${roll}</strong></div>
-          <div style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">The only way to fail Pain Control.</div>
-          <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">Endurance: ${enduranceVal}%</div>
+        <div class="modal-result-body">
+          <div class="result-icon">🎲</div>
+          <div class="result-title failure">FUMBLE!</div>
+          <div class="result-text">Roll: <strong>${roll}</strong></div>
+          <div class="result-detail">The only way to fail Pain Control.</div>
+          <div class="result-meta">Endurance: ${enduranceVal}%</div>
         </div>`;
     } else {
       const crit = Math.max(1, Math.floor(enduranceVal / 20));
       const isCrit = roll <= crit;
       resultHTML = `
-        <div style="text-align: center; padding: 1rem 0;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎲</div>
-          <div style="font-size: 1.3rem; font-weight: bold; color: ${isCrit ? '#ffab00' : '#4caf50'}; margin-bottom: 0.5rem;">
+        <div class="modal-result-body">
+          <div class="result-icon">🎲</div>
+          <div class="result-title ${isCrit ? 'critical' : 'success'}">
             Automatic ${isCrit ? 'Critical Success' : 'Success'}!
           </div>
-          <div style="font-size: 1.1rem; color: #e0e0e0;">Roll: <strong>${roll}</strong></div>
-          <div style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem;">Pain Control treats all Endurance rolls vs injury as Automatic Successes.</div>
-          <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">Endurance: ${enduranceVal}%</div>
+          <div class="result-text">Roll: <strong>${roll}</strong></div>
+          <div class="result-detail">Pain Control treats all Endurance rolls vs injury as Automatic Successes.</div>
+          <div class="result-meta">Endurance: ${enduranceVal}%</div>
         </div>`;
     }
     
@@ -27527,10 +27525,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     'mental strength 4': ['mental strength 5'],
     'overrun': ['greater overrun'],
     'sweeping strike': ['greater sweeping strike'],
-    'defensive reflexes i': ['defensive reflexes ii', 'defensive reflexes iii'],
-    'defensive reflexes 1': ['defensive reflexes 2', 'defensive reflexes 3'],
-    'defensive reflexes ii': ['defensive reflexes iii'],
-    'defensive reflexes 2': ['defensive reflexes 3'],
+    'defensive reflexes i': ['defensive reflexes ii', 'defensive reflexes iii', 'defensive reflexes iv', 'defensive reflexes v'],
+    'defensive reflexes 1': ['defensive reflexes 2', 'defensive reflexes 3', 'defensive reflexes 4', 'defensive reflexes 5'],
+    'defensive reflexes ii': ['defensive reflexes iii', 'defensive reflexes iv', 'defensive reflexes v'],
+    'defensive reflexes 2': ['defensive reflexes 3', 'defensive reflexes 4', 'defensive reflexes 5'],
+    'defensive reflexes iii': ['defensive reflexes iv', 'defensive reflexes v'],
+    'defensive reflexes 3': ['defensive reflexes 4', 'defensive reflexes 5'],
+    'defensive reflexes iv': ['defensive reflexes v'],
+    'defensive reflexes 4': ['defensive reflexes 5'],
     'holy smite': ['improved holy smite', 'greater holy smite'],
     'improved holy smite': ['greater holy smite'],
   },

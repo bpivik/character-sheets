@@ -619,7 +619,7 @@ select:focus {
    ============================================ */
 .main-content-grid {
   display: grid;
-  grid-template-columns: 506px 1fr 420px;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(280px, 1fr) minmax(300px, 1fr);
   gap: 1.5rem;
   align-items: start;
 }
@@ -651,7 +651,7 @@ select:focus {
   align-self: start;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
-  min-width: 420px;
+  min-width: 0;
 }
 
 /* ============================================
@@ -748,29 +748,24 @@ select:focus {
   grid-template-columns: 1fr 70px 70px;
 }
 
-/* Initiative row needs relative positioning for d10 button */
-.derived-attributes .derived-row.has-original:has(#btn-init-roll) {
-  position: relative;
-}
-
+/* Initiative dice button (inside label) */
 .btn-init-roll {
-  position: absolute;
-  right: -30px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
+  background: var(--accent-color, #8b7355);
+  border: 1px solid var(--border-gold, #c4a265);
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.75rem;
-  padding: 0;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.25rem;
   line-height: 1;
-  opacity: 0.5;
+  opacity: 0.75;
   transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+  margin-left: 0.15rem;
 }
 
 .btn-init-roll:hover {
   opacity: 1;
-  transform: translateY(-50%) scale(1.2);
+  transform: scale(1.15);
 }
 
 .derived-attributes .derived-row:last-of-type {
@@ -3195,6 +3190,7 @@ input.skill-input.powerful-concentration-bonus,
 /* Just a Scratch Modal Styles */
 .scratch-modal-content {
   max-width: 500px;
+  min-height: auto;
 }
 
 .scratch-description {
@@ -12409,4 +12405,76 @@ body.dark-mode[data-class-theme] .subsection-header {
   font-size: 0.7rem;
   opacity: 0.8;
   margin-left: 4px;
+}
+
+/* ============================================
+   Modal Result/Confirm Content - Theme-safe colors
+   ============================================ */
+.modal-result-body {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.modal-result-body .result-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-result-body .result-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-header);
+}
+
+.modal-result-body .result-title.success { color: #2e7d32; }
+.modal-result-body .result-title.critical { color: #b8860b; }
+.modal-result-body .result-title.failure { color: #c62828; }
+.modal-result-body .result-title.info { color: var(--accent-color, #8b7355); }
+
+.modal-result-body .result-text {
+  font-size: 0.95rem;
+  color: var(--text-primary, #3a3228);
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.modal-result-body .result-detail {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6b6055);
+  margin-top: 0.5rem;
+}
+
+.modal-result-body .result-meta {
+  font-size: 0.8rem;
+  color: #8a7d6f;
+  margin-top: 0.75rem;
+}
+
+.modal-confirm-body {
+  padding: 0.5rem 0;
+}
+
+.modal-confirm-body .confirm-icon {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-confirm-body .confirm-text {
+  font-size: 0.95rem;
+  color: var(--text-primary, #3a3228);
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.modal-confirm-body .confirm-details {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #5a5045);
+  line-height: 1.8;
+  padding-left: 0.5rem;
+}
+
+.modal-confirm-body .confirm-details strong {
+  color: var(--text-primary, #3a3228);
 }
