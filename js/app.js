@@ -18017,6 +18017,8 @@ const App = {
         inputField.dataset.previousValue = inputField.value;
         this.updateAbilityTooltip(inputField);
         this.syncClassAbilitiesToCharacter();
+        // Reformat all species enemy display names (drop numerals, singular/plural)
+        this.updateSpeciesEnemyDisplayNames();
         this.checkSpeciesEnemyVisibility();
         this.scheduleAutoSave();
       }
@@ -18038,10 +18040,13 @@ const App = {
     const enemies = this._getSpeciesEnemies();
     if (enemies.length > 0) {
       section.style.display = '';
-      // Update header: singular or plural
+      // Reformat ability input display names (drop numerals, singular/plural)
+      this.updateSpeciesEnemyDisplayNames();
+      // Update header: singular or plural with all names
       const header = document.getElementById('species-enemy-header');
       if (header) {
-        header.textContent = enemies.length === 1 ? '🎯 Species Enemy' : '🎯 Species Enemies';
+        const label = enemies.length === 1 ? 'Species Enemy' : 'Species Enemies';
+        header.textContent = `🎯 ${label}`;
       }
       // Update enemy list display
       const listEl = document.getElementById('species-enemy-list');
@@ -18061,7 +18066,41 @@ const App = {
   },
 
   /**
+   * Reformat all Species Enemy ability inputs:
+   * - Drop roman numerals (I, II, III, IV, V) and digit suffixes
+   * - Use "Species Enemy" (singular) when only one, "Species Enemies" (plural) when multiple
+   */
+  updateSpeciesEnemyDisplayNames() {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+
+    // Collect all species enemy inputs and their extracted species names
+    const seInputs = [];
+    for (const input of container.querySelectorAll('.class-ability-input')) {
+      const val = input.value.trim();
+      const match = val.match(/^Species Enem(?:y|ies)\s*(?:I{1,3}|IV|V|\d)?\s*\(([^)]+)\)/i);
+      if (match) {
+        seInputs.push({ input, species: match[1].trim() });
+      }
+    }
+
+    if (seInputs.length === 0) return;
+
+    const label = seInputs.length === 1 ? 'Species Enemy' : 'Species Enemies';
+
+    for (const { input, species } of seInputs) {
+      const newVal = `${label} (${species})`;
+      if (input.value !== newVal) {
+        input.value = newVal;
+        input.dataset.previousValue = newVal;
+        this.updateAbilityTooltip(input);
+      }
+    }
+  },
+
+  /**
    * Parse species enemies from class abilities
+   * Matches both formats: "Species Enemy I (Undead)" and "Species Enemy (Undead)" / "Species Enemies (Undead)"
    */
   _getSpeciesEnemies() {
     const enemies = [];

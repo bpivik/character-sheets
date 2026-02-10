@@ -1464,6 +1464,25 @@ function hasAbility(abilityName, acquiredAbilities) {
   const normalizeApostrophes = (str) => str.replace(/[']/g, "'");
   const normalizedFullName = normalizeApostrophes(fullName);
   
+  // Special handling for Species Enemy I/II/III/IV/V
+  // Display format drops numerals, so count how many species enemies exist
+  const seMatch = baseName.match(/^species enem(?:y|ies)\s*(i{1,3}|iv|v|\d+)?$/i);
+  if (seMatch) {
+    const romanToNum = { 'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5 };
+    const numeral = (seMatch[1] || 'i').toLowerCase();
+    const requiredCount = romanToNum[numeral] || parseInt(numeral, 10) || 1;
+    
+    // Count species enemy entries in acquired abilities
+    let seCount = 0;
+    for (const acquired of acquiredAbilities) {
+      const baseAcquired = acquired.split('(')[0].trim().toLowerCase();
+      if (baseAcquired.match(/^species enem(?:y|ies)\s*(?:i{1,3}|iv|v|\d+)?$/i)) {
+        seCount++;
+      }
+    }
+    return seCount >= requiredCount;
+  }
+  
   for (const acquired of acquiredAbilities) {
     const baseAcquired = acquired.split('(')[0].trim().toLowerCase();
     const normalizedAcquired = normalizeApostrophes(acquired.toLowerCase().trim());
