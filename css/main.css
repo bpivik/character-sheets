@@ -1562,6 +1562,407 @@ input.weapon-damage.rage-boosted,
 /* ============================================
    MENTAL STRENGTH SECTION
    ============================================ */
+/* ========================================
+   ABILITY ANIMATION OVERLAYS (shared)
+   ======================================== */
+.ability-anim-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.ability-anim-overlay.active {
+  opacity: 1;
+}
+.ability-anim-content {
+  text-align: center;
+  color: white;
+}
+
+/* Holy Strike Animation */
+.holy-strike-anim .holy-strike-icon {
+  font-size: 4rem;
+  animation: holyPulse 0.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(240,192,64,0.8));
+}
+.holy-strike-anim .holy-strike-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #f0c040;
+  text-shadow: 0 0 20px rgba(240,192,64,0.6);
+  margin-top: 0.5rem;
+}
+.holy-strike-anim .holy-strike-subtitle {
+  font-size: 1rem;
+  color: #ddd;
+  margin-top: 0.25rem;
+}
+@keyframes holyPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.15); }
+}
+
+/* Lay on Hands Animation */
+.lay-on-hands-anim {
+  position: relative;
+}
+.lay-on-hands-anim .lay-on-hands-icon {
+  font-size: 4rem;
+  animation: healPulse 0.8s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(125,212,212,0.8));
+}
+.lay-on-hands-anim .lay-on-hands-anim-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #7dd4d4;
+  text-shadow: 0 0 20px rgba(125,212,212,0.6);
+  margin-top: 0.5rem;
+}
+.lay-on-hands-particles {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 120px;
+}
+.heal-particle {
+  position: absolute;
+  color: #7dd4d4;
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: healFloat 1.5s ease-out infinite;
+}
+.heal-particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+.heal-particle:nth-child(2) { left: 30%; animation-delay: 0.3s; }
+.heal-particle:nth-child(3) { left: 50%; animation-delay: 0.15s; }
+.heal-particle:nth-child(4) { left: 70%; animation-delay: 0.45s; }
+.heal-particle:nth-child(5) { left: 90%; animation-delay: 0.6s; }
+@keyframes healPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+@keyframes healFloat {
+  0% { opacity: 0; transform: translateY(0); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+/* Detect Evil Animation */
+.detect-evil-anim {
+  position: relative;
+}
+.detect-evil-anim .detect-evil-icon {
+  font-size: 4rem;
+  animation: detectPulse 0.6s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(192,128,255,0.8));
+  position: relative;
+  z-index: 2;
+}
+.detect-evil-anim .detect-evil-anim-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #c080ff;
+  text-shadow: 0 0 15px rgba(192,128,255,0.6);
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+.detect-evil-rings {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.detect-ring {
+  position: absolute;
+  border: 2px solid rgba(192,128,255,0.4);
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.detect-ring.ring-1 {
+  width: 80px; height: 80px;
+  animation: ringExpand 2s ease-out infinite;
+}
+.detect-ring.ring-2 {
+  width: 80px; height: 80px;
+  animation: ringExpand 2s ease-out 0.5s infinite;
+}
+.detect-ring.ring-3 {
+  width: 80px; height: 80px;
+  animation: ringExpand 2s ease-out 1s infinite;
+}
+@keyframes detectPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+@keyframes ringExpand {
+  0% { width: 40px; height: 40px; opacity: 0.8; border-color: rgba(192,128,255,0.6); }
+  100% { width: 200px; height: 200px; opacity: 0; border-color: rgba(192,128,255,0); }
+}
+
+/* ========================================
+   HOLY STRIKE SECTION
+   ======================================== */
+.holy-strike-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #2a1a1a 0%, #3d2020 100%);
+  border: 2px solid #b8860b;
+  border-radius: 6px;
+}
+
+.holy-strike-section .section-header {
+  color: #f0c040;
+  text-shadow: 0 0 10px rgba(240, 192, 64, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.holy-strike-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.holy-strike-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.holy-strike-value {
+  color: #f0c040;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.holy-strike-label {
+  color: #999;
+}
+
+.btn-reset-holy-strike {
+  background: transparent;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-reset-holy-strike:hover {
+  background: #444;
+  border-color: #f0c040;
+  color: #f0c040;
+}
+
+.holy-strike-button-row {
+  width: 100%;
+}
+
+.btn-holy-strike {
+  width: 100%;
+  background: linear-gradient(135deg, #4a2d1a 0%, #6a3d20 50%, #4a2d1a 100%);
+  color: white;
+  border: 1px solid #f0c040;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(184, 134, 11, 0.4);
+}
+
+.btn-holy-strike:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a3d2a 0%, #7a4d30 50%, #5a3d2a 100%);
+  box-shadow: 0 4px 12px rgba(240, 192, 64, 0.5);
+}
+
+.btn-holy-strike:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.holy-strike-active-btn {
+  background: linear-gradient(135deg, #6a4d20 0%, #8a6d30 50%, #6a4d20 100%) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6) !important;
+  animation: holyBtnPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes holyBtnPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+}
+
+/* Holy Strike damage cell highlight */
+.damage-cell.holy-strike-highlight {
+  background: rgba(0, 180, 0, 0.15) !important;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 200, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.holy-strike-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #2a5a1a, #3a7a2a);
+  color: #7fff7f;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  border: 1px solid #5a5;
+  margin-left: 4px;
+  animation: badgePulse 1.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes badgePulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* ========================================
+   DETECT EVIL SECTION
+   ======================================== */
+.detect-evil-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a2a 0%, #2d2040 100%);
+  border: 2px solid #8060b0;
+  border-radius: 6px;
+}
+
+.detect-evil-section .section-header {
+  color: #c080ff;
+  text-shadow: 0 0 10px rgba(192, 128, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.detect-evil-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.detect-evil-button-row {
+  width: 100%;
+}
+
+.btn-detect-evil {
+  width: 100%;
+  background: linear-gradient(135deg, #2a1a3a 0%, #3d2a50 50%, #2a1a3a 100%);
+  color: white;
+  border: 1px solid #8060b0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(128, 96, 176, 0.4);
+}
+
+.btn-detect-evil:hover {
+  background: linear-gradient(135deg, #3a2a4a 0%, #4d3a60 50%, #3a2a4a 100%);
+  box-shadow: 0 4px 12px rgba(192, 128, 255, 0.5);
+}
+
+/* Lay on Hands Section */
+.lay-on-hands-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a2a2a 0%, #1f3d3d 100%);
+  border: 2px solid #5fa8a8;
+  border-radius: 6px;
+}
+
+.lay-on-hands-section .section-header {
+  color: #7dd4d4;
+  text-shadow: 0 0 10px rgba(125, 212, 212, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.lay-on-hands-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.lay-on-hands-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.lay-on-hands-value {
+  color: #7dd4d4;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.lay-on-hands-label {
+  color: #999;
+}
+
+.btn-reset-lay-on-hands {
+  background: transparent;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-reset-lay-on-hands:hover {
+  background: #444;
+  border-color: #7dd4d4;
+  color: #7dd4d4;
+}
+
+.lay-on-hands-button-row {
+  width: 100%;
+}
+
+.btn-lay-on-hands {
+  width: 100%;
+  background: linear-gradient(135deg, #1a3a3a 0%, #2a5050 50%, #1a3a3a 100%);
+  color: white;
+  border: 1px solid #5fa8a8;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(95, 168, 168, 0.4);
+}
+
+.btn-lay-on-hands:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2a4a4a 0%, #3a6060 50%, #2a4a4a 100%);
+  box-shadow: 0 4px 12px rgba(125, 212, 212, 0.5);
+}
+
+.btn-lay-on-hands:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .mental-strength-section {
   padding: 0.5rem;
   background: linear-gradient(135deg, #1a1a2a 0%, #20203d 100%);

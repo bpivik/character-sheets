@@ -1554,6 +1554,59 @@
               </section>
               
               <!-- Mental Strength Section (only visible if character has Mental Strength ability) -->
+
+              <!-- Holy Strike Section (only visible if character has Holy Strike ability) -->
+              <section class="holy-strike-section" id="holy-strike-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">⚔️ Holy Strike</h3>
+                </div>
+                <div class="holy-strike-content">
+                  <div class="holy-strike-info-row">
+                    <span class="holy-strike-value" id="holy-strike-uses-available">0</span>
+                    <span class="holy-strike-label">/ <span id="holy-strike-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-holy-strike" id="btn-reset-holy-strike-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="holy-strike-button-row">
+                    <button type="button" class="btn btn-holy-strike" id="btn-holy-strike-use" title="Activate Holy Strike — adds +1d6 holy damage to next melee attack">
+                      ⚔️ Holy Strike (+1d6)
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Lay on Hands Section (only visible if character has Lay on Hands ability) -->
+              <section class="lay-on-hands-section" id="lay-on-hands-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🙌 Lay on Hands</h3>
+                </div>
+                <div class="lay-on-hands-content">
+                  <div class="lay-on-hands-info-row">
+                    <span class="lay-on-hands-value" id="lay-on-hands-uses-available">0</span>
+                    <span class="lay-on-hands-label">/ <span id="lay-on-hands-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-lay-on-hands" id="btn-reset-lay-on-hands-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="lay-on-hands-button-row">
+                    <button type="button" class="btn btn-lay-on-hands" id="btn-lay-on-hands-use" title="Heal Minor Wound (all HP) or stabilize Serious/Major Wound">
+                      🙌 Lay on Hands
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Detect Evil Section (only visible if character has Detect Evil ability) -->
+              <section class="detect-evil-section" id="detect-evil-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">👁️ Detect Evil</h3>
+                </div>
+                <div class="detect-evil-content">
+                  <div class="detect-evil-button-row">
+                    <button type="button" class="btn btn-detect-evil" id="btn-detect-evil-use" title="Concentrate for 1 Round to detect Evil within 60 feet">
+                      👁️ Detect Evil
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               <section class="mental-strength-section" id="mental-strength-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">🧠 Mental Strength</h3>

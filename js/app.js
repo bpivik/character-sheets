@@ -514,6 +514,9 @@ const App = {
     
     // Check if Commanding section should be visible
     this.checkCommandingVisibility();
+    this.checkHolyStrikeVisibility();
+    this.checkLayOnHandsVisibility();
+    this.checkDetectEvilVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -1915,7 +1918,23 @@ const App = {
         e.stopPropagation();
         const damageInput = diceBtn.parentElement?.querySelector('.weapon-damage');
         if (damageInput && damageInput.value) {
-          this.rollDamage(damageInput.value);
+          let damageStr = damageInput.value;
+          // If Holy Strike is active, append +1d6 (except for Unarmed)
+          if (this.character.holyStrikeActive) {
+            const row = diceBtn.closest('tr');
+            const nameInput = row?.querySelector('.weapon-name');
+            const nameVal = (nameInput?.value || '').toLowerCase().trim();
+            if (nameVal !== 'unarmed' && nameVal !== '') {
+              damageStr += '+1d6';
+              this._holyStrikeUsedThisRoll = true;
+            }
+          }
+          this.rollDamage(damageStr);
+          // Deactivate Holy Strike after damage roll
+          if (this._holyStrikeUsedThisRoll) {
+            this._holyStrikeUsedThisRoll = false;
+            this.deactivateHolyStrike();
+          }
         }
       }
     });
@@ -4852,6 +4871,9 @@ const App = {
         this.checkJustAScratchVisibility();
       } else if (normalizedName === 'commanding') {
         this.checkCommandingVisibility();
+    this.checkHolyStrikeVisibility();
+    this.checkLayOnHandsVisibility();
+    this.checkDetectEvilVisibility();
       } else if (normalizedName.startsWith('mental strength')) {
         this.checkMentalStrengthVisibility();
       } else if (normalizedName === 'turn undead') {
@@ -6150,6 +6172,9 @@ const App = {
         // Check if Commanding section should now be visible
         if (normalizedName === 'commanding') {
           this.checkCommandingVisibility();
+    this.checkHolyStrikeVisibility();
+    this.checkLayOnHandsVisibility();
+    this.checkDetectEvilVisibility();
         }
         
         // Check if Turn Undead section should now be visible
@@ -6204,6 +6229,9 @@ const App = {
     // Check if Commanding section should now be visible
     if (normalizedName === 'commanding') {
       this.checkCommandingVisibility();
+    this.checkHolyStrikeVisibility();
+    this.checkLayOnHandsVisibility();
+    this.checkDetectEvilVisibility();
     }
     
     // Check if Turn Undead section should now be visible
@@ -10750,6 +10778,9 @@ const App = {
     // After updating abilities, check visibility of ability-related UI sections
     this.checkTurnUndeadVisibility();
     this.checkCommandingVisibility();
+    this.checkHolyStrikeVisibility();
+    this.checkLayOnHandsVisibility();
+    this.checkDetectEvilVisibility();
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
@@ -13375,6 +13406,34 @@ const App = {
       }
     }
     
+    // Reset Mental Strength uses if character has the ability
+    
+    // Reset Holy Strike uses if character has the ability
+    if (this.hasAbility('Holy Strike')) {
+      const maxUses = this.getMaxHolyStrikeUses();
+      const prevUses = this.character.holyStrikeUsesRemaining || 0;
+      this.character.holyStrikeUsesRemaining = maxUses;
+      this.updateHolyStrikeDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>Holy Strike uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>Holy Strike:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+
+    // Reset Lay on Hands uses if character has the ability
+    if (this.hasAbility('Lay on Hands')) {
+      const maxUses = this.getMaxLayOnHandsUses();
+      const prevUses = this.character.layOnHandsUsesRemaining || 0;
+      this.character.layOnHandsUsesRemaining = maxUses;
+      this.updateLayOnHandsDisplay();
+      if (prevUses < maxUses) {
+        messages.push(`<strong>Lay on Hands uses restored:</strong> ${prevUses} → ${maxUses}`);
+      } else {
+        messages.push(`<strong>Lay on Hands:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+
     // Reset Mental Strength uses if character has the ability
     const mentalStrengthLevel = this.getMentalStrengthLevel();
     if (mentalStrengthLevel > 0) {
@@ -16794,6 +16853,485 @@ const App = {
     if (activeSkillLabel) activeSkillLabel.textContent = skill.charAt(0).toUpperCase() + skill.slice(1);
     
     this.updateCommandingDisplay();
+  },
+
+  // ============================================
+  // HOLY STRIKE ABILITY (PALADIN)
+  // +1d6 holy damage vs Evil, 1x/day per Rank
+  // ============================================
+
+  checkHolyStrikeVisibility() {
+    const section = document.getElementById('holy-strike-section');
+    if (!section) return;
+    if (this.hasAbility('Holy Strike')) {
+      section.style.display = '';
+      this.initHolyStrike();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  initHolyStrike() {
+    this.updateHolyStrikeDisplay();
+    this.setupHolyStrikeListeners();
+    // Restore active state if saved
+    if (this.character.holyStrikeActive) {
+      this._applyHolyStrikeVisuals();
+    }
+  },
+
+  getMaxHolyStrikeUses() {
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    let maxRank = 0;
+    for (const slot of classSlots) {
+      const className = (document.getElementById(slot.class)?.value || '').toLowerCase().trim();
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      if ((className === 'paladin' || className === 'cavalier') && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    return Math.max(maxRank, 1);
+  },
+
+  updateHolyStrikeDisplay() {
+    const maxUses = this.getMaxHolyStrikeUses();
+    if (this.character.holyStrikeUsesRemaining === undefined || this.character.holyStrikeUsesRemaining === null) {
+      this.character.holyStrikeUsesRemaining = maxUses;
+    }
+    const usesAvail = document.getElementById('holy-strike-uses-available');
+    const usesMax = document.getElementById('holy-strike-uses-max');
+    if (usesAvail) usesAvail.textContent = this.character.holyStrikeUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+    const useBtn = document.getElementById('btn-holy-strike-use');
+    if (useBtn) {
+      useBtn.disabled = this.character.holyStrikeUsesRemaining <= 0 || this.character.holyStrikeActive;
+      if (this.character.holyStrikeActive) {
+        useBtn.textContent = '⚔️ Holy Strike ACTIVE';
+        useBtn.classList.add('holy-strike-active-btn');
+      } else {
+        useBtn.textContent = '⚔️ Holy Strike (+1d6)';
+        useBtn.classList.remove('holy-strike-active-btn');
+      }
+    }
+  },
+
+  setupHolyStrikeListeners() {
+    const useBtn = document.getElementById('btn-holy-strike-use');
+    const resetBtn = document.getElementById('btn-reset-holy-strike-uses');
+    if (useBtn && !useBtn.dataset.listenerAttached) {
+      useBtn.addEventListener('click', () => this.activateHolyStrike());
+      useBtn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.holyStrikeUsesRemaining = this.getMaxHolyStrikeUses();
+        this.deactivateHolyStrike();
+        this.updateHolyStrikeDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  activateHolyStrike() {
+    if (this.character.holyStrikeUsesRemaining <= 0 || this.character.holyStrikeActive) return;
+    this.character.holyStrikeUsesRemaining--;
+    this.character.holyStrikeActive = true;
+
+    // Show animation overlay
+    let overlay = document.getElementById('holy-strike-anim-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'holy-strike-anim-overlay';
+      overlay.className = 'ability-anim-overlay';
+      overlay.innerHTML = `
+        <div class="ability-anim-content holy-strike-anim">
+          <div class="holy-strike-icon">⚔️</div>
+          <div class="holy-strike-title">Holy Strike</div>
+          <div class="holy-strike-subtitle">Attack an Evil creature!</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    overlay.offsetHeight; // force reflow
+    overlay.classList.add('active');
+
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      this._applyHolyStrikeVisuals();
+    }, 1500);
+
+    this.updateHolyStrikeDisplay();
+    this.scheduleAutoSave();
+  },
+
+  _applyHolyStrikeVisuals() {
+    // Add "+1d6" badges to all melee weapon damage cells except Unarmed
+    const meleeDamageCells = document.querySelectorAll('[id^="melee-"][id$="-damage"]');
+    meleeDamageCells.forEach(input => {
+      const row = input.closest('tr');
+      if (!row) return;
+      const nameInput = row.querySelector('.weapon-name');
+      const nameVal = (nameInput?.value || '').toLowerCase().trim();
+      if (nameVal === 'unarmed') return;
+      if (!nameVal) return; // skip empty rows
+
+      const cell = input.closest('.damage-cell');
+      if (!cell) return;
+      cell.classList.add('holy-strike-highlight');
+
+      // Add badge if not present
+      if (!cell.querySelector('.holy-strike-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'holy-strike-badge';
+        badge.textContent = '+1d6';
+        cell.appendChild(badge);
+      }
+    });
+  },
+
+  deactivateHolyStrike() {
+    this.character.holyStrikeActive = false;
+    // Remove all badges and highlights
+    document.querySelectorAll('.holy-strike-badge').forEach(b => b.remove());
+    document.querySelectorAll('.holy-strike-highlight').forEach(c => c.classList.remove('holy-strike-highlight'));
+    this.updateHolyStrikeDisplay();
+    this.scheduleAutoSave();
+  },
+
+  // ============================================
+  // LAY ON HANDS ABILITY (PALADIN)
+  // Heal Minor Wound or stabilize, 1x/day per Rank
+  // ============================================
+
+  checkLayOnHandsVisibility() {
+    const section = document.getElementById('lay-on-hands-section');
+    if (!section) return;
+    if (this.hasAbility('Lay on Hands')) {
+      section.style.display = '';
+      this.initLayOnHands();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  initLayOnHands() {
+    this.updateLayOnHandsDisplay();
+    this.setupLayOnHandsListeners();
+  },
+
+  getMaxLayOnHandsUses() {
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    let maxRank = 0;
+    for (const slot of classSlots) {
+      const className = (document.getElementById(slot.class)?.value || '').toLowerCase().trim();
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      if ((className === 'paladin' || className === 'cavalier') && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    return Math.max(maxRank, 1);
+  },
+
+  updateLayOnHandsDisplay() {
+    const maxUses = this.getMaxLayOnHandsUses();
+    if (this.character.layOnHandsUsesRemaining === undefined || this.character.layOnHandsUsesRemaining === null) {
+      this.character.layOnHandsUsesRemaining = maxUses;
+    }
+    const usesAvail = document.getElementById('lay-on-hands-uses-available');
+    const usesMax = document.getElementById('lay-on-hands-uses-max');
+    if (usesAvail) usesAvail.textContent = this.character.layOnHandsUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+    const useBtn = document.getElementById('btn-lay-on-hands-use');
+    if (useBtn) useBtn.disabled = this.character.layOnHandsUsesRemaining <= 0;
+  },
+
+  setupLayOnHandsListeners() {
+    const useBtn = document.getElementById('btn-lay-on-hands-use');
+    const resetBtn = document.getElementById('btn-reset-lay-on-hands-uses');
+    if (useBtn && !useBtn.dataset.listenerAttached) {
+      useBtn.addEventListener('click', () => this.useLayOnHands());
+      useBtn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.layOnHandsUsesRemaining = this.getMaxLayOnHandsUses();
+        this.updateLayOnHandsDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  useLayOnHands() {
+    if (this.character.layOnHandsUsesRemaining <= 0) return;
+
+    // Show healing animation first
+    let overlay = document.getElementById('lay-on-hands-anim-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'lay-on-hands-anim-overlay';
+      overlay.className = 'ability-anim-overlay';
+      overlay.innerHTML = `
+        <div class="ability-anim-content lay-on-hands-anim">
+          <div class="lay-on-hands-icon">🙌</div>
+          <div class="lay-on-hands-anim-title">Lay on Hands</div>
+          <div class="lay-on-hands-particles">
+            <span class="heal-particle">✦</span>
+            <span class="heal-particle">✦</span>
+            <span class="heal-particle">✦</span>
+            <span class="heal-particle">✦</span>
+            <span class="heal-particle">✦</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    overlay.offsetHeight;
+    overlay.classList.add('active');
+
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      this._showLayOnHandsChoice();
+    }, 1500);
+  },
+
+  _showLayOnHandsChoice() {
+    const modalHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">🙌</div>
+        <div class="result-title success">Lay on Hands</div>
+        <div class="result-detail" style="text-align:center;margin-bottom:0.5rem;">
+          <p>Are you healing yourself or another?</p>
+        </div>
+        <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-lay-on-hands-choice" id="loh-self" style="padding:0.5rem 1rem;font-size:0.9rem;background:linear-gradient(135deg,#1a3a3a,#2a5050);color:white;border:1px solid #5fa8a8;border-radius:5px;cursor:pointer;">Myself</button>
+          <button class="btn btn-lay-on-hands-choice" id="loh-other" style="padding:0.5rem 1rem;font-size:0.9rem;background:linear-gradient(135deg,#2a2a3a,#3a3a50);color:white;border:1px solid #8888aa;border-radius:5px;cursor:pointer;">Another</button>
+          <button class="btn btn-lay-on-hands-choice" id="loh-cancel" style="padding:0.5rem 1rem;font-size:0.9rem;background:#333;color:#aaa;border:1px solid #666;border-radius:5px;cursor:pointer;">Cancel</button>
+        </div>
+      </div>`;
+    
+    this.showResultModal('🙌 Lay on Hands', modalHTML);
+
+    // Attach choice handlers after modal renders
+    setTimeout(() => {
+      document.getElementById('loh-self')?.addEventListener('click', () => {
+        this._closeResultModal();
+        this._layOnHandsSelf();
+      });
+      document.getElementById('loh-other')?.addEventListener('click', () => {
+        this._closeResultModal();
+        this._layOnHandsOther();
+      });
+      document.getElementById('loh-cancel')?.addEventListener('click', () => {
+        this._closeResultModal();
+      });
+    }, 50);
+  },
+
+  _layOnHandsSelf() {
+    // Find hit locations with Minor Wounds
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr');
+    const injuredLocations = [];
+
+    rows.forEach((row, i) => {
+      const statusSpan = document.getElementById(`loc-${i}-status`);
+      const maxInput = document.getElementById(`loc-${i}-hp`);
+      const currentInput = document.getElementById(`loc-${i}-current`);
+      if (!statusSpan || !maxInput || !currentInput) return;
+
+      const status = statusSpan.dataset.status;
+      const locationName = statusSpan.dataset.location || `Location ${i}`;
+      const maxHP = parseInt(maxInput.value, 10) || 0;
+      const currentHP = parseInt(currentInput.value, 10);
+
+      if (status === 'wound-minor') {
+        injuredLocations.push({ index: i, name: locationName, maxHP, currentHP });
+      }
+    });
+
+    if (injuredLocations.length === 0) {
+      const noWoundsHTML = `
+        <div class="modal-result-body">
+          <div class="result-icon">🙌</div>
+          <div class="result-title" style="color:#7dd4d4;">No Minor Wounds</div>
+          <div class="result-detail">
+            <p>You have no locations with Minor Wounds to heal.</p>
+            <p style="font-size:0.8rem;color:#999;margin-top:0.5rem;">Lay on Hands restores all lost HP from a Minor Wound. For Serious or Major Wounds, it stabilizes only — no HP is restored.</p>
+          </div>
+        </div>`;
+      this.showResultModal('🙌 Lay on Hands', noWoundsHTML);
+      return;
+    }
+
+    // Consume use
+    this.character.layOnHandsUsesRemaining--;
+    this.updateLayOnHandsDisplay();
+    this.scheduleAutoSave();
+
+    // Build location picker
+    let buttonsHTML = injuredLocations.map(loc => 
+      `<button class="btn loh-location-btn" data-loc-index="${loc.index}" 
+        style="padding:0.4rem 0.8rem;font-size:0.85rem;background:linear-gradient(135deg,#1a3a3a,#2a5050);color:white;border:1px solid #5fa8a8;border-radius:5px;cursor:pointer;margin:0.2rem;">
+        ${loc.name} (${loc.currentHP}/${loc.maxHP} HP)
+      </button>`
+    ).join('');
+
+    const pickerHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">🙌</div>
+        <div class="result-title success">Choose Location to Heal</div>
+        <div class="result-detail" style="text-align:center;margin-bottom:0.5rem;">
+          <p>Select a location with a Minor Wound to restore all HP:</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.25rem;">
+          ${buttonsHTML}
+        </div>
+      </div>`;
+    
+    this.showResultModal('🙌 Lay on Hands — Choose Location', pickerHTML);
+
+    setTimeout(() => {
+      document.querySelectorAll('.loh-location-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const locIndex = parseInt(btn.dataset.locIndex, 10);
+          this._healLocation(locIndex);
+          this._closeResultModal();
+        });
+      });
+    }, 50);
+  },
+
+  _healLocation(locationIndex) {
+    const maxInput = document.getElementById(`loc-${locationIndex}-hp`);
+    const currentInput = document.getElementById(`loc-${locationIndex}-current`);
+    const statusSpan = document.getElementById(`loc-${locationIndex}-status`);
+    if (!maxInput || !currentInput) return;
+
+    const maxHP = maxInput.value;
+    const prevHP = currentInput.value;
+    currentInput.value = maxHP;
+    this.updateWoundStatus(locationIndex);
+    this.scheduleAutoSave();
+    this.refreshSummaryWidgets();
+
+    const locationName = statusSpan?.dataset.location || `Location ${locationIndex}`;
+    const healedHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">✨</div>
+        <div class="result-title success">Healed!</div>
+        <div class="result-detail" style="text-align:center;">
+          <p><strong>${locationName}</strong> restored from ${prevHP} to ${maxHP} HP.</p>
+        </div>
+        <div class="result-meta">${this.character.layOnHandsUsesRemaining} use(s) remaining today</div>
+      </div>`;
+    this.showResultModal('🙌 Lay on Hands — Healed!', healedHTML);
+  },
+
+  _layOnHandsOther() {
+    // Consume use
+    this.character.layOnHandsUsesRemaining--;
+    this.updateLayOnHandsDisplay();
+    this.scheduleAutoSave();
+
+    const otherHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">🙌</div>
+        <div class="result-title success">Lay on Hands — Another Creature</div>
+        <div class="result-detail">
+          <p>You may restore all lost Hit Points from a <strong>Minor Wound</strong> to a single location of another person.</p>
+          <p style="margin-top:0.5rem;">For <strong>Serious or Major Wounds</strong>, no Hit Points are restored, but laying on hands will stabilize the injury, halting bleeding and preventing imminent death from neglect.</p>
+        </div>
+        <div class="result-meta">${this.character.layOnHandsUsesRemaining} use(s) remaining today</div>
+      </div>`;
+    this.showResultModal('🙌 Lay on Hands', otherHTML);
+  },
+
+  _closeResultModal() {
+    const modal = document.getElementById('result-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  // ============================================
+  // DETECT EVIL ABILITY (PALADIN)
+  // Concentrate 1 Round to sense Evil within 60ft
+  // ============================================
+
+  checkDetectEvilVisibility() {
+    const section = document.getElementById('detect-evil-section');
+    if (!section) return;
+    if (this.hasAbility('Detect Evil')) {
+      section.style.display = '';
+      this.setupDetectEvilListeners();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  setupDetectEvilListeners() {
+    const btn = document.getElementById('btn-detect-evil-use');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.useDetectEvil());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  useDetectEvil() {
+    // Show animation overlay
+    let overlay = document.getElementById('detect-evil-anim-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'detect-evil-anim-overlay';
+      overlay.className = 'ability-anim-overlay';
+      overlay.innerHTML = `
+        <div class="ability-anim-content detect-evil-anim">
+          <div class="detect-evil-icon">👁️</div>
+          <div class="detect-evil-rings">
+            <div class="detect-ring ring-1"></div>
+            <div class="detect-ring ring-2"></div>
+            <div class="detect-ring ring-3"></div>
+          </div>
+          <div class="detect-evil-anim-title">Detecting Evil...</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    overlay.offsetHeight;
+    overlay.classList.add('active');
+
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      this._showDetectEvilResult();
+    }, 2000);
+  },
+
+  _showDetectEvilResult() {
+    const resultHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">👁️</div>
+        <div class="result-title" style="color:#c080ff;">Detect Evil</div>
+        <div class="result-detail">
+          <p>You may detect <strong>Evil beings within 60 feet</strong> and in your field of vision.</p>
+          <p style="margin-top:0.5rem;">This ability reveals <strong>supernatural Evil creatures</strong> such as demons and vampires, as well as <strong>mundane beings with Evil or vile intentions</strong>, as determined by the Games Master.</p>
+        </div>
+      </div>`;
+    this.showResultModal('👁️ Detect Evil', resultHTML);
   },
 
   // ============================================
