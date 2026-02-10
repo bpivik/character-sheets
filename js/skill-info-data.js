@@ -276,6 +276,391 @@ const SKILL_INFO = {
     fumble: `You suffer total mental collapse. Your will is broken, leaving you completely vulnerable to whatever is affecting you. If resisting a spell or shock, the psychological impact becomes permanent until healed.`
   },
 
+  // === Professional Skills ===
+
+  'acrobatics': {
+    title: 'Acrobatics (STR+DEX)',
+    description: `
+      <p>This skill covers physical feats involving balance, agility, tumbling, and juggling. It can be used to perform crowd-pleasing tricks or to assist with practical challenges, such as navigating unstable terrain or reducing fall damage.</p>
+      <p>In some cases, Acrobatics may be used in place of Evade. If Successful, you not only avoid the hazard but also remain on your feet, automatically avoiding the prone condition.</p>
+    `,
+    critical: `You move at double speed while balancing or crossing unstable ground.`,
+    failure: `Your attempt is unimpressive or ends early, drawing little attention or success.`,
+    fumble: `You lose control entirely. You might fall, drop an object in a spectacularly bad way, or hurt yourself during a failed tumble — taking 1d4 points of damage to a random location.`
+  },
+
+  'acting': {
+    title: 'Acting (CHA×2)',
+    description: `
+      <p>This skill governs the ability to convincingly portray another character, whether on stage or in a social setting. The actor adopts different mannerisms, speech patterns, and personality traits to impersonate someone other than themselves.</p>
+      <p>When combined with Disguise and Deceit, Acting becomes a powerful tool for assuming a false identity.</p>
+    `,
+    critical: `Your performance is entirely convincing. On stage, it earns a standing ovation or similar praise. In a social setting, you become the role. Any related skill rolls — such as Deceit or Influence — are one Difficulty Grade easier.`,
+    failure: `Your performance is flat and forgettable.`,
+    fumble: `Your act falls apart. No one is fooled, and even the least observant can see through it — or worse, laugh and jeer.`
+  },
+
+  'animal handling': {
+    title: 'Animal Handling (POW+CHA)',
+    description: `
+      <p>This skill is used to teach animals specific commands and behaviors — such as teaching a dog to sit, stay, fetch, or heel, or breaking a horse for riding. Training a single trick typically takes 20 days, minus the animal's INS.</p>
+      <p>If the animal is not typically trainable, the roll is one Difficulty Grade harder. Training an unfamiliar species is also one Difficulty Grade harder, while a different environment species is two Difficulty Grades harder.</p>
+      <p>Most animals can learn a number of tricks equal to half their INS.</p>
+    `,
+    critical: `Training time is halved, and the trick does not count against the animal's maximum number of learned tricks.`,
+    failure: `The attempt doesn't take. You'll need to try again to teach that trick.`,
+    fumble: `The animal can't grasp the trick or flat-out refuses to learn it. Worse, it may now be able to learn one fewer trick than usual.`
+  },
+
+  'arcane casting': {
+    title: 'Arcane Casting (INT+POW)',
+    description: `
+      <p>This magical skill is essential for using Arcane magic by mages. It measures your ability to successfully cast spells that have been previously memorized from a spellbook or scroll.</p>
+      <p>Arcane Casting reflects more than rote recitation — it represents the ability to enter the correct mental state, perform the required gestures, and speak the necessary incantations. Higher skill levels not only increase the chance of successful casting but also enhance the final Intensity of spells cast.</p>
+    `
+  },
+
+  'arcane knowledge': {
+    title: 'Arcane Knowledge (INT×2)',
+    description: `
+      <p>This magical skill is essential to the use of Arcane magic. It reflects a mage's accumulated understanding of magical theory and spells.</p>
+      <p>Arcane Knowledge is used when attempting to learn new spells, copy them into a spellbook, create magical scrolls, or identify spells as they are being cast. This skill isn't restricted to spellcasters; anyone can study Arcane subjects without practicing magic.</p>
+    `
+  },
+
+  'arcane sorcery': {
+    title: 'Arcane Sorcery (CHA+POW)',
+    description: `
+      <p>Arcane Sorcery represents your innate ability to channel and manipulate arcane energy without formal study or preparation. Unlike the rigorous discipline of mages, sorcerers shape raw magical power instinctively.</p>
+      <p>This skill governs your ability to successfully cast spells spontaneously, resist magical interference, and control the chaotic nature of your innate magic.</p>
+    `,
+    critical: `The spell works, but only half the Magic Points are expended.`,
+    failure: `The spell fails, but no Magic Points are lost. A Minor Arcane Flux may occur.`,
+    fumble: `The spell backfires spectacularly, triggering a Major Arcane Flux.`
+  },
+
+  'art': {
+    title: 'Art (POW+CHA)',
+    description: `
+      <p>This skill represents your ability in a chosen artistic medium — whether painting, poetry, literature, sculpture, or another form. Each additional art form must be advanced separately.</p>
+    `,
+    critical: `You produce something of remarkable quality, elegance, or beauty — worth 50% more than similar work. Any subsequent skill rolls to influence the commissioner or anyone impressed by the piece are temporarily one Difficulty Grade easier.`,
+    failure: `The result is dull and uninspired. It fails to impress and is worth no more than the materials used.`,
+    fumble: `The piece is a disaster. Time, materials, and effort are wasted. If seen by others, it could damage your reputation.`
+  },
+
+  'bureaucracy': {
+    title: 'Bureaucracy (INT×2)',
+    description: `
+      <p>This skill covers the understanding of administrative systems, official records, and unspoken civic conventions. It is used to navigate red tape, interact with officials, and uncover relevant bureaucratic information.</p>
+      <p>Your Bureaucracy skill cannot exceed your Language skill in the relevant language.</p>
+    `,
+    critical: `You gain clear insight into the process and complete the task in half the usual time. Any related skill rolls (such as Influence or Deceit) become one Difficulty Grade easier.`,
+    failure: `You hit a wall — delayed by red tape or lost paperwork. Any relevant follow-up rolls become one Difficulty Grade harder.`,
+    fumble: `Your attempt backfires completely. Access is denied, or you offend someone important, ending the request or inquiry altogether.`
+  },
+
+  'channel': {
+    title: 'Channel (INT+CHA)',
+    description: `
+      <p>This is a Divine magic skill used to call upon and direct the power of the gods. It reflects your understanding of your deity's history, mythology, rituals, prayers, and divine practices.</p>
+      <p>Channel is essential to Divine magic, as it allows clerics, rangers, druids, and paladins to manifest and wield their spells through spiritual connection and devotion.</p>
+    `
+  },
+
+  'commerce': {
+    title: 'Commerce (INT+CHA)',
+    description: `
+      <p>This skill is used to evaluate the value of goods and commodities and to trade them at the most favorable price. It also covers an understanding of business practices, negotiation, and profit-making.</p>
+      <p>Commerce rolls may be Opposed by an opponent's Commerce or Willpower skill.</p>
+    `,
+    critical: `In transactions where rolls are not Opposed, you secure the item or service at half price, or sell it for double its value.`,
+    failure: `The transaction goes poorly: the item is bought for twice its cost, or sold for only half its worth.`,
+    fumble: `The deal collapses. You may offend the other party enough to lose the opportunity entirely — or worse, get cheated by overpaying for something worthless or underselling something valuable.`
+  },
+
+  'courtesy': {
+    title: 'Courtesy (INT+CHA)',
+    description: `
+      <p>This skill covers knowing how to behave appropriately in formal or social settings. It includes the correct forms of address, expected rituals, and cultural conventions.</p>
+    `,
+    critical: `You make an excellent impression. Any relevant follow-up skill rolls are one Difficulty Grade easier.`,
+    failure: `You fail to impress. Subsequent related skill rolls are one Difficulty Grade harder.`,
+    fumble: `The result is humiliating or offensive. Depending on the situation, it may lead to serious consequences. No further social interaction is possible after this failure.`
+  },
+
+  'craft': {
+    title: 'Craft (DEX+INT)',
+    description: `
+      <p>Each Craft represents a specialized trade or practical skill — blacksmithing, carpentry, weaving, pottery, and so on. The time required depends on the nature of the product, the crafter's skill, the quality of materials, and attention to detail.</p>
+    `,
+    critical: `The item is of exceptional quality, showing superior durability, utility, or beauty.`,
+    failure: `The result is sub-standard. Its function, sturdiness, or appearance is noticeably flawed.`,
+    fumble: `The item is worthless and unusable. Alternatively, something goes wrong during the process — damaging tools, materials, property, or even injuring you.`
+  },
+
+  'culture': {
+    title: 'Culture (INT×2)',
+    description: `
+      <p>This skill focuses on understanding the customs, traditions, and practices of societies foreign to your own. Unlike the Customs skill, which applies to your native community, Culture must be taken for specific nations or peoples.</p>
+      <p>Mechanically, it works the same way as Customs but is essential for navigating unfamiliar social landscapes.</p>
+    `
+  },
+
+  'disguise': {
+    title: 'Disguise (INT+CHA)',
+    description: `
+      <p>This skill covers the creation of convincing disguises using appropriate materials such as costumes, cosmetics, wigs, or hairpieces. If any elements are missing or improvised, the roll becomes one or more Difficulty Grades harder.</p>
+      <p>Disguise works well in combination with Acting to enhance the believability of a false identity.</p>
+    `,
+    critical: `Your disguise is flawless. Even a close relative or lifelong enemy wouldn't recognize you.`,
+    failure: `Your disguise is weak, giving casual observers a chance to see through it.`,
+    fumble: `Your disguise falls apart — either immediately obvious or failing at the worst possible moment. No amount of acting can recover the illusion.`
+  },
+
+  'engineering': {
+    title: 'Engineering (INT×2)',
+    description: `
+      <p>This skill covers the design, assessment, and construction of large-scale structures, ranging from houses and bridges to gates and siege engines.</p>
+    `,
+    critical: `You spot hidden structural flaws or weaknesses that would otherwise go unnoticed. Any subsequent rolls that rely on this analysis are one Difficulty Grade easier. Alternatively, the structure gains 10% more Hit Points or Armor Points.`,
+    failure: `The structure is built to sub-standard quality (10% fewer Hit Points or Armor Points), or you are unable to determine anything useful.`,
+    fumble: `A major flaw is introduced into the design, or your assessment is completely wrong. Any related skill rolls become one Difficulty Grade harder.`
+  },
+
+  'fly': {
+    title: 'Fly (STR+DEX)',
+    description: `
+      <p>This skill represents the ability to control aerial movement — steering, diving, hovering, landing, or maneuvering at speed. Only creatures or beings with an inherent ability to fly may use this skill.</p>
+      <p>Weather, wind currents, and fatigue can increase the Difficulty Grade of a roll.</p>
+    `,
+    critical: `You execute your maneuver with perfect control, gaining an advantageous position or increased speed. Your next Fly rolls during the next Round are one Difficulty Grade easier.`,
+    failure: `Your maneuver is clumsy or partially successful. You lose altitude, drift off course, or become vulnerable to attacks until the next Round.`,
+    fumble: `You completely lose control — stalling, colliding with an obstacle, or tumbling out of the sky. You may crash or be unable to recover without immediate action.`
+  },
+
+  'gambling': {
+    title: 'Gambling (INT+POW)',
+    description: `
+      <p>This skill measures your ability in games of chance, particularly where money or valuables are at stake. It includes assessing the odds of success or failure, reading opponents, and detecting cheating.</p>
+      <p>Cheating allows you to roll twice and take the best result. However each time this is attempted you must roll an Opposed test of your Sleight skill against the Perception or Gambling skill of everyone else playing.</p>
+    `,
+    critical: `You win outright or clean out one of the other players.`,
+    failure: `You lose the hand or stake.`,
+    fumble: `You misjudge the odds or suffer terrible luck. You lose everything wagered and are thrown out of the game.`
+  },
+
+  'healing': {
+    title: 'Healing (INT+POW)',
+    description: `
+      <p>This skill represents your knowledge of medical treatment. Healing includes the ability to set broken bones, suture wounds, treat infections, and provide general medical care. Applying Healing takes 1 hour, or 4 Short Rests.</p>
+      <table class="attr-info-table">
+        <thead><tr><th>Treatment</th><th>Success</th><th>Critical</th><th>Fumble</th></tr></thead>
+        <tbody>
+          <tr><td>Serious Wound</td><td>Restores 1d3 HP</td><td>Restores 1d3+1 HP</td><td>+1 HP damage</td></tr>
+          <tr><td>Disease/Poison (before effect)</td><td colspan="3">Counteracts illness if Opposed Roll beats Potency</td></tr>
+          <tr><td>Disease/Poison (after effect)</td><td>New Resistance at 1 grade easier</td><td>2 grades easier</td><td>1 grade harder</td></tr>
+          <tr><td>Surgery (Major Wound)</td><td>Heals normally</td><td>Regains 1 HP immediately</td><td>Endurance roll or death</td></tr>
+        </tbody>
+      </table>
+    `
+  },
+
+  'intimidation': {
+    title: 'Intimidation (INT+CHA)',
+    description: `
+      <p>Intimidation is used to coerce someone into doing something they wouldn't otherwise do, often by threatening violence. A show of strength might allow Brawn to Augment the roll; subtle hints of torture could involve Deceit.</p>
+      <p>Intimidation is usually Opposed by Willpower, though Endurance may apply if physical harm is involved.</p>
+    `,
+    critical: `You gain an additional opportunity with the target, such as obtaining more information or another task to be performed.`,
+    failure: `The target is not intimidated and ignores the request at coercion.`,
+    fumble: `The target is not only not intimidated, but they also laugh at the attempt. Any further attempts to intimidate are one Difficulty Grade harder.`
+  },
+
+  'language': {
+    title: 'Language (INT+CHA)',
+    description: `
+      <p>This skill represents your ability to speak and understand languages other than your native tongue. Like Native Tongue, Language is not usually rolled but instead serves as a static measure of fluency.</p>
+      <table class="attr-info-table">
+        <thead><tr><th>Language %</th><th>Conversational Fluency</th></tr></thead>
+        <tbody>
+          <tr><td>01–25%</td><td>Understands only a few words; cannot form sentences or read</td></tr>
+          <tr><td>26–50%</td><td>Can communicate in simple, broken sentences and read at an elementary level</td></tr>
+          <tr><td>51–75%</td><td>Fluent enough for general conversation; reads at a high school level</td></tr>
+          <tr><td>76%+</td><td>Speaks with eloquence; reads at a college level</td></tr>
+        </tbody>
+      </table>
+    `
+  },
+
+  'lockpicking': {
+    title: 'Lockpicking (DEX×2)',
+    description: `
+      <p>Lockpicking covers the skill of opening mechanical locks without a key. This includes doors, chests, windows, and even locking something without a key (reverse-picking).</p>
+      <p>Picking a lock usually requires an Opposed Test: your Lockpicking skill versus the Mechanisms skill of the original crafter.</p>
+    `,
+    critical: `You open the lock quickly and without a sound. For a short time, picking similar locks becomes one Difficulty Grade easier.`,
+    failure: `The lock stays shut.`,
+    fumble: `The lock jams — maybe from broken tools or internal damage. This usually draws attention.`
+  },
+
+  'lore': {
+    title: 'Lore (INT×2)',
+    description: `
+      <p>This skill represents a specific area of learned knowledge, chosen when the skill is first acquired. Examples include Astrology, Astronomy, Geography, History, Monsters, Mythology, Politics, and Strategy and Tactics.</p>
+    `,
+    critical: `You gain deep insight into the subject. Any related skill roll becomes one Difficulty Grade easier.`,
+    failure: `No useful information is gained.`,
+    fumble: `The subject is completely misunderstood. Incorrect conclusions are drawn, and any follow-up rolls relying on that knowledge are one Difficulty Grade harder.`
+  },
+
+  'mechanisms': {
+    title: 'Mechanisms (DEX+INT)',
+    description: `
+      <p>This skill covers the knowledge and technical ability to build, dismantle, or repair mechanical devices — especially those involving intricate moving parts, such as traps, clockworks, or automated gadgets.</p>
+      <p>Simple tasks take a minimum of 1d3×10 minutes. More complex work may take hours, days, or even months.</p>
+    `,
+    critical: `The device is completed in half the usual time and works flawlessly. Any attempts to disable or bypass it are one Difficulty Grade harder.`,
+    failure: `The device functions, but unreliably. It's prone to breaking down, and attempts to circumvent it are one Difficulty Grade easier.`,
+    fumble: `The mechanism is ruined beyond repair. It must be discarded and built again from scratch.`
+  },
+
+  'meditation': {
+    title: 'Meditation (INT+CON)',
+    description: `
+      <p>This skill allows you to enter a state of deep relaxation and focused concentration. While technically a magical skill, it is essential to monks, helping them attain the focus needed to enhance their abilities beyond normal limits.</p>
+      <p>A Successful Meditation roll enables a monk to recover Fatigue or Hit Points in situations normally forbidden by the rules. However, Meditation is not exclusive to monks.</p>
+    `
+  },
+
+  'musicianship': {
+    title: 'Musicianship (DEX+CHA)',
+    description: `
+      <p>This skill covers the ability to play musical instruments and is used by bards to cast magic. Each application applies to a family of related instruments: Bow Strings, Keyboards, Percussion, Plucked Strings, Strummed Strings, or Wind.</p>
+    `,
+    critical: `Your music is exceptional — stunning in quality, elegance, or beauty. Any related skill rolls, such as Influence, become one Difficulty Grade easier.`,
+    failure: `Your performance is uninspired and forgettable.`,
+    fumble: `A musical disaster. The instrument might break, or the performance might be taken as a serious insult. At the very least, the failure causes embarrassment and may damage your reputation.`
+  },
+
+  'mysticism': {
+    title: 'Mysticism (POW+CON)',
+    description: `
+      <p>This magical skill is essential to monks, forming the foundation of their training. It represents your ability to perform superhuman feats by channeling inner strength and mastering, suppressing, or harnessing powerful emotions or concepts.</p>
+      <p>As your skill in Mysticism improves, so does your access to special Class Abilities (Standard and Ranked Abilities).</p>
+    `
+  },
+
+  'navigation': {
+    title: 'Navigation (INT+POW)',
+    description: `
+      <p>This skill covers the ability to accurately plot and follow a course using natural signs: landmarks, celestial bodies, or even the taste of seawater. Each Navigation skill applies to a specific environment, such as Open Seas, Underground, or Wilderness.</p>
+    `,
+    critical: `You find a shortcut (such as a hidden pass or fast-moving current) that speeds up the journey.`,
+    failure: `Progress is delayed due to uncertainty or temporary loss of direction.`,
+    fumble: `You become completely lost and cannot even retrace your steps.`
+  },
+
+  'oratory': {
+    title: 'Oratory (POW+CHA)',
+    description: `
+      <p>This skill is the art of addressing large groups with the intent to persuade, inspire, or assert control. When attempting to influence a crowd or deliver a message to many, Oratory is used instead of Influence.</p>
+    `,
+    critical: `You completely win over the audience, even swaying staunch opponents. Any related skill rolls become one Difficulty Grade easier.`,
+    failure: `Your speech has no effect. The audience remains indifferent or hostile.`,
+    fumble: `You alienate the crowd, appear foolish, or accidentally convince them of the opposite point. Any related rolls become one Difficulty Grade harder.`
+  },
+
+  'piety': {
+    title: 'Piety (POW+CHA)',
+    description: `
+      <p>This magical skill reflects your devotion to a specific deity or pantheon. Piety not only measures the depth of that faith, but also governs the potency of Divine spells you cast.</p>
+      <p>Piety is not restricted to clerics or druids. Any character may develop the skill as a mark of reverence, even if they do not actively practice Divine magic.</p>
+    `
+  },
+
+  'psychic manipulation': {
+    title: 'Psychic Manipulation (POW×2)',
+    description: `
+      <p>Psychic Manipulation represents your ability to successfully use Psychic Disciplines. Unlike spells, most psychic disciplines do not use Intensity in calculating their effects. For those that do, figure Intensity as equal to one tenth of your Psychic Manipulation skill.</p>
+      <p>Psychic disciplines are not magic and cannot be dispelled.</p>
+    `
+  },
+
+  'seamanship': {
+    title: 'Seamanship (INT+CON)',
+    description: `
+      <p>This skill functions like Boating but applies to large waterborne vessels powered by sails or rows of oars. In addition to handling and maneuvering ships, Seamanship covers their maintenance and upkeep, identifying when repairs are needed, choosing safe anchor points, and recognizing hazards.</p>
+    `
+  },
+
+  'seduction': {
+    title: 'Seduction (INT+CHA)',
+    description: `
+      <p>This skill involves romantic or sexual persuasion and is distinct from Influence. Seduction typically unfolds over time — ranging from hours to days or even weeks. Targets may always oppose a Seduction attempt with a Willpower roll.</p>
+    `,
+    critical: `The target is deeply captivated — falling into passion or desire. Any skill rolls that take advantage of this connection become one Difficulty Grade easier.`,
+    failure: `Your attempt is rebuffed or politely dismissed.`,
+    fumble: `Your effort causes offense or emotional harm. Further attempts are impossible for the time being, and any related rolls become one Difficulty Grade harder.`
+  },
+
+  'sleight': {
+    title: 'Sleight (DEX+CHA)',
+    description: `
+      <p>This skill covers the covert manipulation of small objects — palming, concealing, picking pockets, cutting purses, or creating distractions. It can be used on any object no larger than your hand.</p>
+      <p>Observers may oppose a Sleight attempt with a Perception roll to detect the act.</p>
+    `,
+    critical: `The object is hidden or handled flawlessly. Any attempt to spot or recover it becomes one Difficulty Grade harder.`,
+    failure: `The object isn't hidden. It will be found automatically if someone looks for it.`,
+    fumble: `The object isn't just exposed — it's dropped or revealed at the worst possible moment.`
+  },
+
+  'sorcerous wisdom': {
+    title: 'Sorcerous Wisdom (CHA+INT)',
+    description: `
+      <p>This skill measures the amount of information you learn through practice about your ability to use sorcery, and your ability to use Weaving. Unlike other skills, Sorcerous Wisdom is only improved through Experience Rolls as you learn more about your innate abilities.</p>
+      <p>It is also a measure of your ability to overcome and control Arcane Fluxes.</p>
+    `
+  },
+
+  'streetwise': {
+    title: 'Streetwise (POW+CHA)',
+    description: `
+      <p>This skill represents your familiarity with the people, places, and social undercurrents of a settlement. It covers identifying dangerous areas, locating services (legal or illegal), and knowing who to talk to.</p>
+    `,
+    critical: `You quickly find exactly the right person or place with no bribes and no middlemen. This may even lead to forming a new contact.`,
+    failure: `Time is wasted searching, with no useful result.`,
+    fumble: `Not only do you fail to find what you're after, but you also attract the wrong kind of attention: anything from local criminals to the city watch.`
+  },
+
+  'survival': {
+    title: 'Survival (CON+POW)',
+    description: `
+      <p>This skill covers living off the land in rural or wilderness environments. It includes foraging, building fires, locating shelter, and finding safe places to rest. The skill becomes essential when you are without gear or when environmental conditions turn hostile.</p>
+    `,
+    critical: `You find a reliable source of food or shelter and won't need to make another Survival roll for a number of days equal to one-tenth of your skill (the Critical range).`,
+    failure: `You gain one Level of Fatigue, which remains until the environment improves or another Survival roll is made.`,
+    fumble: `A serious mishap occurs, such as a dangerous encounter, exposure to harsh conditions, or eating something toxic.`
+  },
+
+  'teach': {
+    title: 'Teach (INT+CHA)',
+    description: `
+      <p>Teach lets you share your knowledge and techniques in a clear, constructive way. Without this skill, even the most experienced masters can struggle to train others.</p>
+      <p>Like some other skills, Teach isn't rolled directly. Instead, it sets a limit on what can actually be passed on to more advanced students.</p>
+    `
+  },
+
+  'track': {
+    title: 'Track (INT+CON)',
+    description: `
+      <p>This skill is used to follow any type of quarry — animal or humanoid — by interpreting both clear and subtle signs of passage. Track rolls are made periodically, especially when conditions change. A Conceal roll may be used to oppose a Track attempt.</p>
+    `,
+    critical: `You stay on the trail regardless of terrain or conditions, as long as the quarry isn't trying to hide their tracks. No further Track rolls are needed.`,
+    failure: `The trail is lost, requiring you to backtrack to find it again.`,
+    fumble: `The trail is lost completely, ending the pursuit. Alternatively, you may walk straight into a trap set by the quarry.`
+  },
+
   // === Combat Skills (used on Combat page) ===
 
   'combat skill': {

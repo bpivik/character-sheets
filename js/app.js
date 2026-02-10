@@ -2255,6 +2255,21 @@ const App = {
       }
     }
 
+    // Professional skill rows - insert into prereq-keys cell
+    const profRows = document.querySelectorAll('.professional-skill-row');
+    for (let p = 0; p < profRows.length; p++) {
+      const row = profRows[p];
+      if (row.querySelector('.skill-info-btn')) continue;
+      const nameInput = row.querySelector('.prof-skill-name');
+      if (!nameInput || !nameInput.value.trim()) continue;
+      const key = this._findSkillInfoKey(nameInput.value.trim());
+      if (!key) continue;
+      const prereqKeys = row.querySelector('.prereq-keys');
+      if (prereqKeys) {
+        prereqKeys.appendChild(makeBtn(key));
+      }
+    }
+
     // Combat skill rows - wrap button + name in flex span
     const combatRows = document.querySelectorAll('.combat-skill-row');
     for (let j = 0; j < combatRows.length; j++) {
@@ -2278,7 +2293,65 @@ const App = {
       wrapper.appendChild(nameEl);
     }
   },
-  
+
+  /**
+   * Find SKILL_INFO key for a skill name (handles parenthetical suffixes)
+   * e.g. "Lore (History)" → "lore", "Language (Elvish)" → "language",
+   *      "Craft (Blacksmithing)" → "craft", "Acrobatics" → "acrobatics"
+   */
+  _findSkillInfoKey(skillName) {
+    if (typeof SKILL_INFO === 'undefined') return null;
+    const normalized = skillName.toLowerCase().trim();
+    
+    // Direct match
+    if (SKILL_INFO[normalized]) return normalized;
+    
+    // Try with dashes instead of spaces
+    const dashed = normalized.replace(/\s+/g, '-');
+    if (SKILL_INFO[dashed]) return dashed;
+    
+    // Strip parenthetical suffix: "Lore (History)" → "lore"
+    const base = normalized.replace(/\s*\(.*?\)\s*$/, '').trim();
+    if (SKILL_INFO[base]) return base;
+    
+    // Try dashed base
+    const dashedBase = base.replace(/\s+/g, '-');
+    if (SKILL_INFO[dashedBase]) return dashedBase;
+    
+    return null;
+  },
+
+  /**
+   * Refresh the info button on a professional skill row when its name changes
+   */
+  _refreshProfSkillInfoButton(row, skillName) {
+    if (typeof SKILL_INFO === 'undefined') return;
+    // Remove existing button
+    const existing = row.querySelector('.skill-info-btn');
+    if (existing) existing.remove();
+    
+    if (!skillName) return;
+    const key = this._findSkillInfoKey(skillName);
+    if (!key) return;
+    
+    const self = this;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'skill-info-btn';
+    btn.title = 'Skill info';
+    btn.innerHTML = '&#8505;';
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self.showSkillInfo(key);
+    });
+    
+    const prereqKeys = row.querySelector('.prereq-keys');
+    if (prereqKeys) {
+      prereqKeys.appendChild(btn);
+    }
+  },
+
     /**
    * Show skill info modal (reuses attr-info overlay)
    */
@@ -2330,33 +2403,29 @@ const App = {
     
     const normalized = (skillName || '').toLowerCase().trim();
     
-    // Direct key match first (e.g. "athletics", "first-aid")
-    let info = SKILL_INFO[normalized] || SKILL_INFO[normalized.replace(/\s+/g, '-')];
+    // Use the fuzzy key finder (handles parenthetical suffixes, dashes, etc.)
+    let key = this._findSkillInfoKey(normalized);
     
-    // Try matching "Unarmed" specifically
-    if (!info && normalized === 'unarmed') {
-      info = SKILL_INFO['unarmed'];
-    }
-    
-    // If it looks like a combat skill (contains "combat" or matches weapon names), use combat skill
-    if (!info && (normalized.includes('combat') || normalized.startsWith('combat skill'))) {
-      info = SKILL_INFO['combat skill'];
-    }
-    
-    // For any combat skill on combat page that isn't a standard/prof skill, try combat skill
-    if (!info) {
-      // Check if this is a combat skill by seeing if it's listed in combat skill rows
-      const combatRows = document.querySelectorAll('.combat-skill-row');
-      for (const row of combatRows) {
-        const nameEl = row.querySelector('.combat-skill-name');
-        const rowName = (nameEl?.tagName === 'INPUT' ? nameEl.value : nameEl?.textContent || '').toLowerCase().trim();
-        if (rowName === normalized && normalized !== 'unarmed') {
-          info = SKILL_INFO['combat skill'];
-          break;
+    // If no match, check if it's a combat skill on the combat page
+    if (!key) {
+      if (normalized === 'unarmed') {
+        key = 'unarmed';
+      } else {
+        // Check if this matches a combat skill row name
+        const combatRows = document.querySelectorAll('.combat-skill-row');
+        for (const row of combatRows) {
+          const nameEl = row.querySelector('.combat-skill-name');
+          const rowName = (nameEl?.tagName === 'INPUT' ? nameEl.value : nameEl?.textContent || '').toLowerCase().trim();
+          if (rowName === normalized && normalized !== 'unarmed') {
+            key = 'combat skill';
+            break;
+          }
         }
       }
     }
     
+    if (!key) return null;
+    const info = SKILL_INFO[key];
     if (!info) return null;
     
     // Map result class to outcome property
@@ -2731,6 +2800,9 @@ const App = {
           
           // Auto-fill formula on blur (in case input event didn't catch it)
           this.autoFillProfessionalSkillFormula(e.target, baseInput);
+          
+          // Refresh info button for this row
+          this._refreshProfSkillInfoButton(row, e.target.value);
           
           this.updatePrereqKeys();
           this.scheduleAutoSave();
