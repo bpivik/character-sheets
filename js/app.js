@@ -506,7 +506,6 @@ const App = {
     // Check if Pain Control section should be visible
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
-    this.checkDefensiveReflexesVisibility();
     this.checkQuiveringPalmVisibility();
     this.checkPerfectionVisibility();
     
@@ -4624,8 +4623,6 @@ const App = {
         this.checkPainControlVisibility();
       } else if (normalizedName === 'nether walk') {
         this.checkNertherWalkVisibility();
-      } else if (normalizedName.startsWith('defensive reflexes')) {
-        this.checkDefensiveReflexesVisibility();
       } else if (normalizedName === 'quivering palm') {
         this.checkQuiveringPalmVisibility();
       } else if (normalizedName === 'perfection') {
@@ -5877,11 +5874,6 @@ const App = {
           this.checkNertherWalkVisibility();
         }
         
-        // Check if Defensive Reflexes section should now be visible
-        if (normalizedName.startsWith('defensive reflexes')) {
-          this.checkDefensiveReflexesVisibility();
-        }
-        
         // Check if Quivering Palm section should now be visible
         if (normalizedName === 'quivering palm') {
           this.checkQuiveringPalmVisibility();
@@ -6052,7 +6044,6 @@ const App = {
     this.checkMysticHealingVisibility();
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
-    this.checkDefensiveReflexesVisibility();
     this.checkQuiveringPalmVisibility();
     this.checkPerfectionVisibility();
     
@@ -10497,7 +10488,6 @@ const App = {
     this.checkMysticHealingVisibility();
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
-    this.checkDefensiveReflexesVisibility();
     this.checkQuiveringPalmVisibility();
     this.checkPerfectionVisibility();
     this.checkHolySmiteVisibility();
@@ -14657,92 +14647,6 @@ const App = {
   },
 
   // ============================================
-  // DEFENSIVE REFLEXES TRACKER
-  // ============================================
-  
-  checkDefensiveReflexesVisibility() {
-    const section = document.getElementById('defensive-reflexes-section');
-    if (!section) return;
-    
-    // Get highest tier of Defensive Reflexes
-    const tier = this.getDefensiveReflexesTier();
-    
-    if (tier > 0) {
-      section.style.display = '';
-      this.initDefensiveReflexes(tier);
-    } else {
-      section.style.display = 'none';
-    }
-  },
-  
-  getDefensiveReflexesTier() {
-    // Check from highest to lowest
-    const names = [
-      'Defensive Reflexes V', 'Defensive Reflexes 5',
-      'Defensive Reflexes IV', 'Defensive Reflexes 4',
-      'Defensive Reflexes III', 'Defensive Reflexes 3',
-      'Defensive Reflexes II', 'Defensive Reflexes 2',
-      'Defensive Reflexes I', 'Defensive Reflexes 1', 'Defensive Reflexes'
-    ];
-    const tiers = [5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 1];
-    
-    for (let i = 0; i < names.length; i++) {
-      if (this.hasAbility(names[i])) return tiers[i];
-    }
-    return 0;
-  },
-  
-  initDefensiveReflexes(tier) {
-    const maxUses = tier;
-    if (this.character.defReflexesUsesRemaining === undefined) {
-      this.character.defReflexesUsesRemaining = maxUses;
-    }
-    
-    const usesEl = document.getElementById('def-reflexes-uses');
-    const maxEl = document.getElementById('def-reflexes-max');
-    if (usesEl) usesEl.textContent = this.character.defReflexesUsesRemaining;
-    if (maxEl) maxEl.textContent = maxUses;
-    
-    const btn = document.getElementById('btn-def-reflexes-use');
-    const resetBtn = document.getElementById('btn-reset-def-reflexes');
-    
-    if (btn) {
-      btn.disabled = this.character.defReflexesUsesRemaining <= 0;
-    }
-    
-    if (btn && !btn.dataset.listenerAttached) {
-      btn.addEventListener('click', () => {
-        if (this.character.defReflexesUsesRemaining > 0) {
-          this.character.defReflexesUsesRemaining--;
-          const tier2 = this.getDefensiveReflexesTier();
-          this.initDefensiveReflexes(tier2);
-          this.scheduleAutoSave();
-          
-          const remaining = this.character.defReflexesUsesRemaining;
-          this.showResultModal('🛡️ Defensive Reflexes', `
-            <div style="text-align: center; padding: 1rem 0;">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️</div>
-              <div style="font-size: 1.1rem; font-weight: bold; color: #4fc3f7; margin-bottom: 0.5rem;">Defensive Reflexes Used!</div>
-              <div style="font-size: 0.9rem; color: #e0e0e0;">+1 bonus Action Point for this Reactive Action (Parry/Evade)</div>
-              <div style="font-size: 0.85rem; color: #999; margin-top: 0.75rem;">${remaining} use${remaining !== 1 ? 's' : ''} remaining this combat.</div>
-            </div>
-          `);
-        }
-      });
-      btn.dataset.listenerAttached = 'true';
-    }
-    if (resetBtn && !resetBtn.dataset.listenerAttached) {
-      resetBtn.addEventListener('click', () => {
-        const tier2 = this.getDefensiveReflexesTier();
-        this.character.defReflexesUsesRemaining = tier2;
-        this.initDefensiveReflexes(tier2);
-        this.scheduleAutoSave();
-      });
-      resetBtn.dataset.listenerAttached = 'true';
-    }
-  },
-
-  // ============================================
   // QUIVERING PALM ABILITY (MONK)
   // ============================================
   
@@ -14801,21 +14705,25 @@ const App = {
         const days = Math.ceil(mysVal / 20);
         const mSiz = Math.floor(mysVal / 4);
         
-        const confirmed = confirm(
-          `💀 Quivering Palm\n\n` +
-          `You initiate vibrations in your hand.\n` +
-          `• You have 3 Melee Rounds to touch your target.\n` +
-          `• Max target SIZ: ${mSiz}\n` +
-          `• You have ${days} days to trigger the death.\n` +
-          `• No effect on undead or magic-weapon-only creatures.\n` +
-          `• Requires Extremely Unburdened + No Armor.\n\n` +
-          `Proceed?`
-        );
-        if (!confirmed) return;
-        
-        this.character.qpState = 'initiated';
-        this.initQuiveringPalm();
-        this.scheduleAutoSave();
+        this.showConfirmModal('💀 Quivering Palm', `
+          <div style="padding: 0.5rem 0;">
+            <div style="text-align: center; font-size: 2rem; margin-bottom: 0.5rem;">💀</div>
+            <div style="font-size: 0.95rem; color: #e0e0e0; text-align: center; margin-bottom: 0.75rem;">
+              You initiate vibrations in your hand.
+            </div>
+            <div style="font-size: 0.85rem; color: #ccc; line-height: 1.7; padding-left: 0.5rem;">
+              • You have <strong>3 Melee Rounds</strong> to touch your target<br>
+              • Max target SIZ: <strong>${mSiz}</strong><br>
+              • You have <strong>${days} days</strong> to trigger the death<br>
+              • No effect on undead or magic-weapon-only creatures<br>
+              • Requires Extremely Unburdened + No Armor
+            </div>
+          </div>
+        `, () => {
+          this.character.qpState = 'initiated';
+          this.initQuiveringPalm();
+          this.scheduleAutoSave();
+        });
       });
       initiateBtn.dataset.listenerAttached = 'true';
     }
@@ -16286,6 +16194,46 @@ const App = {
     const closeModal = () => modal.classList.add('hidden');
     modal.querySelector('#result-modal-close').addEventListener('click', closeModal);
     modal.querySelector('#result-modal-ok').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  },
+  
+  /**
+   * Generic confirmation modal with Proceed/Cancel buttons
+   */
+  showConfirmModal(title, bodyHTML, onConfirm) {
+    let modal = document.getElementById('confirm-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'confirm-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>${title}</h3>
+          <button class="modal-close" id="confirm-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          ${bodyHTML}
+        </div>
+        <div class="modal-footer" style="text-align: center; display: flex; gap: 0.5rem; justify-content: center;">
+          <button class="btn btn-secondary" id="confirm-modal-cancel">Cancel</button>
+          <button class="btn btn-primary" id="confirm-modal-proceed">Proceed</button>
+        </div>
+      </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    
+    const closeModal = () => modal.classList.add('hidden');
+    modal.querySelector('#confirm-modal-close').addEventListener('click', closeModal);
+    modal.querySelector('#confirm-modal-cancel').addEventListener('click', closeModal);
+    modal.querySelector('#confirm-modal-proceed').addEventListener('click', () => {
+      closeModal();
+      if (onConfirm) onConfirm();
+    });
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   },
 
