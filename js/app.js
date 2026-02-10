@@ -17831,6 +17831,9 @@ const App = {
       btn.classList.add('improved-aim-active-btn');
     }
 
+    // Refresh combat summary widget so d100 button gets updated target
+    this.refreshSummaryWidget('combat');
+
     // Show modal
     setTimeout(() => {
       const overlay = document.createElement('div');
@@ -17879,6 +17882,9 @@ const App = {
       btn.textContent = '🎯 Improved Aim';
       btn.classList.remove('improved-aim-active-btn');
     }
+
+    // Refresh combat summary widget so d100 button gets restored target
+    this.refreshSummaryWidget('combat');
 
     this.scheduleAutoSave();
   },
@@ -26175,22 +26181,24 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // e.g., 81% skill -> ceil(8.1) = 9, so 09 or less is critical
     let critThreshold = Math.ceil(targetPct / 10);
     
+    // Determine if this is a Combat Skill roll (user may name it anything)
+    const normalizedSkill = (skillName || '').toLowerCase().trim();
+    const combatSkillName = (document.getElementById('combat-skill-1-name')?.value || '').toLowerCase().trim();
+    const isCombatSkillRoll = normalizedSkill === combatSkillName || 
+      normalizedSkill.includes('combat skill') || normalizedSkill.includes('combat style');
+    
     // Ranger Ranged Weapon Specialization: 1/5th critical range for Combat Skill
     let rangerCrit = false;
     const hasRangerRangedSpec = (this.character.weaponSpecializations || []).some(s => s.type === 'Ranger Ranged');
-    if (hasRangerRangedSpec) {
-      const normalizedSkill = (skillName || '').toLowerCase().trim();
-      if (normalizedSkill.includes('combat')) {
-        critThreshold = Math.ceil(targetPct / 5);
-        rangerCrit = true;
-      }
+    if (hasRangerRangedSpec && isCombatSkillRoll) {
+      critThreshold = Math.ceil(targetPct / 5);
+      rangerCrit = true;
     }
     
     // Weapon Master: double critical range for Combat Skill rolls
     let critDoubled = false;
     if (this.character.weaponSpecCritDoubled && (this.character.activeWeaponSpecs || []).length > 0) {
-      const normalizedSkill = (skillName || '').toLowerCase().trim();
-      if (normalizedSkill.includes('combat') || normalizedSkill.includes('combat skill')) {
+      if (isCombatSkillRoll) {
         critThreshold = critThreshold * 2;
         critDoubled = true;
       }
@@ -26238,8 +26246,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
     // Deactivate Improved Aim after rolling Combat Skill
     if (this.character.improvedAimActive) {
-      const normSkill = (skillName || '').toLowerCase().trim();
-      if (normSkill.includes('combat')) {
+      if (isCombatSkillRoll) {
         this.deactivateImprovedAim();
       }
     }
