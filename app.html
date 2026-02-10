@@ -1487,6 +1487,51 @@
                 </div>
               </section>
 
+              <!-- Quivering Palm Section (only visible for Monks with Quivering Palm) -->
+              <section class="just-a-scratch-section" id="quivering-palm-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">💀 Quivering Palm</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-label" style="font-size: 0.72rem;" id="qp-status-text">Ready</span>
+                    <span style="margin: 0 0.3rem; color: #666;">•</span>
+                    <span class="scratch-label" style="font-size: 0.72rem;">Max SIZ: <strong id="qp-max-siz">0</strong></span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-qp" title="Reset (after 1 week / 7 Long Rests)">↺</button>
+                  </div>
+                  <div class="scratch-button-row" style="display: flex; gap: 0.4rem; justify-content: center;">
+                    <button type="button" class="btn btn-scratch" id="btn-qp-initiate" style="background: #880e4f;">
+                      <span class="scratch-text">Initiate</span>
+                    </button>
+                    <button type="button" class="btn btn-scratch" id="btn-qp-trigger" style="background: #4a148c; display: none;">
+                      <span class="scratch-text">Trigger Death</span>
+                    </button>
+                  </div>
+                  <div id="qp-rest-tracker" style="display: none; margin-top: 0.3rem; text-align: center; font-size: 0.72rem; color: #999;">
+                    Long Rests: <strong id="qp-rest-count">0</strong> / 7
+                    <button type="button" class="btn btn-small" id="btn-qp-rest" style="font-size: 0.65rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem; border: 1px solid #555; background: none; color: #aaa; border-radius: 3px; cursor: pointer;">+1 Rest</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Perfection Section (only visible for Monks with Perfection) -->
+              <section class="just-a-scratch-section" id="perfection-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">✨ Perfection</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-label" style="font-size: 0.72rem;">Ethereal Rounds: <strong id="perfection-rounds">20</strong> / 20 today</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-perfection" title="Reset daily rounds">↺</button>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-perfection-toggle" style="background: #1a237e;">
+                      <span class="scratch-text" id="perfection-btn-text">Activate Perfection</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
               <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
                 <div class="section-header-row">

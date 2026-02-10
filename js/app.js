@@ -109,6 +109,29 @@ const App = {
         app.checkMonkAbilitiesVisibility();
       }
     },
+    'quivering palm': {
+      description: 'Kill with a touch — 1/week, Extremely Unburdened + No Armor',
+      apply: function(app) {
+        app.checkQuiveringPalmVisibility();
+      },
+      remove: function(app) {
+        app.checkQuiveringPalmVisibility();
+      }
+    },
+    'perfection': {
+      description: '10 pts magical armor, ethereal 20 rds/day, immune to Charm, no Aging penalties',
+      apply: function(app) {
+        app.checkPerfectionVisibility();
+      },
+      remove: function(app) {
+        // Deactivate if active when ability is removed
+        if (app.character.perfectionActive) {
+          app._restorePerfectionAP();
+          app.character.perfectionActive = false;
+        }
+        app.checkPerfectionVisibility();
+      }
+    },
     'weapon precision': {
       description: 'Use higher of STR+DEX or STR+SIZ for Damage Modifier with finesse weapons',
       // List of weapons that benefit from Weapon Precision
@@ -484,6 +507,8 @@ const App = {
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
     this.checkDefensiveReflexesVisibility();
+    this.checkQuiveringPalmVisibility();
+    this.checkPerfectionVisibility();
     
     // Check if Commanding section should be visible
     this.checkCommandingVisibility();
@@ -4601,6 +4626,10 @@ const App = {
         this.checkNertherWalkVisibility();
       } else if (normalizedName.startsWith('defensive reflexes')) {
         this.checkDefensiveReflexesVisibility();
+      } else if (normalizedName === 'quivering palm') {
+        this.checkQuiveringPalmVisibility();
+      } else if (normalizedName === 'perfection') {
+        this.checkPerfectionVisibility();
       } else if (normalizedName.startsWith('speak with animals') && !this.isInitializing) {
         // If it's the base name without animal chosen, prompt for selection
         if (normalizedName === 'speak with animals') {
@@ -5853,6 +5882,16 @@ const App = {
           this.checkDefensiveReflexesVisibility();
         }
         
+        // Check if Quivering Palm section should now be visible
+        if (normalizedName === 'quivering palm') {
+          this.checkQuiveringPalmVisibility();
+        }
+        
+        // Check if Perfection section should now be visible
+        if (normalizedName === 'perfection') {
+          this.checkPerfectionVisibility();
+        }
+        
         // Check if Commanding section should now be visible
         if (normalizedName === 'commanding') {
           this.checkCommandingVisibility();
@@ -6014,6 +6053,8 @@ const App = {
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
     this.checkDefensiveReflexesVisibility();
+    this.checkQuiveringPalmVisibility();
+    this.checkPerfectionVisibility();
     
     this.scheduleAutoSave();
   },
@@ -10457,6 +10498,8 @@ const App = {
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
     this.checkDefensiveReflexesVisibility();
+    this.checkQuiveringPalmVisibility();
+    this.checkPerfectionVisibility();
     this.checkHolySmiteVisibility();
     this.checkPowerfulConcentrationVisibility();
     this.checkAnimalCompanionVisibility();
@@ -14690,6 +14733,365 @@ const App = {
       });
       resetBtn.dataset.listenerAttached = 'true';
     }
+  },
+
+  // ============================================
+  // QUIVERING PALM ABILITY (MONK)
+  // ============================================
+  
+  checkQuiveringPalmVisibility() {
+    const section = document.getElementById('quivering-palm-section');
+    if (!section) return;
+    
+    if (this.hasAbility('Quivering Palm')) {
+      section.style.display = '';
+      this.initQuiveringPalm();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  initQuiveringPalm() {
+    // State: 'ready', 'initiated', 'cooldown'
+    if (this.character.qpState === undefined) this.character.qpState = 'ready';
+    if (this.character.qpRestCount === undefined) this.character.qpRestCount = 0;
+    
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const maxSiz = Math.floor(mysticismVal / 4);
+    const daysToTrigger = Math.ceil(mysticismVal / 20);
+    
+    const statusEl = document.getElementById('qp-status-text');
+    const maxSizEl = document.getElementById('qp-max-siz');
+    const initiateBtn = document.getElementById('btn-qp-initiate');
+    const triggerBtn = document.getElementById('btn-qp-trigger');
+    const restTracker = document.getElementById('qp-rest-tracker');
+    const restCountEl = document.getElementById('qp-rest-count');
+    
+    if (maxSizEl) maxSizEl.textContent = maxSiz;
+    
+    if (this.character.qpState === 'ready') {
+      if (statusEl) { statusEl.textContent = 'Ready'; statusEl.style.color = '#4caf50'; }
+      if (initiateBtn) { initiateBtn.style.display = ''; initiateBtn.disabled = false; }
+      if (triggerBtn) triggerBtn.style.display = 'none';
+      if (restTracker) restTracker.style.display = 'none';
+    } else if (this.character.qpState === 'initiated') {
+      if (statusEl) { statusEl.textContent = `You have ${daysToTrigger} days to end the vibrations and cause the target's death.`; statusEl.style.color = '#ff9800'; }
+      if (initiateBtn) initiateBtn.style.display = 'none';
+      if (triggerBtn) { triggerBtn.style.display = ''; triggerBtn.disabled = false; }
+      if (restTracker) restTracker.style.display = 'none';
+    } else if (this.character.qpState === 'cooldown') {
+      if (statusEl) { statusEl.textContent = `Cooldown (${this.character.qpRestCount}/7 Long Rests)`; statusEl.style.color = '#f44336'; }
+      if (initiateBtn) { initiateBtn.style.display = ''; initiateBtn.disabled = true; }
+      if (triggerBtn) triggerBtn.style.display = 'none';
+      if (restTracker) restTracker.style.display = '';
+      if (restCountEl) restCountEl.textContent = this.character.qpRestCount;
+    }
+    
+    // Setup listeners (only once)
+    if (initiateBtn && !initiateBtn.dataset.listenerAttached) {
+      initiateBtn.addEventListener('click', () => {
+        const mysVal = this.getSkillValueByName('Mysticism') || 0;
+        const days = Math.ceil(mysVal / 20);
+        const mSiz = Math.floor(mysVal / 4);
+        
+        const confirmed = confirm(
+          `💀 Quivering Palm\n\n` +
+          `You initiate vibrations in your hand.\n` +
+          `• You have 3 Melee Rounds to touch your target.\n` +
+          `• Max target SIZ: ${mSiz}\n` +
+          `• You have ${days} days to trigger the death.\n` +
+          `• No effect on undead or magic-weapon-only creatures.\n` +
+          `• Requires Extremely Unburdened + No Armor.\n\n` +
+          `Proceed?`
+        );
+        if (!confirmed) return;
+        
+        this.character.qpState = 'initiated';
+        this.initQuiveringPalm();
+        this.scheduleAutoSave();
+      });
+      initiateBtn.dataset.listenerAttached = 'true';
+    }
+    
+    if (triggerBtn && !triggerBtn.dataset.listenerAttached) {
+      triggerBtn.addEventListener('click', () => this.triggerQuiveringPalm());
+      triggerBtn.dataset.listenerAttached = 'true';
+    }
+    
+    const resetBtn = document.getElementById('btn-reset-qp');
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.qpState = 'ready';
+        this.character.qpRestCount = 0;
+        this.initQuiveringPalm();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+    
+    const restBtn = document.getElementById('btn-qp-rest');
+    if (restBtn && !restBtn.dataset.listenerAttached) {
+      restBtn.addEventListener('click', () => {
+        this.character.qpRestCount = (this.character.qpRestCount || 0) + 1;
+        if (this.character.qpRestCount >= 7) {
+          this.character.qpState = 'ready';
+          this.character.qpRestCount = 0;
+        }
+        this.initQuiveringPalm();
+        this.scheduleAutoSave();
+      });
+      restBtn.dataset.listenerAttached = 'true';
+    }
+  },
+  
+  triggerQuiveringPalm() {
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const adjustedMysticism = mysticismVal - 20; // Mysticism -20%
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const success = roll <= adjustedMysticism && roll !== 100;
+    
+    // Enter cooldown regardless
+    this.character.qpState = 'cooldown';
+    this.character.qpRestCount = 0;
+    this.initQuiveringPalm();
+    this.scheduleAutoSave();
+    
+    if (success) {
+      this._showQuiveringPalmAnimation(true, roll, adjustedMysticism);
+    } else {
+      this._showQuiveringPalmAnimation(false, roll, adjustedMysticism);
+    }
+  },
+  
+  _showQuiveringPalmAnimation(success, roll, target) {
+    let overlay = document.getElementById('qp-animation-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'qp-animation-overlay';
+      document.body.appendChild(overlay);
+    }
+    
+    if (success) {
+      overlay.innerHTML = `
+        <div class="qp-anim-content">
+          <div class="qp-skull">💀</div>
+          <div class="qp-result-title" style="color: #f44336;">DEATH</div>
+          <div class="qp-result-text">Your target dies instantly.</div>
+          <div class="qp-roll-info">Rolled ${roll} vs Mysticism −20% (${target}%) — Success</div>
+        </div>
+      `;
+    } else {
+      overlay.innerHTML = `
+        <div class="qp-anim-content">
+          <div class="qp-skull">✋</div>
+          <div class="qp-result-title" style="color: #ff9800;">FAILURE</div>
+          <div class="qp-result-text">You fail to kill your target.</div>
+          <div class="qp-roll-info">Rolled ${roll} vs Mysticism −20% (${target}%) — Failed</div>
+        </div>
+      `;
+    }
+    
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0); z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.5s;
+    `;
+    
+    const content = overlay.querySelector('.qp-anim-content');
+    content.style.cssText = `
+      text-align: center; opacity: 0; transform: scale(0.3);
+      transition: opacity 0.6s, transform 0.6s;
+    `;
+    
+    overlay.querySelector('.qp-skull').style.cssText = `
+      font-size: 4rem; margin-bottom: 0.5rem;
+      ${success ? 'animation: qpPulse 0.8s ease-in-out 3;' : ''}
+    `;
+    
+    overlay.querySelector('.qp-result-title').style.cssText += `
+      font-size: 2rem; font-weight: bold; margin: 0.5rem 0;
+    `;
+    
+    overlay.querySelector('.qp-result-text').style.cssText = `
+      font-size: 1.1rem; color: #e0e0e0; margin: 0.5rem 0;
+    `;
+    
+    overlay.querySelector('.qp-roll-info').style.cssText = `
+      font-size: 0.8rem; color: #888; margin-top: 1rem;
+    `;
+    
+    // Add pulse animation if not present
+    if (!document.getElementById('qp-pulse-style')) {
+      const style = document.createElement('style');
+      style.id = 'qp-pulse-style';
+      style.textContent = `
+        @keyframes qpPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.3); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    requestAnimationFrame(() => {
+      overlay.style.background = success ? 'rgba(30, 0, 0, 0.85)' : 'rgba(0, 0, 0, 0.8)';
+      content.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    });
+    
+    overlay.addEventListener('click', () => {
+      content.style.opacity = '0';
+      content.style.transform = 'scale(0.8)';
+      overlay.style.background = 'rgba(0, 0, 0, 0)';
+      setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 500);
+    });
+  },
+
+  // ============================================
+  // PERFECTION ABILITY (MONK)
+  // ============================================
+  
+  checkPerfectionVisibility() {
+    const section = document.getElementById('perfection-section');
+    if (!section) return;
+    
+    if (this.hasAbility('Perfection')) {
+      section.style.display = '';
+      this.initPerfection();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  initPerfection() {
+    if (this.character.perfectionRoundsRemaining === undefined) this.character.perfectionRoundsRemaining = 20;
+    if (this.character.perfectionActive === undefined) this.character.perfectionActive = false;
+    
+    const roundsEl = document.getElementById('perfection-rounds');
+    const btnText = document.getElementById('perfection-btn-text');
+    const btn = document.getElementById('btn-perfection-toggle');
+    const resetBtn = document.getElementById('btn-reset-perfection');
+    
+    if (roundsEl) roundsEl.textContent = this.character.perfectionRoundsRemaining;
+    
+    if (this.character.perfectionActive) {
+      if (btnText) btnText.textContent = 'Deactivate Perfection';
+      if (btn) btn.style.background = '#b71c1c';
+      // Re-apply 10 AP styling on load if still active
+      this._reapplyPerfectionAPStyle();
+    } else {
+      if (btnText) btnText.textContent = 'Activate Perfection';
+      if (btn) {
+        btn.style.background = '#1a237e';
+        btn.disabled = this.character.perfectionRoundsRemaining <= 0;
+      }
+    }
+    
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.togglePerfection());
+      btn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.perfectionRoundsRemaining = 20;
+        this.initPerfection();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+  },
+  
+  togglePerfection() {
+    if (this.character.perfectionActive) {
+      // Deactivate — restore AP values
+      this._restorePerfectionAP();
+      this.character.perfectionActive = false;
+      this.initPerfection();
+      this.scheduleAutoSave();
+    } else {
+      // Activate — save current AP values and set all to 10
+      if (this.character.perfectionRoundsRemaining <= 0) {
+        alert('No Perfection rounds remaining today.');
+        return;
+      }
+      this._applyPerfectionAP();
+      this.character.perfectionActive = true;
+      
+      alert(
+        `✨ Perfection Activated!\n\n` +
+        `• All Hit Locations now have 10 AP (magical armor)\n` +
+        `• You are immune to Charm spells\n` +
+        `• You have ${this.character.perfectionRoundsRemaining} Combat Rounds remaining today\n\n` +
+        `Press the Perfection button again to deactivate.`
+      );
+      
+      this.initPerfection();
+      this.scheduleAutoSave();
+    }
+  },
+  
+  _applyPerfectionAP() {
+    // Save current AP values before overwriting
+    const savedAPs = [];
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+      const apInput = row.querySelector('.ap-input');
+      if (apInput) {
+        savedAPs.push(parseInt(apInput.value, 10) || 0);
+        apInput.value = 10;
+        apInput.dataset.perfectionSaved = savedAPs[savedAPs.length - 1];
+        apInput.style.color = '#b388ff';
+        apInput.title = 'Perfection: 10 magical AP (original: ' + savedAPs[savedAPs.length - 1] + ')';
+      } else {
+        savedAPs.push(0);
+      }
+    });
+    
+    this.character.perfectionSavedAPs = savedAPs;
+    this.updateUnarmedAPHP();
+    this.scheduleAutoSave();
+  },
+  
+  _restorePerfectionAP() {
+    const savedAPs = this.character.perfectionSavedAPs || [];
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+      const apInput = row.querySelector('.ap-input');
+      if (apInput) {
+        apInput.value = savedAPs[i] !== undefined ? savedAPs[i] : 0;
+        delete apInput.dataset.perfectionSaved;
+        apInput.style.color = '';
+        apInput.title = '';
+      }
+    });
+    
+    delete this.character.perfectionSavedAPs;
+    this.updateUnarmedAPHP();
+    this.scheduleAutoSave();
+  },
+  
+  _reapplyPerfectionAPStyle() {
+    const savedAPs = this.character.perfectionSavedAPs || [];
+    const tbody = document.getElementById('hit-locations-body');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, i) => {
+      const apInput = row.querySelector('.ap-input');
+      if (apInput) {
+        apInput.value = 10;
+        apInput.style.color = '#b388ff';
+        apInput.title = 'Perfection: 10 magical AP (original: ' + (savedAPs[i] !== undefined ? savedAPs[i] : 0) + ')';
+      }
+    });
+    this.updateUnarmedAPHP();
   },
   
   useNetherWalk() {

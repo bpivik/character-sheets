@@ -1071,6 +1071,56 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Mysticism 90%",
       summary: "Communicate with natural vegetation; request passage or entanglement"
     },
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes IV", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes III",
+      summary: "May use Defensive Reflexes 4 times per combat (no re-rolls vs same attack, no Luck combo)"
+    },
+    { 
+      name: "Heart Slow", 
+      rank: 4, 
+      prereqs: "Meditation 110%; Mysticism 110%",
+      summary: "Appear dead — immune to Life Sense; must remain completely inactive"
+    },
+    { 
+      name: "Indomitable", 
+      rank: 4, 
+      prereqs: "Meditation 110%",
+      summary: "Immune to all mind control, domination, spells, and spirit possession"
+    },
+    { 
+      name: "Quivering Palm", 
+      rank: 4, 
+      prereqs: "Mysticism 110%; 10 Experience Rolls",
+      summary: "Kill with a touch — 1/week, Extremely Unburdened + No Armor"
+    },
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes V", 
+      rank: 5, 
+      prereqs: "Defensive Reflexes IV",
+      summary: "May use Defensive Reflexes 5 times per combat (no re-rolls vs same attack, no Luck combo)"
+    },
+    { 
+      name: "Perfection", 
+      rank: 5, 
+      prereqs: "Meditation 140%; Mysticism 140%",
+      summary: "10 pts magical armor, ethereal state 20 rds/day, immune to Charm, no Aging penalties"
+    },
   ],
   
   // More classes to be added...
