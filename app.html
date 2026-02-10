@@ -1607,6 +1607,46 @@
                 </div>
               </section>
 
+              <!-- Cure Disease Section (only visible if character has Cure Disease ability) -->
+              <section class="cure-disease-section" id="cure-disease-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🩺 Cure Disease</h3>
+                </div>
+                <div class="cure-disease-content">
+                  <div class="cure-disease-info-row">
+                    <span class="cure-disease-value" id="cure-disease-uses-available">0</span>
+                    <span class="cure-disease-label">/ <span id="cure-disease-uses-max">0</span> uses/week</span>
+                    <button type="button" class="btn btn-small btn-reset-cure-disease" id="btn-reset-cure-disease-uses" title="Reset uses (after 1 week / 7 Long Rests)">↺</button>
+                  </div>
+                  <div class="cure-disease-button-row">
+                    <button type="button" class="btn btn-cure-disease" id="btn-cure-disease-use" title="Remove one natural disease from a sick individual">
+                      🩺 Cure Disease
+                    </button>
+                  </div>
+                  <div id="cure-disease-rest-tracker" style="display: none; margin-top: 0.3rem; text-align: center; font-size: 0.72rem; color: #999;">
+                    Long Rests: <strong id="cure-disease-rest-count">0</strong> / 7
+                    <button type="button" class="btn btn-small" id="btn-cure-disease-rest" style="font-size: 0.65rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem; border: 1px solid #555; background: none; color: #aaa; border-radius: 3px; cursor: pointer;">+1 Rest</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Divine Protection Section (only visible if character has Divine Protection ability) -->
+              <section class="divine-protection-section" id="divine-protection-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🛡️ Divine Protection</h3>
+                </div>
+                <div class="divine-protection-content">
+                  <div class="divine-protection-info">
+                    <span class="divine-prot-label">+10% Willpower, Endurance & Evade</span>
+                  </div>
+                  <div class="divine-protection-toggle">
+                    <button type="button" class="btn btn-divine-protection" id="btn-divine-protection-toggle">
+                      <span id="divine-prot-btn-text">Activate</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               <section class="mental-strength-section" id="mental-strength-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">🧠 Mental Strength</h3>

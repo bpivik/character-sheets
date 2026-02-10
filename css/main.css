@@ -1878,6 +1878,233 @@ input.weapon-damage.rage-boosted,
   box-shadow: 0 4px 12px rgba(192, 128, 255, 0.5);
 }
 
+/* ========================================
+   CURE DISEASE SECTION
+   ======================================== */
+.cure-disease-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a2a1a 0%, #2a3d2a 100%);
+  border: 2px solid #5a8a5a;
+  border-radius: 6px;
+}
+
+.cure-disease-section .section-header {
+  color: #7dcc7d;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.cure-disease-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.cure-disease-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.cure-disease-value {
+  color: #7dcc7d;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.cure-disease-label {
+  color: #999;
+}
+
+.btn-reset-cure-disease {
+  background: transparent;
+  border: 1px solid #666;
+  color: #999;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.btn-reset-cure-disease:hover {
+  background: #444;
+  border-color: #7dcc7d;
+  color: #7dcc7d;
+}
+
+.cure-disease-button-row {
+  width: 100%;
+}
+
+.btn-cure-disease {
+  width: 100%;
+  background: linear-gradient(135deg, #1a3a1a 0%, #2a5a2a 50%, #1a3a1a 100%);
+  color: white;
+  border: 1px solid #5a8a5a;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(90, 138, 90, 0.4);
+}
+
+.btn-cure-disease:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
+  box-shadow: 0 4px 12px rgba(125, 204, 125, 0.5);
+}
+
+.btn-cure-disease:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Cure Disease Animation */
+.cure-disease-anim {
+  position: relative;
+}
+.cure-disease-anim .cure-disease-icon {
+  font-size: 4rem;
+  animation: curePulse 0.7s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(125,204,125,0.8));
+}
+.cure-disease-anim .cure-disease-anim-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #7dcc7d;
+  text-shadow: 0 0 15px rgba(125,204,125,0.6);
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+.cure-disease-particles {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 120px;
+}
+.cure-particle {
+  position: absolute;
+  color: #7dcc7d;
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: healFloat 1.5s ease-out infinite;
+}
+.cure-particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+.cure-particle:nth-child(2) { left: 30%; animation-delay: 0.25s; }
+.cure-particle:nth-child(3) { left: 50%; animation-delay: 0.1s; }
+.cure-particle:nth-child(4) { left: 70%; animation-delay: 0.35s; }
+.cure-particle:nth-child(5) { left: 90%; animation-delay: 0.5s; }
+@keyframes curePulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+/* ========================================
+   DIVINE PROTECTION SECTION
+   ======================================== */
+.divine-protection-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a2a 0%, #2a2a3d 100%);
+  border: 2px solid #6080b8;
+  border-radius: 6px;
+}
+
+.divine-protection-section .section-header {
+  color: #80b0ff;
+  text-shadow: 0 0 10px rgba(128, 176, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.divine-protection-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.divine-protection-info {
+  text-align: center;
+}
+
+.divine-prot-label {
+  color: #80b0ff;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.divine-protection-toggle {
+  width: 100%;
+}
+
+.btn-divine-protection {
+  width: 100%;
+  background: linear-gradient(135deg, #1a2a4a 0%, #2a3a5a 50%, #1a2a4a 100%);
+  color: white;
+  border: 1px solid #6080b8;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(96, 128, 184, 0.4);
+}
+
+.btn-divine-protection:hover {
+  background: linear-gradient(135deg, #2a3a5a 0%, #3a4a6a 50%, #2a3a5a 100%);
+  box-shadow: 0 4px 12px rgba(128, 176, 255, 0.5);
+}
+
+.divine-protection-active-btn {
+  background: linear-gradient(135deg, #2a4a6a 0%, #3a5a8a 50%, #2a4a6a 100%) !important;
+  border-color: #80b0ff !important;
+  box-shadow: 0 0 15px rgba(128, 176, 255, 0.6) !important;
+  animation: divProtPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes divProtPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(128, 176, 255, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(128, 176, 255, 0.8); }
+}
+
+/* Divine Protection boosted skill fields */
+.divine-prot-boosted {
+  box-shadow: 0 0 6px rgba(128, 176, 255, 0.5) !important;
+  border-color: #6080b8 !important;
+}
+
+/* Divine Protection Animation */
+.divine-prot-anim .divine-prot-icon {
+  font-size: 4rem;
+  animation: shieldPulse 0.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(128,176,255,0.8));
+}
+.divine-prot-anim .divine-prot-anim-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #80b0ff;
+  text-shadow: 0 0 20px rgba(128,176,255,0.6);
+  margin-top: 0.5rem;
+}
+.divine-prot-anim .divine-prot-subtitle {
+  font-size: 1rem;
+  color: #ddd;
+  margin-top: 0.25rem;
+}
+@keyframes shieldPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.12); }
+}
+
 /* Lay on Hands Section */
 .lay-on-hands-section {
   padding: 0.5rem;

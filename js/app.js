@@ -517,6 +517,8 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkCureDiseaseVisibility();
+    this.checkDivineProtectionVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -4874,6 +4876,8 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkCureDiseaseVisibility();
+    this.checkDivineProtectionVisibility();
       } else if (normalizedName.startsWith('mental strength')) {
         this.checkMentalStrengthVisibility();
       } else if (normalizedName === 'turn undead') {
@@ -6175,6 +6179,8 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkCureDiseaseVisibility();
+    this.checkDivineProtectionVisibility();
         }
         
         // Check if Turn Undead section should now be visible
@@ -6232,6 +6238,8 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkCureDiseaseVisibility();
+    this.checkDivineProtectionVisibility();
     }
     
     // Check if Turn Undead section should now be visible
@@ -10781,6 +10789,8 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkCureDiseaseVisibility();
+    this.checkDivineProtectionVisibility();
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
@@ -13435,6 +13445,27 @@ const App = {
     }
 
     // Reset Mental Strength uses if character has the ability
+
+    // Track Cure Disease weekly cooldown
+    if (this.hasAbility('Cure Disease') && this.character.cureDiseaseState === 'cooldown') {
+      this.character.cureDiseaseRestCount = (this.character.cureDiseaseRestCount || 0) + 1;
+      if (this.character.cureDiseaseRestCount >= 7) {
+        this.character.cureDiseaseState = 'ready';
+        this.character.cureDiseaseRestCount = 0;
+        this.character.cureDiseaseUsesRemaining = this.getMaxCureDiseaseUses();
+        messages.push(`<strong>Cure Disease:</strong> Weekly cooldown complete — uses restored!`);
+      } else {
+        messages.push(`<strong>Cure Disease cooldown:</strong> ${this.character.cureDiseaseRestCount}/7 Long Rests`);
+      }
+      this.updateCureDiseaseDisplay();
+    }
+
+    // Deactivate Divine Protection on Long Rest
+    if (this.character.divineProtectionActive) {
+      this.deactivateDivineProtection();
+      messages.push(`<strong>Divine Protection:</strong> Deactivated`);
+    }
+
     const mentalStrengthLevel = this.getMentalStrengthLevel();
     if (mentalStrengthLevel > 0) {
       const maxUses = mentalStrengthLevel;
@@ -17332,6 +17363,310 @@ const App = {
         </div>
       </div>`;
     this.showResultModal('👁️ Detect Evil', resultHTML);
+  },
+
+  // ============================================
+  // CURE DISEASE ABILITY (PALADIN)
+  // 1/week per Rank, resets after 7 Long Rests
+  // ============================================
+
+  checkCureDiseaseVisibility() {
+    const section = document.getElementById('cure-disease-section');
+    if (!section) return;
+    if (this.hasAbility('Cure Disease')) {
+      section.style.display = '';
+      this.initCureDisease();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  initCureDisease() {
+    if (this.character.cureDiseaseState === undefined) this.character.cureDiseaseState = 'ready'; // 'ready' or 'cooldown'
+    if (this.character.cureDiseaseUsesRemaining === undefined || this.character.cureDiseaseUsesRemaining === null) {
+      this.character.cureDiseaseUsesRemaining = this.getMaxCureDiseaseUses();
+    }
+    if (this.character.cureDiseaseRestCount === undefined) this.character.cureDiseaseRestCount = 0;
+    this.updateCureDiseaseDisplay();
+    this.setupCureDiseaseListeners();
+  },
+
+  getMaxCureDiseaseUses() {
+    const classSlots = [
+      { class: 'class-primary', rank: 'rank-primary' },
+      { class: 'class-secondary', rank: 'rank-secondary' },
+      { class: 'class-tertiary', rank: 'rank-tertiary' }
+    ];
+    let maxRank = 0;
+    for (const slot of classSlots) {
+      const className = (document.getElementById(slot.class)?.value || '').toLowerCase().trim();
+      const rank = parseInt(document.getElementById(slot.rank)?.value, 10) || 0;
+      if ((className === 'paladin' || className === 'cavalier') && rank > maxRank) {
+        maxRank = rank;
+      }
+    }
+    return Math.max(maxRank, 1);
+  },
+
+  updateCureDiseaseDisplay() {
+    const maxUses = this.getMaxCureDiseaseUses();
+    const usesAvail = document.getElementById('cure-disease-uses-available');
+    const usesMax = document.getElementById('cure-disease-uses-max');
+    const useBtn = document.getElementById('btn-cure-disease-use');
+    const restTracker = document.getElementById('cure-disease-rest-tracker');
+    const restCountEl = document.getElementById('cure-disease-rest-count');
+
+    if (usesAvail) usesAvail.textContent = this.character.cureDiseaseUsesRemaining;
+    if (usesMax) usesMax.textContent = maxUses;
+
+    if (this.character.cureDiseaseState === 'cooldown') {
+      if (useBtn) { useBtn.disabled = true; useBtn.textContent = '🩺 On Cooldown'; }
+      if (restTracker) restTracker.style.display = '';
+      if (restCountEl) restCountEl.textContent = this.character.cureDiseaseRestCount;
+    } else {
+      if (useBtn) {
+        useBtn.disabled = this.character.cureDiseaseUsesRemaining <= 0;
+        useBtn.textContent = '🩺 Cure Disease';
+      }
+      if (restTracker) restTracker.style.display = 'none';
+    }
+  },
+
+  setupCureDiseaseListeners() {
+    const useBtn = document.getElementById('btn-cure-disease-use');
+    const resetBtn = document.getElementById('btn-reset-cure-disease-uses');
+    const restBtn = document.getElementById('btn-cure-disease-rest');
+
+    if (useBtn && !useBtn.dataset.listenerAttached) {
+      useBtn.addEventListener('click', () => this.useCureDisease());
+      useBtn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.cureDiseaseUsesRemaining = this.getMaxCureDiseaseUses();
+        this.character.cureDiseaseState = 'ready';
+        this.character.cureDiseaseRestCount = 0;
+        this.updateCureDiseaseDisplay();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+    if (restBtn && !restBtn.dataset.listenerAttached) {
+      restBtn.addEventListener('click', () => {
+        this.character.cureDiseaseRestCount++;
+        if (this.character.cureDiseaseRestCount >= 7) {
+          this.character.cureDiseaseState = 'ready';
+          this.character.cureDiseaseRestCount = 0;
+          this.character.cureDiseaseUsesRemaining = this.getMaxCureDiseaseUses();
+        }
+        this.updateCureDiseaseDisplay();
+        this.scheduleAutoSave();
+      });
+      restBtn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  useCureDisease() {
+    if (this.character.cureDiseaseUsesRemaining <= 0 || this.character.cureDiseaseState === 'cooldown') return;
+    this.character.cureDiseaseUsesRemaining--;
+
+    // Show animation
+    let overlay = document.getElementById('cure-disease-anim-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'cure-disease-anim-overlay';
+      overlay.className = 'ability-anim-overlay';
+      overlay.innerHTML = `
+        <div class="ability-anim-content cure-disease-anim">
+          <div class="cure-disease-icon">🩺</div>
+          <div class="cure-disease-particles">
+            <span class="cure-particle">✦</span>
+            <span class="cure-particle">✦</span>
+            <span class="cure-particle">✦</span>
+            <span class="cure-particle">✧</span>
+            <span class="cure-particle">✧</span>
+          </div>
+          <div class="cure-disease-anim-title">Curing Disease...</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    overlay.offsetHeight;
+    overlay.classList.add('active');
+
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+
+      // If all uses spent, enter cooldown
+      if (this.character.cureDiseaseUsesRemaining <= 0) {
+        this.character.cureDiseaseState = 'cooldown';
+        this.character.cureDiseaseRestCount = 0;
+      }
+
+      const resultHTML = `
+        <div class="modal-result-body">
+          <div class="result-icon">🩺</div>
+          <div class="result-title success">Disease Cured!</div>
+          <div class="result-detail">
+            <p>You have removed one <strong>natural disease</strong> from the afflicted individual.</p>
+            <p style="margin-top:0.5rem;font-size:0.85rem;color:#aaa;">This does not cure supernatural diseases such as lycanthropy or vampirism.</p>
+          </div>
+          <div class="result-meta">${this.character.cureDiseaseUsesRemaining} use(s) remaining this week</div>
+        </div>`;
+      this.showResultModal('🩺 Cure Disease', resultHTML);
+      this.updateCureDiseaseDisplay();
+      this.scheduleAutoSave();
+    }, 1500);
+  },
+
+  // ============================================
+  // DIVINE PROTECTION ABILITY (PALADIN)
+  // +10% to Willpower, Endurance, Evade (toggle)
+  // ============================================
+
+  checkDivineProtectionVisibility() {
+    const section = document.getElementById('divine-protection-section');
+    if (!section) return;
+    if (this.hasAbility('Divine Protection')) {
+      section.style.display = '';
+      this.initDivineProtection();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  initDivineProtection() {
+    if (this.character.divineProtectionActive === undefined) this.character.divineProtectionActive = false;
+    this.setupDivineProtectionListeners();
+    this.updateDivineProtectionDisplay();
+    // If it was active, re-apply visuals
+    if (this.character.divineProtectionActive) {
+      this._applyDivineProtectionVisuals();
+    }
+  },
+
+  setupDivineProtectionListeners() {
+    const btn = document.getElementById('btn-divine-protection-toggle');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.toggleDivineProtection());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  updateDivineProtectionDisplay() {
+    const btn = document.getElementById('btn-divine-protection-toggle');
+    const textEl = document.getElementById('divine-prot-btn-text');
+    if (this.character.divineProtectionActive) {
+      if (textEl) textEl.textContent = 'Deactivate';
+      if (btn) btn.classList.add('divine-protection-active-btn');
+    } else {
+      if (textEl) textEl.textContent = 'Activate';
+      if (btn) btn.classList.remove('divine-protection-active-btn');
+    }
+  },
+
+  toggleDivineProtection() {
+    if (this.character.divineProtectionActive) {
+      this.deactivateDivineProtection();
+    } else {
+      this.activateDivineProtection();
+    }
+  },
+
+  activateDivineProtection() {
+    this.character.divineProtectionActive = true;
+
+    // Show animation
+    let overlay = document.getElementById('divine-prot-anim-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'divine-prot-anim-overlay';
+      overlay.className = 'ability-anim-overlay';
+      overlay.innerHTML = `
+        <div class="ability-anim-content divine-prot-anim">
+          <div class="divine-prot-icon">🛡️</div>
+          <div class="divine-prot-anim-title">Divine Protection</div>
+          <div class="divine-prot-subtitle">+10% Willpower, Endurance & Evade</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    overlay.offsetHeight;
+    overlay.classList.add('active');
+
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    }, 1200);
+
+    this._applyDivineProtectionVisuals();
+    this._applyDivineProtectionBonuses();
+    this.updateDivineProtectionDisplay();
+    this.scheduleAutoSave();
+  },
+
+  deactivateDivineProtection() {
+    this.character.divineProtectionActive = false;
+    this._removeDivineProtectionBonuses();
+    this._removeDivineProtectionVisuals();
+    this.updateDivineProtectionDisplay();
+    this.scheduleAutoSave();
+  },
+
+  _applyDivineProtectionBonuses() {
+    // Store original values then add +10% to Willpower, Endurance, Evade
+    const skills = [
+      { id: 'willpower-current', storeKey: 'preDivProtWillpower' },
+      { id: 'endurance-current', storeKey: 'preDivProtEndurance' },
+      { id: 'evade-current', storeKey: 'preDivProtEvade' }
+    ];
+    for (const s of skills) {
+      const el = document.getElementById(s.id);
+      if (!el) continue;
+      const current = parseInt(el.value, 10) || 0;
+      if (this.character[s.storeKey] === undefined) {
+        this.character[s.storeKey] = current;
+      }
+      el.value = current + 10;
+      el.classList.add('divine-prot-boosted');
+      el.title = '+10% from Divine Protection';
+    }
+  },
+
+  _removeDivineProtectionBonuses() {
+    const skills = [
+      { id: 'willpower-current', storeKey: 'preDivProtWillpower' },
+      { id: 'endurance-current', storeKey: 'preDivProtEndurance' },
+      { id: 'evade-current', storeKey: 'preDivProtEvade' }
+    ];
+    for (const s of skills) {
+      const el = document.getElementById(s.id);
+      if (!el) continue;
+      if (this.character[s.storeKey] !== undefined) {
+        el.value = this.character[s.storeKey];
+        delete this.character[s.storeKey];
+      }
+      el.classList.remove('divine-prot-boosted');
+      el.title = '';
+    }
+  },
+
+  _applyDivineProtectionVisuals() {
+    const ids = ['willpower-current', 'endurance-current', 'evade-current'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('divine-prot-boosted');
+    });
+  },
+
+  _removeDivineProtectionVisuals() {
+    document.querySelectorAll('.divine-prot-boosted').forEach(el => {
+      el.classList.remove('divine-prot-boosted');
+      el.title = '';
+    });
   },
 
   // ============================================
@@ -25476,6 +25811,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
     
     this.showD100Result(skillName, targetPct, roll, result, resultClass);
+
+    // Deactivate Divine Protection after rolling Willpower, Endurance, or Evade
+    if (this.character.divineProtectionActive) {
+      const normSkill = (skillName || '').toLowerCase().trim();
+      if (normSkill === 'willpower' || normSkill === 'endurance' || normSkill === 'evade') {
+        this.deactivateDivineProtection();
+      }
+    }
   },
 
   /**

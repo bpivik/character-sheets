@@ -1123,6 +1123,76 @@ const RANKED_CLASS_ABILITIES = {
     },
   ],
   
+  paladin: [
+    // Rank 1
+    { 
+      name: "Cure Disease", 
+      rank: 1, 
+      prereqs: "Oath 60%; Willpower 60%",
+      summary: "1/week per Rank: Remove one natural disease from a sick individual"
+    },
+    { 
+      name: "Divine Protection", 
+      rank: 1, 
+      prereqs: "Oath 50%",
+      summary: "+10% to Willpower, Endurance, and Evade when resisting offensive actions"
+    },
+    { 
+      name: "Forceful Strike", 
+      rank: 1, 
+      prereqs: "Brawn 50% OR Mysticism 50%; Combat Style 50%",
+      summary: "-1 grade to attack, +2 grades to Damage Modifier"
+    },
+    { 
+      name: "Immunity to Disease", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "Immune to natural diseases (not supernatural like lycanthropy or vampirism)"
+    },
+    { 
+      name: "Immunity to Fear (10' Radius)", 
+      rank: 1, 
+      prereqs: "Willpower 60%",
+      summary: "Immune to all fear effects; allies within 10ft also immune"
+    },
+    { 
+      name: "Just a Scratch", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: Heal one hit location by Healing Rate (not Major Wounds)"
+    },
+    { 
+      name: "Protection from Evil (10' Radius)", 
+      rank: 1, 
+      prereqs: "Willpower 50%",
+      summary: "Permanent Protection from Evil aura; attackers become immune for 24hrs"
+    },
+    { 
+      name: "Second Wind", 
+      rank: 1, 
+      prereqs: "Endurance 50%",
+      summary: "1/day: After 1hr rest, recover up to 3 Fatigue levels"
+    },
+    { 
+      name: "Sweeping Strike", 
+      rank: 1, 
+      prereqs: "Forceful Strike; Combat Style 60%",
+      summary: "If you drop an opponent, free melee attack on another target in reach (1/round)"
+    },
+    { 
+      name: "Turn Undead", 
+      rank: 1, 
+      prereqs: "Oath 60%; Willpower 60%",
+      summary: "Turn undead/evil beings as per the clerical ability"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
+    },
+  ],
+  
   // More classes to be added...
 };
 
