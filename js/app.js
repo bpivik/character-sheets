@@ -6176,12 +6176,14 @@ const App = {
         // Check if Commanding section should now be visible
         if (normalizedName === 'commanding') {
           this.checkCommandingVisibility();
-    this.checkHolyStrikeVisibility();
-    this.checkLayOnHandsVisibility();
-    this.checkDetectEvilVisibility();
-    this.checkCureDiseaseVisibility();
-    this.checkDivineProtectionVisibility();
         }
+        
+        // Check paladin ability sections
+        if (normalizedName === 'holy strike') this.checkHolyStrikeVisibility();
+        if (normalizedName === 'lay on hands') this.checkLayOnHandsVisibility();
+        if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
+        if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
+        if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
         
         // Check if Turn Undead section should now be visible
         if (normalizedName === 'turn undead') {
@@ -6235,12 +6237,14 @@ const App = {
     // Check if Commanding section should now be visible
     if (normalizedName === 'commanding') {
       this.checkCommandingVisibility();
-    this.checkHolyStrikeVisibility();
-    this.checkLayOnHandsVisibility();
-    this.checkDetectEvilVisibility();
-    this.checkCureDiseaseVisibility();
-    this.checkDivineProtectionVisibility();
     }
+    
+    // Check paladin ability sections
+    if (normalizedName === 'holy strike') this.checkHolyStrikeVisibility();
+    if (normalizedName === 'lay on hands') this.checkLayOnHandsVisibility();
+    if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
+    if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
+    if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
@@ -17658,7 +17662,12 @@ const App = {
     const ids = ['willpower-current', 'endurance-current', 'evade-current'];
     ids.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.classList.add('divine-prot-boosted');
+      if (el) {
+        el.classList.add('divine-prot-boosted');
+        // Also highlight the parent skill row
+        const row = el.closest('.skill-row');
+        if (row) row.classList.add('divine-prot-row');
+      }
     });
   },
 
@@ -17666,6 +17675,9 @@ const App = {
     document.querySelectorAll('.divine-prot-boosted').forEach(el => {
       el.classList.remove('divine-prot-boosted');
       el.title = '';
+    });
+    document.querySelectorAll('.divine-prot-row').forEach(el => {
+      el.classList.remove('divine-prot-row');
     });
   },
 
@@ -29799,6 +29811,26 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.closeUnlockAbilitiesModal();
     
     alert(`Unlocked ${newAbilities.length} ability${newAbilities.length > 1 ? 'ies' : ''}:\n\n• ${newAbilities.join('\n• ')}\n\nSpent ${totalCost} EXP Rolls.\n\nAbilities added to Special Abilities on Combat page.`);
+    
+    // Refresh all ability section visibility (so newly purchased abilities show their buttons)
+    this.checkBerserkRageVisibility();
+    this.checkForcefulStrikeVisibility();
+    this.checkBruteStrengthVisibility();
+    this.checkJustAScratchVisibility();
+    this.checkMysticHealingVisibility();
+    this.checkPainControlVisibility();
+    this.checkNertherWalkVisibility();
+    this.checkQuiveringPalmVisibility();
+    this.checkPerfectionVisibility();
+    this.checkCommandingVisibility();
+    this.checkHolyStrikeVisibility();
+    this.checkLayOnHandsVisibility();
+    this.checkDetectEvilVisibility();
+    this.checkCureDiseaseVisibility();
+    this.checkDivineProtectionVisibility();
+    this.checkMentalStrengthVisibility();
+    this.checkTurnUndeadVisibility();
+    this.checkMonkAbilitiesVisibility();
     
     // Auto-save
     this.scheduleAutoSave();
