@@ -29152,19 +29152,17 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (el) return parseInt(el.value, 10) || 0;
     }
     
-    // Check Oaths (look for Cavalier Oath, Oath of Fealty, or Oath of Chivalry)
+    // Check Oaths (any entry in the Oaths container)
     if (normalized === 'oath') {
       const oathsContainer = document.getElementById('oaths-container');
       if (oathsContainer) {
-        const validOathNames = ['cavalier oath', 'oath of fealty', 'oath of chivalry'];
         let highestOath = 0;
         const oathRows = oathsContainer.querySelectorAll('.belief-row');
         oathRows.forEach(row => {
           const nameEl = row.querySelector('.belief-name');
           const valueEl = row.querySelector('.belief-input');
           const oathName = (nameEl?.value || '').toLowerCase().trim();
-          // Check if this oath matches one of the valid cavalier oaths
-          if (validOathNames.some(valid => oathName.includes(valid) || valid.includes(oathName))) {
+          if (oathName) {
             const value = parseInt(valueEl?.value, 10) || 0;
             if (value > highestOath) highestOath = value;
           }
