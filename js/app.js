@@ -2257,18 +2257,24 @@ const App = {
 
     // Professional skill rows - insert into prereq-keys cell
     const profRows = document.querySelectorAll('.professional-skill-row');
+    console.log('[SkillInfo] Found', profRows.length, 'professional skill rows');
+    let profAdded = 0;
     for (let p = 0; p < profRows.length; p++) {
       const row = profRows[p];
       if (row.querySelector('.skill-info-btn')) continue;
       const nameInput = row.querySelector('.prof-skill-name');
-      if (!nameInput || !nameInput.value.trim()) continue;
-      const key = this._findSkillInfoKey(nameInput.value.trim());
+      const nameVal = nameInput ? nameInput.value.trim() : '';
+      if (!nameVal) continue;
+      const key = this._findSkillInfoKey(nameVal);
+      console.log('[SkillInfo] Prof skill:', nameVal, '-> key:', key);
       if (!key) continue;
       const prereqKeys = row.querySelector('.prereq-keys');
       if (prereqKeys) {
         prereqKeys.appendChild(makeBtn(key));
+        profAdded++;
       }
     }
+    console.log('[SkillInfo] Added', profAdded, 'professional skill info buttons');
 
     // Combat skill rows - wrap button + name in flex span
     const combatRows = document.querySelectorAll('.combat-skill-row');
