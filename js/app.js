@@ -10086,32 +10086,37 @@ const App = {
   _resolveRoll(m, roll) {
     const skill = m.effectiveSkill;
 
-    // Determine result thresholds
-    const critThreshold = Math.max(1, Math.floor(skill / 10));
-    const fumbleThreshold = Math.min(100, 100 - Math.floor((100 - skill) / 10));
+    // Critical: 10% of skill value, always rounded UP
+    const critThreshold = Math.max(1, Math.ceil(skill / 10));
+    
+    // Fumble: 99 or 00 (100). Skills over 100% only fumble on 00
+    const isFumble = skill >= 100 ? (roll === 100) : (roll >= 99);
+    
+    // 96-00 is ALWAYS a Failure, no matter how high the skill
+    const isAutoFail = roll >= 96;
+    
+    // 01-05 is ALWAYS a Success, even if skill is very low
+    const isAutoSuccess = roll <= 5;
 
     let result, resultClass;
-    if (roll <= critThreshold) {
+    if (isFumble) {
+      result = 'FUMBLE';
+      resultClass = 'fumble';
+    } else if (isAutoFail) {
+      result = 'FAILURE';
+      resultClass = 'failure';
+    } else if (roll <= critThreshold && (roll <= skill || isAutoSuccess)) {
       result = 'CRITICAL SUCCESS';
       resultClass = 'critical';
-    } else if (roll <= skill) {
+    } else if (roll <= skill || isAutoSuccess) {
       result = 'SUCCESS';
       resultClass = 'success';
-    } else if (roll >= 100 || roll > fumbleThreshold) {
-      // 96-00 is always a fumble, or if roll > fumble threshold
-      if (roll >= 96) {
-        result = 'FUMBLE';
-        resultClass = 'fumble';
-      } else {
-        result = 'FAILURE';
-        resultClass = 'failure';
-      }
     } else {
       result = 'FAILURE';
       resultClass = 'failure';
     }
 
-    m.rollResult = { roll, result, resultClass, critThreshold, fumbleThreshold };
+    m.rollResult = { roll, result, resultClass, critThreshold };
 
     // Update display
     const banner = document.getElementById('cast-result-banner');
@@ -17416,17 +17421,39 @@ const App = {
     // Roll d100
     const roll = Math.floor(Math.random() * 100) + 1;
     
-    // Determine result
-    // Critical = 1/10th of skill (round up), minimum 1
-    // Fumble = 100, or 99-100 if skill < 50
+    // Determine result using standard d100 rules:
+    // Critical = ceil(skill/10), Fumble = 99-00 (or just 00 if skill >= 100)
+    // 96-00 always failure, 01-05 always success
     const critThreshold = Math.max(1, Math.ceil(channelSkill / 10));
-    const fumbleThreshold = channelSkill < 50 ? 99 : 100;
+    const isFumble = channelSkill >= 100 ? (roll === 100) : (roll >= 99);
+    const isAutoFail = roll >= 96;
+    const isAutoSuccess = roll <= 5;
     
     let resultType = '';
     let resultClass = '';
     let outcomeHtml = '';
     
-    if (roll <= critThreshold) {
+    if (isFumble) {
+      resultType = 'FUMBLE!';
+      resultClass = 'fumble';
+      const doublePower = turningPower * 2;
+      outcomeHtml = `
+        <div class="outcome-fumble">
+          <p><strong>💀 Fumble!</strong></p>
+          <p>Your attempt to Turn not only fails, but it <em>provokes</em> several undead, demons, or devils within the area.</p>
+          <p>Creatures with a combined Intensity equal to <strong>(${doublePower})</strong> (2× your Turning Power) will focus their attacks on you specifically.</p>
+        </div>
+      `;
+    } else if (isAutoFail) {
+      resultType = 'Failure';
+      resultClass = 'failure';
+      outcomeHtml = `
+        <div class="outcome-failure">
+          <p><strong>✗ Failure</strong></p>
+          <p>No undead, demons, or devils Turned.</p>
+        </div>
+      `;
+    } else if (roll <= critThreshold && (roll <= channelSkill || isAutoSuccess)) {
       resultType = 'CRITICAL!';
       resultClass = 'critical';
       const doublePower = turningPower * 2;
@@ -17438,18 +17465,7 @@ const App = {
           <p class="outcome-note">Start with those of the lowest Intensity first.</p>
         </div>
       `;
-    } else if (roll >= fumbleThreshold) {
-      resultType = 'FUMBLE!';
-      resultClass = 'fumble';
-      const doublePower = turningPower * 2;
-      outcomeHtml = `
-        <div class="outcome-fumble">
-          <p><strong>💀 Fumble!</strong></p>
-          <p>Your attempt to Turn not only fails, but it <em>provokes</em> several undead, demons, or devils within the area.</p>
-          <p>Creatures with a combined Intensity equal to <strong>(${doublePower})</strong> (2× your Turning Power) will focus their attacks on you specifically.</p>
-        </div>
-      `;
-    } else if (roll <= channelSkill) {
+    } else if (roll <= channelSkill || isAutoSuccess) {
       resultType = 'Success';
       resultClass = 'success';
       const halfPower = Math.ceil(turningPower / 2); // Round UP
@@ -24877,7 +24893,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     let resultClass = '';
     
     // Critical: 10% of skill value, always rounding UP
-    // e.g., 71% skill -> ceil(7.1) = 8, so roll of 8 or less is critical
+    // e.g., 80% skill -> ceil(8.0) = 8, so 08 or less is critical
+    // e.g., 81% skill -> ceil(8.1) = 9, so 09 or less is critical
     let critThreshold = Math.ceil(targetPct / 10);
     
     // Weapon Master: double critical range for Combat Skill rolls
@@ -24893,14 +24910,26 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Fumble: 99 or 00 (100), but skills over 100% only fumble on 00
     const isFumble = targetPct >= 100 ? (roll === 100) : (roll >= 99);
     
-    // Critical must also be a successful roll (roll <= skill)
-    if (roll <= critThreshold && roll <= targetPct && !isFumble) {
-      result = critDoubled ? 'Critical! (Doubled)' : 'Critical!';
-      resultClass = 'roll-critical';
-    } else if (isFumble) {
+    // 96-00 is ALWAYS a Failure, no matter how high the skill
+    const isAutoFail = roll >= 96;
+    
+    // 01-05 is ALWAYS a Success, even if skill is reduced below 5%
+    const isAutoSuccess = roll <= 5;
+    
+    if (isFumble) {
+      // Fumble takes highest priority
       result = 'Fumble!';
       resultClass = 'roll-fumble';
-    } else if (roll <= targetPct) {
+    } else if (isAutoFail) {
+      // 96-00 always failure (96-98 are failure, 99-00 handled as fumble above)
+      result = 'Failure';
+      resultClass = 'roll-failure';
+    } else if (roll <= critThreshold && (roll <= targetPct || isAutoSuccess)) {
+      // Critical: within critical range AND also a success (normal or auto)
+      result = critDoubled ? 'Critical! (Doubled)' : 'Critical!';
+      resultClass = 'roll-critical';
+    } else if (roll <= targetPct || isAutoSuccess) {
+      // Normal success or auto-success (01-05)
       result = 'Success';
       resultClass = 'roll-success';
     } else {
