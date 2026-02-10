@@ -428,6 +428,9 @@ const App = {
     this.updatePrereqKeys();
     this.updateMagicVisibility();
     
+    // Setup rank readiness skill change listeners
+    this.setupRankReadinessListeners();
+    
     // Setup magic skill sync listeners (for two-way sync between magic page and professional skills)
     this.setupMagicSkillSyncListeners();
     
@@ -7673,6 +7676,9 @@ const App = {
     
     // After recalculation, ensure DM current matches the new original if no ability is stepping it
     this.resetDamageModToOriginalIfClean();
+    
+    // Update rank readiness indicators
+    this.updateRankReadiness();
   },
   
   /**
@@ -8348,6 +8354,145 @@ const App = {
     document.addEventListener('keydown', escHandler);
   },
   
+  /**
+   * Update rank input visual indicators when character is ready to advance
+   * Checks prerequisite skills for each class slot and highlights the rank input green
+   */
+  updateRankReadiness() {
+    if (!window.ClassRankData) return;
+    
+    const slots = ['primary', 'secondary', 'tertiary'];
+    
+    slots.forEach(slot => {
+      const classInput = document.getElementById(`class-${slot}`);
+      const rankInput = document.getElementById(`rank-${slot}`);
+      if (!classInput || !rankInput) return;
+      
+      const className = (classInput.value || '').trim();
+      const currentRank = parseInt(rankInput.value, 10) || 0;
+      
+      // Remove existing state classes
+      rankInput.classList.remove('rank-ready', 'rank-max');
+      rankInput.title = '';
+      
+      if (!className) return;
+      
+      // Check if at max rank
+      if (currentRank >= 5) {
+        rankInput.classList.add('rank-max');
+        rankInput.title = 'Maximum Rank achieved!';
+        return;
+      }
+      
+      // Get next rank requirement
+      const req = window.ClassRankData.getNextRankRequirement(currentRank, slot);
+      if (!req) return;
+      
+      // Get prereq skills for this class
+      const prereqSkills = window.ClassRankData.getPrereqSkillsForClass(className);
+      if (!prereqSkills || prereqSkills.length === 0) return;
+      
+      // Count how many skills meet the threshold
+      const skillStatus = this.getPrereqSkillStatus(prereqSkills, req.percentRequired);
+      const metCount = skillStatus.filter(s => s.met).length;
+      
+      if (metCount >= req.skillsNeeded) {
+        rankInput.classList.add('rank-ready');
+        rankInput.title = 'You are ready to increase your Rank!';
+      }
+    });
+  },
+
+  /**
+   * Setup debounced listeners for skill value changes that affect rank readiness
+   * Uses event delegation on skill containers to minimize listener count
+   */
+  setupRankReadinessListeners() {
+    let rankReadinessTimer = null;
+    const debouncedUpdate = () => {
+      clearTimeout(rankReadinessTimer);
+      rankReadinessTimer = setTimeout(() => {
+        this.updateRankReadiness();
+        // Also re-check conditional auto abilities (e.g., Ranger Divine Spellcasting)
+        this.recheckConditionalAutoAbilities();
+      }, 300);
+    };
+    
+    // Standard skills container
+    const standardSkillsSection = document.querySelector('.standard-skills');
+    if (standardSkillsSection) {
+      standardSkillsSection.addEventListener('input', (e) => {
+        if (e.target.classList.contains('skill-current') || e.target.id?.endsWith('-current')) {
+          debouncedUpdate();
+        }
+      });
+    }
+    
+    // Professional skills container
+    const profSkillsContainer = document.getElementById('professional-skills-container');
+    if (profSkillsContainer) {
+      profSkillsContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('prof-skill-current')) {
+          debouncedUpdate();
+        }
+      });
+    }
+    
+    // Magic skill inputs (Channel, Piety, Arcane Casting, etc.)
+    const magicSkillIds = [
+      'channel-percent', 'piety-percent', 'arcane-casting-percent',
+      'arcane-knowledge-percent', 'arcane-sorcery-percent', 'sorcerous-wisdom-percent',
+      'musicianship-percent', 'lyrical-magic-percent'
+    ];
+    magicSkillIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', debouncedUpdate);
+      }
+    });
+    
+    // Combat skill
+    const combatSkill = document.getElementById('combat-skill-1-percent');
+    if (combatSkill) {
+      combatSkill.addEventListener('input', debouncedUpdate);
+    }
+    
+    // Unarmed
+    const unarmed = document.getElementById('unarmed-percent');
+    if (unarmed) {
+      unarmed.addEventListener('input', debouncedUpdate);
+    }
+    
+    // Oaths container (for Oath-based prereqs like Ranger/Paladin)
+    const oathsContainer = document.getElementById('oaths-container');
+    if (oathsContainer) {
+      oathsContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('belief-input')) {
+          debouncedUpdate();
+        }
+      });
+    }
+  },
+  
+  /**
+   * Re-check conditional automatic abilities (e.g., Ranger Divine Spellcasting)
+   * Called when skill values change to see if any pending auto-abilities now qualify
+   */
+  recheckConditionalAutoAbilities() {
+    const classes = this.getCharacterClasses ? this.getCharacterClasses() : [];
+    if (!classes || classes.length === 0) return;
+    
+    classes.forEach(cls => {
+      const classKey = cls.name?.toLowerCase().trim();
+      const rank = cls.rank || 0;
+      
+      if (classKey === 'ranger' && rank >= 2) {
+        this.checkRangerDivineSpellcasting();
+      }
+      // Future: add paladin, anti-paladin checks here
+    });
+  },
+
   /**
    * Get current values of prerequisite skills
    */
@@ -11049,6 +11194,11 @@ const App = {
     if (classKey === 'cavalier' && rank >= 5) {
       this.checkCavalierExoticMountsIV();
     }
+    
+    // Ranger Rank 2: Divine Spellcasting - conditional on Oath >= 60% and Piety >= 40%
+    if (classKey === 'ranger' && rank >= 2) {
+      this.checkRangerDivineSpellcasting();
+    }
   },
   
   /**
@@ -11226,6 +11376,40 @@ const App = {
     // All prerequisites met - add the ability
     console.log('Exotic Mounts IV: All prerequisites met, adding ability');
     this.addSpecialAbility('Exotic Mounts IV (Griffon)', 'cavalier');
+    this.scheduleAutoSave();
+  },
+  
+  /**
+   * Check and potentially add Divine Spellcasting for Ranger at Rank 2+
+   * Requirements:
+   * - Oath >= 60%
+   * - Piety >= 40%
+   */
+  checkRangerDivineSpellcasting() {
+    // Check if already has Divine Spellcasting
+    const existingAbilities = this.getAllSpecialAbilities().map(a => a.toLowerCase().trim());
+    if (existingAbilities.includes('divine spellcasting')) {
+      return; // Already has it
+    }
+    
+    // Check Oath >= 60%
+    const oathValue = this.getSkillValueByName('oath');
+    if (oathValue < 60) {
+      console.log(`Ranger Divine Spellcasting: Oath ${oathValue}% is below required 60%`);
+      return;
+    }
+    
+    // Check Piety >= 40%
+    const pietyValue = this.getSkillValueByName('piety');
+    if (pietyValue < 40) {
+      console.log(`Ranger Divine Spellcasting: Piety ${pietyValue}% is below required 40%`);
+      return;
+    }
+    
+    // All prerequisites met - add the ability
+    console.log('Ranger Divine Spellcasting: All prerequisites met (Oath ' + oathValue + '%, Piety ' + pietyValue + '%), adding ability');
+    this.addSpecialAbility('Divine Spellcasting', 'ranger');
+    this.updateAllAbilityTooltips();
     this.scheduleAutoSave();
   },
   
@@ -29606,8 +29790,32 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           { type: 'skill', name: 'Oath', value: 130 }
         ]
       }
+    ],
+    ranger: [
+      {
+        name: 'Divine Spellcasting',
+        rank: 2,
+        prereqs: [
+          { type: 'skill', name: 'Oath', value: 60 },
+          { type: 'skill', name: 'Piety', value: 40 }
+        ]
+      }
     ]
     // Add more classes here as needed
+  },
+
+  /**
+   * Ranger-specific automatic abilities
+   */
+  RANGER_AUTO_ABILITIES: {
+    divineSpellcasting: {
+      name: 'Divine Spellcasting',
+      rank: 2,
+      prereqs: {
+        oath: 60,
+        piety: 40
+      }
+    }
   },
 
   /**

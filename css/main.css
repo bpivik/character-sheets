@@ -568,6 +568,26 @@ select:focus {
   width: 55px;
 }
 
+/* Rank Ready-to-Advance indicator */
+.rank-section .field-input-tiny.rank-ready {
+  background: #2e7d32;
+  color: #fff;
+  border-color: #1b5e20;
+  box-shadow: 0 0 6px rgba(46, 125, 50, 0.5);
+  font-weight: bold;
+}
+
+.rank-section .field-input-tiny.rank-ready:hover {
+  background: #388e3c;
+}
+
+/* Max rank indicator */
+.rank-section .field-input-tiny.rank-max {
+  background: #b8860b;
+  color: #fff;
+  border-color: #8b6914;
+}
+
 /* Game Buttons - Vertical Layout in Rank Section */
 .game-buttons-vertical {
   display: flex;

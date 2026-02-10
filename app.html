@@ -1348,7 +1348,7 @@
                     <button type="button" class="btn btn-small btn-reset-rage" id="btn-reset-rage-uses" title="Reset uses to maximum">↺</button>
                   </div>
                   <div class="rage-button-row">
-                    <button type="button" class="btn btn-rage" id="btn-rage-toggle">
+                    <button type="button" class="btn btn-rage" id="btn-rage-toggle" title="Berserk Rage: Enter a battle frenzy — Damage Modifier +1 step, Endurance/Willpower +20%, Brawn +40%, Evade −20%">
                       <span class="rage-text" id="rage-btn-text">Rage!</span>
                     </button>
                   </div>
@@ -1366,7 +1366,7 @@
                       <div class="rage-effect">Brawn: +40%</div>
                       <div class="rage-effect rage-penalty">Evade: -20%</div>
                     </div>
-                    <button type="button" class="btn btn-end-rage" id="btn-end-rage">End Rage (1 Fatigue Level)</button>
+                    <button type="button" class="btn btn-end-rage" id="btn-end-rage" title="End Rage: Remove rage bonuses and gain 1 Fatigue Level">End Rage (1 Fatigue Level)</button>
                   </div>
                 </div>
               </section>
@@ -1381,7 +1381,7 @@
                     <span class="brute-label">+20% Brawn • Fatigue</span>
                   </div>
                   <div class="brute-strength-toggle">
-                    <button type="button" class="btn btn-brute" id="btn-brute-toggle">
+                    <button type="button" class="btn btn-brute" id="btn-brute-toggle" title="Brute Strength: Increase Damage Modifier one step at the cost of one Difficulty Grade on your attack">
                       <span class="brute-text" id="brute-btn-text">Use</span>
                     </button>
                   </div>
@@ -1400,7 +1400,7 @@
                     <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-scratch-uses" title="Reset uses to maximum">↺</button>
                   </div>
                   <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-scratch-use">
+                    <button type="button" class="btn btn-scratch" id="btn-scratch-use" title="Just a Scratch: Shake off a wound — roll Endurance to recover Hit Points">
                       <span class="scratch-text" id="scratch-btn-text">Use</span>
                     </button>
                   </div>
@@ -1419,7 +1419,7 @@
                     <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-mystic-healing" title="Reset daily pool">↺</button>
                   </div>
                   <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-mystic-healing-use">
+                    <button type="button" class="btn btn-scratch" id="btn-mystic-healing-use" title="Mystic Healing: Meditate to heal wounds — recover Hit Points through focused meditation">
                       <span class="scratch-text">Meditate & Heal</span>
                     </button>
                   </div>
@@ -1436,7 +1436,7 @@
                     <span class="scratch-label" style="font-size: 0.72rem;">Auto-Success Endurance (fail only on 100)</span>
                   </div>
                   <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-pain-control-roll">
+                    <button type="button" class="btn btn-scratch" id="btn-pain-control-roll" title="Pain Control: Roll Endurance to ignore the effects of a Serious Wound for a number of rounds">
                       <span class="scratch-text">Roll Endurance</span>
                     </button>
                   </div>
@@ -1458,7 +1458,7 @@
                     <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-nether-walk" title="Reset daily use">↺</button>
                   </div>
                   <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-nether-walk-use" style="background: #7c4dff;">
+                    <button type="button" class="btn btn-scratch" id="btn-nether-walk-use" style="background: #7c4dff;" title="Nether Walk: Teleport a short distance (1/10th Mysticism skill in feet) once per day">
                       <span class="scratch-text">✨ Nether Walk</span>
                     </button>
                   </div>
@@ -1478,10 +1478,10 @@
                     <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-qp" title="Reset (after 1 week / 7 Long Rests)">↺</button>
                   </div>
                   <div class="scratch-button-row" style="display: flex; gap: 0.4rem; justify-content: center;">
-                    <button type="button" class="btn btn-scratch" id="btn-qp-initiate" style="background: #880e4f;">
+                    <button type="button" class="btn btn-scratch" id="btn-qp-initiate" style="background: #880e4f;" title="Quivering Palm: Initiate deadly vibrations — you have 3 rounds to touch the victim">
                       <span class="scratch-text">Initiate</span>
                     </button>
-                    <button type="button" class="btn btn-scratch" id="btn-qp-trigger" style="background: #4a148c; display: none;">
+                    <button type="button" class="btn btn-scratch" id="btn-qp-trigger" style="background: #4a148c; display: none;" title="Quivering Palm: Trigger the fatal vibrations — roll Mysticism −20% to kill the target">
                       <span class="scratch-text">Trigger Death</span>
                     </button>
                   </div>
@@ -1503,7 +1503,7 @@
                     <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-perfection" title="Reset daily rounds">↺</button>
                   </div>
                   <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-perfection-toggle" style="background: #1a237e;">
+                    <button type="button" class="btn btn-scratch" id="btn-perfection-toggle" style="background: #1a237e;" title="Perfection: Enhance all combat rolls — your attacks and defenses are one Difficulty Grade easier">
                       <span class="scratch-text" id="perfection-btn-text">Activate Perfection</span>
                     </button>
                   </div>
@@ -1520,7 +1520,7 @@
                     <span class="forceful-label">-20% skill • +2 dmg</span>
                   </div>
                   <div class="forceful-strike-toggle">
-                    <button type="button" class="btn btn-forceful" id="btn-forceful-toggle">
+                    <button type="button" class="btn btn-forceful" id="btn-forceful-toggle" title="Forceful Strike: Increase Damage Modifier two steps — attack is one Difficulty Grade harder">
                       <span class="forceful-text" id="forceful-btn-text">Activate</span>
                     </button>
                   </div>
@@ -1548,7 +1548,7 @@
                   </div>
                   <div class="commanding-active" id="commanding-active" style="display: none;">
                     <div class="commanding-active-label">👑 <span id="commanding-active-skill">Skill</span> +40% 👑</div>
-                    <button type="button" class="btn btn-end-commanding" id="btn-end-commanding">Done</button>
+                    <button type="button" class="btn btn-end-commanding" id="btn-end-commanding" title="End Commanding Presence: Remove the skill bonus">Done</button>
                   </div>
                 </div>
               </section>
@@ -1640,7 +1640,7 @@
                     <span class="divine-prot-label">+10% Willpower, Endurance & Evade</span>
                   </div>
                   <div class="divine-protection-toggle">
-                    <button type="button" class="btn btn-divine-protection" id="btn-divine-protection-toggle">
+                    <button type="button" class="btn btn-divine-protection" id="btn-divine-protection-toggle" title="Divine Protection: Reduce damage from one attack per round by 2 (Heavy armor) or 1 (Light armor), per Rank">
                       <span id="divine-prot-btn-text">Activate</span>
                     </button>
                   </div>
@@ -1675,7 +1675,7 @@
                   <div class="improved-aim-info">
                     <span class="improved-aim-label">Within Effective Range · 1 Turn to steady</span>
                   </div>
-                  <button type="button" class="btn btn-improved-aim" id="btn-improved-aim">
+                  <button type="button" class="btn btn-improved-aim" id="btn-improved-aim" title="Improved Aim: Within Effective Range, Aiming requires only 1 Turn and makes the attack 1 Difficulty Grade easier">
                     🎯 Improved Aim
                   </button>
                 </div>
@@ -1688,7 +1688,7 @@
                 </div>
                 <div class="species-enemy-content">
                   <div class="species-enemy-list" id="species-enemy-list"></div>
-                  <button type="button" class="btn btn-species-enemy" id="btn-species-enemy">
+                  <button type="button" class="btn btn-species-enemy" id="btn-species-enemy" title="Species Enemy: +10% to all skill rolls and Damage Modifier +1 step vs your chosen enemy">
                     🎯 Activate Species Enemy
                   </button>
                 </div>
@@ -1714,7 +1714,7 @@
                     <div class="mental-strength-effects">
                       <span>vs Mind Magic</span>
                     </div>
-                    <button type="button" class="btn btn-end-mental-strength" id="btn-end-mental-strength">Done</button>
+                    <button type="button" class="btn btn-end-mental-strength" id="btn-end-mental-strength" title="End Mental Strength: Remove the Willpower bonus vs mind-affecting magic">Done</button>
                   </div>
                 </div>
               </section>
@@ -1753,7 +1753,7 @@
                     <span class="holy-smite-bonus" id="holy-smite-bonus">+1 step damage modifier vs Evil</span>
                   </div>
                   <div class="holy-smite-toggle">
-                    <button type="button" class="btn btn-holy-smite" id="btn-holy-smite-toggle">
+                    <button type="button" class="btn btn-holy-smite" id="btn-holy-smite-toggle" title="Holy Smite: Increase Damage Modifier one step against evil creatures">
                       <span class="holy-smite-text" id="holy-smite-btn-text">Activate</span>
                     </button>
                   </div>
@@ -1770,7 +1770,7 @@
                     You possess exceptional focus when casting spells. <strong>Willpower tests to maintain Concentration</strong> for spells or spellcasting are one Difficulty Grade easier. Click to activate when casting.
                   </div>
                   <div class="powerful-concentration-toggle">
-                    <button type="button" class="btn btn-powerful-concentration" id="btn-powerful-concentration-toggle">
+                    <button type="button" class="btn btn-powerful-concentration" id="btn-powerful-concentration-toggle" title="Powerful Concentration: +20 Willpower for maintaining concentration on spells">
                       <span id="powerful-concentration-btn-text">Activate (+20 Willpower)</span>
                     </button>
                   </div>
@@ -1888,7 +1888,7 @@
                   </div>
                   <div class="syrin-ability-active" id="diving-strike-active" style="display: none;">
                     <div class="syrin-active-label">🦅 Active 🦅</div>
-                    <button type="button" class="btn btn-end-syrin" id="btn-end-diving-strike">End</button>
+                    <button type="button" class="btn btn-end-syrin" id="btn-end-diving-strike" title="End Diving Strike: Remove the damage bonus and return to normal">End</button>
                   </div>
                 </div>
               </section>

@@ -60,7 +60,7 @@ const ClassAbilities = {
   
   ranger: {
     rank1: ["Combat Proficiency", "Weapon Specialization"],
-    rank2: ["Divine Spellcasting"]
+    rank2: []
   },
   
   rogue: {

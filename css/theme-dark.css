@@ -603,6 +603,24 @@
   color: var(--text-primary);
 }
 
+/* Rank readiness indicator */
+[data-theme="dark"] .rank-section .field-input-tiny.rank-ready {
+  background: #1b5e20;
+  color: #a5d6a7;
+  border-color: #2e7d32;
+  box-shadow: 0 0 6px rgba(46, 125, 50, 0.4);
+}
+
+[data-theme="dark"] .rank-section .field-input-tiny.rank-ready:hover {
+  background: #2e7d32;
+}
+
+[data-theme="dark"] .rank-section .field-input-tiny.rank-max {
+  background: #5d4037;
+  color: #d7ccc8;
+  border-color: #8d6e63;
+}
+
 /* Field disabled */
 [data-theme="dark"] .field-disabled {
   background-color: #1a1a1a !important;
