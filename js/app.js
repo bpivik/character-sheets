@@ -18122,35 +18122,62 @@ const App = {
       setTimeout(() => animOverlay.remove(), 1500);
     }
 
-    // Store original values for all skill inputs
+    // Store original values and apply +10 to all skill fields
     this.character.preSpeciesEnemySkills = {};
 
-    // Boost ALL standard skills
-    const skillSelectors = [
-      '#standard-skills .skill-input',
-      '#professional-skills .skill-input',
-      '#combat-skill-1-percent',
-      '#unarmed-percent'
-    ];
-    skillSelectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(input => {
-        if (!input.id) return;
-        const val = parseInt(input.value, 10);
-        if (isNaN(val) || val === 0) return;
-        this.character.preSpeciesEnemySkills[input.id] = val;
-        input.value = val + 10;
-        input.classList.add('se-boosted');
-      });
+    // Standard skills (class .skill-input inside .standard-skills)
+    document.querySelectorAll('.standard-skills .skill-input').forEach(input => {
+      if (!input.id) return;
+      const val = parseInt(input.value, 10);
+      if (isNaN(val) || val === 0) return;
+      this.character.preSpeciesEnemySkills[input.id] = val;
+      input.value = val + 10;
+      input.classList.add('se-boosted');
     });
 
-    // Also boost magic skills if present
+    // Professional skills (.prof-skill-current inside #professional-skills-container)
+    document.querySelectorAll('#professional-skills-container .prof-skill-current').forEach(input => {
+      if (!input.id) return;
+      const val = parseInt(input.value, 10);
+      if (isNaN(val) || val === 0) return;
+      this.character.preSpeciesEnemySkills[input.id] = val;
+      input.value = val + 10;
+      input.classList.add('se-boosted');
+    });
+
+    // Combat skill
+    const combatInput = document.getElementById('combat-skill-1-percent');
+    if (combatInput) {
+      const val = parseInt(combatInput.value, 10);
+      if (!isNaN(val) && val > 0) {
+        this.character.preSpeciesEnemySkills['combat-skill-1-percent'] = val;
+        combatInput.value = val + 10;
+        combatInput.classList.add('se-boosted');
+      }
+    }
+
+    // Unarmed
+    const unarmedInput = document.getElementById('unarmed-percent');
+    if (unarmedInput) {
+      const val = parseInt(unarmedInput.value, 10);
+      if (!isNaN(val) && val > 0) {
+        this.character.preSpeciesEnemySkills['unarmed-percent'] = val;
+        unarmedInput.value = val + 10;
+        unarmedInput.classList.add('se-boosted');
+      }
+    }
+
+    // Magic skills
     ['channel-percent', 'piety-percent', 'arcane-casting-percent', 'arcane-knowledge-percent',
      'musicianship-percent', 'arcane-sorcery-percent', 'sorcerous-wisdom-percent'].forEach(id => {
       const input = document.getElementById(id);
-      if (input && parseInt(input.value, 10) > 0) {
-        this.character.preSpeciesEnemySkills[id] = parseInt(input.value, 10);
-        input.value = parseInt(input.value, 10) + 10;
-        input.classList.add('se-boosted');
+      if (input) {
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val) && val > 0) {
+          this.character.preSpeciesEnemySkills[id] = val;
+          input.value = val + 10;
+          input.classList.add('se-boosted');
+        }
       }
     });
 

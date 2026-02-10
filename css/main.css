@@ -2382,11 +2382,21 @@ input.weapon-damage.rage-boosted,
   animation: fadeInUp 0.5s ease-out 0.3s both;
 }
 
-/* Species Enemy boosted fields */
+/* Species Enemy boosted fields (matches rage-boosted pattern) */
 .se-boosted {
-  box-shadow: 0 0 6px rgba(125, 204, 125, 0.5) !important;
-  border-color: #4a8a4a !important;
-  background: rgba(125, 204, 125, 0.08) !important;
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
+/* Ensure se-boosted wins over skill-input compound selectors */
+input.skill-input.se-boosted,
+input.prof-skill-current.se-boosted,
+input.combat-skill-percent.se-boosted,
+.derived-input.se-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 /* Global green tint when Species Enemy active */
