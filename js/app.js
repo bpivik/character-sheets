@@ -520,6 +520,7 @@ const App = {
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
+    this.checkImprovedAimVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -4880,6 +4881,7 @@ const App = {
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
+    this.checkImprovedAimVisibility();
       } else if (normalizedName.startsWith('mental strength')) {
         this.checkMentalStrengthVisibility();
       } else if (normalizedName === 'turn undead') {
@@ -6196,6 +6198,7 @@ const App = {
         if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
         if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
+    this.checkImprovedAimVisibility();
         
         // Check if Turn Undead section should now be visible
         if (normalizedName === 'turn undead') {
@@ -6266,6 +6269,7 @@ const App = {
     if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
     if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
+    this.checkImprovedAimVisibility();
     
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
@@ -10825,6 +10829,7 @@ const App = {
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
+    this.checkImprovedAimVisibility();
     this.checkMentalStrengthVisibility();
     this.checkBerserkRageVisibility();
     this.checkJustAScratchVisibility();
@@ -13498,6 +13503,12 @@ const App = {
     if (this.character.divineProtectionActive) {
       this.deactivateDivineProtection();
       messages.push(`<strong>Divine Protection:</strong> Deactivated`);
+    }
+
+    // Deactivate Improved Aim on Long Rest
+    if (this.character.improvedAimActive) {
+      this.deactivateImprovedAim();
+      messages.push(`<strong>Improved Aim:</strong> Deactivated`);
     }
 
     const mentalStrengthLevel = this.getMentalStrengthLevel();
@@ -17742,6 +17753,148 @@ const App = {
     const chanEl = document.getElementById('cop-channel-value');
     if (magEl) magEl.textContent = magnitude;
     if (chanEl) chanEl.textContent = channelValue;
+  },
+
+  // ============================================
+  // IMPROVED AIM (RANGER RANGED SPEC)
+  // Button that adds +20 to Combat Skill temporarily
+  // ============================================
+
+  checkImprovedAimVisibility() {
+    const section = document.getElementById('improved-aim-section');
+    if (!section) return;
+    const hasRangerRangedSpec = (this.character.weaponSpecializations || []).some(s => s.type === 'Ranger Ranged');
+    if (hasRangerRangedSpec) {
+      section.style.display = '';
+      this._setupImprovedAimButton();
+      // Restore active state if saved
+      if (this.character.improvedAimActive) {
+        this._applyImprovedAimVisuals();
+      }
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  _setupImprovedAimButton() {
+    const btn = document.getElementById('btn-improved-aim');
+    if (!btn || btn.dataset.listenerAttached) return;
+    btn.dataset.listenerAttached = 'true';
+    btn.addEventListener('click', () => this.toggleImprovedAim());
+  },
+
+  toggleImprovedAim() {
+    if (this.character.improvedAimActive) {
+      this.deactivateImprovedAim();
+    } else {
+      this.activateImprovedAim();
+    }
+  },
+
+  activateImprovedAim() {
+    // Play animation
+    const section = document.getElementById('improved-aim-section');
+    if (section) {
+      const animOverlay = document.createElement('div');
+      animOverlay.className = 'ability-anim-overlay improved-aim-anim';
+      animOverlay.innerHTML = `
+        <div class="aim-reticle">🎯</div>
+        <div class="aim-text">Aiming...</div>
+      `;
+      section.style.position = 'relative';
+      section.appendChild(animOverlay);
+      setTimeout(() => animOverlay.remove(), 1500);
+    }
+
+    // Apply +20 to combat skill
+    const combatInput = document.getElementById('combat-skill-1-percent');
+    if (combatInput) {
+      const currentVal = parseInt(combatInput.value, 10) || 0;
+      if (!this.character.preImprovedAimCombat) {
+        this.character.preImprovedAimCombat = currentVal;
+      }
+      combatInput.value = currentVal + 20;
+      combatInput.classList.add('improved-aim-boosted');
+      combatInput.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      // Also highlight the row
+      const row = combatInput.closest('.combat-skill-row');
+      if (row) row.classList.add('improved-aim-row');
+    }
+
+    this.character.improvedAimActive = true;
+
+    // Update button
+    const btn = document.getElementById('btn-improved-aim');
+    if (btn) {
+      btn.textContent = '🎯 Aim ACTIVE — Click to Deactivate';
+      btn.classList.add('improved-aim-active-btn');
+    }
+
+    // Show modal
+    setTimeout(() => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;';
+      const modal = document.createElement('div');
+      modal.style.cssText = 'background:linear-gradient(135deg,#1a2a1a,#25352a);border:2px solid #4a8a4a;border-radius:12px;padding:1.5rem;max-width:380px;width:90%;text-align:center;';
+      modal.innerHTML = `
+        <h3 style="color:#7dcc7d;margin:0 0 0.75rem 0;">🎯 Improved Aim</h3>
+        <p style="color:#ddd;font-size:0.95rem;line-height:1.5;">
+          After taking <strong>1 Turn</strong> to steady your weapon, your next attack is 
+          <strong style="color:#7dcc7d;">1 Difficulty Grade easier</strong>.
+        </p>
+        <p style="color:#999;font-size:0.8rem;margin-top:0.75rem;">
+          Combat Skill boosted by <strong>+20%</strong>. The bonus will deactivate when you roll Combat Skill or click the button again.
+        </p>
+        <button type="button" style="margin-top:1rem;background:#3a6a3a;color:#aaffaa;border:1px solid #4a8a4a;padding:0.4rem 1.5rem;border-radius:5px;cursor:pointer;font-size:0.85rem;">OK</button>
+      `;
+      modal.querySelector('button').addEventListener('click', () => document.body.removeChild(overlay));
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) document.body.removeChild(overlay); });
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    }, 500);
+
+    this.scheduleAutoSave();
+  },
+
+  deactivateImprovedAim() {
+    // Restore combat skill
+    const combatInput = document.getElementById('combat-skill-1-percent');
+    if (combatInput && this.character.preImprovedAimCombat !== undefined) {
+      combatInput.value = this.character.preImprovedAimCombat;
+      combatInput.classList.remove('improved-aim-boosted');
+      combatInput.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      const row = combatInput.closest('.combat-skill-row');
+      if (row) row.classList.remove('improved-aim-row');
+    }
+
+    delete this.character.preImprovedAimCombat;
+    this.character.improvedAimActive = false;
+
+    // Update button
+    const btn = document.getElementById('btn-improved-aim');
+    if (btn) {
+      btn.textContent = '🎯 Improved Aim';
+      btn.classList.remove('improved-aim-active-btn');
+    }
+
+    this.scheduleAutoSave();
+  },
+
+  _applyImprovedAimVisuals() {
+    const combatInput = document.getElementById('combat-skill-1-percent');
+    if (combatInput) {
+      combatInput.classList.add('improved-aim-boosted');
+      const row = combatInput.closest('.combat-skill-row');
+      if (row) row.classList.add('improved-aim-row');
+    }
+    const btn = document.getElementById('btn-improved-aim');
+    if (btn) {
+      btn.textContent = '🎯 Aim ACTIVE — Click to Deactivate';
+      btn.classList.add('improved-aim-active-btn');
+    }
   },
 
   // ============================================
@@ -22721,7 +22874,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       .filter(s => s.type === 'Ranged')
       .map(s => s.weapon.toLowerCase().replace(/\s*\(thrown\)/i, '').trim());
 
-    if (rangedSpecs.length === 0) return;
+    // Check for Ranger Ranged spec (applies to ALL ranged weapons)
+    const hasRangerRangedSpec = specs.some(s => s.type === 'Ranger Ranged');
+
+    if (rangedSpecs.length === 0 && !hasRangerRangedSpec) return;
 
     const rangedBody = document.getElementById('ranged-weapons-body');
     if (!rangedBody) return;
@@ -22731,7 +22887,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (!nameInput || !nameInput.value.trim()) return;
 
       const weaponName = nameInput.value.trim().toLowerCase();
-      const isSpecialized = rangedSpecs.some(specName =>
+      
+      // Ranger Ranged applies to ALL ranged weapons; regular spec matches specific weapon
+      const isSpecialized = hasRangerRangedSpec || rangedSpecs.some(specName =>
         this._weaponNameMatches(weaponName, specName)
       );
       if (!isSpecialized) return;
@@ -22758,7 +22916,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       loadInput.value = String(Math.max(0, loadNum - 1));
       loadInput.dataset.specReduced = 'true';
       loadInput.classList.add('spec-load-reduced');
-      loadInput.title = `Load reduced by 1 (Weapon Specialization). Original: ${currentLoad}`;
+      const specLabel = hasRangerRangedSpec ? 'Ranger Ranged Specialization' : 'Weapon Specialization';
+      loadInput.title = `Load reduced by 1 (${specLabel}). Original: ${currentLoad}`;
     });
   },
 
@@ -26016,6 +26175,17 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // e.g., 81% skill -> ceil(8.1) = 9, so 09 or less is critical
     let critThreshold = Math.ceil(targetPct / 10);
     
+    // Ranger Ranged Weapon Specialization: 1/5th critical range for Combat Skill
+    let rangerCrit = false;
+    const hasRangerRangedSpec = (this.character.weaponSpecializations || []).some(s => s.type === 'Ranger Ranged');
+    if (hasRangerRangedSpec) {
+      const normalizedSkill = (skillName || '').toLowerCase().trim();
+      if (normalizedSkill.includes('combat')) {
+        critThreshold = Math.ceil(targetPct / 5);
+        rangerCrit = true;
+      }
+    }
+    
     // Weapon Master: double critical range for Combat Skill rolls
     let critDoubled = false;
     if (this.character.weaponSpecCritDoubled && (this.character.activeWeaponSpecs || []).length > 0) {
@@ -26045,7 +26215,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       resultClass = 'roll-failure';
     } else if (roll <= critThreshold && (roll <= targetPct || isAutoSuccess)) {
       // Critical: within critical range AND also a success (normal or auto)
-      result = critDoubled ? 'Critical! (Doubled)' : 'Critical!';
+      result = critDoubled ? 'Critical! (Doubled)' : rangerCrit ? 'Critical! (1/5th)' : 'Critical!';
       resultClass = 'roll-critical';
     } else if (roll <= targetPct || isAutoSuccess) {
       // Normal success or auto-success (01-05)
@@ -26063,6 +26233,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const normSkill = (skillName || '').toLowerCase().trim();
       if (normSkill === 'willpower' || normSkill === 'endurance' || normSkill === 'evade') {
         this.deactivateDivineProtection();
+      }
+    }
+
+    // Deactivate Improved Aim after rolling Combat Skill
+    if (this.character.improvedAimActive) {
+      const normSkill = (skillName || '').toLowerCase().trim();
+      if (normSkill.includes('combat')) {
+        this.deactivateImprovedAim();
       }
     }
   },
@@ -30063,6 +30241,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
+    this.checkImprovedAimVisibility();
     this.checkMentalStrengthVisibility();
     this.checkTurnUndeadVisibility();
     this.checkMonkAbilitiesVisibility();

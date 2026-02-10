@@ -2182,6 +2182,114 @@ input.weapon-damage.rage-boosted,
   font-size: 0.68rem;
 }
 
+/* ========================================
+   IMPROVED AIM SECTION (RANGER)
+   ======================================== */
+.improved-aim-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
+  border: 2px solid #4a8a4a;
+  border-radius: 6px;
+}
+
+.improved-aim-section .section-header {
+  color: #7dcc7d;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.improved-aim-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  text-align: center;
+}
+
+.improved-aim-label {
+  color: #88aa88;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.btn-improved-aim {
+  background: linear-gradient(135deg, #2a4a2a, #3a6a3a);
+  color: #7dcc7d;
+  border: 1px solid #4a8a4a;
+  padding: 0.4rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-improved-aim:hover {
+  background: linear-gradient(135deg, #3a5a3a, #4a7a4a);
+  box-shadow: 0 0 12px rgba(125, 204, 125, 0.3);
+  transform: translateY(-1px);
+}
+
+.improved-aim-active-btn {
+  background: linear-gradient(135deg, #3a6a3a, #4a8a4a) !important;
+  border-color: #7dcc7d !important;
+  color: #aaffaa !important;
+  box-shadow: 0 0 15px rgba(125, 204, 125, 0.4) !important;
+  animation: aimPulse 2s ease-in-out infinite;
+}
+
+@keyframes aimPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+}
+
+/* Improved Aim animation */
+.improved-aim-anim {
+  background: radial-gradient(circle, rgba(125, 204, 125, 0.2) 0%, transparent 70%);
+}
+
+.improved-aim-anim .aim-reticle {
+  font-size: 3rem;
+  animation: aimZoom 1.5s ease-out forwards;
+}
+
+.improved-aim-anim .aim-text {
+  color: #7dcc7d;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
+  animation: fadeInUp 0.5s ease-out 0.3s both;
+}
+
+@keyframes aimZoom {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes fadeInUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Improved Aim boosted skill field */
+.improved-aim-boosted {
+  box-shadow: 0 0 6px rgba(125, 204, 125, 0.5) !important;
+  border-color: #4a8a4a !important;
+}
+
+.improved-aim-row {
+  background: rgba(125, 204, 125, 0.1) !important;
+  border-radius: 4px;
+  box-shadow: inset 0 0 8px rgba(125, 204, 125, 0.15);
+}
+.improved-aim-row .combat-skill-name {
+  color: #7dcc7d !important;
+  text-shadow: 0 0 6px rgba(125, 204, 125, 0.3);
+}
+
 /* Lay on Hands Section */
 .lay-on-hands-section {
   padding: 0.5rem;
