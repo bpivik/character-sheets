@@ -2225,9 +2225,7 @@ const App = {
    * Add ℹ info buttons to standard skill rows that have SKILL_INFO entries
    */
   addSkillInfoButtons() {
-    console.log('[SkillInfo] addSkillInfoButtons called, SKILL_INFO exists:', typeof SKILL_INFO !== 'undefined');
     if (typeof SKILL_INFO === 'undefined') return;
-    console.log('[SkillInfo] SKILL_INFO keys:', Object.keys(SKILL_INFO).length);
 
     const self = this;
     function makeBtn(key) {
@@ -2235,7 +2233,7 @@ const App = {
       b.type = 'button';
       b.className = 'skill-info-btn';
       b.title = 'Skill info';
-      b.textContent = String.fromCharCode(0x2139);
+      b.innerHTML = '&#8505;';
       b.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2246,8 +2244,6 @@ const App = {
 
     // Standard skill rows - insert into .skill-name span
     const stdRows = document.querySelectorAll('.standard-skills .skill-row');
-    console.log('[SkillInfo] Found', stdRows.length, 'standard skill rows');
-    let added = 0;
     for (let i = 0; i < stdRows.length; i++) {
       const row = stdRows[i];
       if (row.querySelector('.skill-info-btn')) continue;
@@ -2256,15 +2252,11 @@ const App = {
       const nameSpan = row.querySelector('.skill-name');
       if (nameSpan) {
         nameSpan.insertBefore(makeBtn(skillKey), nameSpan.firstChild);
-        added++;
       }
     }
-    console.log('[SkillInfo] Added', added, 'standard skill info buttons');
 
-    // Combat skill rows - insert into row before name element
+    // Combat skill rows - wrap button + name in flex span
     const combatRows = document.querySelectorAll('.combat-skill-row');
-    console.log('[SkillInfo] Found', combatRows.length, 'combat skill rows');
-    let combatAdded = 0;
     for (let j = 0; j < combatRows.length; j++) {
       const row = combatRows[j];
       if (row.querySelector('.skill-info-btn')) continue;
@@ -2275,15 +2267,16 @@ const App = {
       if (rawName === 'unarmed') { key = 'unarmed'; }
       else if (rawName.length > 0) { key = 'combat skill'; }
       if (!key || !SKILL_INFO[key]) continue;
-      // Wrap button + name in a flex container to avoid breaking grid
       const wrapper = document.createElement('span');
-      wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+      wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:4px;min-width:0;overflow:hidden;';
       nameEl.parentNode.insertBefore(wrapper, nameEl);
       wrapper.appendChild(makeBtn(key));
+      if (nameEl.tagName === 'INPUT') {
+        nameEl.style.minWidth = '0';
+        nameEl.style.flex = '1';
+      }
       wrapper.appendChild(nameEl);
-      combatAdded++;
     }
-    console.log('[SkillInfo] Added', combatAdded, 'combat skill info buttons');
   },
   
     /**

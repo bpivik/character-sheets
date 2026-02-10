@@ -4030,7 +4030,7 @@ input.combat-skill-percent.damage-boosted {
 
 .skill-name {
   font-weight: 500;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.25rem;
 }
@@ -12113,14 +12113,15 @@ input.combat-skill-percent.damage-boosted {
 
 /* Skill Info Button (ℹ next to skill names) */
 .skill-info-btn {
-  width: 15px;
-  height: 15px;
-  min-width: 15px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   border-radius: 50%;
-  border: 1px solid var(--accent-color, #8b7355);
-  background: white;
-  color: var(--accent-color, #8b7355);
-  font-size: 0.55rem;
+  border: 1px solid #c4a265;
+  background: #f5f0e6;
+  color: #8b7355;
+  font-size: 0.6rem;
   font-weight: bold;
   cursor: pointer;
   display: inline-flex;
@@ -12130,6 +12131,9 @@ input.combat-skill-percent.damage-boosted {
   line-height: 1;
   transition: background 0.2s, color 0.2s;
   flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  z-index: 1;
 }
 
 .skill-info-btn:hover {
