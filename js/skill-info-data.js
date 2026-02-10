@@ -271,7 +271,7 @@ const SKILL_INFO = {
       <p>This skill measures your mental resolve — the ability to concentrate, focus intent, or resist psychological and magical strain. It reflects inner strength and determination.</p>
       <p>Willpower is commonly used in situations requiring mental resilience, including the resistance to magic as well as emotionally traumatic experiences.</p>
     `,
-    // No critical defined
+    critical: `If resisting magic, you are rendered immune to any further mentally afflicting spells cast by that opponent during the same encounter.`,
     failure: `The effects depend on the situation but usually mean temporary submission to the mental or emotional force being applied.`,
     fumble: `You suffer total mental collapse. Your will is broken, leaving you completely vulnerable to whatever is affecting you. If resisting a spell or shock, the psychological impact becomes permanent until healed.`
   },

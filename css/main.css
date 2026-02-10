@@ -4030,9 +4030,6 @@ input.combat-skill-percent.damage-boosted {
 
 .skill-name {
   font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
 }
 
 .skill-formula {

@@ -2232,7 +2232,7 @@ const App = {
       btn.type = 'button';
       btn.className = 'skill-info-btn';
       btn.title = 'Skill info';
-      btn.textContent = 'ℹ';
+      btn.textContent = '\u2139';
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -2241,26 +2241,25 @@ const App = {
       return btn;
     };
     
-    // Standard skill rows on Character page — put inside .skill-name span
+    // Standard skill rows on Character page - put in .prereq-keys cell
     document.querySelectorAll('.standard-skills .skill-row').forEach(row => {
       if (row.querySelector('.skill-info-btn')) return;
       const skillKey = row.dataset.skill;
       if (!skillKey || !SKILL_INFO[skillKey]) return;
       
-      const nameSpan = row.querySelector('.skill-name');
-      if (nameSpan) {
-        nameSpan.insertBefore(createInfoBtn(skillKey), nameSpan.firstChild);
+      const prereqKeys = row.querySelector('.prereq-keys');
+      if (prereqKeys) {
+        prereqKeys.appendChild(createInfoBtn(skillKey));
       }
     });
     
-    // Combat skill rows on Combat page
+    // Combat skill rows on Combat page - also in .prereq-keys cell
     document.querySelectorAll('.combat-skill-row').forEach(row => {
       if (row.querySelector('.skill-info-btn')) return;
       
       const nameEl = row.querySelector('.combat-skill-name');
       if (!nameEl) return;
       
-      // Determine skill key
       const nameText = (nameEl.tagName === 'INPUT' ? nameEl.value : nameEl.textContent || '').toLowerCase().trim();
       let skillKey = null;
       if (nameText === 'unarmed') {
@@ -2270,25 +2269,14 @@ const App = {
       }
       if (!skillKey) return;
       
-      // For span (Unarmed): insert inside the span
-      // For input: insert into the prereq-keys span
-      if (nameEl.tagName === 'SPAN') {
-        nameEl.style.display = 'inline-flex';
-        nameEl.style.alignItems = 'center';
-        nameEl.style.gap = '0.25rem';
-        nameEl.insertBefore(createInfoBtn(skillKey), nameEl.firstChild);
-      } else {
-        // Insert after prereq-keys for input-based combat skill names
-        const prereqKeys = row.querySelector('.prereq-keys');
-        if (prereqKeys) {
-          prereqKeys.style.gap = '2px';
-          prereqKeys.appendChild(createInfoBtn(skillKey));
-        }
+      const prereqKeys = row.querySelector('.prereq-keys');
+      if (prereqKeys) {
+        prereqKeys.appendChild(createInfoBtn(skillKey));
       }
     });
   },
   
-  /**
+    /**
    * Show skill info modal (reuses attr-info overlay)
    */
   showSkillInfo(skillKey) {
