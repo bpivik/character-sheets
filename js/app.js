@@ -482,6 +482,8 @@ const App = {
     
     // Check if Pain Control section should be visible
     this.checkPainControlVisibility();
+    this.checkNertherWalkVisibility();
+    this.checkDefensiveReflexesVisibility();
     
     // Check if Commanding section should be visible
     this.checkCommandingVisibility();
@@ -4595,6 +4597,10 @@ const App = {
         this.checkMysticHealingVisibility();
       } else if (normalizedName === 'pain control') {
         this.checkPainControlVisibility();
+      } else if (normalizedName === 'nether walk') {
+        this.checkNertherWalkVisibility();
+      } else if (normalizedName.startsWith('defensive reflexes')) {
+        this.checkDefensiveReflexesVisibility();
       } else if (normalizedName.startsWith('speak with animals') && !this.isInitializing) {
         // If it's the base name without animal chosen, prompt for selection
         if (normalizedName === 'speak with animals') {
@@ -5837,6 +5843,16 @@ const App = {
           this.checkPainControlVisibility();
         }
         
+        // Check if Nether Walk section should now be visible
+        if (normalizedName === 'nether walk') {
+          this.checkNertherWalkVisibility();
+        }
+        
+        // Check if Defensive Reflexes section should now be visible
+        if (normalizedName.startsWith('defensive reflexes')) {
+          this.checkDefensiveReflexesVisibility();
+        }
+        
         // Check if Commanding section should now be visible
         if (normalizedName === 'commanding') {
           this.checkCommandingVisibility();
@@ -5996,6 +6012,8 @@ const App = {
     this.checkJustAScratchVisibility();
     this.checkMysticHealingVisibility();
     this.checkPainControlVisibility();
+    this.checkNertherWalkVisibility();
+    this.checkDefensiveReflexesVisibility();
     
     this.scheduleAutoSave();
   },
@@ -10437,6 +10455,8 @@ const App = {
     this.checkJustAScratchVisibility();
     this.checkMysticHealingVisibility();
     this.checkPainControlVisibility();
+    this.checkNertherWalkVisibility();
+    this.checkDefensiveReflexesVisibility();
     this.checkHolySmiteVisibility();
     this.checkPowerfulConcentrationVisibility();
     this.checkAnimalCompanionVisibility();
@@ -14543,12 +14563,132 @@ const App = {
   // ============================================
   
   checkNertherWalkVisibility() {
-    // Nether Walk is displayed in monk abilities cards, not a separate section
-    // Just ensure initialization
+    const section = document.getElementById('nether-walk-section');
+    if (!section) return;
+    
     if (this.hasAbility('Nether Walk')) {
-      if (this.character.netherWalkUsesRemaining === undefined) {
-        this.character.netherWalkUsesRemaining = 1;
+      section.style.display = '';
+      this.initNetherWalk();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  initNetherWalk() {
+    if (this.character.netherWalkUsesRemaining === undefined) {
+      this.character.netherWalkUsesRemaining = 1;
+    }
+    
+    // Update distance display
+    const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
+    const distance = Math.ceil(mysticismVal / 10);
+    const distEl = document.getElementById('nether-walk-distance');
+    const usesEl = document.getElementById('nether-walk-uses');
+    if (distEl) distEl.textContent = distance;
+    if (usesEl) usesEl.textContent = this.character.netherWalkUsesRemaining;
+    
+    const btn = document.getElementById('btn-nether-walk-use');
+    const resetBtn = document.getElementById('btn-reset-nether-walk');
+    
+    if (btn) {
+      btn.disabled = this.character.netherWalkUsesRemaining <= 0;
+      if (this.character.netherWalkUsesRemaining <= 0) {
+        btn.style.background = '#555';
+      } else {
+        btn.style.background = '#7c4dff';
       }
+    }
+    
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.useNetherWalk());
+      btn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        this.character.netherWalkUsesRemaining = 1;
+        this.initNetherWalk();
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  // ============================================
+  // DEFENSIVE REFLEXES TRACKER
+  // ============================================
+  
+  checkDefensiveReflexesVisibility() {
+    const section = document.getElementById('defensive-reflexes-section');
+    if (!section) return;
+    
+    // Get highest tier of Defensive Reflexes
+    const tier = this.getDefensiveReflexesTier();
+    
+    if (tier > 0) {
+      section.style.display = '';
+      this.initDefensiveReflexes(tier);
+    } else {
+      section.style.display = 'none';
+    }
+  },
+  
+  getDefensiveReflexesTier() {
+    // Check from highest to lowest
+    const names = [
+      'Defensive Reflexes V', 'Defensive Reflexes 5',
+      'Defensive Reflexes IV', 'Defensive Reflexes 4',
+      'Defensive Reflexes III', 'Defensive Reflexes 3',
+      'Defensive Reflexes II', 'Defensive Reflexes 2',
+      'Defensive Reflexes I', 'Defensive Reflexes 1', 'Defensive Reflexes'
+    ];
+    const tiers = [5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 1];
+    
+    for (let i = 0; i < names.length; i++) {
+      if (this.hasAbility(names[i])) return tiers[i];
+    }
+    return 0;
+  },
+  
+  initDefensiveReflexes(tier) {
+    const maxUses = tier;
+    if (this.character.defReflexesUsesRemaining === undefined) {
+      this.character.defReflexesUsesRemaining = maxUses;
+    }
+    
+    const usesEl = document.getElementById('def-reflexes-uses');
+    const maxEl = document.getElementById('def-reflexes-max');
+    if (usesEl) usesEl.textContent = this.character.defReflexesUsesRemaining;
+    if (maxEl) maxEl.textContent = maxUses;
+    
+    const btn = document.getElementById('btn-def-reflexes-use');
+    const resetBtn = document.getElementById('btn-reset-def-reflexes');
+    
+    if (btn) {
+      btn.disabled = this.character.defReflexesUsesRemaining <= 0;
+    }
+    
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => {
+        if (this.character.defReflexesUsesRemaining > 0) {
+          this.character.defReflexesUsesRemaining--;
+          const tier2 = this.getDefensiveReflexesTier();
+          this.initDefensiveReflexes(tier2);
+          this.scheduleAutoSave();
+          
+          const remaining = this.character.defReflexesUsesRemaining;
+          alert(`🛡️ Defensive Reflexes used!\n\n+1 bonus Action Point for this Reactive Action (Parry/Evade).\n\n${remaining} use${remaining !== 1 ? 's' : ''} remaining this combat.`);
+        }
+      });
+      btn.dataset.listenerAttached = 'true';
+    }
+    if (resetBtn && !resetBtn.dataset.listenerAttached) {
+      resetBtn.addEventListener('click', () => {
+        const tier2 = this.getDefensiveReflexesTier();
+        this.character.defReflexesUsesRemaining = tier2;
+        this.initDefensiveReflexes(tier2);
+        this.scheduleAutoSave();
+      });
+      resetBtn.dataset.listenerAttached = 'true';
     }
   },
   
@@ -14684,7 +14824,7 @@ const App = {
     
     // Deduct use
     this.character.netherWalkUsesRemaining = 0;
-    this.updateMonkAbilitiesDisplay();
+    this.initNetherWalk();
     this.scheduleAutoSave();
   },
 
@@ -19503,8 +19643,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
                            this.hasAbility('Ki Strike') ||
                            this.hasAbility('Slow Fall') ||
                            this.hasAbility('Very Agile') ||
-                           this.hasAbility('Arrowcut') ||
-                           this.hasAbility('Nether Walk');
+                           this.hasAbility('Arrowcut');
 
     if (isMonk && hasMonkAbility) {
       section.style.display = '';
@@ -19741,50 +19880,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       `;
     }
 
-    // Nether Walk
-    if (this.hasAbility('Nether Walk')) {
-      const nwDistance = Math.ceil(mysticismVal / 10);
-      const nwUsesRemaining = this.character.netherWalkUsesRemaining !== undefined ? this.character.netherWalkUsesRemaining : 1;
-      const nwColor = nwUsesRemaining > 0 ? '#b388ff' : '#666';
-
-      html += `
-        <div class="weapon-spec-card" style="border-color: ${nwColor};">
-          <div class="weapon-spec-card-header">
-            <span class="weapon-spec-card-icon">🌀</span>
-            <span class="weapon-spec-card-title">Nether Walk</span>
-            <span style="font-size: 0.7rem; color: ${nwColor}; margin-left: auto;">${nwUsesRemaining > 0 ? '1/day' : 'USED'}</span>
-          </div>
-          <div class="benefit-item" style="font-size: 0.78rem; color: #ccc;">
-            <strong>Teleport:</strong> <span style="color: ${nwColor};"><strong>${nwDistance} ft</strong></span> (⌈${mysticismVal}/10⌉)<br>
-            <span style="font-size: 0.72rem; color: #999;">1 Action • As Dimension Door • Must recover 1 round after</span>
-          </div>
-          <div style="margin-top: 0.3rem; text-align: center;">
-            <button type="button" class="btn btn-small" id="btn-nether-walk" style="background: ${nwUsesRemaining > 0 ? '#7c4dff' : '#555'}; color: #fff; border: none; padding: 0.25rem 0.8rem; border-radius: 4px; cursor: ${nwUsesRemaining > 0 ? 'pointer' : 'not-allowed'}; font-size: 0.78rem;" ${nwUsesRemaining <= 0 ? 'disabled' : ''}>
-              ✨ Nether Walk
-            </button>
-            <button type="button" class="btn btn-small" id="btn-nether-walk-reset" title="Reset daily use" style="background: none; border: 1px solid #555; color: #999; padding: 0.2rem 0.4rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem; margin-left: 0.3rem;">↺</button>
-          </div>
-        </div>
-      `;
-    }
-
     container.innerHTML = html;
-    
-    // Setup Nether Walk button listeners
-    if (this.hasAbility('Nether Walk')) {
-      const nwBtn = document.getElementById('btn-nether-walk');
-      const nwReset = document.getElementById('btn-nether-walk-reset');
-      if (nwBtn) {
-        nwBtn.addEventListener('click', () => this.useNetherWalk());
-      }
-      if (nwReset) {
-        nwReset.addEventListener('click', () => {
-          this.character.netherWalkUsesRemaining = 1;
-          this.updateMonkAbilitiesDisplay();
-          this.scheduleAutoSave();
-        });
-      }
-    }
     
     // Apply Graceful Strike DM override to Unarmed weapon
     if (this.hasAbility('Graceful Strike')) {
