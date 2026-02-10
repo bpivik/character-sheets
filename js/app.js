@@ -2255,10 +2255,8 @@ const App = {
       }
     }
 
-    // Professional skill rows - insert into prereq-keys cell
+    // Professional skill rows - wrap button + name input in flex span
     const profRows = document.querySelectorAll('.professional-skill-row');
-    console.log('[SkillInfo] Found', profRows.length, 'professional skill rows');
-    let profAdded = 0;
     for (let p = 0; p < profRows.length; p++) {
       const row = profRows[p];
       if (row.querySelector('.skill-info-btn')) continue;
@@ -2266,15 +2264,16 @@ const App = {
       const nameVal = nameInput ? nameInput.value.trim() : '';
       if (!nameVal) continue;
       const key = this._findSkillInfoKey(nameVal);
-      console.log('[SkillInfo] Prof skill:', nameVal, '-> key:', key);
       if (!key) continue;
-      const prereqKeys = row.querySelector('.prereq-keys');
-      if (prereqKeys) {
-        prereqKeys.appendChild(makeBtn(key));
-        profAdded++;
-      }
+      const wrapper = document.createElement('span');
+      wrapper.className = 'prof-skill-info-wrapper';
+      wrapper.style.cssText = 'display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;';
+      nameInput.parentNode.insertBefore(wrapper, nameInput);
+      wrapper.appendChild(makeBtn(key));
+      nameInput.style.minWidth = '0';
+      nameInput.style.flex = '1';
+      wrapper.appendChild(nameInput);
     }
-    console.log('[SkillInfo] Added', profAdded, 'professional skill info buttons');
 
     // Combat skill rows - wrap button + name in flex span
     const combatRows = document.querySelectorAll('.combat-skill-row');
@@ -2336,9 +2335,30 @@ const App = {
     const existing = row.querySelector('.skill-info-btn');
     if (existing) existing.remove();
     
-    if (!skillName) return;
+    // If wrapper exists but no button needed, unwrap the input
+    const wrapper = row.querySelector('.prof-skill-info-wrapper');
+    const nameInput = row.querySelector('.prof-skill-name');
+    
+    if (!skillName) {
+      if (wrapper && nameInput) {
+        wrapper.parentNode.insertBefore(nameInput, wrapper);
+        nameInput.style.minWidth = '';
+        nameInput.style.flex = '';
+        wrapper.remove();
+      }
+      return;
+    }
+    
     const key = this._findSkillInfoKey(skillName);
-    if (!key) return;
+    if (!key) {
+      if (wrapper && nameInput) {
+        wrapper.parentNode.insertBefore(nameInput, wrapper);
+        nameInput.style.minWidth = '';
+        nameInput.style.flex = '';
+        wrapper.remove();
+      }
+      return;
+    }
     
     const self = this;
     const btn = document.createElement('button');
@@ -2352,9 +2372,19 @@ const App = {
       self.showSkillInfo(key);
     });
     
-    const prereqKeys = row.querySelector('.prereq-keys');
-    if (prereqKeys) {
-      prereqKeys.appendChild(btn);
+    if (wrapper) {
+      // Wrapper exists, just prepend button
+      wrapper.insertBefore(btn, wrapper.firstChild);
+    } else if (nameInput) {
+      // Create wrapper
+      const newWrapper = document.createElement('span');
+      newWrapper.className = 'prof-skill-info-wrapper';
+      newWrapper.style.cssText = 'display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;';
+      nameInput.parentNode.insertBefore(newWrapper, nameInput);
+      newWrapper.appendChild(btn);
+      nameInput.style.minWidth = '0';
+      nameInput.style.flex = '1';
+      newWrapper.appendChild(nameInput);
     }
   },
 
