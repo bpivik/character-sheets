@@ -20106,7 +20106,9 @@ const App = {
       resultClass = 'roll-fumble';
     }
 
-    this.showD100Result('Arcane Scroll (INT×5)', targetPct, roll, result, resultClass);
+    this.showD100Result('Arcane Scroll (INT×5)', targetPct, roll, result, resultClass, {
+      customFumbleText: "Due to the rogue's lack of formal magical training, failing this roll automatically results in a Fumble. A Fumbled roll causes the spell to backfire, either reversing its intended effect or targeting the rogue. The specific consequence is left to the Games Master's discretion, based on whichever outcome is most detrimental to the rogue."
+    });
   },
 
   /**
@@ -29254,8 +29256,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   /**
    * Show d100 roll result overlay
    */
-  showD100Result(skillName, targetPct, roll, result, resultClass) {
+  showD100Result(skillName, targetPct, roll, result, resultClass, options = {}) {
     const isFumble = resultClass === 'roll-fumble';
+    const customFumble = options.customFumbleText || null;
     
     // Look up skill-specific outcome text
     const outcomeText = this.getSkillOutcome(skillName, resultClass);
@@ -29286,7 +29289,25 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
     });
     
-    if (isFumble) {
+    if (isFumble && customFumble) {
+      // Custom fumble display — no auto-add buttons, just informational
+      overlay.dataset.fumble = 'false'; // Allow click-outside to close
+      overlay.innerHTML = `
+        <div class="damage-result-content d100-result-content d100-fumble-content">
+          <div class="d100-skill-name">${skillName}</div>
+          <div class="d100-target">Target: ${targetPct}%</div>
+          <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
+          <div class="d100-result roll-fumble">${result}</div>
+          ${outcomeHTML}
+          <div class="d100-fumble-text">${customFumble}</div>
+          <button class="damage-close">OK</button>
+        </div>
+      `;
+      
+      overlay.querySelector('.damage-close').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+      });
+    } else if (isFumble) {
       overlay.innerHTML = `
         <div class="damage-result-content d100-result-content d100-fumble-content">
           <div class="d100-skill-name">${skillName}</div>
