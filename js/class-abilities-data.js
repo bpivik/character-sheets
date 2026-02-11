@@ -72,11 +72,7 @@ const ClassAbilities = {
   },
   
   sorcerer: {
-    rank1: [],
-    // Familiar is auto-granted at Rank 1 (not selectable from ability list)
-    specialActions: {
-      rank1: { addAbility: "Familiar" }
-    }
+    rank1: ["Familiar"]
   },
   
   warlord: {
