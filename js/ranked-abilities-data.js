@@ -1317,6 +1317,39 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: null,
       summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, etc.)"
     },
+    
+    // Rank 2
+    { 
+      name: "Animal Companion I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "Call/befriend animal companion (SIZ up to ½ Animal Handling, max 35). May be taken multiple times.",
+      repeatable: true
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes I", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 bonus Action Point for Parry/Evade only (one reaction per attack)"
+    },
+    { 
+      name: "Greater Sweeping Strike", 
+      rank: 2, 
+      prereqs: "Sweeping Strike; Combat Style 70%",
+      summary: "Sweeping Strike against ALL enemies in range (if each attack drops a foe)"
+    },
+    { 
+      name: "Species Enemy II", 
+      rank: 2, 
+      prereqs: "Species Enemy I",
+      summary: "Select an additional Species Enemy (+10% skills, +1 Damage step vs chosen foe)"
+    },
   ],
 };
 
