@@ -509,151 +509,36 @@ select:focus-visible {
    Combat Ability Section - Parchment Theme Overrides
    ============================================ */
 
-/* --- Climb Walls --- */
-.climb-walls-section {
-  background: linear-gradient(135deg, rgba(56, 100, 56, 0.1) 0%, rgba(56, 100, 56, 0.05) 100%);
-  border-color: #6a9a6a;
-}
-
-.climb-walls-section .section-header {
-  color: #3a6a3a;
-  text-shadow: none;
-}
-
+/* --- Climb Walls parchment text readability --- */
 .climb-walls-label {
-  color: var(--text-secondary, #5a4a3a);
+  font-style: italic;
 }
 
-.btn-climb-walls {
-  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%);
-  border-color: #5a8a5a;
-  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.25);
-}
-
-.btn-climb-walls:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%);
-  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.35);
-}
-
-.btn-climb-walls:disabled {
-  background: #b0a890;
-  border-color: #a09880;
-  color: #887868;
-  opacity: 0.6;
-}
-
-.climb-walls-active-btn {
-  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%) !important;
-  border-color: #4a8a4a !important;
-}
-
-/* --- Hide in Shadows --- */
-.hide-in-shadows-section {
-  background: linear-gradient(135deg, rgba(70, 50, 120, 0.08) 0%, rgba(70, 50, 120, 0.04) 100%);
-  border-color: #8a7aaa;
-}
-
-.hide-in-shadows-section .section-header {
-  color: #5a4a8a;
-  text-shadow: none;
-}
-
+/* --- Hide in Shadows parchment text readability --- */
 .hide-in-shadows-label {
-  color: var(--text-secondary, #5a4a3a);
+  font-style: italic;
 }
 
-.btn-hide-in-shadows {
-  background: linear-gradient(135deg, #4a3a7a 0%, #5a4a9a 50%, #4a3a7a 100%);
-  border-color: #6a5a9a;
-  box-shadow: 0 2px 8px rgba(70, 50, 120, 0.25);
-}
-
-.btn-hide-in-shadows:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3a2a6a 0%, #4a3a8a 50%, #3a2a6a 100%);
-  box-shadow: 0 4px 12px rgba(70, 50, 120, 0.35);
-}
-
-.hide-in-shadows-active-btn {
-  background: linear-gradient(135deg, #3a2a6a 0%, #4a3a8a 50%, #3a2a6a 100%) !important;
-  border-color: #6a5a9a !important;
-}
-
-/* --- Sneak Attack Info Card --- */
-.sneak-attack-section {
-  background: linear-gradient(135deg, rgba(140, 50, 50, 0.08) 0%, rgba(140, 50, 50, 0.04) 100%);
-  border-color: #9a6a6a;
-}
-
-.sneak-attack-section .section-header {
-  color: #7a3a3a;
-  text-shadow: none;
-}
-
-.sneak-attack-card {
-  color: var(--text-primary, #2a1f14);
-}
-
-.sneak-attack-req {
-  color: var(--text-primary, #2a1f14);
-}
-
-.sneak-attack-divider {
-  background: rgba(140, 50, 50, 0.2);
-}
-
-.sneak-attack-effect {
-  color: var(--text-primary, #2a1f14);
-}
-
-.sneak-attack-bullets {
-  color: #8a2a2a;
-}
-
-.sneak-attack-defense {
-  color: var(--text-secondary, #5a4a3a);
-}
-
-/* --- Forceful Strike --- */
-.forceful-strike-section {
-  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
-  border: 1px solid rgba(56, 118, 56, 0.25);
-  border-radius: 6px;
-}
-
-.forceful-label {
-  color: var(--text-secondary, #5a4a3a);
-}
-
-/* --- Species Enemy --- */
-.species-enemy-section {
-  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
-  border: 1px solid rgba(56, 118, 56, 0.25);
-  border-radius: 6px;
-}
-
-.se-enemy-tag {
-  color: var(--text-primary, #2a1f14);
-  background: rgba(56, 118, 56, 0.1);
-  border-color: rgba(56, 118, 56, 0.3);
-}
-
-/* --- Subterfuge boost --- */
-.subterfuge-boosted {
-  color: #8a6a10 !important;
-  text-shadow: none;
+/* --- Universal parchment field highlights --- */
+.subterfuge-boosted,
+.cw-boosted,
+.his-boosted,
+.brute-boosted,
+.improved-aim-boosted,
+.forceful-boosted,
+.field-boosted {
+  background-color: rgba(0, 120, 0, 0.1) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a6a2a !important;
 }
 
 .subterfuge-boosted::after {
-  color: #8a6a10;
+  color: #2a6a2a;
 }
 
-/* --- Climb Walls / Hide in Shadows skill boost --- */
-.cw-boosted {
-  color: #2d6a2d !important;
-  text-shadow: none;
-}
-
-.his-boosted {
-  color: #5a3a9a !important;
-  text-shadow: none;
+.field-penalized,
+.forceful-penalized {
+  background-color: rgba(180, 80, 0, 0.1) !important;
+  border: 1px solid #a64 !important;
+  color: #8a4a2a !important;
 }

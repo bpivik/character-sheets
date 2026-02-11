@@ -1311,6 +1311,32 @@ select:focus {
   color: #2a7a2a !important;
 }
 
+/* ============================================
+   Universal Field Highlight Classes
+   Use .field-boosted for ANY positive ability boost
+   Use .field-penalized for ANY ability penalty
+   ============================================ */
+.field-boosted,
+input.field-boosted,
+.derived-input.field-boosted,
+.derived-input.derived-readonly.field-boosted,
+.wp-damage-row .derived-input.field-boosted,
+input.weapon-damage.field-boosted,
+.damage-cell input.weapon-damage.field-boosted {
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
+}
+
+.field-penalized,
+input.field-penalized,
+.derived-input.field-penalized,
+.derived-input.derived-readonly.field-penalized {
+  background-color: rgba(200, 100, 0, 0.15) !important;
+  border: 1px solid #a64 !important;
+  color: #a64 !important;
+}
+
 /* Generic damage-boosted class for any ability that modifies Damage Modifier */
 .damage-boosted {
   background-color: rgba(0, 150, 0, 0.15) !important;
@@ -1458,15 +1484,15 @@ input.weapon-damage.rage-boosted,
 
 /* Forceful Strike penalized skill indicators */
 .forceful-penalized {
-  background-color: rgba(200, 100, 0, 0.25) !important;
-  border: 2px solid #c84 !important;
-  color: #a63 !important;
+  background-color: rgba(200, 100, 0, 0.15) !important;
+  border: 1px solid #a64 !important;
+  color: #a64 !important;
 }
 
 .forceful-boosted {
-  background-color: rgba(0, 180, 60, 0.2) !important;
-  border: 2px solid #4c4 !important;
-  color: #2a2 !important;
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 /* ============================================
@@ -1538,11 +1564,15 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #4a4a2d 0%, #5a5a3d 50%, #4a4a2d 100%);
   color: white;
   border: 1px solid #cc6;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(90, 90, 45, 0.4);
@@ -1818,11 +1848,15 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #4a2d1a 0%, #6a3d20 50%, #4a2d1a 100%);
   color: white;
   border: 1px solid #f0c040;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(184, 134, 11, 0.4);
@@ -1911,7 +1945,7 @@ input.weapon-damage.rage-boosted,
   color: white;
   border: 1px solid #8060b0;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
@@ -1993,7 +2027,7 @@ input.weapon-damage.rage-boosted,
   color: white;
   border: 1px solid #5a8a5a;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
@@ -2097,7 +2131,7 @@ input.weapon-damage.rage-boosted,
   color: white;
   border: 1px solid #6080b8;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
@@ -2249,7 +2283,7 @@ input.weapon-damage.rage-boosted,
 .improved-aim-content {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
   align-items: center;
   text-align: center;
 }
@@ -2261,30 +2295,36 @@ input.weapon-damage.rage-boosted,
 }
 
 .btn-improved-aim {
-  background: linear-gradient(135deg, #2a4a2a, #3a6a3a);
-  color: #7dcc7d;
-  border: 1px solid #4a8a4a;
-  padding: 0.4rem 1rem;
-  border-radius: 5px;
+  width: 100%;
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
+  color: white;
+  border: 1px solid #6b6;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
-  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.4);
 }
 
-.btn-improved-aim:hover {
-  background: linear-gradient(135deg, #3a5a3a, #4a7a4a);
-  box-shadow: 0 0 12px rgba(125, 204, 125, 0.3);
-  transform: translateY(-1px);
+.btn-improved-aim:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a5a3a 0%, #4a7a4a 50%, #3a5a3a 100%);
+  box-shadow: 0 4px 12px rgba(102, 187, 102, 0.5);
 }
 
 .improved-aim-active-btn {
-  background: linear-gradient(135deg, #3a6a3a, #4a8a4a) !important;
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%) !important;
   border-color: #7dcc7d !important;
   color: #aaffaa !important;
   box-shadow: 0 0 15px rgba(125, 204, 125, 0.4) !important;
   animation: aimPulse 2s ease-in-out infinite;
+  width: 100%;
 }
 
 @keyframes aimPulse {
@@ -2323,18 +2363,17 @@ input.weapon-damage.rage-boosted,
 
 /* Improved Aim boosted skill field */
 .improved-aim-boosted {
-  box-shadow: 0 0 6px rgba(125, 204, 125, 0.5) !important;
-  border-color: #4a8a4a !important;
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 .improved-aim-row {
-  background: rgba(125, 204, 125, 0.1) !important;
+  background: rgba(0, 150, 0, 0.08) !important;
   border-radius: 4px;
-  box-shadow: inset 0 0 8px rgba(125, 204, 125, 0.15);
 }
 .improved-aim-row .combat-skill-name {
-  color: #7dcc7d !important;
-  text-shadow: 0 0 6px rgba(125, 204, 125, 0.3);
+  color: #2a7a2a !important;
 }
 
 /* ========================================
@@ -2357,7 +2396,7 @@ input.weapon-damage.rage-boosted,
 .species-enemy-content {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
   align-items: center;
   text-align: center;
 }
@@ -2380,30 +2419,36 @@ input.weapon-damage.rage-boosted,
 }
 
 .btn-species-enemy {
-  background: linear-gradient(135deg, #3a2a1a, #5a4a2a);
-  color: #d4a04a;
-  border: 1px solid #8a6a3a;
-  padding: 0.4rem 1rem;
-  border-radius: 5px;
+  width: 100%;
+  background: linear-gradient(135deg, #3a2a1a 0%, #5a4a2a 50%, #3a2a1a 100%);
+  color: white;
+  border: 1px solid #b88a4a;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
-  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(138, 106, 58, 0.4);
 }
 
-.btn-species-enemy:hover {
-  background: linear-gradient(135deg, #4a3a2a, #6a5a3a);
-  box-shadow: 0 0 12px rgba(212, 160, 74, 0.3);
-  transform: translateY(-1px);
+.btn-species-enemy:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4a3a2a 0%, #6a5a3a 50%, #4a3a2a 100%);
+  box-shadow: 0 4px 12px rgba(184, 138, 74, 0.5);
 }
 
 .se-active-btn {
-  background: linear-gradient(135deg, #4a5a2a, #5a6a3a) !important;
+  background: linear-gradient(135deg, #4a5a2a 0%, #5a6a3a 50%, #4a5a2a 100%) !important;
   border-color: #7dcc7d !important;
   color: #aaffaa !important;
   box-shadow: 0 0 15px rgba(125, 204, 125, 0.4) !important;
   animation: sePulse 2s ease-in-out infinite;
+  width: 100%;
 }
 
 @keyframes sePulse {
@@ -2517,11 +2562,15 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #1a3a3a 0%, #2a5050 50%, #1a3a3a 100%);
   color: white;
   border: 1px solid #5fa8a8;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(95, 168, 168, 0.4);
@@ -2602,7 +2651,7 @@ input.combat-skill-percent.se-boosted,
   color: white;
   border: 1px solid #99f;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
@@ -2742,11 +2791,15 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #5a4a1a 0%, #7a6a2a 50%, #5a4a1a 100%);
   color: white;
   border: 1px solid #ffd700;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(212, 168, 64, 0.4);
@@ -3255,7 +3308,7 @@ input.combat-skill-percent.se-boosted,
   color: white;
   border: 1px solid #9a6fd4;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
@@ -3329,7 +3382,7 @@ input.combat-skill-percent.se-boosted,
   color: white;
   border: 1px solid #4a9aaa;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
@@ -4063,8 +4116,9 @@ input.skill-input.powerful-concentration-bonus,
 
 /* Brute Strength boosted indicator */
 .brute-boosted {
-  background-color: rgba(150, 50, 0, 0.15) !important;
-  border-color: #a64 !important;
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 /* ============================================
@@ -13683,7 +13737,6 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
   border: 2px solid #4a8a4a;
   border-radius: 6px;
-  margin-top: 0.75rem;
 }
 
 .climb-walls-section .section-header {
@@ -13694,7 +13747,7 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .climb-walls-content {
-  display: flex; flex-direction: column; gap: 0.4rem; align-items: center; text-align: center;
+  display: flex; flex-direction: column; gap: 0.25rem; align-items: center; text-align: center;
 }
 
 .climb-walls-info { width: 100%; }
@@ -13707,12 +13760,16 @@ body.dark-mode[data-class-theme] .subsection-header {
   width: 100%;
   background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
   color: white;
-  border: 1px solid #4a8a4a;
+  border: 1px solid #6b6;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(45, 90, 45, 0.4);
@@ -13720,12 +13777,11 @@ body.dark-mode[data-class-theme] .subsection-header {
 
 .btn-climb-walls:hover:not(:disabled) {
   background: linear-gradient(135deg, #3a5a3a 0%, #4a7a4a 50%, #3a5a3a 100%);
-  box-shadow: 0 4px 12px rgba(92, 184, 92, 0.5);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 187, 102, 0.5);
 }
 
 .btn-climb-walls:disabled {
-  opacity: 0.4; cursor: not-allowed; filter: grayscale(0.5);
+  opacity: 0.5; cursor: not-allowed; box-shadow: none;
 }
 
 .climb-walls-active-btn {
@@ -13747,7 +13803,6 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #1a1a2a 0%, #252535 100%);
   border: 2px solid #6a5aaa;
   border-radius: 6px;
-  margin-top: 0.75rem;
 }
 
 .hide-in-shadows-section .section-header {
@@ -13758,7 +13813,7 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .hide-in-shadows-content {
-  display: flex; flex-direction: column; gap: 0.4rem; align-items: center; text-align: center;
+  display: flex; flex-direction: column; gap: 0.25rem; align-items: center; text-align: center;
 }
 
 .hide-in-shadows-info { width: 100%; }
@@ -13771,12 +13826,16 @@ body.dark-mode[data-class-theme] .subsection-header {
   width: 100%;
   background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 50%, #2a2a4a 100%);
   color: white;
-  border: 1px solid #6a5aaa;
+  border: 1px solid #8a7aaa;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(80, 60, 140, 0.4);
@@ -13785,7 +13844,6 @@ body.dark-mode[data-class-theme] .subsection-header {
 .btn-hide-in-shadows:hover:not(:disabled) {
   background: linear-gradient(135deg, #3a3a5a 0%, #4a4a7a 50%, #3a3a5a 100%);
   box-shadow: 0 4px 12px rgba(128, 90, 213, 0.5);
-  transform: translateY(-1px);
 }
 
 .hide-in-shadows-active-btn {
@@ -13807,7 +13865,6 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #2a1a1a 0%, #352025 100%);
   border: 2px solid #8a3a3a;
   border-radius: 6px;
-  margin-top: 0.75rem;
 }
 
 .sneak-attack-section .section-header {
@@ -13840,25 +13897,28 @@ body.dark-mode[data-class-theme] .subsection-header {
 
 /* Subterfuge boost indicator on skills */
 .subterfuge-boosted {
-  color: #e6a317 !important;
-  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 .subterfuge-boosted::after {
   content: ' ✦';
   font-size: 0.6em;
-  color: #e6a317;
+  color: #2a7a2a;
 }
 
 /* Climb Walls / Hide in Shadows boost indicator on skills */
 .cw-boosted {
-  color: #5cb85c !important;
-  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 .his-boosted {
-  color: #805ad5 !important;
-  text-shadow: 0 0 4px rgba(128, 90, 213, 0.3);
+  background-color: rgba(0, 150, 0, 0.15) !important;
+  border: 1px solid #4a4 !important;
+  color: #2a7a2a !important;
 }
 
 /* Rogue ability full-page activation animations */
