@@ -20067,7 +20067,46 @@ const App = {
       const intVal = parseInt(this.character.attributes?.INT, 10) || 0;
       const chanceEl = document.getElementById('arcane-scroll-chance');
       if (chanceEl) chanceEl.textContent = intVal * 5;
+      // Init roll button
+      const btn = document.getElementById('btn-arcane-scroll-roll');
+      if (btn && !btn._asInit) {
+        btn._asInit = true;
+        btn.addEventListener('click', () => this.rollArcaneScroll());
+      }
     }
+  },
+
+  /**
+   * Roll d100 for Use Arcane Scrolls (INT x5).
+   * Any failure is automatically a Fumble — spell backfires.
+   */
+  rollArcaneScroll() {
+    const intVal = parseInt(this.character.attributes?.INT, 10) || 0;
+    const targetPct = intVal * 5;
+    const roll = Math.floor(Math.random() * 100) + 1;
+
+    // Critical threshold: 1/10th of target, rounded up
+    const critThreshold = Math.ceil(targetPct / 10);
+
+    let result = '';
+    let resultClass = '';
+
+    // 01-05 always success, even if target < 5
+    const isAutoSuccess = roll <= 5;
+
+    if (roll <= critThreshold && (roll <= targetPct || isAutoSuccess)) {
+      result = 'Critical!';
+      resultClass = 'roll-critical';
+    } else if (roll <= targetPct || isAutoSuccess) {
+      result = 'Success';
+      resultClass = 'roll-success';
+    } else {
+      // ALL failures are fumbles for Arcane Scrolls
+      result = 'Fumble! — Backfire!';
+      resultClass = 'roll-fumble';
+    }
+
+    this.showD100Result('Arcane Scroll (INT×5)', targetPct, roll, result, resultClass);
   },
 
   /**
