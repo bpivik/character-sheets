@@ -20143,25 +20143,45 @@ const App = {
       }
     }
     
-    // No empty slot — create a new row
+    // No empty slot — create a new row and use returned reference
     if (!targetRow) {
-      this.addProfessionalSkillRow(false);
-      const updatedRows = container.querySelectorAll('.professional-skill-row');
-      targetRow = updatedRows[updatedRows.length - 1];
+      targetRow = this.addProfessionalSkillRow(false);
     }
     
     if (!targetRow) return;
     
+    // Get elements directly from the row reference
     const nameInput = targetRow.querySelector('.prof-skill-name');
+    const baseInput = targetRow.querySelector('.prof-skill-base');
     const currentInput = targetRow.querySelector('.prof-skill-current');
-    if (nameInput) {
-      nameInput.value = 'Read Languages';
-      if (currentInput) currentInput.value = baseLevel;
-      nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
-      nameInput.dispatchEvent(new Event('change', { bubbles: true }));
-      // Explicitly refresh info button for Read Languages
-      this._refreshProfSkillInfoButton(targetRow, 'Read Languages');
+    const prereqKeys = targetRow.querySelector('.prereq-keys');
+    
+    if (!nameInput) return;
+    
+    // Fill in skill name
+    nameInput.value = 'Read Languages';
+    nameInput.dataset.previousName = 'Read Languages';
+    if (prereqKeys) prereqKeys.dataset.skillName = 'Read Languages';
+    
+    // Fill in base formula and calculate
+    if (baseInput) {
+      baseInput.value = 'INT x2';
+      // Extract index from nameInput ID to calculate base value
+      const idMatch = nameInput.id ? nameInput.id.match(/prof-skill-(\d+)-name/) : null;
+      if (idMatch) {
+        const idx = parseInt(idMatch[1]);
+        this.calculateProfessionalSkillBase(idx);
+        this.updateProfessionalSkillData(idx);
+      }
     }
+    
+    // Fill in current value
+    if (currentInput) currentInput.value = baseLevel;
+    
+    // Refresh info button and prereq keys
+    this._refreshProfSkillInfoButton(targetRow, 'Read Languages');
+    this.updatePrereqKeys();
+    
     // Hide pending training section
     this.character.readLanguagesPending = false;
     const pendingSection = document.getElementById('read-languages-pending-section');
@@ -30405,6 +30425,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     this.scheduleAutoSave();
     this.addSkillDiceButtons();
+    return row;
   },
 
   /**
