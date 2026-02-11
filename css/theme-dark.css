@@ -1256,12 +1256,13 @@
 }
 
 [data-theme="dark"] .subterfuge-boosted {
-  color: #e6a317 !important;
-  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
 }
 
 [data-theme="dark"] .subterfuge-boosted::after {
-  color: #e6a317;
+  content: '';
 }
 
 [data-theme="dark"] .cw-boosted {

@@ -13894,14 +13894,13 @@ body.dark-mode[data-class-theme] .subsection-header {
 
 /* Subterfuge boost indicator on skills */
 .subterfuge-boosted {
-  color: #e6a317 !important;
-  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 .subterfuge-boosted::after {
-  content: ' ✦';
-  font-size: 0.6em;
-  color: #e6a317;
+  content: '';
 }
 
 /* Climb Walls / Hide in Shadows boost indicator on skills */

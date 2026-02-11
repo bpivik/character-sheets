@@ -533,15 +533,7 @@ select:focus-visible {
   border-color: rgba(56, 118, 56, 0.3);
 }
 
-/* --- Subterfuge boost --- */
-.subterfuge-boosted {
-  color: #8a6a10 !important;
-  text-shadow: none;
-}
-
-.subterfuge-boosted::after {
-  color: #8a6a10;
-}
+/* --- Subterfuge boost: uses main.css green highlight --- */
 
 /* --- Climb Walls / Hide in Shadows skill boost --- */
 /* Rogue ability skill boosts — no parchment overrides needed, green highlight shows through */
