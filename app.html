@@ -113,6 +113,10 @@
               <label class="field-label">Gender</label>
               <input type="text" id="gender" class="field-input" placeholder="">
             </div>
+            <div class="field-row">
+              <label class="field-label">Deity</label>
+              <input type="text" id="deity-name" class="field-input deity-input" placeholder="">
+            </div>
             <div class="field-row field-row-with-rest">
               <label class="field-label">Age</label>
               <input type="number" id="age" class="field-input field-input-small" placeholder="">
@@ -2196,7 +2200,6 @@
                 <th>Knowledge Skill</th>
                 <th>Base %</th>
                 <th>%</th>
-                <th>Deity</th>
               </tr>
             </thead>
             <tbody>
@@ -2208,7 +2211,6 @@
                 <td><span class="casting-skill-name">Piety</span><span class="prereq-key-slot" data-skill="piety"></span></td>
                 <td class="base-calc">CHA+POW</td>
                 <td><input type="number" id="piety-percent" class="magic-skill-input" placeholder=""></td>
-                <td><input type="text" id="deity-name" class="deity-input" placeholder=""></td>
               </tr>
               <tr class="magic-class-mage human-only">
                 <td>Mage</td>
@@ -2218,7 +2220,6 @@
                 <td><span class="casting-skill-name">Arcane Knowledge</span><span class="prereq-key-slot" data-skill="arcane-knowledge"></span></td>
                 <td class="base-calc">INT x2</td>
                 <td><input type="number" id="arcane-knowledge-percent" class="magic-skill-input" placeholder=""></td>
-                <td></td>
               </tr>
               <tr class="magic-class-sorcerer human-only">
                 <td>Sorcerer</td>
@@ -2228,7 +2229,6 @@
                 <td><span class="casting-skill-name">Sorcerous Wisdom</span><span class="prereq-key-slot" data-skill="sorcerous-wisdom"></span></td>
                 <td class="base-calc">CHA+INT</td>
                 <td><input type="number" id="sorcerous-wisdom-percent" class="magic-skill-input" placeholder=""></td>
-                <td></td>
               </tr>
               <tr class="magic-class-bard">
                 <td>Bard</td>
@@ -2238,7 +2238,6 @@
                 <td><span class="casting-skill-name">Lyrical Magic</span><span class="prereq-key-slot" data-skill="lyrical-magic"></span></td>
                 <td class="base-calc">CHA+POW</td>
                 <td><input type="number" id="lyrical-magic-percent" class="magic-skill-input" placeholder=""></td>
-                <td></td>
               </tr>
             </tbody>
           </table>
@@ -2383,7 +2382,6 @@
                 <th>Knowledge Skill</th>
                 <th>Base %</th>
                 <th>%</th>
-                <th>Deity</th>
               </tr>
             </thead>
             <tbody>
@@ -2395,7 +2393,6 @@
                 <td><span class="casting-skill-name">Piety</span><span class="prereq-key-slot" data-skill="piety"></span></td>
                 <td class="base-calc">CHA+POW</td>
                 <td><input type="number" id="piety-percent-p2" class="magic-skill-input sync-magic" data-sync="piety-percent" placeholder=""></td>
-                <td><input type="text" id="deity-name-p2" class="deity-input sync-magic" data-sync="deity-name" placeholder=""></td>
               </tr>
               <tr class="magic-class-mage human-only">
                 <td>Mage</td>
@@ -2405,7 +2402,6 @@
                 <td><span class="casting-skill-name">Arcane Knowledge</span><span class="prereq-key-slot" data-skill="arcane-knowledge"></span></td>
                 <td class="base-calc">INT x2</td>
                 <td><input type="number" id="arcane-knowledge-percent-p2" class="magic-skill-input sync-magic" data-sync="arcane-knowledge-percent" placeholder=""></td>
-                <td></td>
               </tr>
               <tr class="magic-class-sorcerer human-only">
                 <td>Sorcerer</td>
@@ -2415,7 +2411,6 @@
                 <td><span class="casting-skill-name">Sorcerous Wisdom</span><span class="prereq-key-slot" data-skill="sorcerous-wisdom"></span></td>
                 <td class="base-calc">CHA+INT</td>
                 <td><input type="number" id="sorcerous-wisdom-percent-p2" class="magic-skill-input sync-magic" data-sync="sorcerous-wisdom-percent" placeholder=""></td>
-                <td></td>
               </tr>
               <tr class="magic-class-bard">
                 <td>Bard</td>
@@ -2425,7 +2420,6 @@
                 <td><span class="casting-skill-name">Lyrical Magic</span><span class="prereq-key-slot" data-skill="lyrical-magic"></span></td>
                 <td class="base-calc">CHA+POW</td>
                 <td><input type="number" id="lyrical-magic-percent-p2" class="magic-skill-input sync-magic" data-sync="lyrical-magic-percent" placeholder=""></td>
-                <td></td>
               </tr>
             </tbody>
           </table>
@@ -2650,6 +2644,7 @@
   <script src="js/spell-details-data.js"></script>
   <script src="js/class-spells-data.js"></script>
   <script src="js/arcane-flux-data.js"></script>
+  <script src="js/spell-damage-data.js"></script>
   <script src="js/abilities-data.js"></script>
   <script src="js/species-data.js"></script>
   <script src="js/armor-data.js"></script>

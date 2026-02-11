@@ -10826,7 +10826,11 @@ const App = {
       const m = this._castModal;
       const rc = m.rollResult?.resultClass;
       if (rc === 'success' || rc === 'critical' || rc === 'forced') {
-        this._playFullscreenCastAnimation(m.castingType, rc, () => this._closeCastModal());
+        this._playFullscreenCastAnimation(m.castingType, rc, () => {
+          this._closeCastModal();
+          // Check if spell deals damage and show damage resolution modal
+          this._checkSpellDamage(m);
+        });
       } else {
         this._closeCastModal();
       }
@@ -11431,6 +11435,243 @@ const App = {
         }
       }, 80);
     }, 600);
+  },
+
+  // =============================================
+  // SPELL DAMAGE RESOLUTION SYSTEM
+  // =============================================
+
+  /**
+   * Check if a successfully cast spell deals damage and show the damage modal
+   */
+  _checkSpellDamage(m) {
+    const SDD = window.SpellDamageData;
+    if (!SDD || !SDD.hasDamage(m.spellName)) return;
+
+    const damageInfo = SDD.getDamage(m.spellName, m.intensity || 1);
+    if (!damageInfo) return;
+
+    // Store for the modal
+    m._damageInfo = damageInfo;
+    m._isCritical = m.rollResult?.resultClass === 'critical';
+
+    this._showDamageModal(m);
+  },
+
+  /**
+   * Show the damage resolution modal
+   */
+  _showDamageModal(m) {
+    const info = m._damageInfo;
+    const isCrit = m._isCritical;
+
+    // Build the dice expression string for display
+    const diceExpr = info.bonus > 0 ? `${info.dice}+${info.bonus}` : info.dice;
+
+    // Location description
+    let locDesc;
+    const loc = info.locations;
+    if (loc.type === 'single') {
+      locDesc = 'a single Hit Location (d20)';
+    } else if (loc.type === 'all') {
+      locDesc = 'all Hit Locations';
+    } else if (loc.type === 'roll') {
+      locDesc = `${loc.dice} random Hit Location${loc.dice !== '1' ? 's' : ''} (d20 each)`;
+    } else if (loc.type === 'varies') {
+      locDesc = loc.description || 'varies (see spell description)';
+    } else {
+      locDesc = 'see spell description';
+    }
+
+    let overlay = document.getElementById('damage-modal-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'damage-modal-overlay';
+    overlay.className = 'modal-overlay damage-modal-overlay';
+
+    const critNote = isCrit ? '<div class="damage-crit-note">✨ Critical Success — Maximum potency!</div>' : '';
+    const damageTypeIcon = this._getDamageTypeIcon(info.type);
+
+    overlay.innerHTML = `
+      <div class="modal-content damage-modal">
+        <h3 class="damage-title">${damageTypeIcon} Damage Resolution</h3>
+        <div class="damage-spell-name">${m.spellName}</div>
+        ${critNote}
+        <div class="damage-info-block">
+          <div class="damage-formula-row">
+            <span class="damage-formula-label">Damage:</span>
+            <span class="damage-formula-value">${diceExpr}</span>
+            <span class="damage-type-badge damage-type-${info.type || 'magical'}">${info.type || 'magical'}</span>
+          </div>
+          <div class="damage-loc-row">
+            <span class="damage-loc-label">Hit Locations:</span>
+            <span class="damage-loc-value">${locDesc}</span>
+          </div>
+          ${info.notes ? `<div class="damage-notes">${info.notes}</div>` : ''}
+        </div>
+        <div class="damage-prompt">How do you want to resolve damage?</div>
+        <div class="damage-prompt-buttons">
+          <button type="button" class="btn flux-btn flux-btn-system" id="damage-btn-auto">⚡ Auto-Roll</button>
+          <button type="button" class="btn flux-btn flux-btn-roll-self" id="damage-btn-manual">🎲 Roll Myself</button>
+        </div>
+        <div class="damage-result-area" id="damage-result-area" style="display:none;"></div>
+        <div class="damage-close-area" id="damage-close-area" style="display:none;">
+          <button type="button" class="btn flux-btn flux-btn-close" id="damage-close-btn">✖ Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Auto-roll
+    document.getElementById('damage-btn-auto').addEventListener('click', () => {
+      this._autoRollDamage(m, overlay);
+    });
+
+    // Manual roll
+    document.getElementById('damage-btn-manual').addEventListener('click', () => {
+      this._manualRollDamage(m, overlay);
+    });
+  },
+
+  /**
+   * Auto-roll damage and hit locations
+   */
+  _autoRollDamage(m, overlay) {
+    const info = m._damageInfo;
+    const SDD = window.SpellDamageData;
+    const diceExpr = info.bonus > 0 ? `${info.dice}+${info.bonus}` : info.dice;
+
+    // Hide prompt buttons
+    overlay.querySelector('.damage-prompt').style.display = 'none';
+    overlay.querySelector('.damage-prompt-buttons').style.display = 'none';
+
+    const resultArea = document.getElementById('damage-result-area');
+    resultArea.style.display = '';
+
+    // Roll damage
+    const dmgRoll = SDD.rollDice(diceExpr);
+    const rollBreakdown = dmgRoll.rolls.join(' + ') + (dmgRoll.bonus ? ` + ${dmgRoll.bonus}` : '');
+
+    let html = `
+      <div class="damage-roll-result">
+        <div class="damage-roll-header">🎲 Damage Roll: ${diceExpr}</div>
+        <div class="damage-roll-breakdown">${rollBreakdown}</div>
+        <div class="damage-roll-total">${dmgRoll.total} damage</div>
+      </div>
+    `;
+
+    // Roll hit locations
+    const loc = info.locations;
+    if (loc.type === 'single') {
+      const hitLoc = SDD.rollHitLocation();
+      html += `
+        <div class="damage-location-result">
+          <div class="damage-loc-header">🎯 Hit Location (d20): ${hitLoc.roll}</div>
+          <div class="damage-loc-name">${hitLoc.location}</div>
+        </div>
+      `;
+    } else if (loc.type === 'all') {
+      html += `
+        <div class="damage-location-result">
+          <div class="damage-loc-header">🎯 Hit Locations</div>
+          <div class="damage-loc-name">All Hit Locations — ${dmgRoll.total} damage to each</div>
+        </div>
+      `;
+    } else if (loc.type === 'roll') {
+      // Roll how many locations
+      const locCountRoll = SDD.rollDice(loc.dice);
+      const locCount = Math.max(1, locCountRoll.total);
+      const locations = [];
+      for (let i = 0; i < locCount; i++) {
+        locations.push(SDD.rollHitLocation());
+      }
+      const locList = locations.map(l => `<span class="damage-loc-item">d20: ${l.roll} → <strong>${l.location}</strong></span>`).join('');
+      html += `
+        <div class="damage-location-result">
+          <div class="damage-loc-header">🎯 ${locCount} Hit Location${locCount > 1 ? 's' : ''} (${loc.dice} = ${locCount})</div>
+          <div class="damage-loc-list">${locList}</div>
+        </div>
+      `;
+    } else if (loc.type === 'varies') {
+      html += `
+        <div class="damage-location-result">
+          <div class="damage-loc-header">🎯 Hit Locations</div>
+          <div class="damage-loc-name">${loc.description || 'Varies — see spell description'}</div>
+        </div>
+      `;
+    }
+
+    if (info.notes) {
+      html += `<div class="damage-reminder-notes">📋 ${info.notes}</div>`;
+    }
+
+    resultArea.innerHTML = html;
+    document.getElementById('damage-close-area').style.display = '';
+    document.getElementById('damage-close-btn').addEventListener('click', () => overlay.remove());
+  },
+
+  /**
+   * Manual roll — show what to roll and remind the player
+   */
+  _manualRollDamage(m, overlay) {
+    const info = m._damageInfo;
+    const diceExpr = info.bonus > 0 ? `${info.dice}+${info.bonus}` : info.dice;
+
+    // Hide prompt buttons
+    overlay.querySelector('.damage-prompt').style.display = 'none';
+    overlay.querySelector('.damage-prompt-buttons').style.display = 'none';
+
+    const resultArea = document.getElementById('damage-result-area');
+    resultArea.style.display = '';
+
+    const loc = info.locations;
+    let locInstructions;
+    if (loc.type === 'single') {
+      locInstructions = 'Roll a <strong>d20</strong> for Hit Location.';
+    } else if (loc.type === 'all') {
+      locInstructions = 'Damage applies to <strong>all Hit Locations</strong>.';
+    } else if (loc.type === 'roll') {
+      locInstructions = `Roll <strong>${loc.dice}</strong> for number of Hit Locations, then a <strong>d20</strong> for each.`;
+    } else if (loc.type === 'varies') {
+      locInstructions = `Hit Locations: <strong>${loc.description || 'Varies — see spell description'}</strong>.`;
+    } else {
+      locInstructions = 'See spell description for Hit Location rules.';
+    }
+
+    let html = `
+      <div class="damage-manual-instructions">
+        <div class="damage-manual-header">🎲 Roll the following:</div>
+        <div class="damage-manual-dice">
+          <span class="damage-manual-label">Damage:</span>
+          <span class="damage-manual-value">${diceExpr}</span>
+        </div>
+        <div class="damage-manual-loc">
+          ${locInstructions}
+        </div>
+        ${info.notes ? `<div class="damage-reminder-notes">📋 ${info.notes}</div>` : ''}
+      </div>
+    `;
+
+    resultArea.innerHTML = html;
+    document.getElementById('damage-close-area').style.display = '';
+    document.getElementById('damage-close-btn').addEventListener('click', () => overlay.remove());
+  },
+
+  /**
+   * Get an icon for the damage type
+   */
+  _getDamageTypeIcon(type) {
+    const icons = {
+      fire: '🔥',
+      cold: '❄️',
+      lightning: '⚡',
+      acid: '🧪',
+      force: '💫',
+      radiant: '☀️',
+      magical: '✨'
+    };
+    return icons[type] || '⚔️';
   },
 
   // =============================================

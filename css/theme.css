@@ -665,3 +665,47 @@ select:focus-visible {
 .flux-compare-label { color: #666; }
 .flux-reroll-note { color: #3060a0; }
 .flux-mitigation-note { color: #5a2d7a; background: rgba(100, 60, 180, 0.05); }
+
+/* --- Spell Damage Modal (Parchment) --- */
+.damage-modal {
+  background: rgba(240, 225, 205, 0.97);
+  border-color: rgba(200, 80, 40, 0.4);
+}
+
+.damage-title { color: #a05030; }
+.damage-spell-name { color: #333; }
+.damage-crit-note { color: #8a6010; }
+
+.damage-info-block {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(200, 80, 40, 0.15);
+}
+
+.damage-formula-label, .damage-loc-label { color: #666; }
+.damage-formula-value { color: #a05030; }
+.damage-loc-value { color: #333; }
+.damage-notes { color: #777; }
+.damage-prompt { color: #555; }
+
+.damage-roll-result {
+  background: rgba(200, 80, 40, 0.05);
+  border-color: rgba(200, 80, 40, 0.15);
+}
+
+.damage-roll-header { color: #777; }
+.damage-roll-breakdown { color: #888; }
+.damage-roll-total { color: #a05030; }
+
+.damage-location-result {
+  background: rgba(40, 100, 180, 0.04);
+  border-color: rgba(40, 100, 180, 0.12);
+}
+
+.damage-loc-header { color: #3060a0; }
+.damage-loc-name { color: #333; }
+.damage-loc-item { color: #444; }
+.damage-reminder-notes { color: #777; background: rgba(0, 0, 0, 0.02); }
+.damage-manual-header { color: #555; }
+.damage-manual-label { color: #666; }
+.damage-manual-value { color: #a05030; }
+.damage-manual-loc { color: #444; }

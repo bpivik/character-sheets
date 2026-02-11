@@ -2916,6 +2916,229 @@ input.weapon-damage.rage-boosted,
 }
 
 /* ========================================
+   SPELL DAMAGE RESOLUTION MODAL
+   ======================================== */
+.damage-modal-overlay {
+  z-index: 10002;
+}
+
+.damage-modal {
+  max-width: 440px;
+  padding: 1.2rem;
+  border-radius: 8px;
+  border: 2px solid rgba(220, 80, 40, 0.4);
+  background: linear-gradient(135deg, #1a1210, #251810);
+}
+
+.damage-title {
+  text-align: center;
+  margin: 0 0 0.3rem 0;
+  font-size: 1.1rem;
+  color: #e08050;
+}
+
+.damage-spell-name {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ddd;
+  margin-bottom: 0.5rem;
+}
+
+.damage-crit-note {
+  text-align: center;
+  font-size: 0.82rem;
+  color: #d4a017;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.damage-info-block {
+  padding: 0.5rem 0.6rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(220, 80, 40, 0.15);
+  margin-bottom: 0.6rem;
+}
+
+.damage-formula-row,
+.damage-loc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.damage-formula-label,
+.damage-loc-label {
+  color: #aaa;
+  min-width: 90px;
+}
+
+.damage-formula-value {
+  color: #e08050;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.damage-loc-value {
+  color: #ddd;
+}
+
+.damage-type-badge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.damage-type-fire { background: rgba(220, 80, 20, 0.2); color: #e08040; border: 1px solid rgba(220, 80, 20, 0.3); }
+.damage-type-cold { background: rgba(40, 120, 220, 0.2); color: #60a0e0; border: 1px solid rgba(40, 120, 220, 0.3); }
+.damage-type-lightning { background: rgba(200, 180, 40, 0.2); color: #d0c040; border: 1px solid rgba(200, 180, 40, 0.3); }
+.damage-type-acid { background: rgba(40, 180, 40, 0.2); color: #40c040; border: 1px solid rgba(40, 180, 40, 0.3); }
+.damage-type-force { background: rgba(160, 80, 220, 0.2); color: #b080e0; border: 1px solid rgba(160, 80, 220, 0.3); }
+.damage-type-radiant { background: rgba(220, 200, 40, 0.2); color: #e0d040; border: 1px solid rgba(220, 200, 40, 0.3); }
+.damage-type-magical { background: rgba(140, 100, 200, 0.2); color: #a080d0; border: 1px solid rgba(140, 100, 200, 0.3); }
+
+.damage-notes {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 0.3rem;
+  line-height: 1.3;
+  font-style: italic;
+}
+
+.damage-prompt {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #bbb;
+  margin-bottom: 0.5rem;
+}
+
+.damage-prompt-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Auto-roll results */
+.damage-roll-result {
+  text-align: center;
+  margin-bottom: 0.6rem;
+  padding: 0.5rem;
+  border-radius: 5px;
+  background: rgba(220, 80, 40, 0.08);
+  border: 1px solid rgba(220, 80, 40, 0.2);
+}
+
+.damage-roll-header {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 0.2rem;
+}
+
+.damage-roll-breakdown {
+  font-size: 0.78rem;
+  color: #999;
+  margin-bottom: 0.2rem;
+}
+
+.damage-roll-total {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e08050;
+}
+
+.damage-location-result {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+  border-radius: 5px;
+  background: rgba(40, 120, 200, 0.06);
+  border: 1px solid rgba(40, 120, 200, 0.15);
+}
+
+.damage-loc-header {
+  font-size: 0.8rem;
+  color: #70b0e0;
+  margin-bottom: 0.2rem;
+}
+
+.damage-loc-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ddd;
+}
+
+.damage-loc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.damage-loc-item {
+  font-size: 0.82rem;
+  color: #ccc;
+}
+
+.damage-reminder-notes {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.3;
+}
+
+/* Manual roll instructions */
+.damage-manual-instructions {
+  padding: 0.5rem;
+}
+
+.damage-manual-header {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #bbb;
+  margin-bottom: 0.5rem;
+}
+
+.damage-manual-dice {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+}
+
+.damage-manual-label {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.damage-manual-value {
+  color: #e08050;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.damage-manual-loc {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #ccc;
+  margin-bottom: 0.4rem;
+}
+
+.damage-close-area {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* ========================================
    IMPROVED AIM SECTION (RANGER)
    ======================================== */
 .improved-aim-section {
