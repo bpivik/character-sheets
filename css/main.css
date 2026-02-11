@@ -2433,6 +2433,164 @@ input.weapon-damage.rage-boosted,
 }
 
 /* ========================================
+   SPELL WEAVING (SORCERER) — Cast Modal
+   ======================================== */
+.cast-modal-weaving {
+  margin: 0.4rem 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(140, 80, 200, 0.25);
+  background: rgba(100, 60, 180, 0.06);
+}
+
+.weaving-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.weaving-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #c090e0;
+}
+
+.weaving-max-note {
+  font-size: 0.7rem;
+  color: #888;
+  font-style: italic;
+}
+
+.weaving-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+
+.weaving-option {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(140, 80, 200, 0.15);
+  background: rgba(30, 20, 50, 0.3);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+  font-size: 0.78rem;
+}
+
+.weaving-option:hover:not(.disabled) {
+  background: rgba(100, 60, 180, 0.15);
+  border-color: rgba(140, 80, 200, 0.35);
+}
+
+.weaving-option.active {
+  background: rgba(100, 60, 180, 0.2);
+  border-color: rgba(160, 100, 220, 0.5);
+  box-shadow: 0 0 4px rgba(140, 80, 200, 0.2);
+}
+
+.weaving-option.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.weaving-option.quickening-warn {
+  border-color: rgba(200, 160, 40, 0.3);
+}
+
+.weaving-option.quickening-warn .weaving-name::after {
+  content: ' ⚠';
+  font-size: 0.7rem;
+  color: #d4a017;
+}
+
+.weaving-check {
+  margin: 0;
+  accent-color: #9060c0;
+}
+
+.weaving-name {
+  color: #ddd;
+  font-weight: 600;
+  flex: 1;
+}
+
+.weaving-cost {
+  color: #70b0e0;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.weaving-diff {
+  color: #d4a017;
+  font-size: 0.68rem;
+  font-style: italic;
+}
+
+.weaving-summary {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(100, 60, 180, 0.12);
+  border: 1px solid rgba(140, 80, 200, 0.2);
+  font-size: 0.78rem;
+}
+
+.weaving-summary-cost {
+  color: #70b0e0;
+  font-weight: 700;
+}
+
+.weaving-summary-diff {
+  color: #d4a017;
+  font-weight: 600;
+}
+
+.weaving-summary-time {
+  color: #e08060;
+  font-weight: 600;
+}
+
+.weaving-lock-note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #d4a017;
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+
+/* Intensity locked by weaving */
+.intensity-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Weaving locked by intensity */
+.weaving-locked-by-intensity {
+  opacity: 0.5;
+}
+
+.weaving-locked-by-intensity .weaving-check {
+  pointer-events: none;
+}
+
+.weaving-locked-by-intensity::after {
+  content: '⚠ Weaving unavailable while Intensity > 1';
+  display: block;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #d4a017;
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+
+/* ========================================
    ARCANE FLUX MODAL (SORCERER)
    ======================================== */
 .arcane-flux-modal-overlay {

@@ -945,6 +945,60 @@
             </div>
           </div>
 
+          <!-- Sorcerer Weaving Controls (hidden for non-sorcery) -->
+          <div class="cast-modal-weaving hidden" id="cast-weaving-section">
+            <div class="weaving-header-row">
+              <span class="weaving-label">🌀 Spell Weaving</span>
+              <span class="weaving-max-note">(max 2, cannot combine with Intensity)</span>
+            </div>
+            <div class="weaving-options" id="weaving-options">
+              <label class="weaving-option" title="Increase damage/effect by half of rolled damage. +3 MP, Formidable difficulty, +1 Cast Time.">
+                <input type="checkbox" class="weaving-check" data-weave="amplify" data-mp="3" data-difficulty="formidable">
+                <span class="weaving-name">Amplify</span>
+                <span class="weaving-cost">+3 MP</span>
+                <span class="weaving-diff">Formidable</span>
+              </label>
+              <label class="weaving-option" title="Double the spell's duration. +1 MP, Hard difficulty, +1 Cast Time.">
+                <input type="checkbox" class="weaving-check" data-weave="lingering" data-mp="1" data-difficulty="hard">
+                <span class="weaving-name">Lingering</span>
+                <span class="weaving-cost">+1 MP</span>
+                <span class="weaving-diff">Hard</span>
+              </label>
+              <label class="weaving-option" title="Cast without verbal components. +1 MP, Hard difficulty, +1 Cast Time.">
+                <input type="checkbox" class="weaving-check" data-weave="wordless" data-mp="1" data-difficulty="hard">
+                <span class="weaving-name">Wordless</span>
+                <span class="weaving-cost">+1 MP</span>
+                <span class="weaving-diff">Hard</span>
+              </label>
+              <label class="weaving-option" title="Cast without somatic (hand) components. +1 MP, Hard difficulty, +1 Cast Time.">
+                <input type="checkbox" class="weaving-check" data-weave="stillness" data-mp="1" data-difficulty="hard">
+                <span class="weaving-name">Stillness</span>
+                <span class="weaving-cost">+1 MP</span>
+                <span class="weaving-diff">Hard</span>
+              </label>
+              <label class="weaving-option" title="Cast as 1 Action regardless of normal time. +4 MP, Herculean difficulty. No extra Cast Time.">
+                <input type="checkbox" class="weaving-check" data-weave="quickening" data-mp="4" data-difficulty="herculean">
+                <span class="weaving-name">Quickening</span>
+                <span class="weaving-cost">+4 MP</span>
+                <span class="weaving-diff">Herculean</span>
+              </label>
+              <label class="weaving-option" title="Double the area of effect or targets. +2 MP, Hard difficulty, +1 Cast Time.">
+                <input type="checkbox" class="weaving-check" data-weave="expanding" data-mp="2" data-difficulty="hard">
+                <span class="weaving-name">Expanding</span>
+                <span class="weaving-cost">+2 MP</span>
+                <span class="weaving-diff">Hard</span>
+              </label>
+            </div>
+            <div class="weaving-summary hidden" id="weaving-summary">
+              <span class="weaving-summary-cost" id="weaving-summary-cost"></span>
+              <span class="weaving-summary-diff" id="weaving-summary-diff"></span>
+              <span class="weaving-summary-time" id="weaving-summary-time"></span>
+            </div>
+            <div class="weaving-lock-note hidden" id="weaving-lock-note">
+              ⚠ Intensity is locked at 1 while Weaving is active.
+            </div>
+          </div>
+
           <!-- Armor Warning -->
           <div class="cast-modal-armor-warning hidden" id="cast-armor-warning">
             <span class="armor-warning-icon">&#9888;</span>

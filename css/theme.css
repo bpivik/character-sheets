@@ -584,6 +584,43 @@ select:focus-visible {
   color: #555;
 }
 
+/* --- Spell Weaving (Parchment) --- */
+.cast-modal-weaving {
+  background: rgba(100, 60, 150, 0.06);
+  border-color: rgba(100, 60, 150, 0.2);
+}
+
+.weaving-label { color: #5a2d7a; }
+.weaving-max-note { color: #888; }
+
+.weaving-option {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(100, 60, 150, 0.15);
+}
+
+.weaving-option:hover:not(.disabled) {
+  background: rgba(100, 60, 150, 0.1);
+}
+
+.weaving-option.active {
+  background: rgba(100, 60, 150, 0.12);
+  border-color: rgba(120, 70, 180, 0.4);
+}
+
+.weaving-name { color: #333; }
+.weaving-cost { color: #3060a0; }
+.weaving-diff { color: #8a6010; }
+
+.weaving-summary {
+  background: rgba(100, 60, 150, 0.06);
+  border-color: rgba(100, 60, 150, 0.15);
+}
+
+.weaving-summary-cost { color: #3060a0; }
+.weaving-summary-diff { color: #8a6010; }
+.weaving-summary-time { color: #a05030; }
+.weaving-lock-note { color: #8a6010; }
+
 /* --- Arcane Flux Modal (Parchment) --- */
 .arcane-flux-modal.flux-minor {
   background: rgba(240, 230, 200, 0.97);

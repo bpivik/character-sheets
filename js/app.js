@@ -9423,6 +9423,8 @@ const App = {
     intensity: 1,
     maxIntensity: 1,
     spellRank: 0,
+    activeWeaves: [],
+    _weavingDifficulty: null,
     casterRank: 1,
     cost: 1,
     armorRestriction: null,
@@ -9466,6 +9468,8 @@ const App = {
       m.rollResult = null;
       m.intensity = 1;
       m.costStr = costStr;
+      m.activeWeaves = [];
+      m._weavingDifficulty = null;
 
       // Check memorized state — use row-based query for robustness
       // (IDs can desync after row removal/reindex; querySelector on the actual row is most reliable)
@@ -9773,9 +9777,14 @@ const App = {
 
     effective = Math.max(0, Math.min(effective, 200));
 
+    // Apply weaving difficulty multiplier (sorcery only)
+    if (m._weavingDifficulty && m.activeWeaves && m.activeWeaves.length > 0) {
+      effective = Math.max(0, Math.floor(effective * m._weavingDifficulty.multiplier));
+    }
+
     // Only update if our recalculation differs (log for debugging)
     if (effective !== m.effectiveSkill) {
-      console.warn(`%c[CAST] _ensureEffectiveSkill CORRECTED: was ${m.effectiveSkill}, recalculated to ${effective} (base=${baseSkill}, nonMem=${m.isNonMemorized}, penalty=${m.nonMemPenalty})`, 'color: #e63946; font-weight: bold');
+      console.warn(`%c[CAST] _ensureEffectiveSkill CORRECTED: was ${m.effectiveSkill}, recalculated to ${effective} (base=${baseSkill}, nonMem=${m.isNonMemorized}, penalty=${m.nonMemPenalty}, weaving=${m._weavingDifficulty?.label || 'none'})`, 'color: #e63946; font-weight: bold');
       m.effectiveSkill = effective;
     }
     return effective;
@@ -9920,6 +9929,46 @@ const App = {
       intensitySection.style.display = '';
       m.intensity = 1;
       this._updateIntensityDisplay(m, costStr);
+    }
+
+    // Weaving section (sorcery only, not for non-memorized)
+    const weavingSection = document.getElementById('cast-weaving-section');
+    if (m.castingType === 'sorcery' && !m.isNonMemorized) {
+      weavingSection.classList.remove('hidden');
+      m.activeWeaves = [];
+      // Reset all checkboxes
+      weavingSection.querySelectorAll('.weaving-check').forEach(cb => {
+        cb.checked = false;
+        cb.disabled = false;
+        cb.closest('.weaving-option').classList.remove('disabled', 'active');
+      });
+      document.getElementById('weaving-summary').classList.add('hidden');
+      document.getElementById('weaving-lock-note').classList.add('hidden');
+
+      // Smart disable: Quickening warning if already 1 Action
+      const baseCastTime = d?.castingTime || '1 Action';
+      const quickCb = weavingSection.querySelector('[data-weave="quickening"]');
+      if (quickCb) {
+        const isAlready1Action = /^1\s*action/i.test(baseCastTime.trim());
+        if (isAlready1Action) {
+          quickCb.closest('.weaving-option').classList.add('quickening-warn');
+          quickCb.closest('.weaving-option').title = 'This spell already has a 1 Action cast time — Quickening would have no benefit.';
+        } else {
+          quickCb.closest('.weaving-option').classList.remove('quickening-warn');
+          quickCb.closest('.weaving-option').title = 'Cast as 1 Action regardless of normal time. +4 MP, Herculean difficulty. No extra Cast Time.';
+        }
+      }
+
+      // Attach weaving listeners (only once)
+      if (!m._weavingListenersAttached) {
+        weavingSection.querySelectorAll('.weaving-check').forEach(cb => {
+          cb.addEventListener('change', () => this._onWeaveToggle(m, costStr));
+        });
+        m._weavingListenersAttached = true;
+      }
+    } else {
+      weavingSection.classList.add('hidden');
+      m.activeWeaves = [];
     }
 
     // Armor warning
@@ -10086,6 +10135,228 @@ const App = {
   /**
    * Update intensity display and dependent stat values
    */
+  // =============================================
+  // WEAVING SYSTEM (Sorcerer)
+  // =============================================
+
+  /**
+   * Difficulty grade multipliers for weaving
+   */
+  _weaveDifficultyMap: {
+    hard: { label: 'Hard', multiplier: 2/3, rank: 1 },
+    formidable: { label: 'Formidable', multiplier: 1/2, rank: 2 },
+    herculean: { label: 'Herculean', multiplier: 1/3, rank: 3 }
+  },
+
+  /**
+   * Handle a weaving checkbox toggle
+   */
+  _onWeaveToggle(m, costStr) {
+    const weavingSection = document.getElementById('cast-weaving-section');
+    const checkboxes = weavingSection.querySelectorAll('.weaving-check');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+
+    m.activeWeaves = checked.map(cb => ({
+      name: cb.dataset.weave,
+      mp: parseInt(cb.dataset.mp, 10) || 0,
+      difficulty: cb.dataset.difficulty
+    }));
+
+    // Enforce max 2
+    if (m.activeWeaves.length >= 2) {
+      checkboxes.forEach(cb => {
+        if (!cb.checked) {
+          cb.disabled = true;
+          cb.closest('.weaving-option').classList.add('disabled');
+        }
+      });
+    } else {
+      checkboxes.forEach(cb => {
+        cb.disabled = false;
+        cb.closest('.weaving-option').classList.remove('disabled');
+      });
+    }
+
+    // Active styling
+    checkboxes.forEach(cb => {
+      cb.closest('.weaving-option').classList.toggle('active', cb.checked);
+    });
+
+    // Mutual exclusion with Intensity
+    const intensitySection = document.getElementById('cast-modal-intensity-section');
+    const lockNote = document.getElementById('weaving-lock-note');
+    if (m.activeWeaves.length > 0) {
+      // Lock intensity to 1
+      m.intensity = 1;
+      this._updateIntensityDisplay(m, costStr);
+      document.getElementById('cast-intensity-up').disabled = true;
+      document.getElementById('cast-intensity-down').disabled = true;
+      intensitySection.classList.add('intensity-locked');
+      lockNote.classList.remove('hidden');
+    } else {
+      document.getElementById('cast-intensity-up').disabled = m.intensity >= m.maxIntensity;
+      document.getElementById('cast-intensity-down').disabled = m.intensity <= 1;
+      intensitySection.classList.remove('intensity-locked');
+      lockNote.classList.add('hidden');
+    }
+
+    // Update weaving summary
+    this._updateWeavingSummary(m, costStr);
+
+    // Recalculate effective skill with weaving penalty
+    this._applyWeavingToSkill(m);
+
+    // Update cost display (adds weaving MP)
+    this._updateCostDisplay(m, costStr);
+
+    // Update cast time display
+    this._updateWeavingCastTime(m);
+  },
+
+  /**
+   * Calculate the worst difficulty from active weaves
+   */
+  _getWeavingDifficulty(activeWeaves) {
+    if (!activeWeaves || activeWeaves.length === 0) return null;
+    let worst = null;
+    for (const w of activeWeaves) {
+      const d = this._weaveDifficultyMap[w.difficulty];
+      if (!d) continue;
+      if (!worst || d.rank > worst.rank) worst = d;
+    }
+    return worst;
+  },
+
+  /**
+   * Get total extra MP from weaving
+   */
+  _getWeavingMPCost(activeWeaves) {
+    if (!activeWeaves || activeWeaves.length === 0) return 0;
+    return activeWeaves.reduce((sum, w) => sum + w.mp, 0);
+  },
+
+  /**
+   * Apply weaving difficulty penalty to effective skill
+   */
+  _applyWeavingToSkill(m) {
+    // Calculate worst difficulty from active weaves
+    const worstDiff = this._getWeavingDifficulty(m.activeWeaves);
+    m._weavingDifficulty = worstDiff || null;
+
+    // Recalculate effective skill (includes weaving multiplier now)
+    this._ensureEffectiveSkill(m);
+
+    // Update display
+    document.getElementById('cast-skill-percent').textContent = m.effectiveSkill + '%';
+    const diffNote = document.getElementById('cast-difficulty-note');
+    if (worstDiff) {
+      diffNote.textContent = `(${worstDiff.label} — Weaving)`;
+      diffNote.classList.add('penalty');
+    } else if (m.spellRank === 0 && m.casterRank >= 1) {
+      const L = window.SpellDetailsLookup;
+      const bonus = L ? L.getCantripDifficultyAdjustment(m.casterRank) : '';
+      diffNote.textContent = `(${bonus})`;
+      diffNote.classList.remove('penalty');
+    } else if (m.armorRestriction?.penalty) {
+      diffNote.textContent = `(${m.armorRestriction.penalty})`;
+      diffNote.classList.add('penalty');
+    } else {
+      diffNote.textContent = '';
+      diffNote.classList.remove('penalty');
+    }
+  },
+
+  /**
+   * Update the weaving summary display
+   */
+  _updateWeavingSummary(m, costStr) {
+    const summary = document.getElementById('weaving-summary');
+    if (!m.activeWeaves || m.activeWeaves.length === 0) {
+      summary.classList.add('hidden');
+      return;
+    }
+    summary.classList.remove('hidden');
+
+    const extraMP = this._getWeavingMPCost(m.activeWeaves);
+    const worstDiff = this._getWeavingDifficulty(m.activeWeaves);
+    const weaveNames = m.activeWeaves.map(w => w.name.charAt(0).toUpperCase() + w.name.slice(1)).join(' + ');
+
+    document.getElementById('weaving-summary-cost').textContent = `+${extraMP} MP`;
+    document.getElementById('weaving-summary-diff').textContent = worstDiff ? worstDiff.label : '';
+
+    // Cast time change
+    const hasQuickening = m.activeWeaves.some(w => w.name === 'quickening');
+    if (hasQuickening) {
+      document.getElementById('weaving-summary-time').textContent = 'Cast: 1 Action';
+    } else {
+      const steps = m.activeWeaves.length;
+      document.getElementById('weaving-summary-time').textContent = `+${steps} Cast Time step${steps > 1 ? 's' : ''}`;
+    }
+  },
+
+  /**
+   * Update cast time stat display for active weaves
+   */
+  _updateWeavingCastTime(m) {
+    const d = m.spellDetails;
+    const timeEl = document.getElementById('cast-stat-time');
+    if (!d) return;
+
+    const baseTime = d.castingTime || '1 Action';
+    if (!m.activeWeaves || m.activeWeaves.length === 0) {
+      // Reset to base
+      timeEl.textContent = baseTime;
+      timeEl.classList.remove('stat-time-increased');
+      return;
+    }
+
+    const hasQuickening = m.activeWeaves.some(w => w.name === 'quickening');
+    if (hasQuickening) {
+      timeEl.innerHTML = `<span class="stat-time-stepped">1 Action</span>`;
+      timeEl.classList.add('stat-time-increased');
+    } else {
+      // Step up cast time once per non-quickening weave
+      let stepped = baseTime;
+      for (let i = 0; i < m.activeWeaves.length; i++) {
+        stepped = this._stepCastingTime(stepped);
+      }
+      timeEl.innerHTML = `<span class="stat-time-stepped">${stepped}</span>`;
+      timeEl.classList.add('stat-time-increased');
+    }
+  },
+
+  /**
+   * Disable/enable weaving checkboxes based on intensity level
+   * If intensity > 1, weaving is disabled. If intensity returns to 1, re-enable.
+   */
+  _syncWeavingWithIntensity(m) {
+    const weavingSection = document.getElementById('cast-weaving-section');
+    if (!weavingSection || weavingSection.classList.contains('hidden')) return;
+
+    const checkboxes = weavingSection.querySelectorAll('.weaving-check');
+    if (m.intensity > 1) {
+      // Disable all weaving, uncheck any active
+      checkboxes.forEach(cb => {
+        cb.checked = false;
+        cb.disabled = true;
+        cb.closest('.weaving-option').classList.add('disabled');
+        cb.closest('.weaving-option').classList.remove('active');
+      });
+      m.activeWeaves = [];
+      m._weavingDifficulty = null;
+      document.getElementById('weaving-summary').classList.add('hidden');
+      document.getElementById('weaving-lock-note').classList.add('hidden');
+      weavingSection.classList.add('weaving-locked-by-intensity');
+    } else {
+      // Re-enable weaving
+      checkboxes.forEach(cb => {
+        cb.disabled = false;
+        cb.closest('.weaving-option').classList.remove('disabled');
+      });
+      weavingSection.classList.remove('weaving-locked-by-intensity');
+    }
+  },
+
   _updateIntensityDisplay(m, costStr) {
     document.getElementById('cast-intensity-value').textContent = m.intensity;
     document.getElementById('cast-intensity-max').textContent = '/' + m.maxIntensity;
@@ -10416,6 +10687,10 @@ const App = {
       m.cost = costMatch ? parseInt(costMatch[1], 10) : 1;
     }
 
+    // Add weaving MP surcharge
+    const weavingExtra = this._getWeavingMPCost(m.activeWeaves);
+    m.cost += weavingExtra;
+
     // Calculate EXP cost
     const expInfo = this._parseExpCost(d?.costDisplay || costStr || '');
     m.expCost = expInfo.exp;
@@ -10426,8 +10701,8 @@ const App = {
 
     document.getElementById('cast-mp-current').textContent = currentMP;
 
-    if (m.isNonMemorized) {
-      // Non-memorized: show conditional cost
+    if (m.isNonMemorized || m.castingType === 'sorcery') {
+      // Non-memorized and sorcery: show conditional cost (MP deducted on result)
       document.getElementById('cast-mp-after').textContent = mpAfter >= 0 ? `${mpAfter} (if success)` : mpAfter;
     } else {
       document.getElementById('cast-mp-after').textContent = mpAfter >= 0 ? mpAfter : mpAfter;
@@ -10531,6 +10806,7 @@ const App = {
       if (m.intensity > 1) {
         m.intensity--;
         this._updateIntensityDisplay(m);
+        this._syncWeavingWithIntensity(m);
       }
     };
     document.getElementById('cast-intensity-up').onclick = () => {
@@ -10538,6 +10814,7 @@ const App = {
       if (m.intensity < m.maxIntensity) {
         m.intensity++;
         this._updateIntensityDisplay(m);
+        this._syncWeavingWithIntensity(m);
       }
     };
 
@@ -10840,7 +11117,16 @@ const App = {
         }
         const newMP = parseInt(mpField.value, 10) || 0;
         const fatigueNote = deficit > 0 ? ` \u26A0 ${deficit} Fatigue level${deficit > 1 ? 's' : ''} from MP overdraft!` : '';
-        details.textContent = `Critical! Only ${actualCost} MP spent (half cost).${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect with exceptional potency.`;
+        const woveSpell = m.activeWeaves && m.activeWeaves.length > 0;
+        const weaveNames = woveSpell ? m.activeWeaves.map(w => w.name.charAt(0).toUpperCase() + w.name.slice(1)).join(' + ') : '';
+        if (woveSpell) {
+          // Weaving: spell lost from memory after successful cast
+          const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
+          if (memCheck) memCheck.checked = false;
+          details.textContent = `Critical! Only ${actualCost} MP spent (half cost).${expStr} Remaining: ${newMP} MP.${fatigueNote} Woven with ${weaveNames} \u2014 spell takes effect with exceptional potency. \u26A0 Spell lost from memory (2 Long Rests to recover).`;
+        } else {
+          details.textContent = `Critical! Only ${actualCost} MP spent (half cost).${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect with exceptional potency.`;
+        }
 
       } else if (resultClass === 'success') {
         // Success: full MP, full EXP
@@ -10856,7 +11142,15 @@ const App = {
         }
         const newMP = parseInt(mpField.value, 10) || 0;
         const fatigueNote = deficit > 0 ? ` \u26A0 ${deficit} Fatigue level${deficit > 1 ? 's' : ''} from MP overdraft!` : '';
-        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect.`;
+        const woveSpell = m.activeWeaves && m.activeWeaves.length > 0;
+        const weaveNames = woveSpell ? m.activeWeaves.map(w => w.name.charAt(0).toUpperCase() + w.name.slice(1)).join(' + ') : '';
+        if (woveSpell) {
+          const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
+          if (memCheck) memCheck.checked = false;
+          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} Woven with ${weaveNames} \u2014 spell takes effect. \u26A0 Spell lost from memory (2 Long Rests to recover).`;
+        } else {
+          details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect.`;
+        }
 
       } else if (resultClass === 'fumble') {
         // Fumble: half MP spent, EXP retained, spell expunged, Major Arcane Flux
