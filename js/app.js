@@ -532,6 +532,17 @@ const App = {
     this.checkSneakAttackVisibility();
     this.checkSubterfugeVisibility();
     this.restoreSubterfugeVisuals();
+    this.checkGreatHearingVisibility();
+    this.checkSharpEyedVisibility();
+    this.checkVaultingVisibility();
+    this.checkUnarmoredDefenseVisibility();
+    this.restoreUnarmoredDefenseVisuals();
+    this.checkSneakAttackBonusDamage();
+    this.checkWeaponPrecisionVisibility();
+    this.checkSkirmishingVisibility();
+    this.checkSwashbucklingVisibility();
+    this.checkDefensiveReflexesVisibility();
+    this.checkArcaneScrollsVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -1356,6 +1367,9 @@ const App = {
             this.updateBerserkRageDisplay();
           }
           
+          // Update Sneak Attack bonus damage (depends on rogue rank)
+          this.checkSneakAttackBonusDamage();
+          
           // Update Rank 1 spell note for Paladin/Ranger
           this.updateRank1SpellNote();
           
@@ -1965,11 +1979,33 @@ const App = {
               this._holyStrikeUsedThisRoll = true;
             }
           }
+          // If Sneak Attack bonus damage is active, append appropriate dice
+          if (this.character.sneakDamageActive) {
+            const row = diceBtn.closest('tr');
+            const inputId = damageInput?.id || '';
+            const isMelee = inputId.startsWith('melee-');
+            const isRanged = inputId.startsWith('ranged-');
+            const rank = this.getRogueRank();
+            const dmg = this._getSneakAttackDamage(rank);
+            if (isMelee && dmg.melee) {
+              damageStr += dmg.melee;
+              this._sneakDamageUsedThisRoll = true;
+            } else if (isRanged && dmg.ranged) {
+              damageStr += dmg.ranged;
+              this._sneakDamageUsedThisRoll = true;
+            }
+          }
           this.rollDamage(damageStr);
           // Deactivate Holy Strike after damage roll
           if (this._holyStrikeUsedThisRoll) {
             this._holyStrikeUsedThisRoll = false;
             this.deactivateHolyStrike();
+          }
+          // Deactivate Sneak Attack bonus after damage roll
+          if (this._sneakDamageUsedThisRoll) {
+            this._sneakDamageUsedThisRoll = false;
+            this.deactivateSneakDamage();
+            this._removeSneakDamageBadges();
           }
           // Deactivate Species Enemy after damage roll (if combat was rolled first)
           if (this.character.speciesEnemyActive && this.character.speciesEnemyCombatRolled) {
@@ -3998,6 +4034,8 @@ const App = {
           this.checkMonkAbilitiesVisibility();
           // Update Climb Walls button state (depends on armor type)
           this.updateClimbWallsButtonState();
+          // Update Unarmored Defense (depends on armor)
+          this.updateUnarmoredDefense();
         });
         
         // Track when user manually edits AP
@@ -4012,6 +4050,7 @@ const App = {
           this.updateVeryAgileDisplay();
           this.checkMonkAbilitiesVisibility();
           this.updateClimbWallsButtonState();
+          this.updateUnarmoredDefense();
         });
         apInput.addEventListener('blur', () => {
           this.checkMonkAbilitiesVisibility();
@@ -5020,6 +5059,24 @@ const App = {
         this.checkSneakAttackVisibility();
       } else if (normalizedName === 'subterfuge') {
         this.checkSubterfugeVisibility();
+      } else if (normalizedName === 'great hearing') {
+        this.checkGreatHearingVisibility();
+      } else if (normalizedName === 'sharp eyed') {
+        this.checkSharpEyedVisibility();
+      } else if (normalizedName === 'vaulting') {
+        this.checkVaultingVisibility();
+      } else if (normalizedName === 'unarmored defense') {
+        this.checkUnarmoredDefenseVisibility();
+      } else if (normalizedName === 'weapon precision') {
+        this.checkWeaponPrecisionVisibility();
+      } else if (normalizedName === 'skirmishing') {
+        this.checkSkirmishingVisibility();
+      } else if (normalizedName === 'swashbuckling') {
+        this.checkSwashbucklingVisibility();
+      } else if (normalizedName === 'use arcane scrolls') {
+        this.checkArcaneScrollsVisibility();
+      } else if (normalizedName.startsWith('defensive reflexes')) {
+        this.checkDefensiveReflexesVisibility();
       }
     }
     
@@ -6324,8 +6381,17 @@ const App = {
         // Check Rogue ability sections
         if (normalizedName === 'climb walls') this.checkClimbWallsVisibility();
         if (normalizedName === 'hide in shadows') this.checkHideInShadowsVisibility();
-        if (normalizedName === 'sneak attack') this.checkSneakAttackVisibility();
+        if (normalizedName === 'sneak attack') { this.checkSneakAttackVisibility(); this.checkSneakAttackBonusDamage(); }
         if (normalizedName === 'subterfuge') this.checkSubterfugeVisibility();
+        if (normalizedName === 'great hearing') this.checkGreatHearingVisibility();
+        if (normalizedName === 'sharp eyed') this.checkSharpEyedVisibility();
+        if (normalizedName === 'vaulting') this.checkVaultingVisibility();
+        if (normalizedName === 'unarmored defense') this.checkUnarmoredDefenseVisibility();
+        if (normalizedName === 'weapon precision') this.checkWeaponPrecisionVisibility();
+        if (normalizedName === 'skirmishing') this.checkSkirmishingVisibility();
+        if (normalizedName === 'swashbuckling') this.checkSwashbucklingVisibility();
+        if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
+        if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
         
         // Check if Turn Undead section should now be visible
         if (normalizedName === 'turn undead') {
@@ -6409,8 +6475,17 @@ const App = {
     // Check Rogue ability sections
     if (normalizedName === 'climb walls') this.checkClimbWallsVisibility();
     if (normalizedName === 'hide in shadows') this.checkHideInShadowsVisibility();
-    if (normalizedName === 'sneak attack') this.checkSneakAttackVisibility();
+    if (normalizedName === 'sneak attack') { this.checkSneakAttackVisibility(); this.checkSneakAttackBonusDamage(); }
     if (normalizedName === 'subterfuge') this.checkSubterfugeVisibility();
+    if (normalizedName === 'great hearing') this.checkGreatHearingVisibility();
+    if (normalizedName === 'sharp eyed') this.checkSharpEyedVisibility();
+    if (normalizedName === 'vaulting') this.checkVaultingVisibility();
+    if (normalizedName === 'unarmored defense') this.checkUnarmoredDefenseVisibility();
+    if (normalizedName === 'weapon precision') this.checkWeaponPrecisionVisibility();
+    if (normalizedName === 'skirmishing') this.checkSkirmishingVisibility();
+    if (normalizedName === 'swashbuckling') this.checkSwashbucklingVisibility();
+    if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
+    if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
     
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
@@ -13404,6 +13479,10 @@ const App = {
       
       // Update Climb Walls button state (depends on encumbrance)
       this.updateClimbWallsButtonState();
+      // Update Vaulting button state (depends on encumbrance)
+      this.updateVaultingButtonState();
+      // Update Unarmored Defense auto-passive (depends on encumbrance + armor)
+      this.updateUnarmoredDefense();
     }
   },
   
@@ -13958,6 +14037,30 @@ const App = {
     if (this.character.hideInShadowsActive) {
       this.deactivateHideInShadows();
       messages.push(`<strong>Hide in Shadows:</strong> Deactivated`);
+    }
+
+    // Deactivate Great Hearing on Long Rest
+    if (this.character.greatHearingActive) {
+      this.deactivateGreatHearing();
+      messages.push(`<strong>Great Hearing:</strong> Deactivated`);
+    }
+
+    // Deactivate Sharp Eyed on Long Rest
+    if (this.character.sharpEyedActive) {
+      this.deactivateSharpEyed();
+      messages.push(`<strong>Sharp Eyed:</strong> Deactivated`);
+    }
+
+    // Deactivate Vaulting on Long Rest
+    if (this.character.vaultingActive) {
+      this.deactivateVaulting();
+      messages.push(`<strong>Vaulting:</strong> Deactivated`);
+    }
+
+    // Deactivate Sneak Attack Bonus Damage on Long Rest
+    if (this.character.sneakDamageActive) {
+      this.deactivateSneakDamage();
+      messages.push(`<strong>Sneak Attack Bonus:</strong> Deactivated`);
     }
 
     const mentalStrengthLevel = this.getMentalStrengthLevel();
@@ -19358,6 +19461,702 @@ const App = {
         input.title = `Subterfuge: +20% (base ${baseVal}%)`;
       }
     }
+  },
+
+  // ============================================
+  // GREAT HEARING ABILITY (Toggle +20% Perception)
+  // ============================================
+
+  checkGreatHearingVisibility() {
+    const section = document.getElementById('great-hearing-section');
+    if (!section) return;
+    const has = this.hasAbility('Great Hearing');
+    section.style.display = has ? '' : 'none';
+    if (has) this.initGreatHearing();
+  },
+
+  initGreatHearing() {
+    const btn = document.getElementById('btn-great-hearing-toggle');
+    if (!btn || btn._ghInit) return;
+    btn._ghInit = true;
+    btn.addEventListener('click', () => {
+      if (this.character.greatHearingActive) {
+        this.deactivateGreatHearing();
+      } else {
+        this.activateGreatHearing();
+      }
+    });
+    if (this.character.greatHearingActive) this.restoreGreatHearingVisuals();
+  },
+
+  activateGreatHearing() {
+    if (this.character.greatHearingActive) return;
+    this.character.greatHearingActive = true;
+    const input = document.getElementById('perception-current');
+    if (input) {
+      const val = parseInt(input.value, 10) || 0;
+      this.character._ghPercBefore = val;
+      input.value = val + 20;
+      input.classList.add('gh-boosted');
+    }
+    this.showRogueAbilityAnimation('great-hearing-anim-overlay', '👂', 'Great Hearing!');
+    const btn = document.getElementById('btn-great-hearing-toggle');
+    if (btn) { btn.textContent = '👂 Listening ACTIVE — Click to Deactivate'; btn.classList.add('great-hearing-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  deactivateGreatHearing() {
+    if (!this.character.greatHearingActive) return;
+    this.character.greatHearingActive = false;
+    const input = document.getElementById('perception-current');
+    if (input) {
+      if (this.character._ghPercBefore !== undefined) input.value = this.character._ghPercBefore;
+      else input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 20);
+      input.classList.remove('gh-boosted');
+      delete this.character._ghPercBefore;
+    }
+    const btn = document.getElementById('btn-great-hearing-toggle');
+    if (btn) { btn.textContent = '👂 Great Hearing'; btn.classList.remove('great-hearing-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  restoreGreatHearingVisuals() {
+    const input = document.getElementById('perception-current');
+    if (input) input.classList.add('gh-boosted');
+    const btn = document.getElementById('btn-great-hearing-toggle');
+    if (btn) { btn.textContent = '👂 Listening ACTIVE — Click to Deactivate'; btn.classList.add('great-hearing-active-btn'); }
+  },
+
+  // ============================================
+  // SHARP EYED ABILITY (Toggle +20% Perception)
+  // ============================================
+
+  checkSharpEyedVisibility() {
+    const section = document.getElementById('sharp-eyed-section');
+    if (!section) return;
+    const has = this.hasAbility('Sharp Eyed');
+    section.style.display = has ? '' : 'none';
+    if (has) this.initSharpEyed();
+  },
+
+  initSharpEyed() {
+    const btn = document.getElementById('btn-sharp-eyed-toggle');
+    if (!btn || btn._seInit) return;
+    btn._seInit = true;
+    btn.addEventListener('click', () => {
+      if (this.character.sharpEyedActive) {
+        this.deactivateSharpEyed();
+      } else {
+        this.activateSharpEyed();
+      }
+    });
+    if (this.character.sharpEyedActive) this.restoreSharpEyedVisuals();
+  },
+
+  activateSharpEyed() {
+    if (this.character.sharpEyedActive) return;
+    this.character.sharpEyedActive = true;
+    const input = document.getElementById('perception-current');
+    if (input) {
+      const val = parseInt(input.value, 10) || 0;
+      this.character._sePercBefore = val;
+      input.value = val + 20;
+      input.classList.add('se-boosted-rogue');
+    }
+    this.showRogueAbilityAnimation('sharp-eyed-anim-overlay', '👁️', 'Sharp Eyed!');
+    const btn = document.getElementById('btn-sharp-eyed-toggle');
+    if (btn) { btn.textContent = '👁️ Focused ACTIVE — Click to Deactivate'; btn.classList.add('sharp-eyed-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  deactivateSharpEyed() {
+    if (!this.character.sharpEyedActive) return;
+    this.character.sharpEyedActive = false;
+    const input = document.getElementById('perception-current');
+    if (input) {
+      if (this.character._sePercBefore !== undefined) input.value = this.character._sePercBefore;
+      else input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 20);
+      input.classList.remove('se-boosted-rogue');
+      delete this.character._sePercBefore;
+    }
+    const btn = document.getElementById('btn-sharp-eyed-toggle');
+    if (btn) { btn.textContent = '👁️ Sharp Eyed'; btn.classList.remove('sharp-eyed-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  restoreSharpEyedVisuals() {
+    const input = document.getElementById('perception-current');
+    if (input) input.classList.add('se-boosted-rogue');
+    const btn = document.getElementById('btn-sharp-eyed-toggle');
+    if (btn) { btn.textContent = '👁️ Focused ACTIVE — Click to Deactivate'; btn.classList.add('sharp-eyed-active-btn'); }
+  },
+
+  // ============================================
+  // VAULTING ABILITY (Toggle +20% Acrobatics)
+  // ============================================
+
+  checkVaultingVisibility() {
+    const section = document.getElementById('vaulting-section');
+    if (!section) return;
+    const has = this.hasAbility('Vaulting');
+    section.style.display = has ? '' : 'none';
+    if (has) this.initVaulting();
+  },
+
+  initVaulting() {
+    const btn = document.getElementById('btn-vaulting-toggle');
+    if (!btn || btn._vaultInit) return;
+    btn._vaultInit = true;
+    btn.addEventListener('click', () => {
+      if (this.character.vaultingActive) {
+        this.deactivateVaulting();
+      } else {
+        this.activateVaulting();
+      }
+    });
+    this.updateVaultingButtonState();
+    if (this.character.vaultingActive) this.restoreVaultingVisuals();
+  },
+
+  updateVaultingButtonState() {
+    const btn = document.getElementById('btn-vaulting-toggle');
+    const statusEl = document.getElementById('vaulting-status');
+    if (!btn) return;
+    if (this.character.vaultingActive) { btn.disabled = false; return; }
+    const encStatus = document.getElementById('enc-status')?.textContent?.toLowerCase() || '';
+    const isUnburdened = encStatus.includes('unburdened');
+    if (!isUnburdened) {
+      btn.disabled = true;
+      btn.textContent = '🏃 Vault';
+      if (statusEl) statusEl.textContent = '⚠ Requires Unburdened (Things < STR)';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '🏃 Vault';
+      if (statusEl) statusEl.textContent = '+20% Acrobatics · Unburdened + pole required';
+    }
+  },
+
+  activateVaulting() {
+    if (this.character.vaultingActive) return;
+    const encStatus = document.getElementById('enc-status')?.textContent?.toLowerCase() || '';
+    if (!encStatus.includes('unburdened')) return;
+    this.character.vaultingActive = true;
+    // Find Acrobatics in professional skills
+    const acroInput = this._findProfSkillInput('acrobatics');
+    if (acroInput) {
+      const val = parseInt(acroInput.value, 10) || 0;
+      this.character._vaultAcroBefore = val;
+      this.character._vaultAcroId = acroInput.id;
+      acroInput.value = val + 20;
+      acroInput.classList.add('vault-boosted');
+    }
+    this.showRogueAbilityAnimation('vaulting-anim-overlay', '🏃', 'Vaulting!');
+    const btn = document.getElementById('btn-vaulting-toggle');
+    if (btn) { btn.textContent = '🏃 Vaulting ACTIVE — Click to Deactivate'; btn.classList.add('vaulting-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  deactivateVaulting() {
+    if (!this.character.vaultingActive) return;
+    this.character.vaultingActive = false;
+    const acroInput = this.character._vaultAcroId ? document.getElementById(this.character._vaultAcroId) : this._findProfSkillInput('acrobatics');
+    if (acroInput) {
+      if (this.character._vaultAcroBefore !== undefined) acroInput.value = this.character._vaultAcroBefore;
+      else acroInput.value = Math.max(0, (parseInt(acroInput.value, 10) || 0) - 20);
+      acroInput.classList.remove('vault-boosted');
+      delete this.character._vaultAcroBefore;
+      delete this.character._vaultAcroId;
+    }
+    const btn = document.getElementById('btn-vaulting-toggle');
+    if (btn) { btn.textContent = '🏃 Vault'; btn.classList.remove('vaulting-active-btn'); }
+    this.updateVaultingButtonState();
+    this.scheduleAutoSave();
+  },
+
+  restoreVaultingVisuals() {
+    const acroInput = this.character._vaultAcroId ? document.getElementById(this.character._vaultAcroId) : this._findProfSkillInput('acrobatics');
+    if (acroInput) acroInput.classList.add('vault-boosted');
+    const btn = document.getElementById('btn-vaulting-toggle');
+    if (btn) { btn.textContent = '🏃 Vaulting ACTIVE — Click to Deactivate'; btn.classList.add('vaulting-active-btn'); }
+  },
+
+  /** Helper: find a professional skill input by name */
+  _findProfSkillInput(skillName) {
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return null;
+    const rows = container.querySelectorAll('.prof-skill-row');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.prof-skill-name');
+      const currentInput = row.querySelector('.prof-skill-current');
+      if (nameInput && currentInput && nameInput.value.trim().toLowerCase() === skillName.toLowerCase()) {
+        return currentInput;
+      }
+    }
+    return null;
+  },
+
+  // ============================================
+  // UNARMORED DEFENSE (Auto-passive +20% Evade)
+  // ============================================
+
+  checkUnarmoredDefenseVisibility() {
+    const section = document.getElementById('unarmored-defense-section');
+    if (!section) return;
+    const has = this.hasAbility('Unarmored Defense');
+    section.style.display = has ? '' : 'none';
+    if (has) this.updateUnarmoredDefense();
+  },
+
+  updateUnarmoredDefense() {
+    if (!this.hasAbility('Unarmored Defense')) return;
+    const statusEl = document.getElementById('unarmored-defense-status');
+    const evadeInput = document.getElementById('evade-current');
+    if (!evadeInput) return;
+
+    // Check: Unburdened + No Armor
+    const encStatus = document.getElementById('enc-status')?.textContent?.toLowerCase() || '';
+    const isUnburdened = encStatus.includes('unburdened');
+    const isNoArmor = this._detectArmorCategory() === 'none';
+    const meetsConditions = isUnburdened && isNoArmor;
+
+    if (meetsConditions && !this.character.unarmoredDefenseActive) {
+      // Apply +20 to Evade
+      const val = parseInt(evadeInput.value, 10) || 0;
+      this.character._udEvadeBefore = val;
+      evadeInput.value = val + 20;
+      evadeInput.classList.add('ud-boosted');
+      this.character.unarmoredDefenseActive = true;
+      if (statusEl) statusEl.innerHTML = '<span class="ud-active-indicator">✦ ACTIVE — +20% Evade</span>';
+      this.scheduleAutoSave();
+    } else if (!meetsConditions && this.character.unarmoredDefenseActive) {
+      // Remove bonus
+      if (this.character._udEvadeBefore !== undefined) evadeInput.value = this.character._udEvadeBefore;
+      else evadeInput.value = Math.max(0, (parseInt(evadeInput.value, 10) || 0) - 20);
+      evadeInput.classList.remove('ud-boosted');
+      this.character.unarmoredDefenseActive = false;
+      delete this.character._udEvadeBefore;
+      if (statusEl) {
+        if (!isUnburdened) statusEl.textContent = '⚠ Requires Unburdened (Things < STR)';
+        else if (!isNoArmor) statusEl.textContent = '⚠ Requires no armor worn';
+        else statusEl.textContent = '+20% Evade · No armor + Unburdened (auto)';
+      }
+      this.scheduleAutoSave();
+    }
+  },
+
+  restoreUnarmoredDefenseVisuals() {
+    if (!this.character.unarmoredDefenseActive) return;
+    const evadeInput = document.getElementById('evade-current');
+    if (evadeInput) evadeInput.classList.add('ud-boosted');
+    const statusEl = document.getElementById('unarmored-defense-status');
+    if (statusEl) statusEl.innerHTML = '<span class="ud-active-indicator">✦ ACTIVE — +20% Evade</span>';
+  },
+
+  // ============================================
+  // SNEAK ATTACK BONUS DAMAGE (Rank 2+)
+  // ============================================
+
+  checkSneakAttackBonusDamage() {
+    const area = document.getElementById('sneak-attack-bonus-area');
+    if (!area) return;
+    if (!this.hasAbility('Sneak Attack')) { area.style.display = 'none'; return; }
+    const rank = this.getRogueRank();
+    if (rank < 2) { area.style.display = 'none'; return; }
+
+    area.style.display = '';
+    const label = document.getElementById('sneak-attack-bonus-label');
+    const btn = document.getElementById('btn-sneak-attack-damage');
+    const dmg = this._getSneakAttackDamage(rank);
+    if (label) label.innerHTML = `<strong>Rank ${rank} Bonus:</strong> Melee ${dmg.melee}${dmg.ranged ? ' · Ranged ' + dmg.ranged : ''}`;
+    if (btn && !btn._saInit) {
+      btn._saInit = true;
+      btn.addEventListener('click', () => {
+        if (this.character.sneakDamageActive) this.deactivateSneakDamage();
+        else this.activateSneakDamage();
+      });
+    }
+    if (this.character.sneakDamageActive) this.restoreSneakDamageVisuals();
+  },
+
+  _getSneakAttackDamage(rank) {
+    if (rank >= 5) return { melee: '+1d8', ranged: '+1d6' };
+    if (rank >= 4) return { melee: '+1d6', ranged: '+1d4' };
+    if (rank >= 3) return { melee: '+1d4', ranged: '+1d2' };
+    if (rank >= 2) return { melee: '+1d2', ranged: null };
+    return { melee: null, ranged: null };
+  },
+
+  getRogueRank() {
+    const classEl = document.getElementById('class-1-name');
+    const rankEl = document.getElementById('class-1-rank');
+    const class2El = document.getElementById('class-2-name');
+    const rank2El = document.getElementById('class-2-rank');
+    let rogueRank = 0;
+    if (classEl && classEl.value.toLowerCase().includes('rogue')) {
+      rogueRank = parseInt(rankEl?.value, 10) || 0;
+    } else if (class2El && class2El.value.toLowerCase().includes('rogue')) {
+      rogueRank = parseInt(rank2El?.value, 10) || 0;
+    }
+    return rogueRank;
+  },
+
+  activateSneakDamage() {
+    if (this.character.sneakDamageActive) return;
+    this.character.sneakDamageActive = true;
+    const rank = this.getRogueRank();
+    const dmg = this._getSneakAttackDamage(rank);
+
+    // Show animation
+    const diceText = `Melee ${dmg.melee}${dmg.ranged ? ' · Ranged ' + dmg.ranged : ''}`;
+    this.showSneakDamageAnimation(diceText);
+
+    // Add damage badges to weapon cells
+    this._applySneakDamageBadges(dmg);
+
+    const btn = document.getElementById('btn-sneak-attack-damage');
+    if (btn) { btn.textContent = '🗡️ Bonus Damage ACTIVE — Click to Remove'; btn.classList.add('sneak-damage-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  deactivateSneakDamage() {
+    if (!this.character.sneakDamageActive) return;
+    this.character.sneakDamageActive = false;
+    this._removeSneakDamageBadges();
+    const btn = document.getElementById('btn-sneak-attack-damage');
+    if (btn) { btn.textContent = '🗡️ Apply Bonus Damage'; btn.classList.remove('sneak-damage-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  restoreSneakDamageVisuals() {
+    const btn = document.getElementById('btn-sneak-attack-damage');
+    if (btn) { btn.textContent = '🗡️ Bonus Damage ACTIVE — Click to Remove'; btn.classList.add('sneak-damage-active-btn'); }
+    // Re-apply badges on restore
+    const rank = this.getRogueRank();
+    const dmg = this._getSneakAttackDamage(rank);
+    this._applySneakDamageBadges(dmg);
+  },
+
+  _applySneakDamageBadges(dmg) {
+    // Add badges to melee weapon damage cells
+    if (dmg.melee) {
+      document.querySelectorAll('[id^="melee-"][id$="-damage"]').forEach(input => {
+        const row = input.closest('tr');
+        if (!row) return;
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput || !nameInput.value.trim()) return;
+        const cell = input.closest('.damage-cell');
+        if (!cell || cell.querySelector('.sneak-damage-badge')) return;
+        cell.classList.add('sneak-damage-highlight');
+        const badge = document.createElement('span');
+        badge.className = 'sneak-damage-badge';
+        badge.textContent = dmg.melee;
+        cell.appendChild(badge);
+      });
+    }
+    // Add badges to ranged weapon damage cells
+    if (dmg.ranged) {
+      document.querySelectorAll('[id^="ranged-"][id$="-damage"]').forEach(input => {
+        const row = input.closest('tr');
+        if (!row) return;
+        const nameInput = row.querySelector('.weapon-name');
+        if (!nameInput || !nameInput.value.trim()) return;
+        const cell = input.closest('.damage-cell');
+        if (!cell || cell.querySelector('.sneak-damage-badge')) return;
+        cell.classList.add('sneak-damage-highlight');
+        const badge = document.createElement('span');
+        badge.className = 'sneak-damage-badge';
+        badge.textContent = dmg.ranged;
+        cell.appendChild(badge);
+      });
+    }
+  },
+
+  _removeSneakDamageBadges() {
+    document.querySelectorAll('.sneak-damage-badge').forEach(b => b.remove());
+    document.querySelectorAll('.sneak-damage-highlight').forEach(c => c.classList.remove('sneak-damage-highlight'));
+  },
+
+  showSneakDamageAnimation(diceText) {
+    const overlay = document.createElement('div');
+    overlay.className = 'sneak-damage-anim-overlay';
+    overlay.innerHTML = `
+      <div class="sneak-damage-anim-content">
+        <div class="sneak-damage-glow"></div>
+        <div class="sneak-damage-icon">🗡️</div>
+        <div class="sneak-damage-text">Sneak Attack!</div>
+        <div class="sneak-damage-dice">${diceText}</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 400);
+    }, 1500);
+  },
+
+  // ============================================
+  // WEAPON PRECISION INFO CARD
+  // ============================================
+
+  checkWeaponPrecisionVisibility() {
+    const section = document.getElementById('weapon-precision-section');
+    if (!section) return;
+    const has = this.hasAbility('Weapon Precision');
+    section.style.display = has ? '' : 'none';
+    if (has) this.updateWeaponPrecisionCalc();
+  },
+
+  updateWeaponPrecisionCalc() {
+    const strDexEl = document.getElementById('wp-str-dex-dm');
+    const strSizEl = document.getElementById('wp-str-siz-dm');
+    const indicatorEl = document.getElementById('wp-active-indicator');
+    if (!strDexEl || !strSizEl) return;
+
+    const str = parseInt(this.character.attributes?.STR, 10) || 0;
+    const dex = parseInt(this.character.attributes?.DEX, 10) || 0;
+    const siz = parseInt(this.character.attributes?.SIZ, 10) || 0;
+
+    // Look up DM from the standard table
+    const strDexDM = this._lookupDamageModifier(str + dex);
+    const strSizDM = this._lookupDamageModifier(str + siz);
+
+    strDexEl.textContent = strDexDM;
+    strSizEl.textContent = strSizDM;
+
+    if (indicatorEl) {
+      const strDexVal = str + dex;
+      const strSizVal = str + siz;
+      if (strDexVal > strSizVal) {
+        indicatorEl.textContent = '✦ STR+DEX is better';
+        indicatorEl.className = 'wp-active-indicator wp-better';
+      } else if (strDexVal < strSizVal) {
+        indicatorEl.textContent = 'STR+SIZ is better';
+        indicatorEl.className = 'wp-active-indicator wp-worse';
+      } else {
+        indicatorEl.textContent = 'Equal';
+        indicatorEl.className = 'wp-active-indicator wp-worse';
+      }
+    }
+  },
+
+  _lookupDamageModifier(total) {
+    if (total <= 5) return '-1d8';
+    if (total <= 10) return '-1d6';
+    if (total <= 15) return '-1d4';
+    if (total <= 20) return '-1d2';
+    if (total <= 25) return '+0';
+    if (total <= 30) return '+1d2';
+    if (total <= 35) return '+1d4';
+    if (total <= 40) return '+1d6';
+    if (total <= 45) return '+1d8';
+    if (total <= 50) return '+1d10';
+    if (total <= 55) return '+1d12';
+    if (total <= 60) return '+2d6';
+    if (total <= 65) return '+1d6+1d8';
+    if (total <= 70) return '+2d8';
+    return '+1d8+1d10';
+  },
+
+  // ============================================
+  // SKIRMISHING, SWASHBUCKLING, ARCANE SCROLLS INFO CARDS
+  // ============================================
+
+  checkSkirmishingVisibility() {
+    const section = document.getElementById('skirmishing-section');
+    if (!section) return;
+    const has = this.hasAbility('Skirmishing');
+    section.style.display = has ? '' : 'none';
+    if (has) {
+      const athVal = document.getElementById('athletics-current')?.value || '—';
+      const el = document.getElementById('skirmish-athletics-val');
+      if (el) el.textContent = athVal;
+    }
+  },
+
+  checkSwashbucklingVisibility() {
+    const section = document.getElementById('swashbuckling-section');
+    if (!section) return;
+    section.style.display = this.hasAbility('Swashbuckling') ? '' : 'none';
+  },
+
+  checkDefensiveReflexesVisibility() {
+    const section = document.getElementById('defensive-reflexes-section');
+    if (!section) return;
+    // Check all tiers
+    let tier = 0;
+    if (this.hasAbility('Defensive Reflexes IV') || this.hasAbility('Defensive Reflexes 4')) tier = 4;
+    else if (this.hasAbility('Defensive Reflexes III') || this.hasAbility('Defensive Reflexes 3')) tier = 3;
+    else if (this.hasAbility('Defensive Reflexes II') || this.hasAbility('Defensive Reflexes 2')) tier = 2;
+    else if (this.hasAbility('Defensive Reflexes I') || this.hasAbility('Defensive Reflexes 1')) tier = 1;
+    
+    if (tier === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = '';
+    
+    const bonusEl = document.getElementById('dr-bonus-ap');
+    const usesEl = document.getElementById('dr-uses-label');
+    if (bonusEl) bonusEl.textContent = '+1';
+    if (usesEl) usesEl.textContent = `${tier} reaction${tier > 1 ? 's' : ''} per combat`;
+  },
+
+  checkArcaneScrollsVisibility() {
+    const section = document.getElementById('arcane-scrolls-section');
+    if (!section) return;
+    const has = this.hasAbility('Use Arcane Scrolls');
+    section.style.display = has ? '' : 'none';
+    if (has) {
+      const intVal = parseInt(this.character.attributes?.INT, 10) || 0;
+      const chanceEl = document.getElementById('arcane-scroll-chance');
+      if (chanceEl) chanceEl.textContent = intVal * 5;
+    }
+  },
+
+  // ============================================
+  // READ LANGUAGES - Special handling on ability purchase
+  // ============================================
+
+  handleReadLanguagesPurchase() {
+    // Show modal asking about thieves' guild training
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;';
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:linear-gradient(135deg,#1a2020,#252a2a);border:2px solid #5a7a7a;border-radius:12px;padding:1.5rem;max-width:400px;width:90%;text-align:center;color:#ccc;';
+    modal.innerHTML = `
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;">📜</div>
+      <div style="font-weight:bold;color:#8ab8b8;margin-bottom:0.5rem;">Read Languages</div>
+      <div style="font-size:0.85rem;margin-bottom:1rem;">This ability requires one month of Training with the thieves' guild. Has your character completed this training?</div>
+      <div style="display:flex;gap:0.5rem;justify-content:center;">
+        <button id="rl-yes-btn" style="padding:0.5rem 1.5rem;background:#3a6a3a;color:white;border:1px solid #5a8a5a;border-radius:5px;cursor:pointer;font-weight:bold;">Yes — Add Skill</button>
+        <button id="rl-no-btn" style="padding:0.5rem 1.5rem;background:#5a3a3a;color:white;border:1px solid #8a5a5a;border-radius:5px;cursor:pointer;font-weight:bold;">Not Yet</button>
+      </div>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('rl-yes-btn').addEventListener('click', () => {
+      overlay.remove();
+      this.addReadLanguagesSkill();
+    });
+    document.getElementById('rl-no-btn').addEventListener('click', () => {
+      overlay.remove();
+      // Remove the ability since they haven't trained
+      this.removeAbilityByName('Read Languages');
+      this.showFloatingMessage('Read Languages not added — complete thieves\' guild training first.', 'warning');
+    });
+  },
+
+  addReadLanguagesSkill() {
+    const intVal = parseInt(this.character.attributes?.INT, 10) || 0;
+    const baseLevel = intVal * 2;
+
+    // Find empty prof skill slot and add Read Languages
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+    const rows = container.querySelectorAll('.prof-skill-row');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.prof-skill-name');
+      const currentInput = row.querySelector('.prof-skill-current');
+      if (nameInput && !nameInput.value.trim()) {
+        nameInput.value = 'Read Languages';
+        if (currentInput) currentInput.value = baseLevel;
+        nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        nameInput.dispatchEvent(new Event('change', { bubbles: true }));
+        this.scheduleAutoSave();
+        this.showFloatingMessage(`Read Languages added at INT×2 = ${baseLevel}%`, 'success');
+        return;
+      }
+    }
+    this.showFloatingMessage('No empty professional skill slots available!', 'warning');
+  },
+
+  handleUseArcaneScrollsPurchase() {
+    // Show modal asking about thieves' guild training
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;';
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:linear-gradient(135deg,#1a2020,#252a2a);border:2px solid #5a7a7a;border-radius:12px;padding:1.5rem;max-width:400px;width:90%;text-align:center;color:#ccc;';
+    modal.innerHTML = `
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;">📜</div>
+      <div style="font-weight:bold;color:#8ab8b8;margin-bottom:0.5rem;">Use Arcane Scrolls</div>
+      <div style="font-size:0.85rem;margin-bottom:1rem;">This ability requires one month of Training at the thieves' guild. Has your character completed this training?</div>
+      <div style="display:flex;gap:0.5rem;justify-content:center;">
+        <button id="uas-yes-btn" style="padding:0.5rem 1.5rem;background:#3a6a3a;color:white;border:1px solid #5a8a5a;border-radius:5px;cursor:pointer;font-weight:bold;">Yes — Learned</button>
+        <button id="uas-no-btn" style="padding:0.5rem 1.5rem;background:#5a3a3a;color:white;border:1px solid #8a5a5a;border-radius:5px;cursor:pointer;font-weight:bold;">Not Yet</button>
+      </div>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('uas-yes-btn').addEventListener('click', () => {
+      overlay.remove();
+      this.checkArcaneScrollsVisibility();
+      this.showFloatingMessage('Use Arcane Scrolls ability acquired!', 'success');
+    });
+    document.getElementById('uas-no-btn').addEventListener('click', () => {
+      overlay.remove();
+      this.removeAbilityByName('Use Arcane Scrolls');
+      this.showFloatingMessage('Use Arcane Scrolls not added — complete thieves\' guild training first.', 'warning');
+    });
+  },
+
+  removeAbilityByName(abilityName) {
+    const container = document.getElementById('class-abilities-list');
+    if (!container) return;
+    const rows = container.querySelectorAll('.class-ability-row');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.ability-name');
+      if (nameInput && nameInput.value.trim().toLowerCase() === abilityName.toLowerCase()) {
+        row.remove();
+        // Also remove from acquiredAbilities if present
+        if (this.character.acquiredAbilities) {
+          this.character.acquiredAbilities = this.character.acquiredAbilities.filter(a => a.name.toLowerCase() !== abilityName.toLowerCase());
+        }
+        this.scheduleAutoSave();
+        return;
+      }
+    }
+  },
+
+  // ============================================
+  // SHARED: Rogue ability full-page animation
+  // ============================================
+
+  showRogueAbilityAnimation(cssClass, icon, text) {
+    const overlay = document.createElement('div');
+    overlay.className = cssClass;
+    overlay.innerHTML = `
+      <div class="rogue-anim-content">
+        <div class="rogue-anim-glow"></div>
+        <div class="rogue-anim-icon">${icon}</div>
+        <div class="rogue-anim-text">${text}</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 400);
+    }, 1500);
+  },
+
+  /** Show a floating message notification */
+  showFloatingMessage(text, type = 'info') {
+    const colors = { success: '#3a6a3a', warning: '#6a5a2a', info: '#3a5a6a', error: '#6a3a3a' };
+    const borderColors = { success: '#5a8a5a', warning: '#8a7a4a', info: '#5a7a8a', error: '#8a5a5a' };
+    const msg = document.createElement('div');
+    msg.style.cssText = `position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:10001;padding:0.6rem 1.2rem;border-radius:8px;font-size:0.85rem;font-weight:600;color:white;background:${colors[type] || colors.info};border:1px solid ${borderColors[type] || borderColors.info};box-shadow:0 4px 15px rgba(0,0,0,0.4);opacity:0;transition:opacity 0.3s;`;
+    msg.textContent = text;
+    document.body.appendChild(msg);
+    requestAnimationFrame(() => { msg.style.opacity = '1'; });
+    setTimeout(() => {
+      msg.style.opacity = '0';
+      setTimeout(() => msg.remove(), 300);
+    }, 3000);
   },
 
   // ============================================
@@ -28180,6 +28979,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (this.character.hideInShadowsActive && normalizedSkill === 'stealth') {
       this.deactivateHideInShadows();
     }
+
+    // Great Hearing: deactivate after Perception roll
+    if (this.character.greatHearingActive && normalizedSkill === 'perception') {
+      this.deactivateGreatHearing();
+    }
+
+    // Sharp Eyed: deactivate after Perception roll
+    if (this.character.sharpEyedActive && normalizedSkill === 'perception') {
+      this.deactivateSharpEyed();
+    }
+
+    // Vaulting: deactivate after Acrobatics roll
+    if (this.character.vaultingActive && normalizedSkill === 'acrobatics') {
+      this.deactivateVaulting();
+    }
   },
 
   /**
@@ -32208,6 +33022,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkHideInShadowsVisibility();
     this.checkSneakAttackVisibility();
     this.checkSubterfugeVisibility();
+    this.checkGreatHearingVisibility();
+    this.checkSharpEyedVisibility();
+    this.checkVaultingVisibility();
+    this.checkUnarmoredDefenseVisibility();
+    this.checkSneakAttackBonusDamage();
+    this.checkWeaponPrecisionVisibility();
+    this.checkSkirmishingVisibility();
+    this.checkSwashbucklingVisibility();
+    this.checkDefensiveReflexesVisibility();
+    this.checkArcaneScrollsVisibility();
     this.checkMentalStrengthVisibility();
     this.checkTurnUndeadVisibility();
     this.checkMonkAbilitiesVisibility();
@@ -32238,6 +33062,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     if (hasRogueAbility && isRogue) {
       this.addLanguageIfNotExists("Thieves' Cant");
+    }
+
+    // Read Languages requires thieves' guild training prompt
+    if (normalizedAbilities.includes('read languages')) {
+      setTimeout(() => this.handleReadLanguagesPurchase(), 500);
+    }
+
+    // Use Arcane Scrolls requires thieves' guild training prompt
+    if (normalizedAbilities.includes('use arcane scrolls')) {
+      setTimeout(() => this.handleUseArcaneScrollsPurchase(), 500);
     }
   },
 

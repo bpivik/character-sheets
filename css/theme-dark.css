@@ -1154,28 +1154,16 @@
 }
 
 /* Forceful Strike - Dark Mode */
-/* --- Universal Dark Mode Field Highlights --- */
-[data-theme="dark"] .forceful-penalized,
-[data-theme="dark"] .field-penalized {
-  background-color: rgba(200, 100, 0, 0.25) !important;
-  border: 1px solid #d95 !important;
+[data-theme="dark"] .forceful-penalized {
+  background-color: rgba(200, 100, 0, 0.3) !important;
+  border-color: #d95 !important;
   color: #fa6 !important;
 }
 
-[data-theme="dark"] .forceful-boosted,
-[data-theme="dark"] .field-boosted,
-[data-theme="dark"] .brute-boosted,
-[data-theme="dark"] .improved-aim-boosted,
-[data-theme="dark"] .cw-boosted,
-[data-theme="dark"] .his-boosted,
-[data-theme="dark"] .subterfuge-boosted {
-  background-color: rgba(0, 150, 0, 0.25) !important;
-  border: 1px solid #5a5 !important;
+[data-theme="dark"] .forceful-boosted {
+  background-color: rgba(0, 180, 60, 0.25) !important;
+  border-color: #5d5 !important;
   color: #5f5 !important;
-}
-
-[data-theme="dark"] .subterfuge-boosted::after {
-  color: #5f5;
 }
 
 [data-theme="dark"] .rage-boosted,
@@ -1187,9 +1175,194 @@
   color: #5f5 !important;
 }
 
-[data-theme="dark"] .improved-aim-row {
-  background: rgba(0, 150, 0, 0.1) !important;
+/* --- Rogue Ability Sections - Dark Mode --- */
+[data-theme="dark"] .climb-walls-section {
+  background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
+  border-color: #4a8a4a;
 }
-[data-theme="dark"] .improved-aim-row .combat-skill-name {
-  color: #5f5 !important;
+
+[data-theme="dark"] .climb-walls-section .section-header {
+  color: #7dcc7d;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
 }
+
+[data-theme="dark"] .climb-walls-label {
+  color: #88aa88;
+}
+
+[data-theme="dark"] .btn-climb-walls {
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
+  border-color: #4a8a4a;
+  color: white;
+}
+
+[data-theme="dark"] .climb-walls-active-btn {
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%) !important;
+  border-color: #7dcc7d !important;
+  color: #aaffaa !important;
+}
+
+[data-theme="dark"] .btn-climb-walls:disabled {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}
+
+[data-theme="dark"] .hide-in-shadows-section {
+  background: linear-gradient(135deg, #1a1a2a 0%, #252535 100%);
+  border-color: #6a5aaa;
+}
+
+[data-theme="dark"] .hide-in-shadows-section .section-header {
+  color: #b09ae0;
+  text-shadow: 0 0 10px rgba(160, 140, 220, 0.5);
+}
+
+[data-theme="dark"] .hide-in-shadows-label {
+  color: #8888aa;
+}
+
+[data-theme="dark"] .btn-hide-in-shadows {
+  background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 50%, #2a2a4a 100%);
+  border-color: #6a5aaa;
+  color: white;
+}
+
+[data-theme="dark"] .hide-in-shadows-active-btn {
+  background: linear-gradient(135deg, #3a3a6a 0%, #4a4a8a 50%, #3a3a6a 100%) !important;
+  border-color: #b09ae0 !important;
+  color: #d4c4ff !important;
+}
+
+[data-theme="dark"] .sneak-attack-section {
+  background: linear-gradient(135deg, #2a1a1a 0%, #352025 100%);
+  border-color: #8a3a3a;
+}
+
+[data-theme="dark"] .sneak-attack-section .section-header {
+  color: #e06060;
+  text-shadow: 0 0 10px rgba(220, 80, 80, 0.4);
+}
+
+[data-theme="dark"] .sneak-attack-card {
+  color: #cca;
+}
+
+[data-theme="dark"] .sneak-attack-bullets {
+  color: #e06060;
+}
+
+[data-theme="dark"] .sneak-attack-defense {
+  color: #998;
+}
+
+[data-theme="dark"] .subterfuge-boosted {
+  color: #e6a317 !important;
+  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
+}
+
+[data-theme="dark"] .subterfuge-boosted::after {
+  color: #e6a317;
+}
+
+[data-theme="dark"] .cw-boosted {
+  color: #5cb85c !important;
+  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+}
+
+[data-theme="dark"] .his-boosted {
+  color: #805ad5 !important;
+  text-shadow: 0 0 4px rgba(128, 90, 213, 0.3);
+}
+
+/* --- Rogue Ranked Abilities - Dark Mode Restoration --- */
+[data-theme="dark"] .great-hearing-section,
+[data-theme="dark"] .sharp-eyed-section,
+[data-theme="dark"] .vaulting-section {
+  background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
+  border-color: #4a8a4a;
+}
+
+[data-theme="dark"] .great-hearing-section .section-header,
+[data-theme="dark"] .sharp-eyed-section .section-header,
+[data-theme="dark"] .vaulting-section .section-header {
+  color: #7dcc7d;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
+}
+
+[data-theme="dark"] .great-hearing-label,
+[data-theme="dark"] .sharp-eyed-label,
+[data-theme="dark"] .vaulting-label {
+  color: #88aa88;
+}
+
+[data-theme="dark"] .btn-great-hearing,
+[data-theme="dark"] .btn-sharp-eyed,
+[data-theme="dark"] .btn-vaulting {
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
+  border-color: #4a8a4a;
+  color: white;
+}
+
+[data-theme="dark"] .gh-boosted,
+[data-theme="dark"] .se-boosted,
+[data-theme="dark"] .vault-boosted {
+  color: #5cb85c !important;
+  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+}
+
+[data-theme="dark"] .unarmored-defense-section,
+[data-theme="dark"] .defensive-reflexes-section {
+  background: linear-gradient(135deg, #1a2a2a 0%, #253035 100%);
+  border-color: #4a8aaa;
+}
+
+[data-theme="dark"] .unarmored-defense-section .section-header,
+[data-theme="dark"] .defensive-reflexes-section .section-header {
+  color: #7dcced;
+  text-shadow: 0 0 10px rgba(125, 204, 237, 0.4);
+}
+
+[data-theme="dark"] .ud-active-indicator {
+  color: #7dcced;
+  text-shadow: 0 0 8px rgba(125, 204, 237, 0.5);
+}
+
+[data-theme="dark"] .dr-bonus-value {
+  color: #7dcced;
+  text-shadow: 0 0 10px rgba(125, 204, 237, 0.5);
+}
+
+[data-theme="dark"] .skirmishing-section,
+[data-theme="dark"] .swashbuckling-section {
+  background: linear-gradient(135deg, #2a2a1a 0%, #353020 100%);
+  border-color: #8a7a3a;
+}
+
+[data-theme="dark"] .skirmishing-section .section-header,
+[data-theme="dark"] .swashbuckling-section .section-header {
+  color: #d4a04a;
+  text-shadow: 0 0 10px rgba(212, 160, 74, 0.4);
+}
+
+[data-theme="dark"] .skirmishing-rule,
+[data-theme="dark"] .swashbuckling-rule {
+  color: #cca;
+}
+
+[data-theme="dark"] .sneak-attack-bonus-label {
+  color: #e06060;
+}
+
+[data-theme="dark"] .arcane-scrolls-section {
+  background: linear-gradient(135deg, #1a1a2a 0%, #252535 100%);
+  border-color: #6a5aaa;
+}
+
+[data-theme="dark"] .arcane-scrolls-section .section-header {
+  color: #b09ae0;
+  text-shadow: 0 0 10px rgba(160, 140, 220, 0.5);
+}
+
+[data-theme="dark"] .arcane-scrolls-rule { color: #aaa; }
+[data-theme="dark"] .arcane-scrolls-chance { color: #b09ae0; }
+[data-theme="dark"] .arcane-scrolls-warning { color: #e06060; }
