@@ -13672,3 +13672,167 @@ body.dark-mode[data-class-theme] .subsection-header {
   0%, 100% { box-shadow: 0 0 8px currentColor; }
   50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
 }
+
+/* ═══════════════════════════════════════════════════
+   ROGUE ABILITY SECTIONS
+   ═══════════════════════════════════════════════════ */
+
+/* Climb Walls */
+.climb-walls-section {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(92, 184, 92, 0.25);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(92, 184, 92, 0.04) 0%, transparent 100%);
+}
+
+.climb-walls-content {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+}
+
+.climb-walls-info { flex: 1; }
+
+.climb-walls-label {
+  font-size: 0.78rem; color: #999; letter-spacing: 0.3px;
+}
+
+.btn-climb-walls {
+  padding: 0.4rem 0.9rem; border-radius: 5px; cursor: pointer;
+  font-size: 0.78rem; font-weight: 600; transition: all 0.3s ease;
+  background: linear-gradient(135deg, #2a3a2a 0%, #3d4a3d 100%);
+  border: 1px solid rgba(92, 184, 92, 0.3); color: #6dbd6d;
+}
+
+.btn-climb-walls:hover:not(:disabled) {
+  border-color: #5cb85c; box-shadow: 0 0 8px rgba(92, 184, 92, 0.4);
+}
+
+.btn-climb-walls:disabled {
+  opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6);
+}
+
+.btn-climb-walls.active {
+  background: linear-gradient(135deg, rgba(92, 184, 92, 0.15) 0%, rgba(92, 184, 92, 0.25) 100%);
+  border-color: #5cb85c; color: #5cb85c;
+  box-shadow: 0 0 12px rgba(92, 184, 92, 0.5);
+}
+
+/* Hide in Shadows */
+.hide-in-shadows-section {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(128, 90, 213, 0.25);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(128, 90, 213, 0.04) 0%, transparent 100%);
+}
+
+.hide-in-shadows-content {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+}
+
+.hide-in-shadows-info { flex: 1; }
+
+.hide-in-shadows-label {
+  font-size: 0.78rem; color: #999; letter-spacing: 0.3px;
+}
+
+.btn-hide-in-shadows {
+  padding: 0.4rem 0.9rem; border-radius: 5px; cursor: pointer;
+  font-size: 0.78rem; font-weight: 600; transition: all 0.3s ease;
+  background: linear-gradient(135deg, #2a2a3a 0%, #3d3a4d 100%);
+  border: 1px solid rgba(128, 90, 213, 0.3); color: #a07de0;
+}
+
+.btn-hide-in-shadows:hover:not(:disabled) {
+  border-color: #805ad5; box-shadow: 0 0 8px rgba(128, 90, 213, 0.4);
+}
+
+.btn-hide-in-shadows.active {
+  background: linear-gradient(135deg, rgba(128, 90, 213, 0.15) 0%, rgba(128, 90, 213, 0.25) 100%);
+  border-color: #805ad5; color: #805ad5;
+  box-shadow: 0 0 12px rgba(128, 90, 213, 0.5);
+}
+
+/* Sneak Attack Info Card */
+.sneak-attack-section {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.04) 0%, transparent 100%);
+}
+
+.sneak-attack-card {
+  font-size: 0.78rem; color: #bbb; line-height: 1.5;
+}
+
+.sneak-attack-req { margin-bottom: 0.2rem; }
+
+.sneak-attack-divider {
+  height: 1px; background: rgba(220, 53, 69, 0.15); margin: 0.4rem 0;
+}
+
+.sneak-attack-effect { margin-bottom: 0.2rem; }
+
+.sneak-attack-bullets {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  padding-left: 0.5rem; color: #dc3545; font-size: 0.75rem;
+}
+
+.sneak-attack-defense {
+  font-size: 0.73rem; color: #999;
+}
+
+/* Subterfuge boost indicator on skills */
+.subterfuge-boosted {
+  color: #e6a317 !important;
+  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
+}
+
+.subterfuge-boosted::after {
+  content: ' ✦';
+  font-size: 0.6em;
+  color: #e6a317;
+}
+
+/* Climb Walls / Hide in Shadows boost indicator on skills */
+.cw-boosted {
+  color: #5cb85c !important;
+  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+}
+
+.his-boosted {
+  color: #805ad5 !important;
+  text-shadow: 0 0 4px rgba(128, 90, 213, 0.3);
+}
+
+/* Rogue ability activation animations */
+@keyframes climbWallsFlash {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+
+@keyframes hideInShadowsFade {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+.ability-anim-overlay.climb-walls-anim {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 0.3rem;
+  background: radial-gradient(circle, rgba(92, 184, 92, 0.3) 0%, transparent 70%);
+  animation: climbWallsFlash 1.2s ease-out forwards;
+  pointer-events: none; z-index: 5; border-radius: 6px;
+}
+
+.ability-anim-overlay.hide-in-shadows-anim {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 0.3rem;
+  background: radial-gradient(circle, rgba(128, 90, 213, 0.4) 0%, rgba(0,0,0,0.6) 70%);
+  animation: hideInShadowsFade 1.5s ease-out forwards;
+  pointer-events: none; z-index: 5; border-radius: 6px;
+}

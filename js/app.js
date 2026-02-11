@@ -526,6 +526,13 @@ const App = {
     this.checkImprovedAimVisibility();
     this.checkSpeciesEnemyVisibility();
     
+    // Check Rogue ability sections
+    this.checkClimbWallsVisibility();
+    this.checkHideInShadowsVisibility();
+    this.checkSneakAttackVisibility();
+    this.checkSubterfugeVisibility();
+    this.restoreSubterfugeVisuals();
+    
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
     
@@ -3989,6 +3996,8 @@ const App = {
           this.updateVeryAgileDisplay();
           // Check Monk abilities (depends on unarmored status)
           this.checkMonkAbilitiesVisibility();
+          // Update Climb Walls button state (depends on armor type)
+          this.updateClimbWallsButtonState();
         });
         
         // Track when user manually edits AP
@@ -4002,6 +4011,7 @@ const App = {
           this.updateAgileDisplay();
           this.updateVeryAgileDisplay();
           this.checkMonkAbilitiesVisibility();
+          this.updateClimbWallsButtonState();
         });
         apInput.addEventListener('blur', () => {
           this.checkMonkAbilitiesVisibility();
@@ -5002,6 +5012,14 @@ const App = {
           }, 150);
         }
         this.checkSpeciesEnemyVisibility();
+      } else if (normalizedName === 'climb walls') {
+        this.checkClimbWallsVisibility();
+      } else if (normalizedName === 'hide in shadows') {
+        this.checkHideInShadowsVisibility();
+      } else if (normalizedName === 'sneak attack') {
+        this.checkSneakAttackVisibility();
+      } else if (normalizedName === 'subterfuge') {
+        this.checkSubterfugeVisibility();
       }
     }
     
@@ -6302,6 +6320,12 @@ const App = {
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
     this.checkSpeciesEnemyVisibility();
+    
+        // Check Rogue ability sections
+        if (normalizedName === 'climb walls') this.checkClimbWallsVisibility();
+        if (normalizedName === 'hide in shadows') this.checkHideInShadowsVisibility();
+        if (normalizedName === 'sneak attack') this.checkSneakAttackVisibility();
+        if (normalizedName === 'subterfuge') this.checkSubterfugeVisibility();
         
         // Check if Turn Undead section should now be visible
         if (normalizedName === 'turn undead') {
@@ -6381,6 +6405,12 @@ const App = {
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
     this.checkSpeciesEnemyVisibility();
+    
+    // Check Rogue ability sections
+    if (normalizedName === 'climb walls') this.checkClimbWallsVisibility();
+    if (normalizedName === 'hide in shadows') this.checkHideInShadowsVisibility();
+    if (normalizedName === 'sneak attack') this.checkSneakAttackVisibility();
+    if (normalizedName === 'subterfuge') this.checkSubterfugeVisibility();
     
     // Check if Turn Undead section should now be visible
     if (normalizedName === 'turn undead') {
@@ -13371,6 +13401,9 @@ const App = {
       
       // Check Monk abilities display (depends on encumbrance status)
       this.checkMonkAbilitiesVisibility();
+      
+      // Update Climb Walls button state (depends on encumbrance)
+      this.updateClimbWallsButtonState();
     }
   },
   
@@ -13913,6 +13946,18 @@ const App = {
     if (this.character.speciesEnemyActive) {
       this.deactivateSpeciesEnemy();
       messages.push(`<strong>Species Enemy:</strong> Deactivated`);
+    }
+
+    // Deactivate Climb Walls on Long Rest
+    if (this.character.climbWallsActive) {
+      this.deactivateClimbWalls();
+      messages.push(`<strong>Climb Walls:</strong> Deactivated`);
+    }
+
+    // Deactivate Hide in Shadows on Long Rest
+    if (this.character.hideInShadowsActive) {
+      this.deactivateHideInShadows();
+      messages.push(`<strong>Hide in Shadows:</strong> Deactivated`);
     }
 
     const mentalStrengthLevel = this.getMentalStrengthLevel();
@@ -18932,6 +18977,342 @@ const App = {
     if (btn) {
       btn.textContent = '🎯 Species Enemy ACTIVE — Click to Deactivate';
       btn.classList.add('se-active-btn');
+    }
+  },
+
+  // ============================================
+  // ROGUE ABILITIES
+  // ============================================
+
+  /**
+   * Check if character has Climb Walls ability and show/hide section
+   */
+  checkClimbWallsVisibility() {
+    const section = document.getElementById('climb-walls-section');
+    if (!section) return;
+    if (this.hasAbility('Climb Walls')) {
+      section.style.display = '';
+      this.initClimbWalls();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  initClimbWalls() {
+    const btn = document.getElementById('btn-climb-walls-toggle');
+    if (btn && !btn.dataset.listenerAdded) {
+      btn.addEventListener('click', () => {
+        if (this.character.climbWallsActive) {
+          this.deactivateClimbWalls();
+        } else {
+          this.activateClimbWalls();
+        }
+      });
+      btn.dataset.listenerAdded = 'true';
+    }
+    this.updateClimbWallsButtonState();
+    if (this.character.climbWallsActive) this.restoreClimbWallsVisuals();
+  },
+
+  /**
+   * Update Climb Walls button state based on armor and encumbrance
+   */
+  updateClimbWallsButtonState() {
+    const btn = document.getElementById('btn-climb-walls-toggle');
+    const statusEl = document.getElementById('climb-walls-status');
+    if (!btn) return;
+
+    const armorCat = this._detectArmorCategory();
+    const isHeavyArmor = armorCat === 'heavy';
+    const encStatus = document.getElementById('enc-status')?.textContent?.toLowerCase() || '';
+    const isUnburdened = encStatus.includes('unburdened');
+
+    if (this.character.climbWallsActive) {
+      btn.disabled = false;
+      return;
+    }
+
+    if (isHeavyArmor) {
+      btn.disabled = true;
+      btn.title = 'Climb Walls requires Light armor or none';
+      if (statusEl) statusEl.textContent = '⚠ Requires Light armor or none';
+    } else if (!isUnburdened) {
+      btn.disabled = true;
+      btn.title = 'Climb Walls requires Unburdened encumbrance';
+      if (statusEl) statusEl.textContent = '⚠ Requires Unburdened (Things < STR)';
+    } else {
+      btn.disabled = false;
+      btn.title = 'Climb Walls: +20% Athletics, ignore 1 Grade of Difficulty when climbing';
+      if (statusEl) statusEl.textContent = '+20% Athletics • Unburdened + Light armor';
+    }
+  },
+
+  activateClimbWalls() {
+    if (this.character.climbWallsActive) return;
+
+    // Double-check requirements
+    const armorCat = this._detectArmorCategory();
+    if (armorCat === 'heavy') return;
+    const encStatus = document.getElementById('enc-status')?.textContent?.toLowerCase() || '';
+    if (!encStatus.includes('unburdened')) return;
+
+    this.character.climbWallsActive = true;
+
+    // Apply +20 to Athletics
+    const athleticsInput = document.getElementById('athletics-current');
+    if (athleticsInput) {
+      const val = parseInt(athleticsInput.value, 10) || 0;
+      this.character._climbWallsAthBefore = val;
+      athleticsInput.value = val + 20;
+      athleticsInput.classList.add('cw-boosted');
+      athleticsInput.title = (athleticsInput.title || '') + ' | Climb Walls: +20%';
+    }
+
+    // Animation
+    const section = document.getElementById('climb-walls-section');
+    if (section) {
+      const anim = document.createElement('div');
+      anim.className = 'ability-anim-overlay climb-walls-anim';
+      anim.innerHTML = '<div style="font-size: 1.5rem;">🧗</div><div style="font-size: 0.85rem; color: #5cb85c; font-weight: 600;">Climb Walls!</div>';
+      section.style.position = 'relative';
+      section.appendChild(anim);
+      setTimeout(() => anim.remove(), 1200);
+    }
+
+    // Update button
+    const btn = document.getElementById('btn-climb-walls-toggle');
+    const btnText = document.getElementById('climb-walls-btn-text');
+    if (btn) btn.classList.add('active');
+    if (btnText) btnText.textContent = '🧗 Climbing ✦';
+
+    this.scheduleAutoSave();
+  },
+
+  deactivateClimbWalls() {
+    if (!this.character.climbWallsActive) return;
+    this.character.climbWallsActive = false;
+
+    // Restore Athletics
+    const athleticsInput = document.getElementById('athletics-current');
+    if (athleticsInput) {
+      if (this.character._climbWallsAthBefore !== undefined) {
+        athleticsInput.value = this.character._climbWallsAthBefore;
+      } else {
+        const val = parseInt(athleticsInput.value, 10) || 0;
+        athleticsInput.value = Math.max(0, val - 20);
+      }
+      athleticsInput.classList.remove('cw-boosted');
+      athleticsInput.title = (athleticsInput.title || '').replace(/\s*\|\s*Climb Walls: \+20%/, '');
+      delete this.character._climbWallsAthBefore;
+    }
+
+    // Update button
+    const btn = document.getElementById('btn-climb-walls-toggle');
+    const btnText = document.getElementById('climb-walls-btn-text');
+    if (btn) btn.classList.remove('active');
+    if (btnText) btnText.textContent = '🧗 Climb';
+    this.updateClimbWallsButtonState();
+
+    this.scheduleAutoSave();
+  },
+
+  restoreClimbWallsVisuals() {
+    const athleticsInput = document.getElementById('athletics-current');
+    if (athleticsInput) {
+      athleticsInput.classList.add('cw-boosted');
+      athleticsInput.title = (athleticsInput.title || '') + ' | Climb Walls: +20%';
+    }
+    const btn = document.getElementById('btn-climb-walls-toggle');
+    const btnText = document.getElementById('climb-walls-btn-text');
+    if (btn) btn.classList.add('active');
+    if (btnText) btnText.textContent = '🧗 Climbing ✦';
+  },
+
+  /**
+   * Check if character has Hide in Shadows ability and show/hide section
+   */
+  checkHideInShadowsVisibility() {
+    const section = document.getElementById('hide-in-shadows-section');
+    if (!section) return;
+    if (this.hasAbility('Hide in Shadows')) {
+      section.style.display = '';
+      this.initHideInShadows();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  initHideInShadows() {
+    const btn = document.getElementById('btn-hide-in-shadows-toggle');
+    if (btn && !btn.dataset.listenerAdded) {
+      btn.addEventListener('click', () => {
+        if (this.character.hideInShadowsActive) {
+          this.deactivateHideInShadows();
+        } else {
+          this.activateHideInShadows();
+        }
+      });
+      btn.dataset.listenerAdded = 'true';
+    }
+    if (this.character.hideInShadowsActive) this.restoreHideInShadowsVisuals();
+  },
+
+  activateHideInShadows() {
+    if (this.character.hideInShadowsActive) return;
+    this.character.hideInShadowsActive = true;
+
+    // Apply +20 to Stealth
+    const stealthInput = document.getElementById('stealth-current');
+    if (stealthInput) {
+      const val = parseInt(stealthInput.value, 10) || 0;
+      this.character._hideInShadowsStBefore = val;
+      stealthInput.value = val + 20;
+      stealthInput.classList.add('his-boosted');
+      stealthInput.title = (stealthInput.title || '') + ' | Hide in Shadows: +20%';
+    }
+
+    // Animation
+    const section = document.getElementById('hide-in-shadows-section');
+    if (section) {
+      const anim = document.createElement('div');
+      anim.className = 'ability-anim-overlay hide-in-shadows-anim';
+      anim.innerHTML = '<div style="font-size: 1.5rem;">🌑</div><div style="font-size: 0.85rem; color: #805ad5; font-weight: 600;">Hidden!</div>';
+      section.style.position = 'relative';
+      section.appendChild(anim);
+      setTimeout(() => anim.remove(), 1500);
+    }
+
+    // Update button
+    const btn = document.getElementById('btn-hide-in-shadows-toggle');
+    const btnText = document.getElementById('hide-in-shadows-btn-text');
+    if (btn) btn.classList.add('active');
+    if (btnText) btnText.textContent = '🌑 Hidden ✦';
+
+    this.scheduleAutoSave();
+  },
+
+  deactivateHideInShadows() {
+    if (!this.character.hideInShadowsActive) return;
+    this.character.hideInShadowsActive = false;
+
+    // Restore Stealth
+    const stealthInput = document.getElementById('stealth-current');
+    if (stealthInput) {
+      if (this.character._hideInShadowsStBefore !== undefined) {
+        stealthInput.value = this.character._hideInShadowsStBefore;
+      } else {
+        const val = parseInt(stealthInput.value, 10) || 0;
+        stealthInput.value = Math.max(0, val - 20);
+      }
+      stealthInput.classList.remove('his-boosted');
+      stealthInput.title = (stealthInput.title || '').replace(/\s*\|\s*Hide in Shadows: \+20%/, '');
+      delete this.character._hideInShadowsStBefore;
+    }
+
+    // Update button
+    const btn = document.getElementById('btn-hide-in-shadows-toggle');
+    const btnText = document.getElementById('hide-in-shadows-btn-text');
+    if (btn) btn.classList.remove('active');
+    if (btnText) btnText.textContent = '🌑 Hide';
+
+    this.scheduleAutoSave();
+  },
+
+  restoreHideInShadowsVisuals() {
+    const stealthInput = document.getElementById('stealth-current');
+    if (stealthInput) {
+      stealthInput.classList.add('his-boosted');
+      stealthInput.title = (stealthInput.title || '') + ' | Hide in Shadows: +20%';
+    }
+    const btn = document.getElementById('btn-hide-in-shadows-toggle');
+    const btnText = document.getElementById('hide-in-shadows-btn-text');
+    if (btn) btn.classList.add('active');
+    if (btnText) btnText.textContent = '🌑 Hidden ✦';
+  },
+
+  /**
+   * Check if character has Sneak Attack ability and show/hide info card
+   */
+  checkSneakAttackVisibility() {
+    const section = document.getElementById('sneak-attack-section');
+    if (!section) return;
+    section.style.display = this.hasAbility('Sneak Attack') ? '' : 'none';
+  },
+
+  /**
+   * Subterfuge passive bonus system
+   * Automatically applies +20 to Lockpicking, Mechanisms, and Sleight professional skills
+   */
+  checkSubterfugeVisibility() {
+    const hasSubterfuge = this.hasAbility('Subterfuge');
+    if (hasSubterfuge && !this.character.subterfugeApplied) {
+      this.applySubterfugeBonus();
+    } else if (!hasSubterfuge && this.character.subterfugeApplied) {
+      this.removeSubterfugeBonus();
+    }
+  },
+
+  applySubterfugeBonus() {
+    const targetSkills = ['lockpicking', 'mechanisms', 'sleight'];
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+
+    this.character.subterfugeApplied = true;
+    this.character._subterfugeBonuses = {};
+
+    const rows = container.querySelectorAll('.prof-skill-row');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.prof-skill-name');
+      const currentInput = row.querySelector('.prof-skill-current');
+      if (!nameInput || !currentInput) return;
+
+      const skillName = nameInput.value.trim().toLowerCase();
+      if (targetSkills.includes(skillName) && currentInput.value) {
+        const val = parseInt(currentInput.value, 10) || 0;
+        if (val > 0) {
+          this.character._subterfugeBonuses[currentInput.id] = val;
+          currentInput.value = val + 20;
+          currentInput.classList.add('subterfuge-boosted');
+          currentInput.title = `Subterfuge: +20% (base ${val}%)`;
+        }
+      }
+    });
+
+    this.scheduleAutoSave();
+  },
+
+  removeSubterfugeBonus() {
+    if (!this.character.subterfugeApplied) return;
+
+    const saved = this.character._subterfugeBonuses || {};
+    for (const [id, val] of Object.entries(saved)) {
+      const input = document.getElementById(id);
+      if (input) {
+        input.value = val;
+        input.classList.remove('subterfuge-boosted');
+        input.title = '';
+      }
+    }
+
+    delete this.character._subterfugeBonuses;
+    this.character.subterfugeApplied = false;
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Re-apply Subterfuge visual indicators on page load
+   * (Values are already baked into saved data)
+   */
+  restoreSubterfugeVisuals() {
+    if (!this.character.subterfugeApplied) return;
+    const saved = this.character._subterfugeBonuses || {};
+    for (const id of Object.keys(saved)) {
+      const input = document.getElementById(id);
+      if (input) {
+        input.classList.add('subterfuge-boosted');
+        const baseVal = saved[id];
+        input.title = `Subterfuge: +20% (base ${baseVal}%)`;
+      }
     }
   },
 
@@ -27745,6 +28126,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (this.character.dualStrikeActive && isCombatSkillRoll) {
       this.deactivateDualStrike();
     }
+
+    // Climb Walls: deactivate after Athletics roll
+    if (this.character.climbWallsActive && normalizedSkill === 'athletics') {
+      this.deactivateClimbWalls();
+    }
+
+    // Hide in Shadows: deactivate after Stealth roll
+    if (this.character.hideInShadowsActive && normalizedSkill === 'stealth') {
+      this.deactivateHideInShadows();
+    }
   },
 
   /**
@@ -31769,6 +32160,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkCircleOfPowerVisibility();
     this.checkImprovedAimVisibility();
     this.checkSpeciesEnemyVisibility();
+    this.checkClimbWallsVisibility();
+    this.checkHideInShadowsVisibility();
+    this.checkSneakAttackVisibility();
+    this.checkSubterfugeVisibility();
     this.checkMentalStrengthVisibility();
     this.checkTurnUndeadVisibility();
     this.checkMonkAbilitiesVisibility();
