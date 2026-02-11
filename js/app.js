@@ -6176,6 +6176,28 @@ const App = {
       return true; // The modal will handle adding the ability if needed
     }
     
+    // Handle Species Enemy II+ — merge into existing entry instead of creating new row
+    const seAddMatch = normalizedName.match(/^species enem(?:y|ies)\s*(ii|iii|iv|v|[2-5])$/i);
+    if (seAddMatch) {
+      // Find existing Species Enemy entry on the sheet
+      const existingInputs = container.querySelectorAll('.class-ability-input');
+      let existingSEInput = null;
+      for (const input of existingInputs) {
+        const val = input.value.trim().toLowerCase();
+        if (val.match(/^species enem(?:y|ies)\s*(?:i{1,3}|iv|v|\d)?\s*\(/i)) {
+          existingSEInput = input;
+          break;
+        }
+      }
+      
+      if (existingSEInput) {
+        // Existing entry found — prompt for new species and append
+        this.promptAppendSpeciesEnemy(existingSEInput);
+        return true;
+      }
+      // If no existing entry found (shouldn't happen), fall through to normal add
+    }
+    
     // Handle Animal Companion abilities - show modal to select companion
     if (normalizedName.startsWith('animal companion')) {
       // Determine the tier from the ability name
@@ -18476,8 +18498,74 @@ const App = {
   },
 
   /**
-   * Check if character has any Species Enemy ability and show/hide button section
+   * Prompt to add an additional species enemy to an existing consolidated entry
+   * Appends the new species with a comma instead of creating a separate row
    */
+  promptAppendSpeciesEnemy(existingInput) {
+    let modal = document.getElementById('species-enemy-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'species-enemy-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
+
+    // Extract current species from existing entry
+    const currentVal = existingInput.value.trim();
+    const parenMatch = currentVal.match(/\(([^)]+)\)/);
+    const currentSpecies = parenMatch ? parenMatch[1].trim() : '';
+
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content">
+        <div class="modal-header">
+          <h3>🎯 New Species Enemy</h3>
+          <button class="modal-close" id="se-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.85rem;">Current species enemies: <strong>${currentSpecies}</strong></p>
+          <p style="font-size: 0.85rem; margin-top: 0.5rem;">Enter the new species to add:</p>
+          <input type="text" id="se-species-input" placeholder="e.g., Goblins, Orcs, Undead..." 
+                 style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-top: 0.5rem; border: 1px solid #555; background: #2a2a3a; color: #eee; border-radius: 4px; box-sizing: border-box;">
+          <p style="font-size: 0.72rem; color: #999; margin-top: 0.5rem;">
+            Common species enemies include bugbears, ettins, giants, gnolls, goblins, hobgoblins, kobolds, ogres, orcs, trolls, and undead.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="se-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="se-accept">Accept</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('se-modal-close').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('se-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+    const speciesInput = document.getElementById('se-species-input');
+    document.getElementById('se-accept').addEventListener('click', () => {
+      const newSpecies = speciesInput.value.trim();
+      if (!newSpecies) {
+        speciesInput.style.borderColor = '#ff4444';
+        return;
+      }
+
+      // Append new species to the existing parenthetical
+      const updatedSpecies = currentSpecies ? `${currentSpecies}, ${newSpecies}` : newSpecies;
+      const count = updatedSpecies.split(',').length;
+      const label = count === 1 ? 'Species Enemy' : 'Species Enemies';
+      existingInput.value = `${label} (${updatedSpecies})`;
+      existingInput.dataset.previousValue = existingInput.value;
+      this.updateAbilityTooltip(existingInput);
+      this.syncClassAbilitiesToCharacter();
+      this.checkSpeciesEnemyVisibility();
+      this.scheduleAutoSave();
+
+      modal.classList.add('hidden');
+    });
+
+    modal.classList.remove('hidden');
+    setTimeout(() => speciesInput.focus(), 100);
+  },
   checkSpeciesEnemyVisibility() {
     const section = document.getElementById('species-enemy-section');
     if (!section) return;
@@ -18525,16 +18613,43 @@ const App = {
       const val = input.value.trim();
       const match = val.match(/^Species Enem(?:y|ies)\s*(?:I{1,3}|IV|V|\d)?\s*\(([^)]+)\)/i);
       if (match) {
-        seInputs.push({ input, species: match[1].trim() });
+        seInputs.push({ input, speciesStr: match[1].trim() });
       }
     }
 
     if (seInputs.length === 0) return;
 
-    const label = seInputs.length === 1 ? 'Species Enemy' : 'Species Enemies';
-
-    for (const { input, species } of seInputs) {
-      const newVal = `${label} (${species})`;
+    // If there are multiple separate entries, consolidate into the first one
+    if (seInputs.length > 1) {
+      // Collect all species from all entries
+      const allSpecies = [];
+      seInputs.forEach(({ speciesStr }) => {
+        speciesStr.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+          if (!allSpecies.includes(s)) allSpecies.push(s);
+        });
+      });
+      
+      // Set first entry to consolidated value
+      const label = allSpecies.length === 1 ? 'Species Enemy' : 'Species Enemies';
+      const newVal = `${label} (${allSpecies.join(', ')})`;
+      seInputs[0].input.value = newVal;
+      seInputs[0].input.dataset.previousValue = newVal;
+      this.updateAbilityTooltip(seInputs[0].input);
+      
+      // Clear remaining entries
+      for (let i = 1; i < seInputs.length; i++) {
+        seInputs[i].input.value = '';
+        seInputs[i].input.dataset.previousValue = '';
+      }
+      
+      this.syncClassAbilitiesToCharacter();
+      this.compactClassAbilities();
+    } else {
+      // Single entry — just ensure label is correct
+      const { input, speciesStr } = seInputs[0];
+      const speciesCount = speciesStr.split(',').length;
+      const label = speciesCount === 1 ? 'Species Enemy' : 'Species Enemies';
+      const newVal = `${label} (${speciesStr})`;
       if (input.value !== newVal) {
         input.value = newVal;
         input.dataset.previousValue = newVal;
@@ -18554,7 +18669,11 @@ const App = {
     for (const input of container.querySelectorAll('.class-ability-input')) {
       const val = input.value.trim();
       const match = val.match(/^Species Enem(?:y|ies)\s*(?:I{1,3}|IV|V|\d)?\s*\(([^)]+)\)/i);
-      if (match) enemies.push(match[1].trim());
+      if (match) {
+        // Split comma-separated species into individual entries
+        const speciesList = match[1].split(',').map(s => s.trim()).filter(Boolean);
+        enemies.push(...speciesList);
+      }
     }
     return enemies;
   },

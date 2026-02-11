@@ -1364,6 +1364,40 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Species Enemy II",
       summary: "Select an additional Species Enemy (+10% skills, +1 Damage step vs chosen foe)"
     },
+    
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Defensive Reflexes II", 
+      rank: 4, 
+      prereqs: "Defensive Reflexes I",
+      summary: "+1 bonus AP for Parry/Evade only. May now use this ability twice per combat (cannot re-roll same attack or combine with Luck Point)"
+    },
+    { 
+      name: "Species Enemy IV", 
+      rank: 4, 
+      prereqs: "Species Enemy III",
+      summary: "Select an additional Species Enemy (+10% skills, +1 Damage step vs chosen foe)"
+    },
+    
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Species Enemy V", 
+      rank: 5, 
+      prereqs: "Species Enemy IV",
+      summary: "Select an additional Species Enemy (+10% skills, +1 Damage step vs chosen foe)"
+    },
   ],
 };
 
