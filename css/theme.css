@@ -524,29 +524,6 @@ select:focus-visible {
   color: var(--text-secondary, #5a4a3a);
 }
 
-.btn-climb-walls {
-  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%);
-  border-color: #5a8a5a;
-  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.25);
-}
-
-.btn-climb-walls:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%);
-  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.35);
-}
-
-.btn-climb-walls:disabled {
-  background: #b0a890;
-  border-color: #a09880;
-  color: #887868;
-  opacity: 0.6;
-}
-
-.climb-walls-active-btn {
-  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%) !important;
-  border-color: #4a8a4a !important;
-}
-
 /* --- Hide in Shadows --- */
 .hide-in-shadows-section {
   background: linear-gradient(135deg, rgba(70, 50, 120, 0.08) 0%, rgba(70, 50, 120, 0.04) 100%);
@@ -560,22 +537,6 @@ select:focus-visible {
 
 .hide-in-shadows-label {
   color: var(--text-secondary, #5a4a3a);
-}
-
-.btn-hide-in-shadows {
-  background: linear-gradient(135deg, #4a3a7a 0%, #5a4a9a 50%, #4a3a7a 100%);
-  border-color: #6a5a9a;
-  box-shadow: 0 2px 8px rgba(70, 50, 120, 0.25);
-}
-
-.btn-hide-in-shadows:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3a2a6a 0%, #4a3a8a 50%, #3a2a6a 100%);
-  box-shadow: 0 4px 12px rgba(70, 50, 120, 0.35);
-}
-
-.hide-in-shadows-active-btn {
-  background: linear-gradient(135deg, #3a2a6a 0%, #4a3a8a 50%, #3a2a6a 100%) !important;
-  border-color: #6a5a9a !important;
 }
 
 /* --- Sneak Attack Info Card --- */
@@ -657,3 +618,99 @@ select:focus-visible {
   color: #5a3a9a !important;
   text-shadow: none;
 }
+
+/* --- Great Hearing / Sharp Eyed / Vaulting (parchment) --- */
+.great-hearing-section,
+.sharp-eyed-section,
+.vaulting-section {
+  background: linear-gradient(135deg, rgba(56, 100, 56, 0.1) 0%, rgba(56, 100, 56, 0.05) 100%);
+  border-color: #6a9a6a;
+}
+
+.great-hearing-section .section-header,
+.sharp-eyed-section .section-header,
+.vaulting-section .section-header {
+  color: #3a6a3a;
+  text-shadow: none;
+}
+
+.great-hearing-label, .sharp-eyed-label, .vaulting-label {
+  color: var(--text-secondary, #5a4a3a);
+}
+
+.gh-boosted, .se-boosted, .vault-boosted {
+  color: #2d6a2d !important;
+  text-shadow: none;
+}
+
+/* --- Unarmored Defense (parchment) --- */
+.unarmored-defense-section {
+  background: linear-gradient(135deg, rgba(50, 100, 130, 0.08) 0%, rgba(50, 100, 130, 0.04) 100%);
+  border-color: #6a9aaa;
+}
+
+.unarmored-defense-section .section-header {
+  color: #3a6a8a;
+  text-shadow: none;
+}
+
+.ud-active-indicator {
+  color: #3a6a8a;
+  text-shadow: none;
+}
+
+.ud-inactive-label { color: var(--text-secondary, #5a4a3a); }
+.ud-info-label { color: var(--text-secondary, #5a4a3a); }
+
+/* --- Skirmishing / Swashbuckling (parchment) --- */
+.skirmishing-section,
+.swashbuckling-section {
+  background: linear-gradient(135deg, rgba(140, 110, 50, 0.08) 0%, rgba(140, 110, 50, 0.04) 100%);
+  border-color: #a09060;
+}
+
+.skirmishing-section .section-header,
+.swashbuckling-section .section-header {
+  color: #7a6020;
+  text-shadow: none;
+}
+
+.skirmishing-card, .swashbuckling-card {
+  color: var(--text-primary, #2a1f14);
+}
+
+/* --- Defensive Reflexes (parchment) --- */
+.defensive-reflexes-section {
+  background: linear-gradient(135deg, rgba(50, 100, 130, 0.08) 0%, rgba(50, 100, 130, 0.04) 100%);
+  border-color: #6a9aaa;
+}
+
+.defensive-reflexes-section .section-header {
+  color: #3a6a8a;
+  text-shadow: none;
+}
+
+.dr-bonus-value { color: #3a6a8a; text-shadow: none; }
+.dr-bonus-label { color: var(--text-primary, #2a1f14); }
+.dr-uses-label { color: var(--text-secondary, #5a4a3a); }
+.dr-rules { color: var(--text-secondary, #5a4a3a); }
+
+/* --- Sneak Attack Damage (parchment) --- */
+.sneak-attack-bonus-label {
+  color: #7a3a3a;
+}
+
+/* --- Use Arcane Scrolls (parchment) --- */
+.arcane-scrolls-section {
+  background: linear-gradient(135deg, rgba(70, 50, 120, 0.08) 0%, rgba(70, 50, 120, 0.04) 100%);
+  border-color: #8a7aaa;
+}
+
+.arcane-scrolls-section .section-header {
+  color: #5a4a8a;
+  text-shadow: none;
+}
+
+.arcane-scrolls-card { color: var(--text-primary, #2a1f14); }
+.arcane-scrolls-warning { color: #7a3a3a; }
+.arcane-scrolls-chance { color: #5a4a8a; }
