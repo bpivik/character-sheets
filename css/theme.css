@@ -583,3 +583,48 @@ select:focus-visible {
 .familiar-info-details {
   color: #555;
 }
+
+/* --- Arcane Flux Modal (Parchment) --- */
+.arcane-flux-modal.flux-minor {
+  background: rgba(240, 230, 200, 0.97);
+  border-color: rgba(180, 140, 40, 0.5);
+}
+
+.arcane-flux-modal.flux-major {
+  background: rgba(240, 220, 210, 0.97);
+  border-color: rgba(180, 40, 40, 0.5);
+}
+
+.flux-desc { color: #666; }
+.flux-roll-label { color: #555; }
+.flux-choose-label { color: #555; }
+
+.flux-wisdom-note {
+  background: rgba(100, 60, 180, 0.08);
+  border-color: rgba(100, 60, 150, 0.2);
+  color: #5a2d7a;
+}
+
+.flux-roll-input, .flux-choose-select {
+  background: rgba(255, 255, 255, 0.8);
+  color: #333;
+  border-color: rgba(150, 130, 100, 0.4);
+}
+
+.flux-result-effect {
+  color: #333;
+  background: rgba(0, 0, 0, 0.03);
+  border-left-color: rgba(180, 140, 40, 0.6);
+}
+
+.flux-major .flux-result-effect, .flux-major-effect {
+  border-left-color: rgba(180, 40, 40, 0.6);
+}
+
+.flux-roll-display { color: #555; }
+.flux-roll-number { color: #8a6010; }
+.flux-major .flux-roll-number { color: #a03030; }
+
+.flux-compare-label { color: #666; }
+.flux-reroll-note { color: #3060a0; }
+.flux-mitigation-note { color: #5a2d7a; background: rgba(100, 60, 180, 0.05); }

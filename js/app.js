@@ -6780,17 +6780,6 @@ const App = {
     const tbody = document.getElementById(`${rankKey}-body`);
     if (!tbody) return null;
     
-    // Sorcerer: spells known = memorize limit, can't add more rows
-    if (this.isSorcererClass()) {
-      const maxInput = document.getElementById(`${rankKey}-max`);
-      const maxAllowed = parseInt(maxInput?.value, 10) || 0;
-      const currentRows = tbody.rows.length;
-      if (currentRows >= maxAllowed) {
-        this.showFloatingMessage(`Sorcerers may only know ${maxAllowed} ${this.spellRankLabels?.[rankKey] || rankKey} spell${maxAllowed !== 1 ? 's' : ''} (equal to memorize limit).`, 'warning');
-        return null;
-      }
-    }
-    
     const index = tbody.rows.length;
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -10622,8 +10611,9 @@ const App = {
     if ((m.expCost || 0) > 0 && currentExp < m.expCost) return;
 
     // For NORMAL casting: deduct MP and EXP upfront (Mythras RAW)
-    // For NON-MEMORIZED: don't deduct yet (depends on result)
-    if (!m.isNonMemorized) {
+    // For NON-MEMORIZED or SORCERY: don't deduct yet (depends on result)
+    const isSorcery = m.castingType === 'sorcery';
+    if (!m.isNonMemorized && !isSorcery) {
       // MP goes to 0 minimum (deficit becomes fatigue)
       mpField.value = Math.max(0, currentMP - m.cost);
       this.character.derived = this.character.derived || {};
@@ -10826,6 +10816,79 @@ const App = {
         document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
       }
 
+    } else if (m.castingType === 'sorcery') {
+      // === SORCERY CASTING RESULTS (MP deferred to here) ===
+      const currentMP = parseInt(mpField?.value, 10) || 0;
+      const expField = document.getElementById('exp-rolls');
+      const currentExp = parseInt(expField?.value, 10) || 0;
+      const halfCost = Math.max(1, Math.ceil(m.cost / 2));
+      const expStr = (m.expCost || 0) > 0 ? ` ${m.expCost} EXP spent.` : '';
+
+      if (resultClass === 'critical') {
+        // Critical: half MP, half EXP
+        const actualCost = halfCost;
+        const deficit = Math.max(0, actualCost - currentMP);
+        mpField.value = Math.max(0, currentMP - actualCost);
+        this.character.derived = this.character.derived || {};
+        this.character.derived.magicPointsCurrent = mpField.value;
+        this.updateMagicMPDisplay();
+        if (deficit > 0) this._applyOvercastFatigue(deficit);
+        if ((m.expCost || 0) > 0 && expField) {
+          const halfExp = Math.max(1, Math.ceil(m.expCost / 2));
+          expField.value = currentExp - halfExp;
+          if (this.character.expRolls !== undefined) this.character.expRolls = parseInt(expField.value, 10);
+        }
+        const newMP = parseInt(mpField.value, 10) || 0;
+        const fatigueNote = deficit > 0 ? ` \u26A0 ${deficit} Fatigue level${deficit > 1 ? 's' : ''} from MP overdraft!` : '';
+        details.textContent = `Critical! Only ${actualCost} MP spent (half cost).${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect with exceptional potency.`;
+
+      } else if (resultClass === 'success') {
+        // Success: full MP, full EXP
+        const deficit = Math.max(0, m.cost - currentMP);
+        mpField.value = Math.max(0, currentMP - m.cost);
+        this.character.derived = this.character.derived || {};
+        this.character.derived.magicPointsCurrent = mpField.value;
+        this.updateMagicMPDisplay();
+        if (deficit > 0) this._applyOvercastFatigue(deficit);
+        if ((m.expCost || 0) > 0 && expField) {
+          expField.value = currentExp - m.expCost;
+          if (this.character.expRolls !== undefined) this.character.expRolls = parseInt(expField.value, 10);
+        }
+        const newMP = parseInt(mpField.value, 10) || 0;
+        const fatigueNote = deficit > 0 ? ` \u26A0 ${deficit} Fatigue level${deficit > 1 ? 's' : ''} from MP overdraft!` : '';
+        details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect.`;
+
+      } else if (resultClass === 'fumble') {
+        // Fumble: half MP spent, EXP retained, spell expunged, Major Arcane Flux
+        const actualCost = halfCost;
+        const deficit = Math.max(0, actualCost - currentMP);
+        mpField.value = Math.max(0, currentMP - actualCost);
+        this.character.derived = this.character.derived || {};
+        this.character.derived.magicPointsCurrent = mpField.value;
+        this.updateMagicMPDisplay();
+        if (deficit > 0) this._applyOvercastFatigue(deficit);
+        const newMP = parseInt(mpField.value, 10) || 0;
+        const fatigueNote = deficit > 0 ? ` \u26A0 ${deficit} Fatigue level${deficit > 1 ? 's' : ''} from MP overdraft!` : '';
+        const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
+        if (memCheck) memCheck.checked = false;
+        details.textContent = `Fumble! ${actualCost} MP spent (half cost). Remaining: ${newMP} MP.${fatigueNote} The spell backfires \u2014 expunged from memory. Major Arcane Flux triggered!`;
+        setTimeout(() => this._showArcaneFluxPrompt('major', m), 1200);
+
+      } else {
+        // Failure: no MP lost, no EXP lost, Minor Arcane Flux
+        details.textContent = `The spell fails, but no Magic Points are lost. A Minor Arcane Flux may occur!`;
+        const forceSection = document.getElementById('cast-force-section');
+        forceSection.classList.remove('hidden');
+        document.getElementById('cast-force-btn').style.display = '';
+        const luckEl = document.getElementById('luck-current');
+        const luckCount = parseInt(luckEl?.value, 10) || 0;
+        document.getElementById('cast-luck-count').textContent = luckCount;
+        document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
+        const forceExplain = forceSection.querySelector('.cast-force-explain');
+        forceExplain.textContent = 'The spell failed. You may force it (full MP cost, spell expunged from memory), or spend a Luck Point to reroll.';
+        setTimeout(() => this._showArcaneFluxPrompt('minor', m), 1200);
+      }
+
     } else {
       // === NORMAL (MEMORIZED) CASTING RESULTS ===
       const newMP = parseInt(mpField?.value, 10) || 0;
@@ -10880,6 +10943,25 @@ const App = {
     document.getElementById('cast-result-text').textContent = 'FORCED SUCCESS';
 
     const mpField = document.getElementById('magic-points-current');
+
+    // For sorcery, MP was deferred — deduct now on force
+    if (m.castingType === 'sorcery') {
+      const currentMP = parseInt(mpField?.value, 10) || 0;
+      const deficit = Math.max(0, m.cost - currentMP);
+      mpField.value = Math.max(0, currentMP - m.cost);
+      this.character.derived = this.character.derived || {};
+      this.character.derived.magicPointsCurrent = mpField.value;
+      this.updateMagicMPDisplay();
+      if (deficit > 0) this._applyOvercastFatigue(deficit);
+      // Deduct EXP
+      const expField = document.getElementById('exp-rolls');
+      if ((m.expCost || 0) > 0 && expField) {
+        const curExp = parseInt(expField.value, 10) || 0;
+        expField.value = curExp - m.expCost;
+        if (this.character.expRolls !== undefined) this.character.expRolls = parseInt(expField.value, 10);
+      }
+    }
+
     const newMP = parseInt(mpField?.value, 10) || 0;
 
     const details = document.getElementById('cast-result-details');
@@ -10924,6 +11006,10 @@ const App = {
     // Reset and reroll
     m.hasRolled = false;
     m.rollResult = null;
+
+    // Close any open Arcane Flux modal (sorcery reroll cancels the flux)
+    const fluxOverlay = document.getElementById('arcane-flux-overlay');
+    if (fluxOverlay) fluxOverlay.remove();
 
     // Hide force section
     document.getElementById('cast-force-section').classList.add('hidden');
@@ -11051,6 +11137,383 @@ const App = {
         }
       }, 80);
     }, 600);
+  },
+
+  // =============================================
+  // ARCANE FLUX SYSTEM (Sorcerer)
+  // =============================================
+
+  /**
+   * Show the initial Arcane Flux prompt: roll yourself or let the system roll?
+   * @param {string} fluxType - 'minor' or 'major'
+   * @param {Object} m - the cast modal state
+   */
+  _showArcaneFluxPrompt(fluxType, m) {
+    const isMinor = fluxType === 'minor';
+    const title = isMinor ? '⚡ Minor Arcane Flux' : '🌀 Major Arcane Flux';
+    const desc = isMinor
+      ? 'Your spell failed and the arcane energy has become unstable. A Minor Arcane Flux occurs!'
+      : 'Your spell has backfired catastrophically! A Major Arcane Flux erupts!';
+
+    // Get Sorcerous Wisdom for mitigation
+    const wisdomEl = document.getElementById('sorcerous-wisdom-percent');
+    const wisdomPct = parseInt(wisdomEl?.value, 10) || 0;
+    const mitigation = window.ArcaneFluxData?.getSorcerousWisdomMitigation(wisdomPct, fluxType);
+
+    let overlay = document.getElementById('arcane-flux-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'arcane-flux-overlay';
+    overlay.className = 'modal-overlay arcane-flux-modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content arcane-flux-modal ${isMinor ? 'flux-minor' : 'flux-major'}">
+        <h3 class="flux-title">${title}</h3>
+        <p class="flux-desc">${desc}</p>
+        ${mitigation && mitigation.canIgnore ? `
+          <div class="flux-wisdom-note">
+            <strong>Sorcerous Wisdom (${wisdomPct}%):</strong> ${mitigation.text}
+          </div>
+          <div class="flux-prompt-buttons">
+            <button type="button" class="btn flux-btn flux-btn-ignore" id="flux-btn-ignore">🛡️ Ignore the Flux</button>
+            <button type="button" class="btn flux-btn flux-btn-roll-self" id="flux-btn-roll-self">🎲 Roll Myself</button>
+            <button type="button" class="btn flux-btn flux-btn-system" id="flux-btn-system">⚡ System Rolls</button>
+          </div>
+        ` : `
+          <div class="flux-prompt-buttons">
+            <button type="button" class="btn flux-btn flux-btn-roll-self" id="flux-btn-roll-self">🎲 I'll Roll Myself</button>
+            <button type="button" class="btn flux-btn flux-btn-system" id="flux-btn-system">⚡ Let the System Roll</button>
+          </div>
+        `}
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Ignore button
+    const ignoreBtn = document.getElementById('flux-btn-ignore');
+    if (ignoreBtn) {
+      ignoreBtn.addEventListener('click', () => {
+        overlay.remove();
+        this.showFloatingMessage(`${isMinor ? 'Minor' : 'Major'} Arcane Flux ignored via Sorcerous Wisdom (${wisdomPct}%).`, 'info');
+      });
+    }
+
+    // Roll myself
+    document.getElementById('flux-btn-roll-self').addEventListener('click', () => {
+      this._showFluxManualRoll(overlay, fluxType, wisdomPct, mitigation);
+    });
+
+    // System rolls
+    document.getElementById('flux-btn-system').addEventListener('click', () => {
+      this._showFluxSystemRoll(overlay, fluxType, wisdomPct, mitigation);
+    });
+  },
+
+  /**
+   * Manual roll path: show Sorcerous Wisdom info, then input for d100
+   */
+  _showFluxManualRoll(overlay, fluxType, wisdomPct, mitigation) {
+    const isMinor = fluxType === 'minor';
+    const title = isMinor ? '⚡ Minor Arcane Flux — Manual Roll' : '🌀 Major Arcane Flux — Manual Roll';
+    const modalEl = overlay.querySelector('.arcane-flux-modal');
+
+    let wisdomHtml = '';
+    if (mitigation && (mitigation.canReroll || mitigation.canChoose || mitigation.canIgnore)) {
+      wisdomHtml = `
+        <div class="flux-wisdom-note">
+          <strong>Sorcerous Wisdom (${wisdomPct}%):</strong> ${mitigation.text}
+        </div>
+      `;
+    } else if (wisdomPct > 0) {
+      wisdomHtml = `
+        <div class="flux-wisdom-note flux-wisdom-none">
+          <strong>Sorcerous Wisdom (${wisdomPct}%):</strong> No mitigation at this level.
+        </div>
+      `;
+    }
+
+    // If canChoose (Minor 81+), show the full table as a selector
+    if (mitigation && mitigation.canChoose && isMinor) {
+      const tableData = window.ArcaneFluxData.MINOR_FLUX;
+      const optionsHtml = tableData.map(e =>
+        `<option value="${e.min}">${String(e.min).padStart(2,'0')}-${String(e.max).padStart(2,'0')}: ${e.effect.substring(0, 80)}${e.effect.length > 80 ? '...' : ''}</option>`
+      ).join('');
+
+      modalEl.innerHTML = `
+        <h3 class="flux-title">${title}</h3>
+        ${wisdomHtml}
+        <div class="flux-choose-section">
+          <label class="flux-choose-label">Choose your Minor Arcane Flux effect:</label>
+          <select id="flux-choose-select" class="flux-choose-select">${optionsHtml}</select>
+        </div>
+        <div class="flux-result-display" id="flux-result-display" style="display:none;"></div>
+        <div class="flux-action-buttons">
+          <button type="button" class="btn flux-btn flux-btn-confirm" id="flux-confirm-choice">✔ Confirm Choice</button>
+        </div>
+      `;
+      document.getElementById('flux-confirm-choice').addEventListener('click', () => {
+        const selectedRoll = parseInt(document.getElementById('flux-choose-select').value, 10);
+        const effect = window.ArcaneFluxData.getMinorFlux(selectedRoll);
+        const resultDisplay = document.getElementById('flux-result-display');
+        resultDisplay.style.display = '';
+        resultDisplay.innerHTML = `<div class="flux-result-effect">${effect}</div>`;
+        // Replace confirm with close
+        document.getElementById('flux-confirm-choice').textContent = '✖ Close';
+        document.getElementById('flux-confirm-choice').onclick = () => overlay.remove();
+      });
+      return;
+    }
+
+    // Standard manual roll: enter d100
+    modalEl.innerHTML = `
+      <h3 class="flux-title">${title}</h3>
+      ${wisdomHtml}
+      <div class="flux-roll-input-section">
+        <label class="flux-roll-label">Enter your d100 roll (1-100):</label>
+        <input type="number" id="flux-manual-roll-input" class="flux-roll-input" min="1" max="100" placeholder="d100">
+        <button type="button" class="btn flux-btn flux-btn-submit" id="flux-submit-roll">Submit Roll</button>
+      </div>
+      <div class="flux-result-display" id="flux-result-display" style="display:none;"></div>
+      <div class="flux-action-buttons" id="flux-action-buttons" style="display:none;"></div>
+    `;
+
+    document.getElementById('flux-submit-roll').addEventListener('click', () => {
+      const input = document.getElementById('flux-manual-roll-input');
+      const roll = parseInt(input.value, 10);
+      if (isNaN(roll) || roll < 1 || roll > 100) {
+        this.showFloatingMessage('Please enter a number between 1 and 100.', 'warning');
+        return;
+      }
+      this._showFluxResult(overlay, fluxType, roll, wisdomPct, mitigation, false);
+    });
+
+    // Focus the input
+    setTimeout(() => document.getElementById('flux-manual-roll-input')?.focus(), 100);
+  },
+
+  /**
+   * System roll path: auto-roll d100, apply mitigation, show result
+   */
+  _showFluxSystemRoll(overlay, fluxType, wisdomPct, mitigation) {
+    const isMinor = fluxType === 'minor';
+    const title = isMinor ? '⚡ Minor Arcane Flux' : '🌀 Major Arcane Flux';
+    const modalEl = overlay.querySelector('.arcane-flux-modal');
+    const roll = Math.floor(Math.random() * 100) + 1;
+
+    // For system roll, apply mitigation automatically
+    let finalRoll = roll;
+    let mitigationNote = '';
+
+    if (mitigation) {
+      if (mitigation.canIgnore) {
+        // Already handled by the Ignore button, but if system rolls, we still show result
+        // (they chose system roll instead of ignore)
+      }
+      if (mitigation.canReroll) {
+        const reroll = Math.floor(Math.random() * 100) + 1;
+        if (mitigation.mustTakeSecond) {
+          mitigationNote = `<div class="flux-mitigation-note">Sorcerous Wisdom (${wisdomPct}%): Rolled ${String(roll).padStart(2,'0')} then rerolled ${String(reroll).padStart(2,'0')}. Must take second result.</div>`;
+          finalRoll = reroll;
+        } else {
+          // Can choose either — pick the "better" one (less dangerous = higher roll for minor, varies for major)
+          // For simplicity, pick the one with a less severe effect (heuristic: higher rolls tend to be less harmful)
+          const betterRoll = roll > reroll ? roll : reroll;
+          const worseRoll = roll > reroll ? reroll : roll;
+          mitigationNote = `<div class="flux-mitigation-note">Sorcerous Wisdom (${wisdomPct}%): Rolled ${String(roll).padStart(2,'0')} and ${String(reroll).padStart(2,'0')}. Chose the more favorable result (${String(betterRoll).padStart(2,'0')}).</div>`;
+          finalRoll = betterRoll;
+        }
+      }
+      if (mitigation.canChoose && isMinor) {
+        // System picks a benign result (37-39 range: +10% to next sorcery roll)
+        finalRoll = 37;
+        mitigationNote = `<div class="flux-mitigation-note">Sorcerous Wisdom (${wisdomPct}%): May choose any Minor Flux result. System selected a favorable outcome.</div>`;
+      }
+    }
+
+    const effect = isMinor
+      ? window.ArcaneFluxData.getMinorFlux(finalRoll)
+      : window.ArcaneFluxData.getMajorFlux(finalRoll);
+
+    // Check for Minor 100 → Major escalation
+    let escalation = '';
+    if (isMinor && finalRoll === 100) {
+      const majorRoll = Math.floor(Math.random() * 100) + 1;
+      const majorEffect = window.ArcaneFluxData.getMajorFlux(majorRoll);
+      escalation = `
+        <div class="flux-escalation">
+          <h4 class="flux-escalation-title">🌀 Escalated to Major Arcane Flux!</h4>
+          <div class="flux-roll-display">d100: <strong>${String(majorRoll).padStart(2,'0')}</strong></div>
+          <div class="flux-result-effect flux-major-effect">${majorEffect}</div>
+        </div>
+      `;
+    }
+
+    // Check for Major 100 → double roll
+    let doubleRoll = '';
+    if (!isMinor && finalRoll === 100) {
+      const roll1 = Math.floor(Math.random() * 99) + 1;
+      const roll2 = Math.floor(Math.random() * 99) + 1;
+      const effect1 = window.ArcaneFluxData.getMajorFlux(roll1);
+      const effect2 = window.ArcaneFluxData.getMajorFlux(roll2);
+      doubleRoll = `
+        <div class="flux-escalation">
+          <h4 class="flux-escalation-title">💥 Double Major Flux!</h4>
+          <div class="flux-double-result">
+            <div class="flux-roll-display">Roll 1 — d100: <strong>${String(roll1).padStart(2,'0')}</strong></div>
+            <div class="flux-result-effect">${effect1}</div>
+            <div class="flux-roll-display" style="margin-top:0.5rem;">Roll 2 — d100: <strong>${String(roll2).padStart(2,'0')}</strong></div>
+            <div class="flux-result-effect">${effect2}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    modalEl.innerHTML = `
+      <h3 class="flux-title">${title}</h3>
+      ${mitigationNote}
+      <div class="flux-roll-display">d100: <strong class="flux-roll-number">${String(finalRoll).padStart(2,'0')}</strong></div>
+      <div class="flux-result-display">
+        <div class="flux-result-effect">${effect}</div>
+      </div>
+      ${escalation}
+      ${doubleRoll}
+      <div class="flux-action-buttons">
+        <button type="button" class="btn flux-btn flux-btn-close" id="flux-close-btn">✖ Close</button>
+      </div>
+    `;
+
+    document.getElementById('flux-close-btn').addEventListener('click', () => overlay.remove());
+  },
+
+  /**
+   * Show the result of a manual flux roll, with mitigation options
+   */
+  _showFluxResult(overlay, fluxType, roll, wisdomPct, mitigation, isReroll) {
+    const isMinor = fluxType === 'minor';
+    const effect = isMinor
+      ? window.ArcaneFluxData.getMinorFlux(roll)
+      : window.ArcaneFluxData.getMajorFlux(roll);
+
+    const resultDisplay = document.getElementById('flux-result-display');
+    resultDisplay.style.display = '';
+
+    // Check for escalation (Minor 100 → Major)
+    let escalationNote = '';
+    if (isMinor && roll === 100) {
+      escalationNote = `<div class="flux-escalation-warning">⚠ This escalates to a <strong>Major Arcane Flux</strong>! Roll on the Major table.</div>`;
+    }
+    // Major 100 → double
+    if (!isMinor && roll === 100) {
+      escalationNote = `<div class="flux-escalation-warning">💥 Roll <strong>TWICE</strong> more on this table and take <strong>BOTH</strong> effects!</div>`;
+    }
+
+    resultDisplay.innerHTML = `
+      <div class="flux-roll-display">d100: <strong class="flux-roll-number">${String(roll).padStart(2,'0')}</strong></div>
+      <div class="flux-result-effect">${effect}</div>
+      ${escalationNote}
+    `;
+
+    // Show mitigation action buttons
+    const actionsEl = document.getElementById('flux-action-buttons');
+    actionsEl.style.display = '';
+    actionsEl.innerHTML = '';
+
+    // Hide submit section
+    const submitSection = overlay.querySelector('.flux-roll-input-section');
+    if (submitSection) submitSection.style.display = 'none';
+
+    const canReroll = mitigation && mitigation.canReroll && !isReroll;
+
+    if (canReroll) {
+      const rerollNote = mitigation.mustTakeSecond
+        ? '(you must take the second result)'
+        : '(you may choose either result)';
+      actionsEl.innerHTML = `
+        <div class="flux-reroll-note">You may reroll ${rerollNote}.</div>
+        <button type="button" class="btn flux-btn flux-btn-reroll" id="flux-btn-reroll">🎲 Enter Reroll</button>
+        <button type="button" class="btn flux-btn flux-btn-keep" id="flux-btn-keep-result">✔ Keep This Result</button>
+      `;
+
+      document.getElementById('flux-btn-reroll').addEventListener('click', () => {
+        // Store first result for comparison
+        this._fluxFirstRoll = { roll, effect };
+        // Show new input for reroll
+        actionsEl.innerHTML = `
+          <div class="flux-roll-input-section">
+            <label class="flux-roll-label">Enter your reroll (d100):</label>
+            <input type="number" id="flux-reroll-input" class="flux-roll-input" min="1" max="100" placeholder="d100">
+            <button type="button" class="btn flux-btn flux-btn-submit" id="flux-submit-reroll">Submit Reroll</button>
+          </div>
+        `;
+        setTimeout(() => document.getElementById('flux-reroll-input')?.focus(), 100);
+
+        document.getElementById('flux-submit-reroll').addEventListener('click', () => {
+          const rerollVal = parseInt(document.getElementById('flux-reroll-input').value, 10);
+          if (isNaN(rerollVal) || rerollVal < 1 || rerollVal > 100) {
+            this.showFloatingMessage('Please enter a number between 1 and 100.', 'warning');
+            return;
+          }
+          const rerollEffect = isMinor
+            ? window.ArcaneFluxData.getMinorFlux(rerollVal)
+            : window.ArcaneFluxData.getMajorFlux(rerollVal);
+
+          if (mitigation.mustTakeSecond) {
+            // Must take second result
+            resultDisplay.innerHTML = `
+              <div class="flux-comparison">
+                <div class="flux-compare-item flux-compare-rejected">
+                  <div class="flux-compare-label">First Roll (${String(this._fluxFirstRoll.roll).padStart(2,'0')}):</div>
+                  <div class="flux-result-effect">${this._fluxFirstRoll.effect}</div>
+                </div>
+                <div class="flux-compare-item flux-compare-active">
+                  <div class="flux-compare-label">Second Roll (${String(rerollVal).padStart(2,'0')}) — <strong>Must Take</strong>:</div>
+                  <div class="flux-result-effect">${rerollEffect}</div>
+                </div>
+              </div>
+            `;
+            actionsEl.innerHTML = `<button type="button" class="btn flux-btn flux-btn-close" id="flux-close-btn">✖ Close</button>`;
+            document.getElementById('flux-close-btn').addEventListener('click', () => overlay.remove());
+          } else {
+            // Can choose either
+            resultDisplay.innerHTML = `
+              <div class="flux-comparison">
+                <div class="flux-compare-item" id="flux-choice-1">
+                  <div class="flux-compare-label">Roll 1 (${String(this._fluxFirstRoll.roll).padStart(2,'0')}):</div>
+                  <div class="flux-result-effect">${this._fluxFirstRoll.effect}</div>
+                  <button type="button" class="btn flux-btn flux-btn-choose" data-choice="1">Choose This</button>
+                </div>
+                <div class="flux-compare-item" id="flux-choice-2">
+                  <div class="flux-compare-label">Roll 2 (${String(rerollVal).padStart(2,'0')}):</div>
+                  <div class="flux-result-effect">${rerollEffect}</div>
+                  <button type="button" class="btn flux-btn flux-btn-choose" data-choice="2">Choose This</button>
+                </div>
+              </div>
+            `;
+            actionsEl.innerHTML = '';
+            resultDisplay.querySelectorAll('.flux-btn-choose').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const choice = btn.dataset.choice;
+                const otherChoice = choice === '1' ? '2' : '1';
+                document.getElementById(`flux-choice-${otherChoice}`).classList.add('flux-compare-rejected');
+                document.getElementById(`flux-choice-${choice}`).classList.add('flux-compare-active');
+                resultDisplay.querySelectorAll('.flux-btn-choose').forEach(b => b.remove());
+                actionsEl.innerHTML = `<button type="button" class="btn flux-btn flux-btn-close" id="flux-close-btn">✖ Close</button>`;
+                document.getElementById('flux-close-btn').addEventListener('click', () => overlay.remove());
+              });
+            });
+          }
+        });
+      });
+
+      document.getElementById('flux-btn-keep-result').addEventListener('click', () => {
+        actionsEl.innerHTML = `<button type="button" class="btn flux-btn flux-btn-close" id="flux-close-btn">✖ Close</button>`;
+        document.getElementById('flux-close-btn').addEventListener('click', () => overlay.remove());
+      });
+    } else {
+      // No reroll available — just close
+      actionsEl.innerHTML = `<button type="button" class="btn flux-btn flux-btn-close" id="flux-close-btn">✖ Close</button>`;
+      document.getElementById('flux-close-btn').addEventListener('click', () => overlay.remove());
+    }
   },
 
   /**
