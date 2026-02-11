@@ -13666,3 +13666,9 @@ body.dark-mode[data-class-theme] .subsection-header {
 .modal-confirm-body .confirm-details strong {
   color: var(--text-primary, #3a3228);
 }
+
+/* Specialist II pulse animation */
+@keyframes spec-ii-pulse {
+  0%, 100% { box-shadow: 0 0 8px currentColor; }
+  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+}

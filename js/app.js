@@ -1322,9 +1322,27 @@ const App = {
           
           this.recalculateAll();
           
-          // Sync current AP when original changes from rank-up/down
-          this.syncCurrentToDerivedChange('action-points', apOrigBefore);
-          this.syncCurrentToDerivedChange('luck', luckOrigBefore);
+          // On rank INCREASE: set current AP and Luck to the new maximum
+          if (newRank > previousRank) {
+            const apOrig = document.getElementById('action-points-original');
+            const apCurr = document.getElementById('action-points-current');
+            if (apOrig && apCurr) {
+              apCurr.value = apOrig.value;
+              apCurr.dataset.originalValue = apCurr.value;
+              this.character.derived.actionPointsCurrent = apCurr.value;
+            }
+            
+            const luckOrig = document.getElementById('luck-original');
+            const luckCurr = document.getElementById('luck-current');
+            if (luckOrig && luckCurr) {
+              luckCurr.value = luckOrig.value;
+              this.character.derived.luckCurrent = luckCurr.value;
+            }
+          } else {
+            // On rank DECREASE: cap current to new max
+            this.syncCurrentToDerivedChange('action-points', apOrigBefore);
+            this.syncCurrentToDerivedChange('luck', luckOrigBefore);
+          }
           
           // Update rage display text (damage steps, fatigue waivers) based on new rank
           if (this.hasAbility('Berserk Rage')) {
@@ -4006,8 +4024,30 @@ const App = {
     
     hitLocations.forEach((loc, i) => {
       const hpInput = document.getElementById(`loc-${i}-hp`);
+      const currentInput = document.getElementById(`loc-${i}-current`);
       if (hpInput) {
-        hpInput.value = loc.hp;
+        const oldMax = parseInt(hpInput.value, 10) || 0;
+        const newMax = loc.hp;
+        hpInput.value = newMax;
+        
+        // Sync current HP when max changes (rank-up/down or characteristic change)
+        if (currentInput && oldMax > 0 && newMax !== oldMax) {
+          const currentVal = parseInt(currentInput.value, 10);
+          if (newMax > oldMax) {
+            // Max increased: add the delta to current HP
+            const increase = newMax - oldMax;
+            if (isNaN(currentVal) || currentVal === 0) {
+              currentInput.value = newMax;
+            } else {
+              currentInput.value = Math.min(currentVal + increase, newMax);
+            }
+          } else {
+            // Max decreased: cap current to new max
+            if (!isNaN(currentVal) && currentVal > newMax) {
+              currentInput.value = newMax;
+            }
+          }
+        }
       }
       
       // Also update the character object so autosave picks up the change
@@ -4015,6 +4055,9 @@ const App = {
         this.character.combat.hitLocations[i] = { armor: '', ap: '', hp: '', current: '' };
       }
       this.character.combat.hitLocations[i].hp = loc.hp.toString();
+      if (currentInput) {
+        this.character.combat.hitLocations[i].current = currentInput.value;
+      }
     });
     
     // Update wound statuses since max HP may have changed
@@ -9493,9 +9536,24 @@ const App = {
     let baseSkill = parseInt(skillEl?.value, 10) || 0;
 
     // For non-memorized divine, use Piety instead
-    if (m.isNonMemorized && m.nonMemSkillName === 'Piety') {
-      const pietyEl = document.getElementById('piety-percent');
-      baseSkill = parseInt(pietyEl?.value, 10) || 0;
+    if (m.isNonMemorized) {
+      if (m.nonMemSkillName === 'Piety') {
+        const pietyEl = document.getElementById('piety-percent');
+        baseSkill = parseInt(pietyEl?.value, 10) || 0;
+      } else if (!m.nonMemSkillName) {
+        // Safety: if nonMemSkillName wasn't set, check if this is a divine caster
+        const classNorm = (m.classSource || '').toLowerCase();
+        const isDivine = classNorm.includes('cleric') || classNorm.includes('druid') ||
+                         classNorm.includes('paladin') || classNorm.includes('ranger') ||
+                         classNorm.includes('anti-paladin');
+        if (isDivine) {
+          m.nonMemSkillName = 'Piety';
+          m.nonMemSkillId = 'piety-percent';
+          const pietyEl = document.getElementById('piety-percent');
+          baseSkill = parseInt(pietyEl?.value, 10) || 0;
+          m.nonMemSkillPercent = baseSkill;
+        }
+      }
     }
 
     let effective = baseSkill;
@@ -9511,8 +9569,25 @@ const App = {
     }
 
     // Non-memorized penalty — THIS IS THE CRITICAL PART
-    if (m.isNonMemorized && m.nonMemPenalty) {
+    if (m.isNonMemorized && m.nonMemPenalty !== 0) {
       effective += m.nonMemPenalty;
+    }
+    // Extra safety: if non-mem but penalty wasn't set, recalculate it
+    if (m.isNonMemorized && m.nonMemPenalty === 0) {
+      const classNorm = (m.classSource || '').toLowerCase();
+      if (classNorm.includes('mage') || classNorm.includes('magic-user') || classNorm.includes('bard')) {
+        m.nonMemPenalty = -20;
+        m.nonMemDifficulty = 'Hard';
+      } else if (classNorm.includes('sorcerer')) {
+        m.nonMemPenalty = -40;
+        m.nonMemDifficulty = 'Formidable';
+      } else {
+        // Divine casters: Formidable
+        m.nonMemPenalty = -40;
+        m.nonMemDifficulty = 'Formidable';
+      }
+      effective += m.nonMemPenalty;
+      console.warn(`[CAST] _ensureEffectiveSkill: non-mem penalty was 0, recalculated to ${m.nonMemPenalty}`);
     }
 
     effective = Math.max(0, Math.min(effective, 200));
@@ -10326,6 +10401,21 @@ const App = {
   _executeCast() {
     const m = this._castModal;
     if (m.hasRolled) return;
+
+    // DEFENSIVE: Re-check the memorized checkbox at cast time
+    // This catches cases where the checkbox state was stale at modal-open time
+    const spellTbody = document.getElementById(`${m.rankKey}-body`);
+    const spellRow = spellTbody?.rows[m.slotIndex];
+    const memCheck = spellRow?.querySelector('.spell-memorized') ||
+                     document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
+    if (memCheck) {
+      const nowNonMem = !memCheck.checked;
+      if (nowNonMem !== m.isNonMemorized) {
+        console.warn(`[CAST] Re-check: isNonMemorized was ${m.isNonMemorized}, now ${nowNonMem}. Re-applying.`);
+        m.isNonMemorized = nowNonMem;
+        this._applySelectedClass(m);
+      }
+    }
 
     // Check MP — allow overcasting with fatigue penalty
     const mpField = document.getElementById('magic-points-current');
@@ -21599,6 +21689,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           ],
           rank2Benefits: [
             { label: 'Simultaneous Strike', text: 'Strike with both weapons simultaneously. This attack is 1 Difficulty Grade harder (−20% Combat Skill). If successful, both weapons hit — but only one weapon (your choice) may generate Special Effects.', hasButton: true }
+          ],
+          rank3Benefits: [
+            { label: 'Dual Weapon Specialist II', text: 'Double your Critical chance on attacks. In addition, your wielded melee weapons gain a 1-step improvement to Damage Modifier.', hasButton: true, id: 'dw-spec-ii' }
           ]
         };
       case 'Ranger Ranged':
@@ -21612,6 +21705,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           ],
           rank2Benefits: [
             { label: 'Marksman', text: 'You may shift the result of a Hit Location roll to an adjacent location, provided the target is within the weapon\'s Close Range — as per the Marksman Special Effect.' }
+          ],
+          rank3Benefits: [
+            { label: 'Ranged Specialist II', text: 'When within Close Range, double your Critical chance on attacks. In addition, your wielded ranged weapons gain a 1-step improvement to Damage Modifier.', hasButton: true, id: 'ranged-spec-ii' }
           ]
         };
       default:
@@ -22173,6 +22269,65 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         }
       }
 
+      // Check if Ranger is Rank 3+ with Combat Skill >= 90% for rank 3 benefits
+      let rank3Html = '';
+      if (isRangerSpec && benefitData.rank3Benefits) {
+        const rangerRank = this._getRangerRank();
+        const combatSkill = parseInt(document.getElementById('combat-skill-1-percent')?.value, 10) || 0;
+        if (rangerRank >= 3 && combatSkill >= 90) {
+          const isSpecIIActive = this.character.specIIActive || false;
+          const specType = spec.type === 'Dual Weapon' ? 'dw' : 'ranged';
+          const btnIcon = spec.type === 'Dual Weapon' ? '⚔️' : '🏹';
+          const btnLabel = spec.type === 'Dual Weapon' ? 'Dual Weapon Specialist II' : 'Ranged Specialist II';
+          const activeColor = spec.type === 'Dual Weapon' ? '#d4380d' : '#1890ff';
+          const activeGlow = spec.type === 'Dual Weapon' ? 'rgba(212, 56, 13, 0.6)' : 'rgba(24, 144, 255, 0.6)';
+          const activeBg = spec.type === 'Dual Weapon' 
+            ? `linear-gradient(135deg, ${activeColor}22, ${activeColor}44)` 
+            : `linear-gradient(135deg, ${activeColor}22, ${activeColor}44)`;
+
+          rank3Html = benefitData.rank3Benefits.map(b => {
+            if (b.hasButton) {
+              return `
+                <div class="benefit-item rank3-benefit" style="border-top: 1px solid rgba(201, 165, 90, 0.3); padding-top: 0.4rem; margin-top: 0.3rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                    <button type="button" class="spec-ii-btn${isSpecIIActive ? ' spec-ii-active' : ''}" id="btn-spec-ii-toggle"
+                      data-spec-type="${specType}"
+                      title="${isSpecIIActive ? 'Click to deactivate ' + btnLabel : 'Click to activate: double Critical chance, +1 DM step'}"
+                      style="
+                        padding: 0.25rem 0.55rem; border-radius: 4px; cursor: pointer;
+                        font-size: 0.72rem; transition: all 0.3s ease; font-weight: 600;
+                        letter-spacing: 0.3px; white-space: nowrap;
+                        background: ${isSpecIIActive ? activeBg : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
+                        border: 1px solid ${isSpecIIActive ? activeColor : 'rgba(201, 165, 90, 0.25)'};
+                        color: ${isSpecIIActive ? activeColor : '#888'};
+                        box-shadow: ${isSpecIIActive ? `0 0 10px ${activeGlow}` : 'none'};
+                      ">
+                      ${btnIcon} ${btnLabel}${isSpecIIActive ? ' ✦' : ''}
+                    </button>
+                    <span style="font-size: 0.75rem; color: #999;">(Rank 3)</span>
+                  </div>
+                  <strong>${b.label}:</strong> ${b.text}
+                </div>
+              `;
+            } else {
+              return `
+                <div class="benefit-item rank3-benefit" style="border-top: 1px solid rgba(201, 165, 90, 0.3); padding-top: 0.4rem; margin-top: 0.3rem;">
+                  <strong>${b.label}:</strong> ${b.text} <span style="font-size: 0.75rem; color: #999;">(Rank 3)</span>
+                </div>
+              `;
+            }
+          }).join('');
+        } else if (rangerRank >= 3 && combatSkill < 90) {
+          // Show as locked — missing prereq
+          rank3Html = `
+            <div class="benefit-item rank3-benefit" style="border-top: 1px dashed rgba(201, 165, 90, 0.2); padding-top: 0.4rem; margin-top: 0.3rem; opacity: 0.5;">
+              <strong>${benefitData.rank3Benefits[0].label}:</strong> <em>Requires Combat Skill 90%+ to activate</em>
+              <span style="font-size: 0.75rem; color: #999;">(Rank 3)</span>
+            </div>
+          `;
+        }
+      }
+
       // Button label and icon
       let btnLabel, btnIcon, btnColor, btnGlow;
       if (isMastered && tierData) {
@@ -22276,6 +22431,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
               </div>
             `).join('')}
             ${rank2Html}
+            ${rank3Html}
             ${masteryBenefitsHtml}
           </div>
         </div>
@@ -22335,6 +22491,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       dualStrikeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.toggleDualStrike();
+      });
+    }
+
+    // Wire up Specialist II button (Ranger Rank 3)
+    const specIIBtn = cardsContainer.querySelector('#btn-spec-ii-toggle');
+    if (specIIBtn) {
+      specIIBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleSpecialistII(specIIBtn.dataset.specType);
       });
     }
 
@@ -23646,6 +23811,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (this.character.dualStrikeActive) {
       this.deactivateDualStrike();
     }
+    // Also deactivate Specialist II if active
+    if (this.character.specIIActive) {
+      this.deactivateSpecialistII();
+    }
     this.recalculateCombatBuffs();
     this.releaseBaselineIfClean();
   },
@@ -23748,6 +23917,124 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       btn.title = 'Click to activate: both weapons hit at −20% Combat Skill';
     }
     
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Toggle Specialist II (Ranger Rank 3)
+   * When active: double Critical chance, +1 DM step to all weapons
+   */
+  toggleSpecialistII(specType) {
+    const isActive = this.character.specIIActive || false;
+    if (isActive) {
+      this.deactivateSpecialistII();
+    } else {
+      this.activateSpecialistII(specType);
+    }
+  },
+
+  activateSpecialistII(specType) {
+    this.character.specIIActive = true;
+    this.character.specIIType = specType || 'dw';
+    
+    // Double Critical chance — set flag for d100 roll
+    this.character.specIICritDoubled = true;
+    
+    // +1 DM step to current damage modifier
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    if (dmgCurrent) {
+      const currentDM = dmgCurrent.value.trim();
+      this.character._specIIDmgBefore = currentDM;
+      dmgCurrent.value = this.stepDamageModifier(currentDM, 1);
+      dmgCurrent.classList.add('damage-boosted');
+      dmgCurrent.title = (dmgCurrent.title || '') + ' | Specialist II: +1 DM step';
+    }
+    
+    // Also step weapon-specific DM if present
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    if (wpDmgCurrent && wpDmgCurrent.value.trim()) {
+      const wpCurrentDM = wpDmgCurrent.value.trim();
+      this.character._specIIWpDmgBefore = wpCurrentDM;
+      wpDmgCurrent.value = this.stepDamageModifier(wpCurrentDM, 1);
+      wpDmgCurrent.classList.add('damage-boosted');
+    }
+    
+    // Animate button
+    const btn = document.getElementById('btn-spec-ii-toggle');
+    if (btn) {
+      const isDW = specType === 'dw';
+      const color = isDW ? '#d4380d' : '#1890ff';
+      const glow = isDW ? 'rgba(212, 56, 13, 0.6)' : 'rgba(24, 144, 255, 0.6)';
+      const icon = isDW ? '⚔️' : '🏹';
+      const label = isDW ? 'Dual Weapon Specialist II' : 'Ranged Specialist II';
+      
+      btn.classList.add('spec-ii-active');
+      btn.style.background = `linear-gradient(135deg, ${color}22, ${color}44)`;
+      btn.style.borderColor = color;
+      btn.style.color = color;
+      btn.style.boxShadow = `0 0 12px ${glow}`;
+      btn.innerHTML = `${icon} ${label} ✦`;
+      btn.title = `Click to deactivate ${label}`;
+      
+      // Flash animation
+      btn.style.transform = 'scale(1.2)';
+      setTimeout(() => { btn.style.transform = 'scale(1)'; }, 250);
+      
+      // Pulse glow effect
+      btn.style.animation = 'spec-ii-pulse 1.5s ease-in-out 3';
+      setTimeout(() => { btn.style.animation = ''; }, 4500);
+    }
+    
+    this.scheduleAutoSave();
+  },
+
+  deactivateSpecialistII() {
+    if (!this.character.specIIActive) return;
+    this.character.specIIActive = false;
+    this.character.specIICritDoubled = false;
+    
+    // Reverse DM step
+    const dmgCurrent = document.getElementById('damage-mod-current');
+    if (dmgCurrent) {
+      if (this.character._specIIDmgBefore) {
+        dmgCurrent.value = this.character._specIIDmgBefore;
+      } else {
+        dmgCurrent.value = this.stepDamageModifier(dmgCurrent.value.trim(), -1);
+      }
+      dmgCurrent.classList.remove('damage-boosted');
+      dmgCurrent.title = (dmgCurrent.title || '').replace(/\s*\|\s*Specialist II: \+1 DM step/, '');
+      delete this.character._specIIDmgBefore;
+    }
+    
+    // Reverse weapon-specific DM
+    const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+    if (wpDmgCurrent) {
+      if (this.character._specIIWpDmgBefore) {
+        wpDmgCurrent.value = this.character._specIIWpDmgBefore;
+      } else if (wpDmgCurrent.value.trim()) {
+        wpDmgCurrent.value = this.stepDamageModifier(wpDmgCurrent.value.trim(), -1);
+      }
+      wpDmgCurrent.classList.remove('damage-boosted');
+      delete this.character._specIIWpDmgBefore;
+    }
+    
+    // Update button
+    const btn = document.getElementById('btn-spec-ii-toggle');
+    if (btn) {
+      const isDW = (this.character.specIIType || 'dw') === 'dw';
+      const icon = isDW ? '⚔️' : '🏹';
+      const label = isDW ? 'Dual Weapon Specialist II' : 'Ranged Specialist II';
+      
+      btn.classList.remove('spec-ii-active');
+      btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
+      btn.style.borderColor = 'rgba(201, 165, 90, 0.25)';
+      btn.style.color = '#888';
+      btn.style.boxShadow = 'none';
+      btn.innerHTML = `${icon} ${label}`;
+      btn.title = 'Click to activate: double Critical chance, +1 DM step';
+    }
+    
+    delete this.character.specIIType;
     this.scheduleAutoSave();
   },
 
@@ -23855,6 +24142,20 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           ? existing + ` | Multi-shot (${multiShot.count}): ${multiShot.csPenalty}%`
           : `Legendary Master Multi-shot (${multiShot.count}): ${multiShot.csPenalty}%`;
         skillInput.classList.add('forceful-penalized');
+      }
+    }
+
+    // Restore Specialist II visuals if active
+    if (this.character.specIIActive) {
+      this.character.specIICritDoubled = true;
+      const dmgCurrent = document.getElementById('damage-mod-current');
+      if (dmgCurrent) {
+        dmgCurrent.classList.add('damage-boosted');
+        dmgCurrent.title = (dmgCurrent.title || '') + ' | Specialist II: +1 DM step';
+      }
+      const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
+      if (wpDmgCurrent && wpDmgCurrent.value.trim()) {
+        wpDmgCurrent.classList.add('damage-boosted');
       }
     }
   },
@@ -27250,6 +27551,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     let critDoubled = false;
     if (this.character.weaponSpecCritDoubled && (this.character.activeWeaponSpecs || []).length > 0) {
       if (isCombatSkillRoll) {
+        critThreshold = critThreshold * 2;
+        critDoubled = true;
+      }
+    }
+    
+    // Ranger Specialist II: double critical range for Combat Skill rolls
+    if (this.character.specIICritDoubled && isCombatSkillRoll) {
+      if (!critDoubled) {
         critThreshold = critThreshold * 2;
         critDoubled = true;
       }

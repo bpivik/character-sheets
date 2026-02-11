@@ -1350,6 +1350,20 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Species Enemy I",
       summary: "Select an additional Species Enemy (+10% skills, +1 Damage step vs chosen foe)"
     },
+    
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (cannot exceed racial max, once per Rank)"
+    },
+    { 
+      name: "Species Enemy III", 
+      rank: 3, 
+      prereqs: "Species Enemy II",
+      summary: "Select an additional Species Enemy (+10% skills, +1 Damage step vs chosen foe)"
+    },
   ],
 };
 
