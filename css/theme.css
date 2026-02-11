@@ -561,3 +561,25 @@ select:focus-visible {
 .weaving-footnote {
   color: #666;
 }
+
+/* --- Familiar Section (Parchment) --- */
+.familiar-section {
+  background: rgba(75, 0, 130, 0.04);
+  border-color: rgba(100, 50, 120, 0.25);
+}
+
+.familiar-section .section-header {
+  color: #5a2d7a;
+}
+
+.familiar-type-label {
+  color: #4a2060;
+}
+
+.familiar-type-value {
+  color: #5a2d7a;
+}
+
+.familiar-info-details {
+  color: #555;
+}

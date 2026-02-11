@@ -73,9 +73,9 @@ const ClassAbilities = {
   
   sorcerer: {
     rank1: [],
-    // Special: Adds "Familiar" to Rank 1 spells
+    // Familiar is auto-granted at Rank 1 (not selectable from ability list)
     specialActions: {
-      rank1: { addSpell: { rank: "rank1", spell: "Familiar" } }
+      rank1: { addAbility: "Familiar" }
     }
   },
   

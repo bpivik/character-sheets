@@ -543,6 +543,7 @@ const App = {
     this.checkSwashbucklingVisibility();
     this.checkDefensiveReflexesVisibility();
     this.checkArcaneScrollsVisibility();
+    this.checkFamiliarVisibility();
     this.checkReadLanguagesPendingVisibility();
     
     // Check if Mental Strength section should be visible
@@ -636,6 +637,7 @@ const App = {
     }
     
     console.log('Initialization complete!');
+    this._initComplete = true;
   },
   
   /**
@@ -6408,6 +6410,7 @@ const App = {
         if (normalizedName === 'swashbuckling') this.checkSwashbucklingVisibility();
         if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
         if (normalizedName === 'read languages') this.checkReadLanguagesPendingVisibility();
+        if (normalizedName === 'familiar') this.checkFamiliarVisibility();
         if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
         
         // Check if Turn Undead section should now be visible
@@ -6503,6 +6506,7 @@ const App = {
     if (normalizedName === 'swashbuckling') this.checkSwashbucklingVisibility();
     if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
     if (normalizedName === 'read languages') this.checkReadLanguagesPendingVisibility();
+    if (normalizedName === 'familiar') this.checkFamiliarVisibility();
     if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
     
     // Check if Turn Undead section should now be visible
@@ -11369,6 +11373,7 @@ const App = {
     this.checkShapeChangeVisibility();
     this.checkWeaponSpecVisibility();
     this.checkMonkAbilitiesVisibility();
+    this.checkFamiliarVisibility();
     
     // Update weapon master tier (rank may have changed)
     if (this.character.weaponMaster) {
@@ -11470,11 +11475,6 @@ const App = {
         if (existingAbilities.includes('unarmed proficiency')) {
           this.updateUnarmedDamage(actions.changeUnarmedDamage);
         }
-      }
-      
-      // Add spell (Sorcerer Familiar) - always add if class is Sorcerer at rank 1+
-      if (actions.addSpell) {
-        this.addSpellIfNotExists(actions.addSpell.rank, actions.addSpell.spell);
       }
       
       // Add professional skills (Monk: Mysticism, Meditation)
@@ -12490,19 +12490,12 @@ const App = {
       }
     }
     
-    // Remove Sorcerer's Familiar spell
+    // Clear Sorcerer's Familiar data
     if (classKey === 'sorcerer') {
-      const tbody = document.getElementById('rank1-body');
-      if (tbody) {
-        Array.from(tbody.rows).forEach(tr => {
-          const nameInput = tr.querySelector('.spell-name');
-          if (nameInput && nameInput.value.toLowerCase().trim() === 'familiar' && 
-              nameInput.dataset.classSpell === 'sorcerer') {
-            tr.remove();
-          }
-        });
-        this.reindexSpellRows('rank1');
-      }
+      this.character.familiarType = null;
+      const familiarDisplay = document.getElementById('familiar-type-display');
+      if (familiarDisplay) familiarDisplay.textContent = 'Not yet chosen';
+      this.checkFamiliarVisibility();
     }
     
     // Remove Fighter's Weapon Master data
@@ -20242,6 +20235,149 @@ const App = {
 
     this.showD100Result('Arcane Scroll (INT×5)', targetPct, roll, result, resultClass, {
       customFumbleText: "Due to the rogue's lack of formal magical training, failing this roll automatically results in a Fumble. A Fumbled roll causes the spell to backfire, either reversing its intended effect or targeting the rogue. The specific consequence is left to the Games Master's discretion, based on whichever outcome is most detrimental to the rogue."
+    });
+  },
+
+  /**
+   * Show/hide the Familiar info card section.
+   * Visible when sorcerer has the Familiar ability.
+   */
+  checkFamiliarVisibility() {
+    const section = document.getElementById('familiar-section');
+    if (!section) return;
+    
+    if (!this.hasAbility('Familiar')) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    const wasHidden = section.style.display === 'none';
+    section.style.display = '';
+    
+    // Restore saved familiar type
+    const display = document.getElementById('familiar-type-display');
+    if (display && this.character.familiarType) {
+      display.textContent = this.character.familiarType;
+    }
+    
+    // Init button
+    const btn = document.getElementById('btn-choose-familiar');
+    if (btn && !btn._famInit) {
+      btn._famInit = true;
+      btn.addEventListener('click', () => this.showFamiliarTypeModal());
+    }
+    
+    // Auto-prompt if newly shown and no type chosen yet (only after init, not on page load)
+    if (wasHidden && !this.character.familiarType && !this._familiarPromptShown && this._initComplete) {
+      this._familiarPromptShown = true;
+      // Slight delay so the UI settles first
+      setTimeout(() => this.showFamiliarTypeModal(), 400);
+    }
+  },
+
+  /**
+   * Show modal to choose/change familiar type
+   */
+  showFamiliarTypeModal() {
+    let overlay = document.getElementById('familiar-type-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'familiar-type-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content familiar-modal-content">
+        <h3 class="modal-title">🐾 Choose Your Familiar</h3>
+        <p class="familiar-modal-desc">Roll d100 on the Familiars Table (subtract 5% per Rank above 1) and select or type the result below.</p>
+        <div class="familiar-modal-options">
+          <div class="familiar-option-group">
+            <label class="familiar-option-label">Quick Select:</label>
+            <select id="familiar-quick-select" class="familiar-select">
+              <option value="">— Select type —</option>
+              <optgroup label="Special (01-05)">
+                <option value="Brownie (Special)">Brownie (Good/Neutral)</option>
+                <option value="Lesser Demon (Special)">Lesser Demon (Evil/Chaotic)</option>
+                <option value="Lesser Devil (Special)">Lesser Devil (Evil)</option>
+                <option value="Pseudo Dragon (Special)">Pseudo Dragon (Any Non-Evil)</option>
+                <option value="Quasit (Special)">Quasit (Chaotic/Evil)</option>
+              </optgroup>
+              <optgroup label="Amphibian (06-10)">
+                <option value="Frog/Toad">Frog/Toad</option>
+                <option value="Salamander">Salamander</option>
+              </optgroup>
+              <optgroup label="Avian (11-20)">
+                <option value="Dove">Dove</option>
+                <option value="Sparrow">Sparrow</option>
+                <option value="Pigeon">Pigeon</option>
+                <option value="Crow">Crow</option>
+                <option value="Hawk">Hawk</option>
+                <option value="Owl">Owl</option>
+                <option value="Raven">Raven</option>
+                <option value="Eagle">Eagle</option>
+              </optgroup>
+              <optgroup label="Feline (21-35)">
+                <option value="Cat, Small">Cat, Small</option>
+                <option value="Cat, Medium">Cat, Medium</option>
+                <option value="Cat, Large (Bobcat/Lynx)">Cat, Large (Bobcat/Lynx)</option>
+              </optgroup>
+              <optgroup label="Insect/Arachnid (36-48)">
+                <option value="Spider">Spider</option>
+                <option value="Beetle">Beetle</option>
+                <option value="Moth/Butterfly">Moth/Butterfly</option>
+                <option value="Bat">Bat</option>
+              </optgroup>
+              <optgroup label="Canine (49-59)">
+                <option value="Dog, Small">Dog, Small</option>
+                <option value="Dog, Medium">Dog, Medium</option>
+                <option value="Coyote/Jackal">Coyote/Jackal</option>
+              </optgroup>
+              <optgroup label="Reptile (60-75)">
+                <option value="Turtle">Turtle</option>
+                <option value="Lizard">Lizard</option>
+                <option value="Snake">Snake</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="familiar-option-group">
+            <label class="familiar-option-label">Or type custom:</label>
+            <input type="text" id="familiar-custom-input" class="familiar-custom-input" placeholder="e.g. Hawk, Small Black Cat, etc." value="${this.character.familiarType || ''}">
+          </div>
+        </div>
+        <div class="familiar-modal-buttons">
+          <button type="button" class="btn btn-confirm-familiar" id="btn-confirm-familiar">✔ Confirm</button>
+          <button type="button" class="btn btn-cancel-familiar" id="btn-cancel-familiar">✖ Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // Sync quick select → custom input
+    const select = document.getElementById('familiar-quick-select');
+    const customInput = document.getElementById('familiar-custom-input');
+    select.addEventListener('change', () => {
+      if (select.value) customInput.value = select.value;
+    });
+    
+    // Confirm
+    document.getElementById('btn-confirm-familiar').addEventListener('click', () => {
+      const val = customInput.value.trim();
+      if (val) {
+        this.character.familiarType = val;
+        const display = document.getElementById('familiar-type-display');
+        if (display) display.textContent = val;
+        this.scheduleAutoSave();
+      }
+      overlay.remove();
+    });
+    
+    // Cancel
+    document.getElementById('btn-cancel-familiar').addEventListener('click', () => {
+      overlay.remove();
+    });
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
     });
   },
 

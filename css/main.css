@@ -2264,6 +2264,175 @@ input.weapon-damage.rage-boosted,
 }
 
 /* ========================================
+   FAMILIAR SECTION (SORCERER)
+   ======================================== */
+.familiar-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(75, 0, 130, 0.08), rgba(138, 43, 226, 0.06));
+  border: 2px solid rgba(138, 43, 226, 0.3);
+  border-radius: 6px;
+}
+
+.familiar-section .section-header {
+  color: #7b3f9e;
+}
+
+.familiar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.familiar-type-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background: rgba(138, 43, 226, 0.08);
+  border-radius: 4px;
+  border: 1px solid rgba(138, 43, 226, 0.2);
+}
+
+.familiar-type-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #5a2d7a;
+}
+
+.familiar-type-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #7b3f9e;
+  flex: 1;
+}
+
+.btn-choose-familiar {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  background: rgba(138, 43, 226, 0.1);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  color: #7b3f9e;
+}
+
+.btn-choose-familiar:hover {
+  background: rgba(138, 43, 226, 0.2);
+}
+
+.familiar-info-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.familiar-info-item {
+  padding: 0.1rem 0;
+}
+
+.familiar-warning {
+  color: #b33;
+  font-weight: 600;
+}
+
+.familiar-note {
+  font-size: 0.72rem;
+  color: #888;
+  font-style: italic;
+  border-top: 1px solid rgba(138, 43, 226, 0.15);
+  padding-top: 0.3rem;
+  margin-top: 0.1rem;
+}
+
+/* Familiar Type Modal */
+.familiar-modal-content {
+  max-width: 420px;
+  padding: 1.2rem;
+}
+
+.familiar-modal-content .modal-title {
+  text-align: center;
+  color: #7b3f9e;
+  margin-bottom: 0.5rem;
+}
+
+.familiar-modal-desc {
+  font-size: 0.8rem;
+  color: #777;
+  text-align: center;
+  margin-bottom: 0.8rem;
+}
+
+.familiar-modal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.familiar-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.familiar-option-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.familiar-select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: rgba(138, 43, 226, 0.04);
+}
+
+.familiar-custom-input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.familiar-modal-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.8rem;
+}
+
+.btn-confirm-familiar {
+  background: #7b3f9e;
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirm-familiar:hover {
+  background: #6a2e8d;
+}
+
+.btn-cancel-familiar {
+  background: #ccc;
+  color: #333;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancel-familiar:hover {
+  background: #bbb;
+}
+
+/* ========================================
    IMPROVED AIM SECTION (RANGER)
    ======================================== */
 .improved-aim-section {
