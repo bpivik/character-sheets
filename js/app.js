@@ -6776,6 +6776,17 @@ const App = {
     const tbody = document.getElementById(`${rankKey}-body`);
     if (!tbody) return null;
     
+    // Sorcerer: spells known = memorize limit, can't add more rows
+    if (this.isSorcererClass()) {
+      const maxInput = document.getElementById(`${rankKey}-max`);
+      const maxAllowed = parseInt(maxInput?.value, 10) || 0;
+      const currentRows = tbody.rows.length;
+      if (currentRows >= maxAllowed) {
+        this.showFloatingMessage(`Sorcerers may only know ${maxAllowed} ${this.spellRankLabels?.[rankKey] || rankKey} spell${maxAllowed !== 1 ? 's' : ''} (equal to memorize limit).`, 'warning');
+        return null;
+      }
+    }
+    
     const index = tbody.rows.length;
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -8993,6 +9004,9 @@ const App = {
     // Hide/show spell columns based on memorization values
     this.updateSpellColumnVisibility();
     
+    // Show/hide sorcerer weaving charts
+    this.updateWeavingChartVisibility();
+    
     // Hide/show Ranks 3-5 tab based on whether any rank 3-5 spells are available
     this.updateMagic2TabVisibility();
     
@@ -9027,6 +9041,28 @@ const App = {
     }
   },
   
+  /**
+   * Check if any current class slot contains Sorcerer
+   */
+  isSorcererClass() {
+    const classes = ['class-primary', 'class-secondary', 'class-tertiary'];
+    return classes.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().toLowerCase() === 'sorcerer';
+    });
+  },
+
+  /**
+   * Show/hide the Sorcerer Spell Weaving charts on both magic pages
+   */
+  updateWeavingChartVisibility() {
+    const isSorc = this.isSorcererClass();
+    const s1 = document.getElementById('weaving-effects-section-1');
+    const s2 = document.getElementById('weaving-effects-section-2');
+    if (s1) s1.style.display = isSorc ? '' : 'none';
+    if (s2) s2.style.display = isSorc ? '' : 'none';
+  },
+
   /**
    * Hide Ranks 3-5 Spells tab if all rank 3, 4, 5 memorization is 0
    */
@@ -9254,7 +9290,9 @@ const App = {
       });
       
       // Check if there's class spell data for this rank
+      // Sorcerers don't use Fill Spells — they know only what they've learned
       const classesWithSpells = availableClasses.filter(c => {
+        if (c.name === 'sorcerer') return false;
         const classList = window.ClassSpellLists[c.name];
         return classList && classList[rankKey] && classList[rankKey].length > 0;
       });

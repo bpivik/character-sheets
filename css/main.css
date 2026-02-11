@@ -10643,6 +10643,84 @@ input.combat-skill-percent.damage-boosted {
   border-color: #4caf50;
 }
 
+/* Sorcerer Weaving Effects Chart */
+.weaving-effects-section {
+  margin-top: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(139, 69, 139, 0.3);
+  border-radius: 6px;
+  background: rgba(75, 0, 110, 0.06);
+}
+
+.weaving-effects-section .section-header {
+  color: #7b3f9e;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.weaving-intro {
+  font-size: 0.78rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+.weaving-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.weaving-table th {
+  background: rgba(123, 63, 158, 0.15);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid rgba(139, 69, 139, 0.25);
+  text-align: center;
+  color: #7b3f9e;
+}
+
+.weaving-table th:first-child {
+  text-align: left;
+}
+
+.weaving-table td {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid rgba(139, 69, 139, 0.15);
+  text-align: center;
+}
+
+.weaving-table td:first-child {
+  text-align: left;
+}
+
+.weaving-table tbody tr:nth-child(even) {
+  background: rgba(123, 63, 158, 0.04);
+}
+
+.weaving-table tbody tr:hover {
+  background: rgba(123, 63, 158, 0.1);
+}
+
+.weaving-desc {
+  font-size: 0.72rem;
+  color: #999;
+}
+
+.weaving-footnotes {
+  margin-top: 0.4rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(139, 69, 139, 0.15);
+}
+
+.weaving-footnote {
+  font-size: 0.68rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
 /* Magic skill reference (page 5) */
 .magic-skill-ref {
   font-weight: 500;

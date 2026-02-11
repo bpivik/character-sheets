@@ -537,3 +537,27 @@ select:focus-visible {
 
 /* --- Climb Walls / Hide in Shadows skill boost --- */
 /* Rogue ability skill boosts — no parchment overrides needed, green highlight shows through */
+
+
+/* --- Sorcerer Weaving Chart (Parchment) --- */
+.weaving-effects-section {
+  background: rgba(75, 0, 110, 0.04);
+  border-color: rgba(100, 50, 120, 0.25);
+}
+
+.weaving-effects-section .section-header {
+  color: #5a2d7a;
+}
+
+.weaving-table th {
+  background: rgba(90, 45, 122, 0.12);
+  color: #5a2d7a;
+}
+
+.weaving-desc {
+  color: #777;
+}
+
+.weaving-footnote {
+  color: #666;
+}

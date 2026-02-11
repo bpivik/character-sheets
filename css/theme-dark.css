@@ -1419,3 +1419,48 @@
 [data-theme="dark"] .arcane-scrolls-rule { color: #aaa; }
 [data-theme="dark"] .arcane-scrolls-chance { color: #b09ae0; }
 [data-theme="dark"] .arcane-scrolls-warning { color: #e06060; }
+
+
+/* --- Sorcerer Weaving Chart (Dark) --- */
+[data-theme="dark"] .weaving-effects-section {
+  background: rgba(120, 50, 180, 0.1);
+  border-color: rgba(160, 80, 200, 0.3);
+}
+
+[data-theme="dark"] .weaving-effects-section .section-header {
+  color: #c090e0;
+}
+
+[data-theme="dark"] .weaving-intro {
+  color: #999;
+}
+
+[data-theme="dark"] .weaving-table th {
+  background: rgba(160, 80, 200, 0.2);
+  color: #c090e0;
+  border-color: rgba(160, 80, 200, 0.25);
+}
+
+[data-theme="dark"] .weaving-table td {
+  border-color: rgba(160, 80, 200, 0.15);
+}
+
+[data-theme="dark"] .weaving-table tbody tr:nth-child(even) {
+  background: rgba(120, 50, 180, 0.08);
+}
+
+[data-theme="dark"] .weaving-table tbody tr:hover {
+  background: rgba(120, 50, 180, 0.15);
+}
+
+[data-theme="dark"] .weaving-desc {
+  color: #888;
+}
+
+[data-theme="dark"] .weaving-footnotes {
+  border-color: rgba(160, 80, 200, 0.2);
+}
+
+[data-theme="dark"] .weaving-footnote {
+  color: #888;
+}
