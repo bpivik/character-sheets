@@ -1305,10 +1305,10 @@ select:focus {
 
 /* Rage boosted/penalized skill indicators */
 .rage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
   border-color: #4a4 !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ============================================
@@ -1323,9 +1323,9 @@ input.field-boosted,
 .wp-damage-row .derived-input.field-boosted,
 input.weapon-damage.field-boosted,
 .damage-cell input.weapon-damage.field-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 .field-penalized,
@@ -1339,44 +1339,43 @@ input.field-penalized,
 
 /* Generic damage-boosted class for any ability that modifies Damage Modifier */
 .damage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border-color: #4a4 !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ensure damage-boosted wins over derived-input compound selectors */
 .derived-input.damage-boosted,
 .derived-input.derived-readonly.damage-boosted,
 .wp-damage-row .derived-input.damage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ensure damage-boosted wins for weapon damage fields on Combat page */
 input.weapon-damage.damage-boosted,
 .damage-cell input.weapon-damage.damage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ensure rage-boosted wins over derived-input compound selectors */
 .derived-input.rage-boosted,
 .derived-input.derived-readonly.rage-boosted,
 .wp-damage-row .derived-input.rage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ensure rage-boosted wins for weapon damage fields on Combat page */
 input.weapon-damage.rage-boosted,
 .damage-cell input.weapon-damage.rage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 .rage-penalized {
@@ -1490,9 +1489,9 @@ input.weapon-damage.rage-boosted,
 }
 
 .forceful-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ============================================
@@ -1631,9 +1630,9 @@ input.weapon-damage.rage-boosted,
 
 /* Commanding boosted skill indicator */
 .commanding-boosted {
-  background-color: rgba(204, 204, 102, 0.25) !important;
-  border: 2px solid #cc6 !important;
-  color: #996 !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ============================================
@@ -2159,8 +2158,9 @@ input.weapon-damage.rage-boosted,
 
 /* Divine Protection boosted skill fields */
 .divine-prot-boosted {
-  box-shadow: 0 0 6px rgba(128, 176, 255, 0.5) !important;
-  border-color: #6080b8 !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Divine Protection highlighted skill row */
@@ -2363,9 +2363,9 @@ input.weapon-damage.rage-boosted,
 
 /* Improved Aim boosted skill field */
 .improved-aim-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 .improved-aim-row {
@@ -2373,7 +2373,7 @@ input.weapon-damage.rage-boosted,
   border-radius: 4px;
 }
 .improved-aim-row .combat-skill-name {
-  color: #2a7a2a !important;
+  color: #1a6b1a !important;
 }
 
 /* ========================================
@@ -2476,9 +2476,9 @@ input.weapon-damage.rage-boosted,
 
 /* Species Enemy boosted fields (matches rage-boosted pattern) */
 .se-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ensure se-boosted wins over skill-input compound selectors */
@@ -2486,9 +2486,9 @@ input.skill-input.se-boosted,
 input.prof-skill-current.se-boosted,
 input.combat-skill-percent.se-boosted,
 .derived-input.se-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Global green tint when Species Enemy active */
@@ -2719,9 +2719,9 @@ input.combat-skill-percent.se-boosted,
 
 /* Mental Strength boosted skill indicator */
 .mental-strength-boosted {
-  background-color: rgba(153, 153, 255, 0.25) !important;
-  border: 2px solid #99f !important;
-  color: #66c !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ========================================
@@ -3415,17 +3415,17 @@ input.combat-skill-percent.se-boosted,
 
 /* Powerful Concentration bonus styling for Willpower */
 .powerful-concentration-bonus {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ensure powerful-concentration-bonus wins over skill-input */
 input.skill-input.powerful-concentration-bonus,
 #willpower-current.powerful-concentration-bonus {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ============================================
@@ -4116,9 +4116,9 @@ input.skill-input.powerful-concentration-bonus,
 
 /* Brute Strength boosted indicator */
 .brute-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ============================================
@@ -4569,9 +4569,9 @@ input.skill-input.powerful-concentration-bonus,
 /* Ensure damage-boosted wins on combat skill percent input */
 .combat-skill-percent.damage-boosted,
 input.combat-skill-percent.damage-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Ranged weapon load reduced indicator */

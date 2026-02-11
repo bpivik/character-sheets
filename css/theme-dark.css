@@ -1161,9 +1161,51 @@
 }
 
 [data-theme="dark"] .forceful-boosted {
-  background-color: rgba(0, 180, 60, 0.25) !important;
-  border-color: #5d5 !important;
-  color: #5f5 !important;
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .commanding-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .divine-prot-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .mental-strength-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .brute-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .improved-aim-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .damage-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .powerful-concentration-bonus {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
 }
 
 [data-theme="dark"] .rage-boosted,

@@ -7974,8 +7974,10 @@ const App = {
       // Mirror forceful-boosted styling
       if (dmgModCurrent && dmgModCurrent.classList.contains('forceful-boosted')) {
         combatDmgMod.classList.add('forceful-boosted');
+        combatDmgMod.title = 'Forceful Strike: +2 Damage steps';
       } else {
         combatDmgMod.classList.remove('forceful-boosted');
+        combatDmgMod.title = '';
       }
     }
     
@@ -14881,6 +14883,7 @@ const App = {
       }
       dmgOrigField.value = mod;
       dmgOrigField.classList.add('rage-boosted');
+      dmgOrigField.title = 'Berserk Rage: increased Damage';
     }
     
     // Endurance +20%
@@ -14889,6 +14892,7 @@ const App = {
       const curr = parseInt(enduranceField.value, 10) || 0;
       enduranceField.value = curr + 20;
       enduranceField.classList.add('rage-boosted');
+      enduranceField.title = 'Berserk Rage: +40% Endurance';
     }
     
     // Willpower +20%
@@ -14897,6 +14901,7 @@ const App = {
       const curr = parseInt(willpowerField.value, 10) || 0;
       willpowerField.value = curr + 20;
       willpowerField.classList.add('rage-boosted');
+      willpowerField.title = 'Berserk Rage: +40% Willpower';
     }
     
     // Brawn +40%
@@ -14905,6 +14910,7 @@ const App = {
       const curr = parseInt(brawnField.value, 10) || 0;
       brawnField.value = curr + 40;
       brawnField.classList.add('rage-boosted');
+      brawnField.title = 'Berserk Rage: +40% Brawn';
     }
     
     // Evade -20% (use base value without display bonuses)
@@ -14944,6 +14950,7 @@ const App = {
       }
       wpDmgOrigField.value = mod;
       wpDmgOrigField.classList.add('rage-boosted');
+      wpDmgOrigField.title = 'Berserk Rage: increased Damage';
     }
     
     // Update weapon damage displays to reflect new Damage Modifier
@@ -14981,6 +14988,7 @@ const App = {
     if (dmgOrigField) {
       dmgOrigField.value = this.character.preRageValues.damageModOrig;
       dmgOrigField.classList.remove('rage-boosted');
+      dmgOrigField.title = '';
     }
     
     // Restore Endurance
@@ -14988,6 +14996,7 @@ const App = {
     if (enduranceField) {
       enduranceField.value = this.character.preRageValues.endurance;
       enduranceField.classList.remove('rage-boosted');
+      enduranceField.title = '';
     }
     
     // Restore Willpower
@@ -14995,6 +15004,7 @@ const App = {
     if (willpowerField) {
       willpowerField.value = this.character.preRageValues.willpower;
       willpowerField.classList.remove('rage-boosted');
+      willpowerField.title = '';
     }
     
     // Restore Brawn
@@ -15002,6 +15012,7 @@ const App = {
     if (brawnField) {
       brawnField.value = this.character.preRageValues.brawn;
       brawnField.classList.remove('rage-boosted');
+      brawnField.title = '';
     }
     
     // Restore Evade
@@ -15022,6 +15033,7 @@ const App = {
     if (wpDmgOrigField) {
       wpDmgOrigField.value = this.character.preRageValues.wpDamageModOrig || wpDmgOrigField.value;
       wpDmgOrigField.classList.remove('rage-boosted');
+      wpDmgOrigField.title = '';
     }
     
     // Update weapon damage displays to reflect restored Damage Modifier
@@ -15127,24 +15139,31 @@ const App = {
     
     if (dmgCurrField) {
       dmgCurrField.classList.add('rage-boosted');
+      dmgCurrField.title = 'Berserk Rage: increased Damage';
       const steps = this.character.rageDmgStepsApplied || 1;
       dmgCurrField.title = `+${steps} step${steps > 1 ? 's' : ''} due to Rage`;
     }
     if (dmgOrigField) dmgOrigField.classList.add('rage-boosted');
+    if (dmgOrigField) dmgOrigField.title = 'Berserk Rage: increased Damage';
     if (enduranceField) enduranceField.classList.add('rage-boosted');
+    if (enduranceField) enduranceField.title = 'Berserk Rage: increased Damage';
     if (willpowerField) willpowerField.classList.add('rage-boosted');
+    if (willpowerField) willpowerField.title = 'Berserk Rage: increased Damage';
     if (brawnField) brawnField.classList.add('rage-boosted');
+    if (brawnField) brawnField.title = 'Berserk Rage: increased Damage';
     
     // WP Damage Mod fields
     const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
     const wpDmgOrigField = document.getElementById('wp-damage-mod-original');
     if (wpDmgCurrField && wpDmgCurrField.value.trim()) {
       wpDmgCurrField.classList.add('rage-boosted');
+      wpDmgCurrField.title = 'Berserk Rage: increased Damage';
       const steps = this.character.rageDmgStepsApplied || 1;
       wpDmgCurrField.title = `+${steps} step${steps > 1 ? 's' : ''} due to Rage`;
     }
     if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
       wpDmgOrigField.classList.add('rage-boosted');
+      wpDmgOrigField.title = 'Berserk Rage: increased Damage';
     }
     
     // Re-apply rage styling to all weapon damage fields
@@ -16488,6 +16507,7 @@ const App = {
       dmgCurrField.title = 'Forceful Strike: +2 steps';
     }
     if (dmgOrigField) dmgOrigField.classList.add('forceful-boosted');
+    if (dmgOrigField) dmgOrigField.title = 'Forceful Strike: +2 Damage steps';
     
     // WP Damage Mod visual indicators
     const wpDmgCurrField = document.getElementById('wp-damage-mod-current');
@@ -16498,6 +16518,7 @@ const App = {
     }
     if (wpDmgOrigField && wpDmgOrigField.value.trim()) {
       wpDmgOrigField.classList.add('forceful-boosted');
+      wpDmgOrigField.title = 'Forceful Strike: +2 Damage steps';
     }
     
     // Style all weapon damage fields
@@ -16597,6 +16618,7 @@ const App = {
       const curr = parseInt(brawnInput.value, 10) || 0;
       brawnInput.value = curr + 20;
       brawnInput.classList.add('brute-boosted');
+      brawnInput.title = `Brute Strength: +20% Brawn (base ${curr}%)`;
     }
     
     // Update summary page
@@ -16650,6 +16672,7 @@ const App = {
     if (brawnInput && this.character.preBruteStrengthBrawn !== undefined) {
       brawnInput.value = this.character.preBruteStrengthBrawn;
       brawnInput.classList.remove('brute-boosted');
+      brawnInput.title = '';
     }
     
     // Update summary page
@@ -16692,7 +16715,7 @@ const App = {
     
     // Re-apply visual indicator
     const brawnInput = document.getElementById('brawn-current');
-    if (brawnInput) brawnInput.classList.add('brute-boosted');
+    if (brawnInput) { brawnInput.classList.add('brute-boosted'); const bv = this.character.preBruteStrengthBrawn; brawnInput.title = bv ? `Brute Strength: +20% Brawn (base ${bv}%)` : 'Brute Strength: +20% Brawn'; }
   },
 
   // ============================================
@@ -18393,6 +18416,7 @@ const App = {
       const el = document.getElementById(id);
       if (el) {
         el.classList.add('divine-prot-boosted');
+        el.title = '+10% from Divine Protection';
         // Also highlight the parent skill row
         const row = el.closest('.skill-row');
         if (row) row.classList.add('divine-prot-row');
@@ -18503,6 +18527,7 @@ const App = {
       }
       combatInput.value = currentVal + 20;
       combatInput.classList.add('improved-aim-boosted');
+      combatInput.title = `Improved Aim: +20% Combat Skill (base ${currentVal}%)`;
       combatInput.dispatchEvent(new Event('input', { bubbles: true }));
       
       // Also highlight the row
@@ -18555,6 +18580,7 @@ const App = {
     if (combatInput && this.character.preImprovedAimCombat !== undefined) {
       combatInput.value = this.character.preImprovedAimCombat;
       combatInput.classList.remove('improved-aim-boosted');
+      combatInput.title = '';
       combatInput.dispatchEvent(new Event('input', { bubbles: true }));
       
       const row = combatInput.closest('.combat-skill-row');
@@ -18581,6 +18607,8 @@ const App = {
     const combatInput = document.getElementById('combat-skill-1-percent');
     if (combatInput) {
       combatInput.classList.add('improved-aim-boosted');
+      const bv = this.character.preImprovedAimCombat;
+      combatInput.title = bv !== undefined ? `Improved Aim: +20% Combat Skill (base ${bv}%)` : 'Improved Aim: +20% Combat Skill';
       const row = combatInput.closest('.combat-skill-row');
       if (row) row.classList.add('improved-aim-row');
     }
@@ -18912,6 +18940,7 @@ const App = {
       this.character.preSpeciesEnemySkills[input.id] = val;
       input.value = val + 10;
       input.classList.add('se-boosted');
+      input.title = 'Species Enemy: +10%';
     });
 
     // Professional skills (.prof-skill-current inside #professional-skills-container)
@@ -18922,6 +18951,7 @@ const App = {
       this.character.preSpeciesEnemySkills[input.id] = val;
       input.value = val + 10;
       input.classList.add('se-boosted');
+      input.title = 'Species Enemy: +10%';
     });
 
     // Combat skill
@@ -18932,6 +18962,7 @@ const App = {
         this.character.preSpeciesEnemySkills['combat-skill-1-percent'] = val;
         combatInput.value = val + 10;
         combatInput.classList.add('se-boosted');
+        combatInput.title = 'Species Enemy: +10%';
       }
     }
 
@@ -18943,6 +18974,7 @@ const App = {
         this.character.preSpeciesEnemySkills['unarmed-percent'] = val;
         unarmedInput.value = val + 10;
         unarmedInput.classList.add('se-boosted');
+        unarmedInput.title = 'Species Enemy: +10%';
       }
     }
 
@@ -18956,6 +18988,7 @@ const App = {
           this.character.preSpeciesEnemySkills[id] = val;
           input.value = val + 10;
           input.classList.add('se-boosted');
+          input.title = 'Species Enemy: +10%';
         }
       }
     });
@@ -18967,6 +19000,7 @@ const App = {
       this.character.preSpeciesEnemyDM = currentDM;
       dmField.value = this._stepDamageModifier(currentDM, 1);
       dmField.classList.add('se-boosted');
+      dmField.title = 'Species Enemy: +1 Damage step';
     }
 
     // +1 step to Weapon Precision Damage Modifier if present
@@ -18975,6 +19009,7 @@ const App = {
       this.character.preSpeciesEnemyWPDM = wpDmField.value.trim();
       wpDmField.value = this._stepDamageModifier(wpDmField.value.trim(), 1);
       wpDmField.classList.add('se-boosted');
+      wpDmField.title = 'Species Enemy: +1 Damage step';
     }
 
     // Update weapon damage displays on combat page
@@ -19041,6 +19076,7 @@ const App = {
       if (input) {
         input.value = val;
         input.classList.remove('se-boosted');
+        input.title = '';
       }
     }
 
@@ -19049,6 +19085,7 @@ const App = {
     if (dmField && this.character.preSpeciesEnemyDM !== undefined) {
       dmField.value = this.character.preSpeciesEnemyDM;
       dmField.classList.remove('se-boosted');
+      dmField.title = '';
     }
 
     // Restore WP damage modifier
@@ -19056,6 +19093,7 @@ const App = {
     if (wpDmField && this.character.preSpeciesEnemyWPDM !== undefined) {
       wpDmField.value = this.character.preSpeciesEnemyWPDM;
       wpDmField.classList.remove('se-boosted');
+      wpDmField.title = '';
     }
 
     // Update weapon damage displays on combat page
@@ -19094,14 +19132,17 @@ const App = {
     for (const id of Object.keys(saved)) {
       const input = document.getElementById(id);
       if (input) input.classList.add('se-boosted');
+      if (input) input.title = 'Species Enemy: +10%';
     }
     const dmField = document.getElementById('damage-mod-current');
     if (dmField && this.character.preSpeciesEnemyDM !== undefined) {
       dmField.classList.add('se-boosted');
+      dmField.title = 'Species Enemy: +1 Damage step';
     }
     const wpDmField = document.getElementById('wp-damage-mod-current');
     if (wpDmField && this.character.preSpeciesEnemyWPDM !== undefined) {
       wpDmField.classList.add('se-boosted');
+      wpDmField.title = 'Species Enemy: +1 Damage step';
     }
     document.body.classList.add('species-enemy-active-mode');
     const btn = document.getElementById('btn-species-enemy');
@@ -19199,6 +19240,7 @@ const App = {
       this.character._climbWallsAthBefore = val;
       athleticsInput.value = val + 20;
       athleticsInput.classList.add('cw-boosted');
+      athleticsInput.title = `Climb Walls: +20% Athletics (base ${val}%)`;
     }
 
     // Full-page animation (like Turn Undead)
@@ -19256,6 +19298,7 @@ const App = {
         athleticsInput.value = Math.max(0, val - 20);
       }
       athleticsInput.classList.remove('cw-boosted');
+      athleticsInput.title = '';
       delete this.character._climbWallsAthBefore;
     }
 
@@ -19274,6 +19317,8 @@ const App = {
     const athleticsInput = document.getElementById('athletics-current');
     if (athleticsInput) {
       athleticsInput.classList.add('cw-boosted');
+      const baseVal = this.character._climbWallsAthBefore;
+      athleticsInput.title = baseVal !== undefined ? `Climb Walls: +20% Athletics (base ${baseVal}%)` : 'Climb Walls: +20% Athletics';
     }
     const btn = document.getElementById('btn-climb-walls-toggle');
     if (btn) {
@@ -19322,6 +19367,7 @@ const App = {
       this.character._hideInShadowsStBefore = val;
       stealthInput.value = val + 20;
       stealthInput.classList.add('his-boosted');
+      stealthInput.title = `Hide in Shadows: +20% Stealth (base ${val}%)`;
     }
 
     // Full-page animation (like Turn Undead)
@@ -19380,6 +19426,7 @@ const App = {
         stealthInput.value = Math.max(0, val - 20);
       }
       stealthInput.classList.remove('his-boosted');
+      stealthInput.title = '';
       delete this.character._hideInShadowsStBefore;
     }
 
@@ -19397,6 +19444,8 @@ const App = {
     const stealthInput = document.getElementById('stealth-current');
     if (stealthInput) {
       stealthInput.classList.add('his-boosted');
+      const baseVal = this.character._hideInShadowsStBefore;
+      stealthInput.title = baseVal !== undefined ? `Hide in Shadows: +20% Stealth (base ${baseVal}%)` : 'Hide in Shadows: +20% Stealth';
     }
     const btn = document.getElementById('btn-hide-in-shadows-toggle');
     if (btn) {
@@ -19526,6 +19575,7 @@ const App = {
       this.character._ghPercBefore = val;
       input.value = val + 20;
       input.classList.add('gh-boosted');
+      input.title = `Great Hearing: +20% Perception (base ${val}%)`;
     }
     this.showRogueAbilityAnimation('great-hearing-anim-overlay', '👂', 'Great Hearing!');
     const btn = document.getElementById('btn-great-hearing-toggle');
@@ -19541,6 +19591,7 @@ const App = {
       if (this.character._ghPercBefore !== undefined) input.value = this.character._ghPercBefore;
       else input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 20);
       input.classList.remove('gh-boosted');
+      input.title = '';
       delete this.character._ghPercBefore;
     }
     const btn = document.getElementById('btn-great-hearing-toggle');
@@ -19550,7 +19601,7 @@ const App = {
 
   restoreGreatHearingVisuals() {
     const input = document.getElementById('perception-current');
-    if (input) input.classList.add('gh-boosted');
+    if (input) { input.classList.add('gh-boosted'); const bv = this.character._ghPercBefore; input.title = bv !== undefined ? `Great Hearing: +20% Perception (base ${bv}%)` : 'Great Hearing: +20% Perception'; }
     const btn = document.getElementById('btn-great-hearing-toggle');
     if (btn) { btn.textContent = '👂 Listening ACTIVE — Click to Deactivate'; btn.classList.add('great-hearing-active-btn'); }
   },
@@ -19590,6 +19641,7 @@ const App = {
       this.character._sePercBefore = val;
       input.value = val + 20;
       input.classList.add('se-boosted-rogue');
+      input.title = `Sharp Eyed: +20% Perception (base ${val}%)`;
     }
     this.showRogueAbilityAnimation('sharp-eyed-anim-overlay', '👁️', 'Sharp Eyed!');
     const btn = document.getElementById('btn-sharp-eyed-toggle');
@@ -19605,6 +19657,7 @@ const App = {
       if (this.character._sePercBefore !== undefined) input.value = this.character._sePercBefore;
       else input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 20);
       input.classList.remove('se-boosted-rogue');
+      input.title = '';
       delete this.character._sePercBefore;
     }
     const btn = document.getElementById('btn-sharp-eyed-toggle');
@@ -19614,7 +19667,7 @@ const App = {
 
   restoreSharpEyedVisuals() {
     const input = document.getElementById('perception-current');
-    if (input) input.classList.add('se-boosted-rogue');
+    if (input) { input.classList.add('se-boosted-rogue'); const bv = this.character._sePercBefore; input.title = bv !== undefined ? `Sharp Eyed: +20% Perception (base ${bv}%)` : 'Sharp Eyed: +20% Perception'; }
     const btn = document.getElementById('btn-sharp-eyed-toggle');
     if (btn) { btn.textContent = '👁️ Focused ACTIVE — Click to Deactivate'; btn.classList.add('sharp-eyed-active-btn'); }
   },
@@ -19677,6 +19730,7 @@ const App = {
       this.character._vaultAcroId = acroInput.id;
       acroInput.value = val + 20;
       acroInput.classList.add('vault-boosted');
+      acroInput.title = `Vaulting: +20% Acrobatics (base ${val}%)`;
     }
     this.showRogueAbilityAnimation('vaulting-anim-overlay', '🏃', 'Vaulting!');
     const btn = document.getElementById('btn-vaulting-toggle');
@@ -19692,6 +19746,7 @@ const App = {
       if (this.character._vaultAcroBefore !== undefined) acroInput.value = this.character._vaultAcroBefore;
       else acroInput.value = Math.max(0, (parseInt(acroInput.value, 10) || 0) - 20);
       acroInput.classList.remove('vault-boosted');
+      acroInput.title = '';
       delete this.character._vaultAcroBefore;
       delete this.character._vaultAcroId;
     }
@@ -19703,7 +19758,7 @@ const App = {
 
   restoreVaultingVisuals() {
     const acroInput = this.character._vaultAcroId ? document.getElementById(this.character._vaultAcroId) : this._findProfSkillInput('acrobatics');
-    if (acroInput) acroInput.classList.add('vault-boosted');
+    if (acroInput) { acroInput.classList.add('vault-boosted'); const bv = this.character._vaultAcroBefore; acroInput.title = bv !== undefined ? `Vaulting: +20% Acrobatics (base ${bv}%)` : 'Vaulting: +20% Acrobatics'; }
     const btn = document.getElementById('btn-vaulting-toggle');
     if (btn) { btn.textContent = '🏃 Vaulting ACTIVE — Click to Deactivate'; btn.classList.add('vaulting-active-btn'); }
   },
@@ -24731,6 +24786,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
 
       if (isWeaponSpecActive) {
         skillInput.classList.add('damage-boosted');
+        skillInput.title = 'Damage modifier boosted';
         if (anyMastered && masteredTierData) {
           skillInput.title = 'Critical doubled (' + masteredTierData.label + ')';
         } else {
@@ -24762,6 +24818,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (dmgOrigField) {
         dmgOrigField.value = this.stepDamageModifier(baseline.damageModOrig, 2);
         dmgOrigField.classList.add('forceful-boosted');
+        dmgOrigField.title = 'Forceful Strike: +2 Damage steps';
       }
       if (wpDmgCurrField && baseline.wpDamageMod.trim()) {
         wpDmgCurrField.value = this.stepDamageModifier(baseline.wpDamageMod, 2);
@@ -24771,6 +24828,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (wpDmgOrigField && baseline.wpDamageModOrig.trim()) {
         wpDmgOrigField.value = this.stepDamageModifier(baseline.wpDamageModOrig, 2);
         wpDmgOrigField.classList.add('forceful-boosted');
+        wpDmgOrigField.title = 'Forceful Strike: +2 Damage steps';
       }
     } else {
       if (dmgCurrField) {
@@ -24781,6 +24839,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (dmgOrigField) {
         dmgOrigField.value = baseline.damageModOrig;
         dmgOrigField.classList.remove('forceful-boosted');
+        dmgOrigField.title = '';
       }
       if (wpDmgCurrField) {
         wpDmgCurrField.value = baseline.wpDamageMod;
@@ -24790,6 +24849,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (wpDmgOrigField) {
         wpDmgOrigField.value = baseline.wpDamageModOrig;
         wpDmgOrigField.classList.remove('forceful-boosted');
+        wpDmgOrigField.title = '';
       }
     }
 
@@ -24934,6 +24994,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           damageField.value = damageField.dataset.wmOriginalDamage;
           delete damageField.dataset.wmOriginalDamage;
           damageField.classList.remove('damage-boosted');
+          damageField.title = '';
           if (!damageField.classList.contains('forceful-boosted')) {
             damageField.title = '';
           }
@@ -24982,6 +25043,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       loadInput.value = String(newLoad);
       loadInput.dataset.wmReloadReduced = 'true';
       loadInput.classList.add('damage-boosted');
+      loadInput.title = 'Damage modifier boosted';
       const freeNote = newLoad === 0 ? ' (Free Action!)' : '';
       loadInput.title = `${tierData.label}: -${reductionAmount} Reload${freeNote}. Original: ${loadInput.dataset.wmOriginalLoad}`;
     });
@@ -25003,6 +25065,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           delete input.dataset.wmReloadReduced;
           delete input.dataset.wmOriginalLoad;
           input.classList.remove('damage-boosted');
+          input.title = '';
           // Preserve spec-load-reduced title if present
           if (!input.classList.contains('spec-load-reduced')) {
             input.title = '';
@@ -25556,6 +25619,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this.character._specIIWpDmgBefore = wpCurrentDM;
       wpDmgCurrent.value = this.stepDamageModifier(wpCurrentDM, 1);
       wpDmgCurrent.classList.add('damage-boosted');
+      wpDmgCurrent.title = 'Damage modifier boosted';
     }
     
     // Animate button
@@ -25614,6 +25678,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         wpDmgCurrent.value = this.stepDamageModifier(wpDmgCurrent.value.trim(), -1);
       }
       wpDmgCurrent.classList.remove('damage-boosted');
+      wpDmgCurrent.title = '';
       delete this.character._specIIWpDmgBefore;
     }
     
@@ -25666,6 +25731,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const skillInput = document.getElementById('combat-skill-1-percent');
     if (skillInput) {
       skillInput.classList.add('damage-boosted');
+      skillInput.title = 'Damage modifier boosted';
       if (anyMastered && masteredTierData) {
         skillInput.title = 'Critical doubled (' + masteredTierData.label + ')';
       } else {
@@ -25721,6 +25787,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
               for (const input of row.querySelectorAll('input')) {
                 if (input.id && input.id.includes('-load')) {
                   input.classList.add('damage-boosted');
+                  input.title = 'Damage modifier boosted';
                   const loadVal = parseInt(input.value, 10);
                   const freeNote = loadVal === 0 ? ' (Free Action!)' : '';
                   input.title = `${masteredTierData.label}: -${reloadReduction} Reload${freeNote}`;
@@ -25755,6 +25822,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const wpDmgCurrent = document.getElementById('wp-damage-mod-current');
       if (wpDmgCurrent && wpDmgCurrent.value.trim()) {
         wpDmgCurrent.classList.add('damage-boosted');
+        wpDmgCurrent.title = 'Damage modifier boosted';
       }
     }
   },
