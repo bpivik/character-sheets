@@ -19034,16 +19034,19 @@ const App = {
 
     if (isHeavyArmor) {
       btn.disabled = true;
+      btn.textContent = '🧗 Climb Walls';
       btn.title = 'Climb Walls requires Light armor or none';
       if (statusEl) statusEl.textContent = '⚠ Requires Light armor or none';
     } else if (!isUnburdened) {
       btn.disabled = true;
+      btn.textContent = '🧗 Climb Walls';
       btn.title = 'Climb Walls requires Unburdened encumbrance';
       if (statusEl) statusEl.textContent = '⚠ Requires Unburdened (Things < STR)';
     } else {
       btn.disabled = false;
+      btn.textContent = '🧗 Climb Walls';
       btn.title = 'Climb Walls: +20% Athletics, ignore 1 Grade of Difficulty when climbing';
-      if (statusEl) statusEl.textContent = '+20% Athletics • Unburdened + Light armor';
+      if (statusEl) statusEl.textContent = '+20% Athletics · Unburdened + Light armor';
     }
   },
 
@@ -19065,27 +19068,47 @@ const App = {
       this.character._climbWallsAthBefore = val;
       athleticsInput.value = val + 20;
       athleticsInput.classList.add('cw-boosted');
-      athleticsInput.title = (athleticsInput.title || '') + ' | Climb Walls: +20%';
     }
 
-    // Animation
-    const section = document.getElementById('climb-walls-section');
-    if (section) {
-      const anim = document.createElement('div');
-      anim.className = 'ability-anim-overlay climb-walls-anim';
-      anim.innerHTML = '<div style="font-size: 1.5rem;">🧗</div><div style="font-size: 0.85rem; color: #5cb85c; font-weight: 600;">Climb Walls!</div>';
-      section.style.position = 'relative';
-      section.appendChild(anim);
-      setTimeout(() => anim.remove(), 1200);
-    }
+    // Full-page animation (like Turn Undead)
+    this.showClimbWallsAnimation();
 
     // Update button
     const btn = document.getElementById('btn-climb-walls-toggle');
-    const btnText = document.getElementById('climb-walls-btn-text');
-    if (btn) btn.classList.add('active');
-    if (btnText) btnText.textContent = '🧗 Climbing ✦';
+    if (btn) {
+      btn.textContent = '🧗 Climbing ACTIVE — Click to Deactivate';
+      btn.classList.add('climb-walls-active-btn');
+    }
 
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Show Climb Walls full-page animation
+   */
+  showClimbWallsAnimation() {
+    const overlay = document.createElement('div');
+    overlay.className = 'climb-walls-anim-overlay';
+    overlay.innerHTML = `
+      <div class="climb-walls-anim-content">
+        <div class="cw-glow"></div>
+        <div class="cw-rocks">
+          <div class="rock">🪨</div>
+          <div class="rock">🪨</div>
+          <div class="rock">🪨</div>
+          <div class="rock">🪨</div>
+          <div class="rock">🪨</div>
+        </div>
+        <div class="climb-walls-icon">🧗</div>
+        <div class="climb-walls-anim-text">Climb Walls!</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 400);
+    }, 1500);
   },
 
   deactivateClimbWalls() {
@@ -19102,15 +19125,15 @@ const App = {
         athleticsInput.value = Math.max(0, val - 20);
       }
       athleticsInput.classList.remove('cw-boosted');
-      athleticsInput.title = (athleticsInput.title || '').replace(/\s*\|\s*Climb Walls: \+20%/, '');
       delete this.character._climbWallsAthBefore;
     }
 
     // Update button
     const btn = document.getElementById('btn-climb-walls-toggle');
-    const btnText = document.getElementById('climb-walls-btn-text');
-    if (btn) btn.classList.remove('active');
-    if (btnText) btnText.textContent = '🧗 Climb';
+    if (btn) {
+      btn.textContent = '🧗 Climb Walls';
+      btn.classList.remove('climb-walls-active-btn');
+    }
     this.updateClimbWallsButtonState();
 
     this.scheduleAutoSave();
@@ -19120,12 +19143,12 @@ const App = {
     const athleticsInput = document.getElementById('athletics-current');
     if (athleticsInput) {
       athleticsInput.classList.add('cw-boosted');
-      athleticsInput.title = (athleticsInput.title || '') + ' | Climb Walls: +20%';
     }
     const btn = document.getElementById('btn-climb-walls-toggle');
-    const btnText = document.getElementById('climb-walls-btn-text');
-    if (btn) btn.classList.add('active');
-    if (btnText) btnText.textContent = '🧗 Climbing ✦';
+    if (btn) {
+      btn.textContent = '🧗 Climbing ACTIVE — Click to Deactivate';
+      btn.classList.add('climb-walls-active-btn');
+    }
   },
 
   /**
@@ -19168,27 +19191,48 @@ const App = {
       this.character._hideInShadowsStBefore = val;
       stealthInput.value = val + 20;
       stealthInput.classList.add('his-boosted');
-      stealthInput.title = (stealthInput.title || '') + ' | Hide in Shadows: +20%';
     }
 
-    // Animation
-    const section = document.getElementById('hide-in-shadows-section');
-    if (section) {
-      const anim = document.createElement('div');
-      anim.className = 'ability-anim-overlay hide-in-shadows-anim';
-      anim.innerHTML = '<div style="font-size: 1.5rem;">🌑</div><div style="font-size: 0.85rem; color: #805ad5; font-weight: 600;">Hidden!</div>';
-      section.style.position = 'relative';
-      section.appendChild(anim);
-      setTimeout(() => anim.remove(), 1500);
-    }
+    // Full-page animation (like Turn Undead)
+    this.showHideInShadowsAnimation();
 
     // Update button
     const btn = document.getElementById('btn-hide-in-shadows-toggle');
-    const btnText = document.getElementById('hide-in-shadows-btn-text');
-    if (btn) btn.classList.add('active');
-    if (btnText) btnText.textContent = '🌑 Hidden ✦';
+    if (btn) {
+      btn.textContent = '🌑 Hidden ACTIVE — Click to Deactivate';
+      btn.classList.add('hide-in-shadows-active-btn');
+    }
 
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Show Hide in Shadows full-page animation
+   */
+  showHideInShadowsAnimation() {
+    const overlay = document.createElement('div');
+    overlay.className = 'hide-in-shadows-anim-overlay';
+    overlay.innerHTML = `
+      <div class="hide-in-shadows-anim-content">
+        <div class="his-void"></div>
+        <div class="his-wisps">
+          <div class="wisp"></div>
+          <div class="wisp"></div>
+          <div class="wisp"></div>
+          <div class="wisp"></div>
+          <div class="wisp"></div>
+          <div class="wisp"></div>
+        </div>
+        <div class="hide-in-shadows-icon">🌑</div>
+        <div class="hide-in-shadows-anim-text">Hidden in Shadows...</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 400);
+    }, 1500);
   },
 
   deactivateHideInShadows() {
@@ -19205,15 +19249,15 @@ const App = {
         stealthInput.value = Math.max(0, val - 20);
       }
       stealthInput.classList.remove('his-boosted');
-      stealthInput.title = (stealthInput.title || '').replace(/\s*\|\s*Hide in Shadows: \+20%/, '');
       delete this.character._hideInShadowsStBefore;
     }
 
     // Update button
     const btn = document.getElementById('btn-hide-in-shadows-toggle');
-    const btnText = document.getElementById('hide-in-shadows-btn-text');
-    if (btn) btn.classList.remove('active');
-    if (btnText) btnText.textContent = '🌑 Hide';
+    if (btn) {
+      btn.textContent = '🌑 Hide in Shadows';
+      btn.classList.remove('hide-in-shadows-active-btn');
+    }
 
     this.scheduleAutoSave();
   },
@@ -19222,12 +19266,12 @@ const App = {
     const stealthInput = document.getElementById('stealth-current');
     if (stealthInput) {
       stealthInput.classList.add('his-boosted');
-      stealthInput.title = (stealthInput.title || '') + ' | Hide in Shadows: +20%';
     }
     const btn = document.getElementById('btn-hide-in-shadows-toggle');
-    const btnText = document.getElementById('hide-in-shadows-btn-text');
-    if (btn) btn.classList.add('active');
-    if (btnText) btnText.textContent = '🌑 Hidden ✦';
+    if (btn) {
+      btn.textContent = '🌑 Hidden ACTIVE — Click to Deactivate';
+      btn.classList.add('hide-in-shadows-active-btn');
+    }
   },
 
   /**

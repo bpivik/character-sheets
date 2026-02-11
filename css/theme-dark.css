@@ -1177,69 +1177,82 @@
 
 /* --- Rogue Ability Sections - Dark Mode --- */
 [data-theme="dark"] .climb-walls-section {
-  background: linear-gradient(135deg, rgba(92, 184, 92, 0.04) 0%, transparent 100%);
-  border-color: rgba(92, 184, 92, 0.25);
+  background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
+  border-color: #4a8a4a;
+}
+
+[data-theme="dark"] .climb-walls-section .section-header {
+  color: #7dcc7d;
+  text-shadow: 0 0 10px rgba(125, 204, 125, 0.5);
 }
 
 [data-theme="dark"] .climb-walls-label {
-  color: #999;
+  color: #88aa88;
 }
 
 [data-theme="dark"] .btn-climb-walls {
-  background: linear-gradient(135deg, #2a3a2a 0%, #3d4a3d 100%);
-  border-color: rgba(92, 184, 92, 0.3);
-  color: #6dbd6d;
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
+  border-color: #4a8a4a;
+  color: white;
 }
 
-[data-theme="dark"] .btn-climb-walls.active {
-  background: linear-gradient(135deg, rgba(92, 184, 92, 0.15) 0%, rgba(92, 184, 92, 0.25) 100%);
-  border-color: #5cb85c;
-  color: #5cb85c;
-  box-shadow: 0 0 12px rgba(92, 184, 92, 0.5);
+[data-theme="dark"] .climb-walls-active-btn {
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%) !important;
+  border-color: #7dcc7d !important;
+  color: #aaffaa !important;
 }
 
 [data-theme="dark"] .btn-climb-walls:disabled {
   opacity: 0.4;
-  filter: grayscale(0.6);
+  filter: grayscale(0.5);
 }
 
 [data-theme="dark"] .hide-in-shadows-section {
-  background: linear-gradient(135deg, rgba(128, 90, 213, 0.04) 0%, transparent 100%);
-  border-color: rgba(128, 90, 213, 0.25);
+  background: linear-gradient(135deg, #1a1a2a 0%, #252535 100%);
+  border-color: #6a5aaa;
+}
+
+[data-theme="dark"] .hide-in-shadows-section .section-header {
+  color: #b09ae0;
+  text-shadow: 0 0 10px rgba(160, 140, 220, 0.5);
 }
 
 [data-theme="dark"] .hide-in-shadows-label {
-  color: #999;
+  color: #8888aa;
 }
 
 [data-theme="dark"] .btn-hide-in-shadows {
-  background: linear-gradient(135deg, #2a2a3a 0%, #3d3a4d 100%);
-  border-color: rgba(128, 90, 213, 0.3);
-  color: #a07de0;
+  background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 50%, #2a2a4a 100%);
+  border-color: #6a5aaa;
+  color: white;
 }
 
-[data-theme="dark"] .btn-hide-in-shadows.active {
-  background: linear-gradient(135deg, rgba(128, 90, 213, 0.15) 0%, rgba(128, 90, 213, 0.25) 100%);
-  border-color: #805ad5;
-  color: #805ad5;
-  box-shadow: 0 0 12px rgba(128, 90, 213, 0.5);
+[data-theme="dark"] .hide-in-shadows-active-btn {
+  background: linear-gradient(135deg, #3a3a6a 0%, #4a4a8a 50%, #3a3a6a 100%) !important;
+  border-color: #b09ae0 !important;
+  color: #d4c4ff !important;
 }
 
 [data-theme="dark"] .sneak-attack-section {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.04) 0%, transparent 100%);
-  border-color: rgba(220, 53, 69, 0.2);
+  background: linear-gradient(135deg, #2a1a1a 0%, #352025 100%);
+  border-color: #8a3a3a;
+}
+
+[data-theme="dark"] .sneak-attack-section .section-header {
+  color: #e06060;
+  text-shadow: 0 0 10px rgba(220, 80, 80, 0.4);
 }
 
 [data-theme="dark"] .sneak-attack-card {
-  color: #bbb;
+  color: #cca;
 }
 
 [data-theme="dark"] .sneak-attack-bullets {
-  color: #dc3545;
+  color: #e06060;
 }
 
 [data-theme="dark"] .sneak-attack-defense {
-  color: #999;
+  color: #998;
 }
 
 [data-theme="dark"] .subterfuge-boosted {
