@@ -19494,10 +19494,12 @@ const App = {
       if (targetSkills.includes(skillName) && currentInput.value) {
         const val = parseInt(currentInput.value, 10) || 0;
         if (val > 0) {
-          this.character._subterfugeBonuses[currentInput.id] = val;
+          this.character._subterfugeBonuses[skillName] = val;
           currentInput.value = val + 20;
           currentInput.classList.add('subterfuge-boosted');
-          currentInput.title = `Subterfuge: +20% (base ${val}%)`;
+          const tip = `Subterfuge: +20% (base ${val}%)`;
+          currentInput.title = tip;
+          row.title = tip;
         }
       }
     });
@@ -19509,13 +19511,21 @@ const App = {
     if (!this.character.subterfugeApplied) return;
 
     const saved = this.character._subterfugeBonuses || {};
-    for (const [id, val] of Object.entries(saved)) {
-      const input = document.getElementById(id);
-      if (input) {
-        input.value = val;
-        input.classList.remove('subterfuge-boosted');
-        input.title = '';
-      }
+    const container = document.getElementById('professional-skills-container');
+    if (container) {
+      const rows = container.querySelectorAll('.professional-skill-row');
+      rows.forEach(row => {
+        const nameInput = row.querySelector('.prof-skill-name');
+        const currentInput = row.querySelector('.prof-skill-current');
+        if (!nameInput || !currentInput) return;
+        const skillName = nameInput.value.trim().toLowerCase();
+        if (saved[skillName] !== undefined) {
+          currentInput.value = saved[skillName];
+          currentInput.classList.remove('subterfuge-boosted');
+          currentInput.title = '';
+          row.title = '';
+        }
+      });
     }
 
     delete this.character._subterfugeBonuses;
@@ -19530,14 +19540,45 @@ const App = {
   restoreSubterfugeVisuals() {
     if (!this.character.subterfugeApplied) return;
     const saved = this.character._subterfugeBonuses || {};
-    for (const id of Object.keys(saved)) {
-      const input = document.getElementById(id);
-      if (input) {
-        input.classList.add('subterfuge-boosted');
-        const baseVal = saved[id];
-        input.title = `Subterfuge: +20% (base ${baseVal}%)`;
-      }
+    const container = document.getElementById('professional-skills-container');
+    if (!container) return;
+
+    // Migrate old format: if keys look like element IDs (e.g. 'prof-skill-2-current'), convert to skill names
+    const firstKey = Object.keys(saved)[0] || '';
+    if (firstKey.startsWith('prof-skill-')) {
+      const migrated = {};
+      const rows = container.querySelectorAll('.professional-skill-row');
+      rows.forEach(row => {
+        const nameInput = row.querySelector('.prof-skill-name');
+        const currentInput = row.querySelector('.prof-skill-current');
+        if (!nameInput || !currentInput) return;
+        const skillName = nameInput.value.trim().toLowerCase();
+        // Check if THIS skill should have been boosted (by checking if current value = base + 20)
+        if (['lockpicking', 'mechanisms', 'sleight'].includes(skillName)) {
+          const currentVal = parseInt(currentInput.value, 10) || 0;
+          if (currentVal > 20) {
+            migrated[skillName] = currentVal - 20;
+          }
+        }
+      });
+      this.character._subterfugeBonuses = migrated;
+      this.scheduleAutoSave();
     }
+
+    const updated = this.character._subterfugeBonuses || {};
+    const rows = container.querySelectorAll('.professional-skill-row');
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.prof-skill-name');
+      const currentInput = row.querySelector('.prof-skill-current');
+      if (!nameInput || !currentInput) return;
+      const skillName = nameInput.value.trim().toLowerCase();
+      if (updated[skillName] !== undefined) {
+        currentInput.classList.add('subterfuge-boosted');
+        const tip = `Subterfuge: +20% (base ${updated[skillName]}%)`;
+        currentInput.title = tip;
+        row.title = tip;
+      }
+    });
   },
 
   // ============================================
