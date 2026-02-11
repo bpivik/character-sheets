@@ -13737,6 +13737,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
   border: 2px solid #4a8a4a;
   border-radius: 6px;
+  margin-top: 0.75rem;
 }
 
 .climb-walls-section .section-header {
@@ -13747,7 +13748,7 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .climb-walls-content {
-  display: flex; flex-direction: column; gap: 0.25rem; align-items: center; text-align: center;
+  display: flex; flex-direction: column; gap: 0.4rem; align-items: center; text-align: center;
 }
 
 .climb-walls-info { width: 100%; }
@@ -13760,16 +13761,12 @@ body.dark-mode[data-class-theme] .subsection-header {
   width: 100%;
   background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
   color: white;
-  border: 1px solid #6b6;
+  border: 1px solid #4a8a4a;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(45, 90, 45, 0.4);
@@ -13777,11 +13774,12 @@ body.dark-mode[data-class-theme] .subsection-header {
 
 .btn-climb-walls:hover:not(:disabled) {
   background: linear-gradient(135deg, #3a5a3a 0%, #4a7a4a 50%, #3a5a3a 100%);
-  box-shadow: 0 4px 12px rgba(102, 187, 102, 0.5);
+  box-shadow: 0 4px 12px rgba(92, 184, 92, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-climb-walls:disabled {
-  opacity: 0.5; cursor: not-allowed; box-shadow: none;
+  opacity: 0.4; cursor: not-allowed; filter: grayscale(0.5);
 }
 
 .climb-walls-active-btn {
@@ -13803,6 +13801,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #1a1a2a 0%, #252535 100%);
   border: 2px solid #6a5aaa;
   border-radius: 6px;
+  margin-top: 0.75rem;
 }
 
 .hide-in-shadows-section .section-header {
@@ -13813,7 +13812,7 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .hide-in-shadows-content {
-  display: flex; flex-direction: column; gap: 0.25rem; align-items: center; text-align: center;
+  display: flex; flex-direction: column; gap: 0.4rem; align-items: center; text-align: center;
 }
 
 .hide-in-shadows-info { width: 100%; }
@@ -13826,16 +13825,12 @@ body.dark-mode[data-class-theme] .subsection-header {
   width: 100%;
   background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 50%, #2a2a4a 100%);
   color: white;
-  border: 1px solid #8a7aaa;
+  border: 1px solid #6a5aaa;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
   border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
   transition: all 0.3s ease;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   box-shadow: 0 2px 8px rgba(80, 60, 140, 0.4);
@@ -13844,6 +13839,7 @@ body.dark-mode[data-class-theme] .subsection-header {
 .btn-hide-in-shadows:hover:not(:disabled) {
   background: linear-gradient(135deg, #3a3a5a 0%, #4a4a7a 50%, #3a3a5a 100%);
   box-shadow: 0 4px 12px rgba(128, 90, 213, 0.5);
+  transform: translateY(-1px);
 }
 
 .hide-in-shadows-active-btn {
@@ -13865,6 +13861,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #2a1a1a 0%, #352025 100%);
   border: 2px solid #8a3a3a;
   border-radius: 6px;
+  margin-top: 0.75rem;
 }
 
 .sneak-attack-section .section-header {
@@ -13897,15 +13894,14 @@ body.dark-mode[data-class-theme] .subsection-header {
 
 /* Subterfuge boost indicator on skills */
 .subterfuge-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  color: #e6a317 !important;
+  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
 }
 
 .subterfuge-boosted::after {
   content: ' ✦';
   font-size: 0.6em;
-  color: #2a7a2a;
+  color: #e6a317;
 }
 
 /* Climb Walls / Hide in Shadows boost indicator on skills */
