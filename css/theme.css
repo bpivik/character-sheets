@@ -509,35 +509,30 @@ select:focus-visible {
    Combat Ability Section - Parchment Theme Overrides
    ============================================ */
 
-/* --- Climb Walls (parchment) --- */
+/* --- Climb Walls --- */
 .climb-walls-section {
-  background: linear-gradient(135deg, rgba(45, 100, 45, 0.15) 0%, rgba(45, 100, 45, 0.08) 100%);
-  border: 2px solid #5a8a5a;
-  box-shadow: inset 0 1px 4px rgba(45, 90, 45, 0.12), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(56, 100, 56, 0.1) 0%, rgba(56, 100, 56, 0.05) 100%);
+  border-color: #6a9a6a;
 }
 
 .climb-walls-section .section-header {
-  color: #2d5a2d;
+  color: #3a6a3a;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .climb-walls-label {
-  color: #4a6a4a;
-  font-style: italic;
+  color: var(--text-secondary, #5a4a3a);
 }
 
 .btn-climb-walls {
-  background: linear-gradient(135deg, #2d6a2d 0%, #3d8a3d 50%, #2d6a2d 100%);
-  border: 2px solid #4a8a4a;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.35);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%);
+  border-color: #5a8a5a;
+  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.25);
 }
 
 .btn-climb-walls:hover:not(:disabled) {
-  background: linear-gradient(135deg, #237a23 0%, #2d9a2d 50%, #237a23 100%);
-  box-shadow: 0 4px 14px rgba(45, 120, 45, 0.45);
+  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%);
+  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.35);
 }
 
 .btn-climb-walls:disabled {
@@ -548,61 +543,50 @@ select:focus-visible {
 }
 
 .climb-walls-active-btn {
-  background: linear-gradient(135deg, #237a23 0%, #2d9a2d 50%, #237a23 100%) !important;
-  border-color: #3aaa3a !important;
-  color: #d4ffd4 !important;
-  box-shadow: 0 0 12px rgba(45, 130, 45, 0.4) !important;
+  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%) !important;
+  border-color: #4a8a4a !important;
 }
 
-/* --- Hide in Shadows (parchment) --- */
+/* --- Hide in Shadows --- */
 .hide-in-shadows-section {
-  background: linear-gradient(135deg, rgba(70, 50, 130, 0.12) 0%, rgba(70, 50, 130, 0.06) 100%);
-  border: 2px solid #7a6aaa;
-  box-shadow: inset 0 1px 4px rgba(70, 50, 130, 0.1), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(70, 50, 120, 0.08) 0%, rgba(70, 50, 120, 0.04) 100%);
+  border-color: #8a7aaa;
 }
 
 .hide-in-shadows-section .section-header {
-  color: #4a3a7a;
+  color: #5a4a8a;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .hide-in-shadows-label {
-  color: #6a5a8a;
-  font-style: italic;
+  color: var(--text-secondary, #5a4a3a);
 }
 
 .btn-hide-in-shadows {
   background: linear-gradient(135deg, #4a3a7a 0%, #5a4a9a 50%, #4a3a7a 100%);
-  border: 2px solid #6a5a9a;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(70, 50, 130, 0.35);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  border-color: #6a5a9a;
+  box-shadow: 0 2px 8px rgba(70, 50, 120, 0.25);
 }
 
 .btn-hide-in-shadows:hover:not(:disabled) {
   background: linear-gradient(135deg, #3a2a6a 0%, #4a3a8a 50%, #3a2a6a 100%);
-  box-shadow: 0 4px 14px rgba(80, 60, 150, 0.45);
+  box-shadow: 0 4px 12px rgba(70, 50, 120, 0.35);
 }
 
 .hide-in-shadows-active-btn {
   background: linear-gradient(135deg, #3a2a6a 0%, #4a3a8a 50%, #3a2a6a 100%) !important;
-  border-color: #8a6acc !important;
-  color: #d4c4ff !important;
-  box-shadow: 0 0 12px rgba(100, 70, 180, 0.4) !important;
+  border-color: #6a5a9a !important;
 }
 
-/* --- Sneak Attack Info Card (parchment) --- */
+/* --- Sneak Attack Info Card --- */
 .sneak-attack-section {
-  background: linear-gradient(135deg, rgba(140, 40, 40, 0.1) 0%, rgba(140, 40, 40, 0.05) 100%);
-  border: 2px solid #9a6060;
-  box-shadow: inset 0 1px 4px rgba(140, 40, 40, 0.08), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(140, 50, 50, 0.08) 0%, rgba(140, 50, 50, 0.04) 100%);
+  border-color: #9a6a6a;
 }
 
 .sneak-attack-section .section-header {
-  color: #7a2a2a;
+  color: #7a3a3a;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .sneak-attack-card {
@@ -614,7 +598,7 @@ select:focus-visible {
 }
 
 .sneak-attack-divider {
-  background: rgba(140, 50, 50, 0.25);
+  background: rgba(140, 50, 50, 0.2);
 }
 
 .sneak-attack-effect {
@@ -622,17 +606,17 @@ select:focus-visible {
 }
 
 .sneak-attack-bullets {
-  color: #7a2a2a;
+  color: #8a2a2a;
 }
 
 .sneak-attack-defense {
   color: var(--text-secondary, #5a4a3a);
 }
 
-/* --- Forceful Strike (parchment) --- */
+/* --- Forceful Strike --- */
 .forceful-strike-section {
-  background: linear-gradient(135deg, rgba(56, 118, 56, 0.08) 0%, transparent 100%);
-  border: 1px solid rgba(56, 118, 56, 0.3);
+  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
+  border: 1px solid rgba(56, 118, 56, 0.25);
   border-radius: 6px;
 }
 
@@ -640,30 +624,30 @@ select:focus-visible {
   color: var(--text-secondary, #5a4a3a);
 }
 
-/* --- Species Enemy (parchment) --- */
+/* --- Species Enemy --- */
 .species-enemy-section {
-  background: linear-gradient(135deg, rgba(56, 118, 56, 0.08) 0%, transparent 100%);
-  border: 1px solid rgba(56, 118, 56, 0.3);
+  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
+  border: 1px solid rgba(56, 118, 56, 0.25);
   border-radius: 6px;
 }
 
 .se-enemy-tag {
   color: var(--text-primary, #2a1f14);
-  background: rgba(56, 118, 56, 0.12);
-  border-color: rgba(56, 118, 56, 0.35);
+  background: rgba(56, 118, 56, 0.1);
+  border-color: rgba(56, 118, 56, 0.3);
 }
 
-/* --- Subterfuge boost (parchment) --- */
+/* --- Subterfuge boost --- */
 .subterfuge-boosted {
-  color: #7a5a08 !important;
+  color: #8a6a10 !important;
   text-shadow: none;
 }
 
 .subterfuge-boosted::after {
-  color: #7a5a08;
+  color: #8a6a10;
 }
 
-/* --- Climb Walls / Hide in Shadows skill boost (parchment) --- */
+/* --- Climb Walls / Hide in Shadows skill boost --- */
 .cw-boosted {
   color: #2d6a2d !important;
   text-shadow: none;
@@ -678,37 +662,32 @@ select:focus-visible {
 .great-hearing-section,
 .sharp-eyed-section,
 .vaulting-section {
-  background: linear-gradient(135deg, rgba(45, 100, 45, 0.15) 0%, rgba(45, 100, 45, 0.08) 100%);
-  border: 2px solid #5a8a5a;
-  box-shadow: inset 0 1px 4px rgba(45, 90, 45, 0.12), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(56, 100, 56, 0.1) 0%, rgba(56, 100, 56, 0.05) 100%);
+  border-color: #6a9a6a;
 }
 
 .great-hearing-section .section-header,
 .sharp-eyed-section .section-header,
 .vaulting-section .section-header {
-  color: #2d5a2d;
+  color: #3a6a3a;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .great-hearing-label, .sharp-eyed-label, .vaulting-label {
-  color: #4a6a4a;
-  font-style: italic;
+  color: var(--text-secondary, #5a4a3a);
 }
 
 .btn-great-hearing, .btn-sharp-eyed, .btn-vaulting {
-  background: linear-gradient(135deg, #2d6a2d 0%, #3d8a3d 50%, #2d6a2d 100%);
-  border: 2px solid #4a8a4a;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.35);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  background: linear-gradient(135deg, #3a6a3a 0%, #4a8a4a 50%, #3a6a3a 100%);
+  border-color: #5a8a5a;
+  box-shadow: 0 2px 8px rgba(45, 90, 45, 0.25);
 }
 
 .btn-great-hearing:hover:not(:disabled),
 .btn-sharp-eyed:hover:not(:disabled),
 .btn-vaulting:hover:not(:disabled) {
-  background: linear-gradient(135deg, #237a23 0%, #2d9a2d 50%, #237a23 100%);
-  box-shadow: 0 4px 14px rgba(45, 120, 45, 0.45);
+  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%);
+  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.35);
 }
 
 .btn-vaulting:disabled {
@@ -721,10 +700,8 @@ select:focus-visible {
 .great-hearing-active-btn,
 .sharp-eyed-active-btn,
 .vaulting-active-btn {
-  background: linear-gradient(135deg, #237a23 0%, #2d9a2d 50%, #237a23 100%) !important;
-  border-color: #3aaa3a !important;
-  color: #d4ffd4 !important;
-  box-shadow: 0 0 12px rgba(45, 130, 45, 0.4) !important;
+  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%) !important;
+  border-color: #4a8a4a !important;
 }
 
 .gh-boosted, .se-boosted, .vault-boosted {
@@ -734,39 +711,34 @@ select:focus-visible {
 
 /* --- Unarmored Defense (parchment) --- */
 .unarmored-defense-section {
-  background: linear-gradient(135deg, rgba(40, 90, 130, 0.12) 0%, rgba(40, 90, 130, 0.06) 100%);
-  border: 2px solid #6090aa;
-  box-shadow: inset 0 1px 4px rgba(40, 90, 130, 0.1), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(50, 100, 130, 0.08) 0%, rgba(50, 100, 130, 0.04) 100%);
+  border-color: #6a9aaa;
 }
 
 .unarmored-defense-section .section-header {
-  color: #2d5a7a;
+  color: #3a6a8a;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .ud-active-indicator {
-  color: #2d6a3a;
-  font-weight: bold;
+  color: #3a6a8a;
   text-shadow: none;
 }
 
-.ud-inactive-label { color: #8a6a4a; }
+.ud-inactive-label { color: var(--text-secondary, #5a4a3a); }
 .ud-info-label { color: var(--text-secondary, #5a4a3a); }
 
 /* --- Skirmishing / Swashbuckling (parchment) --- */
 .skirmishing-section,
 .swashbuckling-section {
-  background: linear-gradient(135deg, rgba(140, 110, 40, 0.12) 0%, rgba(140, 110, 40, 0.06) 100%);
-  border: 2px solid #a08a50;
-  box-shadow: inset 0 1px 4px rgba(140, 110, 40, 0.1), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(140, 110, 50, 0.08) 0%, rgba(140, 110, 50, 0.04) 100%);
+  border-color: #a09060;
 }
 
 .skirmishing-section .section-header,
 .swashbuckling-section .section-header {
-  color: #6a5010;
+  color: #7a6020;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .skirmishing-card, .swashbuckling-card {
@@ -775,61 +747,52 @@ select:focus-visible {
 
 /* --- Defensive Reflexes (parchment) --- */
 .defensive-reflexes-section {
-  background: linear-gradient(135deg, rgba(40, 90, 130, 0.12) 0%, rgba(40, 90, 130, 0.06) 100%);
-  border: 2px solid #6090aa;
-  box-shadow: inset 0 1px 4px rgba(40, 90, 130, 0.1), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(50, 100, 130, 0.08) 0%, rgba(50, 100, 130, 0.04) 100%);
+  border-color: #6a9aaa;
 }
 
 .defensive-reflexes-section .section-header {
-  color: #2d5a7a;
+  color: #3a6a8a;
   text-shadow: none;
-  font-weight: 700;
 }
 
-.dr-bonus-value { color: #2d5a7a; font-weight: bold; text-shadow: none; }
+.dr-bonus-value { color: #3a6a8a; text-shadow: none; }
 .dr-bonus-label { color: var(--text-primary, #2a1f14); }
 .dr-uses-label { color: var(--text-secondary, #5a4a3a); }
 .dr-rules { color: var(--text-secondary, #5a4a3a); }
 
 /* --- Sneak Attack Damage (parchment) --- */
 .sneak-attack-bonus-label {
-  color: #7a2a2a;
-  font-weight: bold;
+  color: #7a3a3a;
 }
 
 .btn-sneak-damage {
-  background: linear-gradient(135deg, #7a2a2a 0%, #9a3a3a 50%, #7a2a2a 100%);
-  border: 2px solid #8a4a4a;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(140, 40, 40, 0.35);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  background: linear-gradient(135deg, #7a3030 0%, #9a4040 50%, #7a3030 100%);
+  border-color: #8a5050;
+  box-shadow: 0 2px 8px rgba(140, 50, 50, 0.25);
 }
 
 .btn-sneak-damage:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6a1a1a 0%, #8a2a2a 50%, #6a1a1a 100%);
-  box-shadow: 0 4px 14px rgba(160, 40, 40, 0.45);
+  background: linear-gradient(135deg, #6a2020 0%, #8a3030 50%, #6a2020 100%);
+  box-shadow: 0 4px 12px rgba(140, 50, 50, 0.35);
 }
 
 .sneak-damage-active-btn {
-  background: linear-gradient(135deg, #6a1a1a 0%, #8a2a2a 50%, #6a1a1a 100%) !important;
-  border-color: #cc5050 !important;
-  color: #ffd4d4 !important;
-  box-shadow: 0 0 12px rgba(180, 50, 50, 0.4) !important;
+  background: linear-gradient(135deg, #6a2020 0%, #8a3030 50%, #6a2020 100%) !important;
+  border-color: #aa5050 !important;
 }
 
 /* --- Use Arcane Scrolls (parchment) --- */
 .arcane-scrolls-section {
-  background: linear-gradient(135deg, rgba(70, 50, 130, 0.12) 0%, rgba(70, 50, 130, 0.06) 100%);
-  border: 2px solid #7a6aaa;
-  box-shadow: inset 0 1px 4px rgba(70, 50, 130, 0.1), 0 1px 3px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(70, 50, 120, 0.08) 0%, rgba(70, 50, 120, 0.04) 100%);
+  border-color: #8a7aaa;
 }
 
 .arcane-scrolls-section .section-header {
-  color: #4a3a7a;
+  color: #5a4a8a;
   text-shadow: none;
-  font-weight: 700;
 }
 
 .arcane-scrolls-card { color: var(--text-primary, #2a1f14); }
-.arcane-scrolls-warning { color: #7a2a2a; font-weight: bold; }
-.arcane-scrolls-chance { color: #4a3a7a; font-weight: bold; }
+.arcane-scrolls-warning { color: #7a3a3a; }
+.arcane-scrolls-chance { color: #5a4a8a; }
