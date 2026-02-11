@@ -19420,7 +19420,7 @@ const App = {
     this.character.subterfugeApplied = true;
     this.character._subterfugeBonuses = {};
 
-    const rows = container.querySelectorAll('.prof-skill-row');
+    const rows = container.querySelectorAll('.professional-skill-row');
     rows.forEach(row => {
       const nameInput = row.querySelector('.prof-skill-name');
       const currentInput = row.querySelector('.prof-skill-current');
@@ -19697,7 +19697,7 @@ const App = {
   _findProfSkillInput(skillName) {
     const container = document.getElementById('professional-skills-container');
     if (!container) return null;
-    const rows = container.querySelectorAll('.prof-skill-row');
+    const rows = container.querySelectorAll('.professional-skill-row');
     for (const row of rows) {
       const nameInput = row.querySelector('.prof-skill-name');
       const currentInput = row.querySelector('.prof-skill-current');
@@ -20061,7 +20061,7 @@ const App = {
     // Check if Read Languages already exists as a professional skill
     const container = document.getElementById('professional-skills-container');
     if (container) {
-      const rows = container.querySelectorAll('.prof-skill-row');
+      const rows = container.querySelectorAll('.professional-skill-row');
       for (const row of rows) {
         const nameInput = row.querySelector('.prof-skill-name');
         if (nameInput && nameInput.value.trim().toLowerCase() === 'read languages') {
@@ -20134,7 +20134,7 @@ const App = {
     if (!container) return;
     
     let targetRow = null;
-    const rows = container.querySelectorAll('.prof-skill-row');
+    const rows = container.querySelectorAll('.professional-skill-row');
     for (const row of rows) {
       const nameInput = row.querySelector('.prof-skill-name');
       if (nameInput && !nameInput.value.trim()) {
@@ -20146,7 +20146,7 @@ const App = {
     // No empty slot — create a new row
     if (!targetRow) {
       this.addProfessionalSkillRow(false);
-      const updatedRows = container.querySelectorAll('.prof-skill-row');
+      const updatedRows = container.querySelectorAll('.professional-skill-row');
       targetRow = updatedRows[updatedRows.length - 1];
     }
     
@@ -21876,7 +21876,7 @@ const App = {
     if (pietyInput) return parseInt(pietyInput.value, 10) || 0;
     
     // Fallback: search professional skills
-    const profSkills = document.querySelectorAll('.prof-skill-row');
+    const profSkills = document.querySelectorAll('.professional-skill-row');
     for (const row of profSkills) {
       const nameInput = row.querySelector('.prof-skill-name');
       const totalInput = row.querySelector('.prof-skill-total');
