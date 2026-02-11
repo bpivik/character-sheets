@@ -1332,7 +1332,7 @@
           <div class="abilities-right-column">
             <!-- Grid of ability cards -->
             <div class="ability-cards-grid">
-              <!-- Berserk Rage Section (only visible if character has Berserk Rage ability) -->
+              <!-- ===== ABILITY BUTTONS (Toggle/Activate) ===== -->
               <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">⚔️ Berserk Rage</h3>
@@ -1370,8 +1370,7 @@
                   </div>
                 </div>
               </section>
-              
-              <!-- Brute Strength Section (only visible if character has Brute Strength ability) -->
+
               <section class="brute-strength-section" id="brute-strength-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">💪 Brute Strength</h3>
@@ -1387,147 +1386,21 @@
                   </div>
                 </div>
               </section>
-              
-              <!-- Just a Scratch Section (only visible if character has Just a Scratch ability) -->
-              <section class="just-a-scratch-section" id="just-a-scratch-section" style="display: none;">
+
+              <section class="climb-walls-section" id="climb-walls-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">🩹 Just a Scratch</h3>
+                  <h3 class="section-header">🧗 Climb Walls</h3>
                 </div>
-                <div class="just-a-scratch-content">
-                  <div class="scratch-info-row">
-                    <span class="scratch-value" id="scratch-uses-available">1</span>
-                    <span class="scratch-label">/ 1 use</span>
-                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-scratch-uses" title="Reset uses to maximum">↺</button>
+                <div class="climb-walls-content">
+                  <div class="climb-walls-info">
+                    <span class="climb-walls-label" id="climb-walls-status">+20% Athletics · Unburdened + Light armor</span>
                   </div>
-                  <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-scratch-use" title="Just a Scratch: Shake off a wound — roll Endurance to recover Hit Points">
-                      <span class="scratch-text" id="scratch-btn-text">Use</span>
-                    </button>
-                  </div>
+                  <button type="button" class="btn btn-climb-walls" id="btn-climb-walls-toggle" title="Climb Walls: Ignore 1 Grade of Difficulty on Athletics when climbing (Unburdened + Light armor only)">
+                    🧗 Climb Walls
+                  </button>
                 </div>
               </section>
 
-              <!-- Mystic Healing Section (only visible for Monks with Mystic Healing) -->
-              <section class="just-a-scratch-section" id="mystic-healing-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🧘 Mystic Healing</h3>
-                </div>
-                <div class="just-a-scratch-content">
-                  <div class="scratch-info-row">
-                    <span class="scratch-value" id="mystic-healing-remaining">0</span>
-                    <span class="scratch-label">/ <span id="mystic-healing-pool">0</span> HP remaining today</span>
-                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-mystic-healing" title="Reset daily pool">↺</button>
-                  </div>
-                  <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-mystic-healing-use" title="Mystic Healing: Meditate to heal wounds — recover Hit Points through focused meditation">
-                      <span class="scratch-text">Meditate & Heal</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Pain Control Section (only visible for Monks with Pain Control) -->
-              <section class="just-a-scratch-section" id="pain-control-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🧠 Pain Control</h3>
-                </div>
-                <div class="just-a-scratch-content">
-                  <div class="scratch-info-row">
-                    <span class="scratch-label" style="font-size: 0.72rem;">Auto-Success Endurance (fail only on 100)</span>
-                  </div>
-                  <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-pain-control-roll" title="Pain Control: Roll Endurance to ignore the effects of a Serious Wound for a number of rounds">
-                      <span class="scratch-text">Roll Endurance</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Nether Walk Section (only visible for Monks with Nether Walk) -->
-              <section class="just-a-scratch-section" id="nether-walk-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🌀 Nether Walk</h3>
-                </div>
-                <div class="just-a-scratch-content">
-                  <div class="scratch-info-row">
-                    <span class="scratch-value" id="nether-walk-distance">0</span>
-                    <span class="scratch-label">ft teleport</span>
-                    <span style="margin: 0 0.3rem; color: #666;">•</span>
-                    <span class="scratch-value" id="nether-walk-uses">1</span>
-                    <span class="scratch-label">/ 1 use today</span>
-                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-nether-walk" title="Reset daily use">↺</button>
-                  </div>
-                  <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-nether-walk-use" style="background: #7c4dff;" title="Nether Walk: Teleport a short distance (1/10th Mysticism skill in feet) once per day">
-                      <span class="scratch-text">✨ Nether Walk</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Quivering Palm Section (only visible for Monks with Quivering Palm) -->
-              <section class="just-a-scratch-section" id="quivering-palm-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">💀 Quivering Palm</h3>
-                </div>
-                <div class="just-a-scratch-content">
-                  <div class="scratch-info-row">
-                    <span class="scratch-label" style="font-size: 0.72rem;" id="qp-status-text">Ready</span>
-                    <span style="margin: 0 0.3rem; color: #666;">•</span>
-                    <span class="scratch-label" style="font-size: 0.72rem;">Max SIZ: <strong id="qp-max-siz">0</strong></span>
-                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-qp" title="Reset (after 1 week / 7 Long Rests)">↺</button>
-                  </div>
-                  <div class="scratch-button-row" style="display: flex; gap: 0.4rem; justify-content: center;">
-                    <button type="button" class="btn btn-scratch" id="btn-qp-initiate" style="background: #880e4f;" title="Quivering Palm: Initiate deadly vibrations — you have 3 rounds to touch the victim">
-                      <span class="scratch-text">Initiate</span>
-                    </button>
-                    <button type="button" class="btn btn-scratch" id="btn-qp-trigger" style="background: #4a148c; display: none;" title="Quivering Palm: Trigger the fatal vibrations — roll Mysticism −20% to kill the target">
-                      <span class="scratch-text">Trigger Death</span>
-                    </button>
-                  </div>
-                  <div id="qp-rest-tracker" style="display: none; margin-top: 0.3rem; text-align: center; font-size: 0.72rem; color: #999;">
-                    Long Rests: <strong id="qp-rest-count">0</strong> / 7
-                    <button type="button" class="btn btn-small" id="btn-qp-rest" style="font-size: 0.65rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem; border: 1px solid #555; background: none; color: #aaa; border-radius: 3px; cursor: pointer;">+1 Rest</button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Perfection Section (only visible for Monks with Perfection) -->
-              <section class="just-a-scratch-section" id="perfection-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">✨ Perfection</h3>
-                </div>
-                <div class="just-a-scratch-content">
-                  <div class="scratch-info-row">
-                    <span class="scratch-label" style="font-size: 0.72rem;">Ethereal Rounds: <strong id="perfection-rounds">20</strong> / 20 today</span>
-                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-perfection" title="Reset daily rounds">↺</button>
-                  </div>
-                  <div class="scratch-button-row">
-                    <button type="button" class="btn btn-scratch" id="btn-perfection-toggle" style="background: #1a237e;" title="Perfection: Enhance all combat rolls — your attacks and defenses are one Difficulty Grade easier">
-                      <span class="scratch-text" id="perfection-btn-text">Activate Perfection</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Forceful Strike Section (only visible if character has Forceful Strike ability) -->
-              <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">⚡ Forceful Strike</h3>
-                </div>
-                <div class="forceful-strike-content">
-                  <div class="forceful-strike-info">
-                    <span class="forceful-label">-20% skill • +2 dmg</span>
-                  </div>
-                  <div class="forceful-strike-toggle">
-                    <button type="button" class="btn btn-forceful" id="btn-forceful-toggle" title="Forceful Strike: Increase Damage Modifier two steps — attack is one Difficulty Grade harder">
-                      <span class="forceful-text" id="forceful-btn-text">Activate</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-              
-              <!-- Commanding Section (only visible if character has Commanding ability) -->
               <section class="commanding-section" id="commanding-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">👑 Commanding</h3>
@@ -1552,62 +1425,7 @@
                   </div>
                 </div>
               </section>
-              
-              <!-- Mental Strength Section (only visible if character has Mental Strength ability) -->
 
-              <!-- Holy Strike Section (only visible if character has Holy Strike ability) -->
-              <section class="holy-strike-section" id="holy-strike-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">⚔️ Holy Strike</h3>
-                </div>
-                <div class="holy-strike-content">
-                  <div class="holy-strike-info-row">
-                    <span class="holy-strike-value" id="holy-strike-uses-available">0</span>
-                    <span class="holy-strike-label">/ <span id="holy-strike-uses-max">0</span> uses/day</span>
-                    <button type="button" class="btn btn-small btn-reset-holy-strike" id="btn-reset-holy-strike-uses" title="Reset uses to maximum">↺</button>
-                  </div>
-                  <div class="holy-strike-button-row">
-                    <button type="button" class="btn btn-holy-strike" id="btn-holy-strike-use" title="Activate Holy Strike — adds +1d6 holy damage to next melee attack">
-                      ⚔️ Holy Strike (+1d6)
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Lay on Hands Section (only visible if character has Lay on Hands ability) -->
-              <section class="lay-on-hands-section" id="lay-on-hands-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🙌 Lay on Hands</h3>
-                </div>
-                <div class="lay-on-hands-content">
-                  <div class="lay-on-hands-info-row">
-                    <span class="lay-on-hands-value" id="lay-on-hands-uses-available">0</span>
-                    <span class="lay-on-hands-label">/ <span id="lay-on-hands-uses-max">0</span> uses/day</span>
-                    <button type="button" class="btn btn-small btn-reset-lay-on-hands" id="btn-reset-lay-on-hands-uses" title="Reset uses to maximum">↺</button>
-                  </div>
-                  <div class="lay-on-hands-button-row">
-                    <button type="button" class="btn btn-lay-on-hands" id="btn-lay-on-hands-use" title="Heal Minor Wound (all HP) or stabilize Serious/Major Wound">
-                      🙌 Lay on Hands
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Detect Evil Section (only visible if character has Detect Evil ability) -->
-              <section class="detect-evil-section" id="detect-evil-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">👁️ Detect Evil</h3>
-                </div>
-                <div class="detect-evil-content">
-                  <div class="detect-evil-button-row">
-                    <button type="button" class="btn btn-detect-evil" id="btn-detect-evil-use" title="Concentrate for 1 Round to detect Evil within 60 feet">
-                      👁️ Detect Evil
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Cure Disease Section (only visible if character has Cure Disease ability) -->
               <section class="cure-disease-section" id="cure-disease-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">🩺 Cure Disease</h3>
@@ -1630,7 +1448,19 @@
                 </div>
               </section>
 
-              <!-- Divine Protection Section (only visible if character has Divine Protection ability) -->
+              <section class="detect-evil-section" id="detect-evil-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">👁️ Detect Evil</h3>
+                </div>
+                <div class="detect-evil-content">
+                  <div class="detect-evil-button-row">
+                    <button type="button" class="btn btn-detect-evil" id="btn-detect-evil-use" title="Concentrate for 1 Round to detect Evil within 60 feet">
+                      👁️ Detect Evil
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               <section class="divine-protection-section" id="divine-protection-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">🛡️ Divine Protection</h3>
@@ -1647,116 +1477,22 @@
                 </div>
               </section>
 
-              <!-- Circle of Power Section (only visible if character has Circle of Power ability) -->
-              <section class="circle-of-power-section" id="circle-of-power-section" style="display: none;">
+              <section class="forceful-strike-section" id="forceful-strike-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">🔵 Circle of Power</h3>
+                  <h3 class="section-header">⚡ Forceful Strike</h3>
                 </div>
-                <div class="circle-of-power-content">
-                  <div class="circle-of-power-info">
-                    <span class="cop-label">Holy Weapon Required</span>
+                <div class="forceful-strike-content">
+                  <div class="forceful-strike-info">
+                    <span class="forceful-label">-20% skill • +2 dmg</span>
                   </div>
-                  <div class="circle-of-power-detail">
-                    <span class="cop-text">Suppresses hostile magic up to Magnitude</span>
-                    <span class="cop-magnitude" id="cop-magnitude-value">0</span>
-                  </div>
-                  <div class="circle-of-power-note">
-                    <span class="cop-formula">(Channel <span id="cop-channel-value">0</span>% ÷ 10, rounded up)</span>
+                  <div class="forceful-strike-toggle">
+                    <button type="button" class="btn btn-forceful" id="btn-forceful-toggle" title="Forceful Strike: Increase Damage Modifier two steps — attack is one Difficulty Grade harder">
+                      <span class="forceful-text" id="forceful-btn-text">Activate</span>
+                    </button>
                   </div>
                 </div>
               </section>
 
-              <!-- Improved Aim Section (only visible if character has Ranger Ranged Weapon Specialization) -->
-              <section class="improved-aim-section" id="improved-aim-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🎯 Improved Aim</h3>
-                </div>
-                <div class="improved-aim-content">
-                  <div class="improved-aim-info">
-                    <span class="improved-aim-label">Within Effective Range · 1 Turn to steady</span>
-                  </div>
-                  <button type="button" class="btn btn-improved-aim" id="btn-improved-aim" title="Improved Aim: Within Effective Range, Aiming requires only 1 Turn and makes the attack 1 Difficulty Grade easier">
-                    🎯 Improved Aim
-                  </button>
-                </div>
-              </section>
-
-              <!-- Species Enemy Section (only visible if character has Species Enemy ability) -->
-              <section class="species-enemy-section" id="species-enemy-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header" id="species-enemy-header">🎯 Species Enemy</h3>
-                </div>
-                <div class="species-enemy-content">
-                  <div class="species-enemy-list" id="species-enemy-list"></div>
-                  <button type="button" class="btn btn-species-enemy" id="btn-species-enemy" title="Species Enemy: +10% to all skill rolls and Damage Modifier +1 step vs your chosen enemy">
-                    🎯 Activate Species Enemy
-                  </button>
-                </div>
-              </section>
-
-              <!-- Climb Walls Section (Rogue) -->
-              <section class="climb-walls-section" id="climb-walls-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🧗 Climb Walls</h3>
-                </div>
-                <div class="climb-walls-content">
-                  <div class="climb-walls-info">
-                    <span class="climb-walls-label" id="climb-walls-status">+20% Athletics · Unburdened + Light armor</span>
-                  </div>
-                  <button type="button" class="btn btn-climb-walls" id="btn-climb-walls-toggle" title="Climb Walls: Ignore 1 Grade of Difficulty on Athletics when climbing (Unburdened + Light armor only)">
-                    🧗 Climb Walls
-                  </button>
-                </div>
-              </section>
-
-              <!-- Hide in Shadows Section (Rogue) -->
-              <section class="hide-in-shadows-section" id="hide-in-shadows-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🌑 Hide in Shadows</h3>
-                </div>
-                <div class="hide-in-shadows-content">
-                  <div class="hide-in-shadows-info">
-                    <span class="hide-in-shadows-label">+20% Stealth · In shadow or darkness</span>
-                  </div>
-                  <button type="button" class="btn btn-hide-in-shadows" id="btn-hide-in-shadows-toggle" title="Hide in Shadows: Enemy Perception rolls are 1 Difficulty Grade harder when in shadow or darkness">
-                    🌑 Hide in Shadows
-                  </button>
-                </div>
-              </section>
-
-              <!-- Sneak Attack Section (Rogue - Info Card) -->
-              <section class="sneak-attack-section" id="sneak-attack-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🗡️ Sneak Attack</h3>
-                </div>
-                <div class="sneak-attack-content">
-                  <div class="sneak-attack-card">
-                    <div class="sneak-attack-req"><strong>Weapon:</strong> Small/Medium melee or ranged within 30 ft</div>
-                    <div class="sneak-attack-req"><strong>Target:</strong> Humanoid with vital organs • Must be outside target's field of vision</div>
-                    <div class="sneak-attack-divider"></div>
-                    <div class="sneak-attack-effect"><strong>On Success:</strong> Bonus <em>Choose Location</em> SE (head/chest/abdomen):</div>
-                    <div class="sneak-attack-bullets">
-                      <span>• Ignore negative Damage Modifiers</span>
-                      <span>• Bypass Armor & Maximize Damage don't require Critical</span>
-                    </div>
-                    <div class="sneak-attack-divider"></div>
-                    <div class="sneak-attack-defense">
-                      <strong>Detecting:</strong> Perception roll (Hard if distracted)<br>
-                      <strong>Defending from side:</strong> Formidable &nbsp;|&nbsp; <strong>From behind:</strong> Herculean
-                    </div>
-                    <!-- Sneak Attack Bonus Damage (Rank 2+) -->
-                    <div class="sneak-attack-bonus-area" id="sneak-attack-bonus-area" style="display: none;">
-                      <div class="sneak-attack-divider"></div>
-                      <div class="sneak-attack-bonus-label" id="sneak-attack-bonus-label"></div>
-                      <button type="button" class="btn btn-sneak-damage" id="btn-sneak-attack-damage" title="Apply Sneak Attack bonus damage">
-                        🗡️ Apply Bonus Damage
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Great Hearing Section (Rogue) -->
               <section class="great-hearing-section" id="great-hearing-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">👂 Great Hearing</h3>
@@ -1771,133 +1507,105 @@
                 </div>
               </section>
 
-              <!-- Sharp Eyed Section (Rogue) -->
-              <section class="sharp-eyed-section" id="sharp-eyed-section" style="display: none;">
+              <section class="hide-in-shadows-section" id="hide-in-shadows-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">👁️ Sharp Eyed</h3>
+                  <h3 class="section-header">🌑 Hide in Shadows</h3>
                 </div>
-                <div class="sharp-eyed-content">
-                  <div class="sharp-eyed-info">
-                    <span class="sharp-eyed-label">+20% Perception · Vision-related rolls</span>
+                <div class="hide-in-shadows-content">
+                  <div class="hide-in-shadows-info">
+                    <span class="hide-in-shadows-label">+20% Stealth · In shadow or darkness</span>
                   </div>
-                  <button type="button" class="btn btn-sharp-eyed" id="btn-sharp-eyed-toggle" title="Sharp Eyed: Perception rolls related to vision are 1 Difficulty Grade easier">
-                    👁️ Sharp Eyed
+                  <button type="button" class="btn btn-hide-in-shadows" id="btn-hide-in-shadows-toggle" title="Hide in Shadows: Enemy Perception rolls are 1 Difficulty Grade harder when in shadow or darkness">
+                    🌑 Hide in Shadows
                   </button>
                 </div>
               </section>
 
-              <!-- Vaulting Section (Rogue) -->
-              <section class="vaulting-section" id="vaulting-section" style="display: none;">
+              <section class="holy-smite-section" id="holy-smite-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">🏃 Vaulting</h3>
+                  <h3 class="section-header" id="holy-smite-header">⚔️ Holy Smite</h3>
                 </div>
-                <div class="vaulting-content">
-                  <div class="vaulting-info">
-                    <span class="vaulting-label" id="vaulting-status">+20% Acrobatics · Unburdened + pole required</span>
+                <div class="holy-smite-content">
+                  <div class="holy-smite-info-row">
+                    <span class="holy-smite-value" id="holy-smite-uses-available">1</span>
+                    <span class="holy-smite-label">/ <span id="holy-smite-uses-max">1</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-holy-smite" id="btn-reset-holy-smite-uses" title="Reset uses to maximum">↺</button>
                   </div>
-                  <button type="button" class="btn btn-vaulting" id="btn-vaulting-toggle" title="Vaulting: Easy Acrobatics roll (+20%) to pole vault — horizontal: 2x height + 1d4+6 ft, vertical: staff length">
-                    🏃 Vault
+                  <div class="holy-smite-bonus-row">
+                    <span class="holy-smite-bonus" id="holy-smite-bonus">+1 step damage modifier vs Evil</span>
+                  </div>
+                  <div class="holy-smite-toggle">
+                    <button type="button" class="btn btn-holy-smite" id="btn-holy-smite-toggle" title="Holy Smite: Increase Damage Modifier one step against evil creatures">
+                      <span class="holy-smite-text" id="holy-smite-btn-text">Activate</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="holy-strike-section" id="holy-strike-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">⚔️ Holy Strike</h3>
+                </div>
+                <div class="holy-strike-content">
+                  <div class="holy-strike-info-row">
+                    <span class="holy-strike-value" id="holy-strike-uses-available">0</span>
+                    <span class="holy-strike-label">/ <span id="holy-strike-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-holy-strike" id="btn-reset-holy-strike-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="holy-strike-button-row">
+                    <button type="button" class="btn btn-holy-strike" id="btn-holy-strike-use" title="Activate Holy Strike — adds +1d6 holy damage to next melee attack">
+                      ⚔️ Holy Strike (+1d6)
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="improved-aim-section" id="improved-aim-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🎯 Improved Aim</h3>
+                </div>
+                <div class="improved-aim-content">
+                  <div class="improved-aim-info">
+                    <span class="improved-aim-label">Within Effective Range · 1 Turn to steady</span>
+                  </div>
+                  <button type="button" class="btn btn-improved-aim" id="btn-improved-aim" title="Improved Aim: Within Effective Range, Aiming requires only 1 Turn and makes the attack 1 Difficulty Grade easier">
+                    🎯 Improved Aim
                   </button>
                 </div>
               </section>
 
-              <!-- Unarmored Defense Section (Rogue — auto-passive) -->
-              <section class="unarmored-defense-section" id="unarmored-defense-section" style="display: none;">
+              <section class="just-a-scratch-section" id="just-a-scratch-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">🛡️ Unarmored Defense</h3>
+                  <h3 class="section-header">🩹 Just a Scratch</h3>
                 </div>
-                <div class="unarmored-defense-content">
-                  <div class="unarmored-defense-info">
-                    <span class="unarmored-defense-label" id="unarmored-defense-status">+20% Evade · No armor + Unburdened (auto)</span>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-value" id="scratch-uses-available">1</span>
+                    <span class="scratch-label">/ 1 use</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-scratch-uses" title="Reset uses to maximum">↺</button>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-scratch-use" title="Just a Scratch: Shake off a wound — roll Endurance to recover Hit Points">
+                      <span class="scratch-text" id="scratch-btn-text">Use</span>
+                    </button>
                   </div>
                 </div>
               </section>
 
-              <!-- Weapon Precision Info Card (Rogue) -->
-              <section class="weapon-precision-section" id="weapon-precision-section" style="display: none;">
+              <section class="lay-on-hands-section" id="lay-on-hands-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">🎯 Weapon Precision</h3>
+                  <h3 class="section-header">🙌 Lay on Hands</h3>
                 </div>
-                <div class="weapon-precision-content">
-                  <div class="weapon-precision-card">
-                    <div class="wp-calc-row">
-                      <span class="wp-calc-label">STR+DEX DM:</span>
-                      <span class="wp-calc-value" id="wp-str-dex-dm">—</span>
-                      <span class="wp-calc-sep">vs</span>
-                      <span class="wp-calc-label">STR+SIZ DM:</span>
-                      <span class="wp-calc-value" id="wp-str-siz-dm">—</span>
-                      <span class="wp-active-indicator" id="wp-active-indicator"></span>
-                    </div>
-                    <div class="wp-weapons-list">Clubs, daggers, garrotes, knives, shortswords, main gauche, rapiers, unarmed, darts, slings, short bows, javelins</div>
+                <div class="lay-on-hands-content">
+                  <div class="lay-on-hands-info-row">
+                    <span class="lay-on-hands-value" id="lay-on-hands-uses-available">0</span>
+                    <span class="lay-on-hands-label">/ <span id="lay-on-hands-uses-max">0</span> uses/day</span>
+                    <button type="button" class="btn btn-small btn-reset-lay-on-hands" id="btn-reset-lay-on-hands-uses" title="Reset uses to maximum">↺</button>
                   </div>
-                </div>
-              </section>
-
-              <!-- Skirmishing Info Card (Rogue) -->
-              <section class="skirmishing-section" id="skirmishing-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">🏹 Skirmishing</h3>
-                </div>
-                <div class="skirmishing-content">
-                  <div class="skirmishing-card">
-                    Ranged attacks while running (not sprinting). Combat Skill capped by Athletics (<span class="skirmish-athletics-val" id="skirmish-athletics-val">—</span>%).
-                  </div>
-                </div>
-              </section>
-
-              <!-- Swashbuckling Info Card (Rogue) -->
-              <section class="swashbuckling-section" id="swashbuckling-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">⚔️ Swashbuckling</h3>
-                </div>
-                <div class="swashbuckling-content">
-                  <div class="swashbuckling-card">
-                    Attack & Evade while jumping/swinging into or out of combat. Ignores Athletics skill cap. Requires Unburdened + Light armor.
-                  </div>
-                </div>
-              </section>
-
-              <!-- Defensive Reflexes Section (Rogue Rank 2+) -->
-              <section class="defensive-reflexes-section" id="defensive-reflexes-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">⚡ Defensive Reflexes</h3>
-                </div>
-                <div class="defensive-reflexes-content">
-                  <div class="dr-info-row">
-                    <span class="dr-bonus-value" id="dr-bonus-ap">+1</span>
-                    <span class="dr-bonus-label">Bonus Reactive AP</span>
-                  </div>
-                  <div class="dr-uses-row">
-                    <span class="dr-uses-label" id="dr-uses-label">1 reaction per combat</span>
-                  </div>
-                  <div class="dr-rules">
-                    <span>Parry/Evade only · No re-rolling same attack · Cannot combine with Luck Point</span>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Read Languages Pending Training (Rogue) -->
-              <section class="read-languages-section" id="read-languages-pending-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">📜 Read Languages</h3>
-                </div>
-                <div class="read-languages-content">
-                  <div class="read-languages-label">Requires one month of thieves' guild training</div>
-                  <button type="button" class="btn btn-read-languages" id="btn-complete-rl-training" title="Confirm guild training completed">
-                    📜 Complete Guild Training
-                  </button>
-                </div>
-              </section>
-
-              <!-- Use Arcane Scrolls Info Card (Rogue) -->
-              <section class="arcane-scrolls-section" id="arcane-scrolls-section" style="display: none;">
-                <div class="section-header-row">
-                  <h3 class="section-header">📜 Use Arcane Scrolls</h3>
-                </div>
-                <div class="arcane-scrolls-content">
-                  <div class="arcane-scrolls-card">
-                    <div>Cast spells from mage scrolls without Read Magic. Success chance: <strong>INT x5 = <span id="arcane-scroll-chance">—</span>%</strong></div>
-                    <div class="arcane-scrolls-warning">⚠ Failure automatically results in a Fumble — spell backfires!</div>
+                  <div class="lay-on-hands-button-row">
+                    <button type="button" class="btn btn-lay-on-hands" id="btn-lay-on-hands-use" title="Heal Minor Wound (all HP) or stabilize Serious/Major Wound">
+                      🙌 Lay on Hands
+                    </button>
                   </div>
                 </div>
               </section>
@@ -1926,49 +1634,79 @@
                   </div>
                 </div>
               </section>
-              
-              <!-- Turn Undead Section (only visible if character has Turn Undead ability) -->
-              <section class="turn-undead-section" id="turn-undead-section" style="display: none;">
+
+              <section class="just-a-scratch-section" id="mystic-healing-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">☀️ Turn Undead</h3>
+                  <h3 class="section-header">🧘 Mystic Healing</h3>
                 </div>
-                <div class="turn-undead-content">
-                  <div class="turn-undead-info-row">
-                    <span class="turn-undead-value" id="turn-undead-uses-available">0</span>
-                    <span class="turn-undead-label">/ <span id="turn-undead-uses-max">0</span> per encounter</span>
-                    <button type="button" class="btn btn-small btn-reset-turn-undead" id="btn-reset-turn-undead-uses" title="Reset uses (new encounter)">↺</button>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-value" id="mystic-healing-remaining">0</span>
+                    <span class="scratch-label">/ <span id="mystic-healing-pool">0</span> HP remaining today</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-mystic-healing" title="Reset daily pool">↺</button>
                   </div>
-                  <div class="turn-undead-button-row" id="turn-undead-buttons">
-                    <button type="button" class="btn btn-turn-undead" id="btn-turn-undead-use" title="Turn Undead: Channel divine power to drive off or destroy undead, demons, or devils">
-                      ☀️ Turn Undead
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-mystic-healing-use" title="Mystic Healing: Meditate to heal wounds — recover Hit Points through focused meditation">
+                      <span class="scratch-text">Meditate & Heal</span>
                     </button>
                   </div>
                 </div>
               </section>
-              
-              <!-- Holy Smite Section (only visible if character has Holy Smite/Improved/Greater) -->
-              <section class="holy-smite-section" id="holy-smite-section" style="display: none;">
+
+              <section class="just-a-scratch-section" id="nether-walk-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header" id="holy-smite-header">⚔️ Holy Smite</h3>
+                  <h3 class="section-header">🌀 Nether Walk</h3>
                 </div>
-                <div class="holy-smite-content">
-                  <div class="holy-smite-info-row">
-                    <span class="holy-smite-value" id="holy-smite-uses-available">1</span>
-                    <span class="holy-smite-label">/ <span id="holy-smite-uses-max">1</span> uses/day</span>
-                    <button type="button" class="btn btn-small btn-reset-holy-smite" id="btn-reset-holy-smite-uses" title="Reset uses to maximum">↺</button>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-value" id="nether-walk-distance">0</span>
+                    <span class="scratch-label">ft teleport</span>
+                    <span style="margin: 0 0.3rem; color: #666;">•</span>
+                    <span class="scratch-value" id="nether-walk-uses">1</span>
+                    <span class="scratch-label">/ 1 use today</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-nether-walk" title="Reset daily use">↺</button>
                   </div>
-                  <div class="holy-smite-bonus-row">
-                    <span class="holy-smite-bonus" id="holy-smite-bonus">+1 step damage modifier vs Evil</span>
-                  </div>
-                  <div class="holy-smite-toggle">
-                    <button type="button" class="btn btn-holy-smite" id="btn-holy-smite-toggle" title="Holy Smite: Increase Damage Modifier one step against evil creatures">
-                      <span class="holy-smite-text" id="holy-smite-btn-text">Activate</span>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-nether-walk-use" style="background: #7c4dff;" title="Nether Walk: Teleport a short distance (1/10th Mysticism skill in feet) once per day">
+                      <span class="scratch-text">✨ Nether Walk</span>
                     </button>
                   </div>
                 </div>
               </section>
-              
-              <!-- Powerful Concentration Section (only visible if character has Powerful Concentration) -->
+
+              <section class="just-a-scratch-section" id="pain-control-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🧠 Pain Control</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-label" style="font-size: 0.72rem;">Auto-Success Endurance (fail only on 100)</span>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-pain-control-roll" title="Pain Control: Roll Endurance to ignore the effects of a Serious Wound for a number of rounds">
+                      <span class="scratch-text">Roll Endurance</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="just-a-scratch-section" id="perfection-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">✨ Perfection</h3>
+                </div>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-label" style="font-size: 0.72rem;">Ethereal Rounds: <strong id="perfection-rounds">20</strong> / 20 today</span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-perfection" title="Reset daily rounds">↺</button>
+                  </div>
+                  <div class="scratch-button-row">
+                    <button type="button" class="btn btn-scratch" id="btn-perfection-toggle" style="background: #1a237e;" title="Perfection: Enhance all combat rolls — your attacks and defenses are one Difficulty Grade easier">
+                      <span class="scratch-text" id="perfection-btn-text">Activate Perfection</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               <section class="powerful-concentration-section" id="powerful-concentration-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">🧠 Powerful Concentration</h3>
@@ -1984,24 +1722,45 @@
                   </div>
                 </div>
               </section>
-              
-              <!-- Animal Companion Section (only visible if character has Animal Companion ability) -->
-              <section class="animal-companion-section" id="animal-companion-section" style="display: none;">
+
+              <section class="just-a-scratch-section" id="quivering-palm-section" style="display: none;">
                 <div class="section-header-row">
-                  <h3 class="section-header">🐾 Animal Companion</h3>
+                  <h3 class="section-header">💀 Quivering Palm</h3>
                 </div>
-                <div class="animal-companion-content">
-                  <div class="companion-tier-info">
-                    <span class="companion-tier-label" id="companion-tier-label">Tier I</span>
-                    <span class="companion-siz-limit" id="companion-siz-limit">Max SIZ: 35</span>
+                <div class="just-a-scratch-content">
+                  <div class="scratch-info-row">
+                    <span class="scratch-label" style="font-size: 0.72rem;" id="qp-status-text">Ready</span>
+                    <span style="margin: 0 0.3rem; color: #666;">•</span>
+                    <span class="scratch-label" style="font-size: 0.72rem;">Max SIZ: <strong id="qp-max-siz">0</strong></span>
+                    <button type="button" class="btn btn-small btn-reset-scratch" id="btn-reset-qp" title="Reset (after 1 week / 7 Long Rests)">↺</button>
                   </div>
-                  <div class="companion-list" id="companion-list">
-                    <p class="no-companions">No companions yet. Use Spend XP Rolls to add one.</p>
+                  <div class="scratch-button-row" style="display: flex; gap: 0.4rem; justify-content: center;">
+                    <button type="button" class="btn btn-scratch" id="btn-qp-initiate" style="background: #880e4f;" title="Quivering Palm: Initiate deadly vibrations — you have 3 rounds to touch the victim">
+                      <span class="scratch-text">Initiate</span>
+                    </button>
+                    <button type="button" class="btn btn-scratch" id="btn-qp-trigger" style="background: #4a148c; display: none;" title="Quivering Palm: Trigger the fatal vibrations — roll Mysticism −20% to kill the target">
+                      <span class="scratch-text">Trigger Death</span>
+                    </button>
+                  </div>
+                  <div id="qp-rest-tracker" style="display: none; margin-top: 0.3rem; text-align: center; font-size: 0.72rem; color: #999;">
+                    Long Rests: <strong id="qp-rest-count">0</strong> / 7
+                    <button type="button" class="btn btn-small" id="btn-qp-rest" style="font-size: 0.65rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem; border: 1px solid #555; background: none; color: #aaa; border-radius: 3px; cursor: pointer;">+1 Rest</button>
                   </div>
                 </div>
               </section>
 
-              <!-- Shape Change Section (only visible if character has Shape Change ability) -->
+              <section class="read-languages-section" id="read-languages-pending-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">📜 Read Languages</h3>
+                </div>
+                <div class="read-languages-content">
+                  <div class="read-languages-label">Requires one month of thieves' guild training</div>
+                  <button type="button" class="btn btn-read-languages" id="btn-complete-rl-training" title="Confirm guild training completed">
+                    📜 Complete Guild Training
+                  </button>
+                </div>
+              </section>
+
               <section class="shape-change-section" id="shape-change-section" style="display: none;">
                 <div class="section-header-row">
                   <h3 class="section-header">🐺 Shape Change</h3>
@@ -2023,6 +1782,215 @@
                   </div>
                 </div>
               </section>
+
+              <section class="sharp-eyed-section" id="sharp-eyed-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">👁️ Sharp Eyed</h3>
+                </div>
+                <div class="sharp-eyed-content">
+                  <div class="sharp-eyed-info">
+                    <span class="sharp-eyed-label">+20% Perception · Vision-related rolls</span>
+                  </div>
+                  <button type="button" class="btn btn-sharp-eyed" id="btn-sharp-eyed-toggle" title="Sharp Eyed: Perception rolls related to vision are 1 Difficulty Grade easier">
+                    👁️ Sharp Eyed
+                  </button>
+                </div>
+              </section>
+
+              <section class="sneak-attack-section" id="sneak-attack-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🗡️ Sneak Attack</h3>
+                </div>
+                <div class="sneak-attack-content">
+                  <div class="sneak-attack-card">
+                    <div class="sneak-attack-req"><strong>Weapon:</strong> Small/Medium melee or ranged within 30 ft</div>
+                    <div class="sneak-attack-req"><strong>Target:</strong> Humanoid with vital organs • Must be outside target's field of vision</div>
+                    <div class="sneak-attack-divider"></div>
+                    <div class="sneak-attack-effect"><strong>On Success:</strong> Bonus <em>Choose Location</em> SE (head/chest/abdomen):</div>
+                    <div class="sneak-attack-bullets">
+                      <span>• Ignore negative Damage Modifiers</span>
+                      <span>• Bypass Armor & Maximize Damage don't require Critical</span>
+                    </div>
+                    <div class="sneak-attack-divider"></div>
+                    <div class="sneak-attack-defense">
+                      <strong>Detecting:</strong> Perception roll (Hard if distracted)<br>
+                      <strong>Defending from side:</strong> Formidable &nbsp;|&nbsp; <strong>From behind:</strong> Herculean
+                    </div>
+                    <!-- Sneak Attack Bonus Damage (Rank 2+) -->
+                    <div class="sneak-attack-bonus-area" id="sneak-attack-bonus-area" style="display: none;">
+                      <div class="sneak-attack-divider"></div>
+                      <div class="sneak-attack-bonus-label" id="sneak-attack-bonus-label"></div>
+                      <button type="button" class="btn btn-sneak-damage" id="btn-sneak-attack-damage" title="Apply Sneak Attack bonus damage to weapons">
+                        🗡️ Apply Bonus Damage
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="species-enemy-section" id="species-enemy-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header" id="species-enemy-header">🎯 Species Enemy</h3>
+                </div>
+                <div class="species-enemy-content">
+                  <div class="species-enemy-list" id="species-enemy-list"></div>
+                  <button type="button" class="btn btn-species-enemy" id="btn-species-enemy" title="Species Enemy: +10% to all skill rolls and Damage Modifier +1 step vs your chosen enemy">
+                    🎯 Activate Species Enemy
+                  </button>
+                </div>
+              </section>
+
+              <section class="turn-undead-section" id="turn-undead-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">☀️ Turn Undead</h3>
+                </div>
+                <div class="turn-undead-content">
+                  <div class="turn-undead-info-row">
+                    <span class="turn-undead-value" id="turn-undead-uses-available">0</span>
+                    <span class="turn-undead-label">/ <span id="turn-undead-uses-max">0</span> per encounter</span>
+                    <button type="button" class="btn btn-small btn-reset-turn-undead" id="btn-reset-turn-undead-uses" title="Reset uses (new encounter)">↺</button>
+                  </div>
+                  <div class="turn-undead-button-row" id="turn-undead-buttons">
+                    <button type="button" class="btn btn-turn-undead" id="btn-turn-undead-use" title="Turn Undead: Channel divine power to drive off or destroy undead, demons, or devils">
+                      ☀️ Turn Undead
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="vaulting-section" id="vaulting-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🏃 Vaulting</h3>
+                </div>
+                <div class="vaulting-content">
+                  <div class="vaulting-info">
+                    <span class="vaulting-label" id="vaulting-status">+20% Acrobatics · Unburdened + pole required</span>
+                  </div>
+                  <button type="button" class="btn btn-vaulting" id="btn-vaulting-toggle" title="Vaulting: Easy Acrobatics roll (+20%) to pole vault — horizontal: 2x height + 1d4+6 ft, vertical: staff length">
+                    🏃 Vault
+                  </button>
+                </div>
+              </section>
+
+              <!-- ===== DIVIDER: Buttons above / Info Cards below ===== -->
+              <hr class="ability-cards-divider" id="ability-btn-info-divider" />
+
+              <!-- ===== INFO CARDS (Passive/Informational) ===== -->
+              <section class="animal-companion-section" id="animal-companion-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🐾 Animal Companion</h3>
+                </div>
+                <div class="animal-companion-content">
+                  <div class="companion-tier-info">
+                    <span class="companion-tier-label" id="companion-tier-label">Tier I</span>
+                    <span class="companion-siz-limit" id="companion-siz-limit">Max SIZ: 35</span>
+                  </div>
+                  <div class="companion-list" id="companion-list">
+                    <p class="no-companions">No companions yet. Use Spend XP Rolls to add one.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="arcane-scrolls-section" id="arcane-scrolls-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">📜 Use Arcane Scrolls</h3>
+                </div>
+                <div class="arcane-scrolls-content">
+                  <div class="arcane-scrolls-card">
+                    <div>Cast spells from mage scrolls without Read Magic. Success chance: <strong>INT x5 = <span id="arcane-scroll-chance">—</span>%</strong></div>
+                    <div class="arcane-scrolls-warning">⚠ Failure automatically results in a Fumble — spell backfires!</div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="circle-of-power-section" id="circle-of-power-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🔵 Circle of Power</h3>
+                </div>
+                <div class="circle-of-power-content">
+                  <div class="circle-of-power-info">
+                    <span class="cop-label">Holy Weapon Required</span>
+                  </div>
+                  <div class="circle-of-power-detail">
+                    <span class="cop-text">Suppresses hostile magic up to Magnitude</span>
+                    <span class="cop-magnitude" id="cop-magnitude-value">0</span>
+                  </div>
+                  <div class="circle-of-power-note">
+                    <span class="cop-formula">(Channel <span id="cop-channel-value">0</span>% ÷ 10, rounded up)</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="defensive-reflexes-section" id="defensive-reflexes-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">⚡ Defensive Reflexes</h3>
+                </div>
+                <div class="defensive-reflexes-content">
+                  <div class="dr-info-row">
+                    <span class="dr-bonus-value" id="dr-bonus-ap">+1</span>
+                    <span class="dr-bonus-label">Bonus Reactive AP</span>
+                  </div>
+                  <div class="dr-uses-row">
+                    <span class="dr-uses-label" id="dr-uses-label">1 reaction per combat</span>
+                  </div>
+                  <div class="dr-rules">
+                    <span>Parry/Evade only · No re-rolling same attack · Cannot combine with Luck Point</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="skirmishing-section" id="skirmishing-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🏹 Skirmishing</h3>
+                </div>
+                <div class="skirmishing-content">
+                  <div class="skirmishing-card">
+                    Ranged attacks while running (not sprinting). Combat Skill capped by Athletics (<span class="skirmish-athletics-val" id="skirmish-athletics-val">—</span>%).
+                  </div>
+                </div>
+              </section>
+
+              <section class="swashbuckling-section" id="swashbuckling-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">⚔️ Swashbuckling</h3>
+                </div>
+                <div class="swashbuckling-content">
+                  <div class="swashbuckling-card">
+                    Attack & Evade while jumping/swinging into or out of combat. Ignores Athletics skill cap. Requires Unburdened + Light armor.
+                  </div>
+                </div>
+              </section>
+
+              <section class="unarmored-defense-section" id="unarmored-defense-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🛡️ Unarmored Defense</h3>
+                </div>
+                <div class="unarmored-defense-content">
+                  <div class="unarmored-defense-info">
+                    <span class="unarmored-defense-label" id="unarmored-defense-status">+20% Evade · No armor + Unburdened (auto)</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="weapon-precision-section" id="weapon-precision-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🎯 Weapon Precision</h3>
+                </div>
+                <div class="weapon-precision-content">
+                  <div class="weapon-precision-card">
+                    <div class="wp-calc-row">
+                      <span class="wp-calc-label">STR+DEX DM:</span>
+                      <span class="wp-calc-value" id="wp-str-dex-dm">—</span>
+                      <span class="wp-calc-sep">vs</span>
+                      <span class="wp-calc-label">STR+SIZ DM:</span>
+                      <span class="wp-calc-value" id="wp-str-siz-dm">—</span>
+                      <span class="wp-active-indicator" id="wp-active-indicator"></span>
+                    </div>
+                    <div class="wp-weapons-list">Clubs, daggers, garrotes, knives, shortswords, main gauche, rapiers, unarmed, darts, slings, short bows, javelins</div>
+                  </div>
+                </div>
+              </section>
+
             </div>
 
             <!-- Monk Abilities Section (only visible for Monk class) -->

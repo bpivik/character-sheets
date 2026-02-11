@@ -566,6 +566,9 @@ const App = {
     // Check if Shape Change section should be visible
     this.checkShapeChangeVisibility();
     
+    // Update the button/info divider visibility
+    this.updateAbilityDividerVisibility();
+    
     // Check if Weapon Specialization section should be visible
     this.checkWeaponSpecVisibility();
     
@@ -888,6 +891,8 @@ const App = {
           window.WeaponData.updateAllWeaponDamage();
           // Re-apply damage boost styling if any damage-boosting ability is active
           this.reapplyDamageBoostStyling();
+          // Re-apply sneak attack bonus damage badges (auto-passive at rank 2+)
+          this.checkSneakAttackBonusDamage();
         }
         
         // Sync magic skill values when switching to Magic pages
@@ -1371,6 +1376,9 @@ const App = {
           // Update Sneak Attack bonus damage (depends on rogue rank)
           this.checkSneakAttackBonusDamage();
           
+          // Update button/info divider visibility (rank changes may show/hide sections)
+          this.updateAbilityDividerVisibility();
+          
           // Update Rank 1 spell note for Paladin/Ranger
           this.updateRank1SpellNote();
           
@@ -1529,6 +1537,7 @@ const App = {
               setTimeout(() => {
                 this.updateClassSpells(previousClasses);
                 this.updateClassAbilities(previousClasses);
+                this.updateAbilityDividerVisibility();
               }, 50);
             } catch (e) {
               console.error('[CLASS BLUR] Error in post-class-change handlers:', e);
@@ -4651,6 +4660,7 @@ const App = {
               window.WeaponData.autofillMeleeWeapon(rowIndex, nameInput.value);
               this.highlightSpecializedWeapons();
               this.syncCombatToEquipment(nameInput.value.trim(), 'melee');
+              this.checkSneakAttackBonusDamage();
               this.scheduleAutoSave();
             }
           });
@@ -4713,6 +4723,7 @@ const App = {
               this.syncCombatToEquipment(nameInput.value.trim(), 'ranged');
               // Apply load reduction after autofill sets the base load value
               this.applyRangedSpecLoadReduction();
+              this.checkSneakAttackBonusDamage();
               this.scheduleAutoSave();
             }
           });
@@ -5547,6 +5558,7 @@ const App = {
       if (input && input.value.toLowerCase().startsWith(baseNameLower)) {
         row.remove();
         this.reindexClassAbilityRows();
+        this.updateAbilityDividerVisibility();
         return;
       }
     }
@@ -6527,6 +6539,9 @@ const App = {
         if (newInput.isConnected) this.promptSpeciesEnemy(newInput);
       }, 100);
     }
+    
+    // Update button/info divider visibility
+    this.updateAbilityDividerVisibility();
     
     return !!newInput;
   },
@@ -19790,9 +19805,9 @@ const App = {
   checkSneakAttackBonusDamage() {
     const area = document.getElementById('sneak-attack-bonus-area');
     if (!area) return;
-    if (!this.hasAbility('Sneak Attack')) { area.style.display = 'none'; return; }
+    if (!this.hasAbility('Sneak Attack')) { area.style.display = 'none'; this._removeSneakDamageBadges(); return; }
     const rank = this.getRogueRank();
-    if (rank < 2) { area.style.display = 'none'; return; }
+    if (rank < 2) { area.style.display = 'none'; this._removeSneakDamageBadges(); return; }
 
     area.style.display = '';
     const label = document.getElementById('sneak-attack-bonus-label');
@@ -19806,7 +19821,12 @@ const App = {
         else this.activateSneakDamage();
       });
     }
-    if (this.character.sneakDamageActive) this.restoreSneakDamageVisuals();
+    // If rank changed while active, refresh badges
+    if (this.character.sneakDamageActive) {
+      this._removeSneakDamageBadges();
+      this._applySneakDamageBadges(dmg);
+      this.restoreSneakDamageVisuals();
+    }
   },
 
   _getSneakAttackDamage(rank) {
@@ -21875,6 +21895,46 @@ const App = {
     } else {
       section.style.display = 'none';
     }
+  },
+  
+  /**
+   * Show/hide the divider between ability buttons and info cards.
+   * Only visible when BOTH groups have at least one visible section.
+   */
+  updateAbilityDividerVisibility() {
+    const divider = document.getElementById('ability-btn-info-divider');
+    if (!divider) return;
+    
+    // Info card section IDs (passive/informational — no toggle buttons)
+    const infoCardIds = [
+      'animal-companion-section',
+      'arcane-scrolls-section',
+      'circle-of-power-section',
+      'defensive-reflexes-section',
+      'skirmishing-section',
+      'swashbuckling-section',
+      'unarmored-defense-section',
+      'weapon-precision-section',
+    ];
+    
+    // All sections in the ability-cards-grid
+    const grid = divider.closest('.ability-cards-grid');
+    if (!grid) return;
+    const allSections = grid.querySelectorAll('section');
+    
+    let hasVisibleButton = false;
+    let hasVisibleInfoCard = false;
+    
+    allSections.forEach(sec => {
+      if (sec.style.display === 'none') return;
+      if (infoCardIds.includes(sec.id)) {
+        hasVisibleInfoCard = true;
+      } else {
+        hasVisibleButton = true;
+      }
+    });
+    
+    divider.style.display = (hasVisibleButton && hasVisibleInfoCard) ? '' : 'none';
   },
   
   /**
@@ -25943,6 +26003,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.highlightSpecializedWeapons();
     // Apply load reduction after weapon sync
     this.applyRangedSpecLoadReduction();
+    this.checkSneakAttackBonusDamage();
     this.scheduleAutoSave();
   },
 
