@@ -544,18 +544,4 @@ select:focus-visible {
 }
 
 /* --- Climb Walls / Hide in Shadows skill boost --- */
-.cw-boosted {
-  color: #2d6a2d !important;
-  text-shadow: none;
-}
-
-.his-boosted {
-  color: #5a3a9a !important;
-  text-shadow: none;
-}
-
-/* --- Great Hearing / Sharp Eyed / Vaulting skill boost (parchment) --- */
-.gh-boosted, .se-boosted, .vault-boosted {
-  color: #2d6a2d !important;
-  text-shadow: none;
-}
+/* Rogue ability skill boosts — no parchment overrides needed, green highlight shows through */

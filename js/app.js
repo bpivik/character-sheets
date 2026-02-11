@@ -1663,12 +1663,13 @@ const App = {
           setTimeout(() => this.applyAllPenalties(), 10);
         } else {
           // Normal edit - also update originalValue if it exists
-          // For Evade: if Artful Dodger or Lightning Reflexes display bonus is active, save base value (minus display bonuses)
-          if (skillKey === 'evade' && (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)) {
+          // For Evade: if Artful Dodger or Lightning Reflexes or Unarmored Defense display bonus is active, save base value (minus display bonuses)
+          if (skillKey === 'evade' && (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed || this.character.unarmoredDefenseActive)) {
             const displayedValue = parseInt(e.target.value, 10) || 0;
             let bonusToRemove = 0;
             if (this.artfulDodgerDisplayed) bonusToRemove += 10;
             if (this.lightningReflexesDisplayed) bonusToRemove += (this._lightningReflexesBonus || 0);
+            if (this.character.unarmoredDefenseActive) bonusToRemove += 20;
             const baseValue = Math.max(0, displayedValue - bonusToRemove).toString();
             if (e.target.dataset.originalValue !== undefined) {
               e.target.dataset.originalValue = baseValue;
@@ -1836,7 +1837,7 @@ const App = {
       saveBtn.addEventListener('click', () => {
         this.collectFormData();
         if (!StorageManager.save(this.character)) {
-          alert('Error saving character.');
+          this.showInfoModal('Save Error', 'Error saving character.', 'error');
         }
       });
     }
@@ -1859,7 +1860,7 @@ const App = {
               this.generateHitLocations();
               this.populateForm();
               this.recalculateAll();
-              alert('Character loaded!');
+              this.showFloatingMessage('Character loaded!', 'success');
             } catch (error) {
               alert('Error loading file: ' + error.message);
             }
@@ -3426,10 +3427,10 @@ const App = {
         // Clear the container
         this.character.containers[containerId] = [];
         this.scheduleAutoSave();
-        alert(`${moved} item(s) moved to your Equipment list.`);
+        this.showFloatingMessage(`${moved} item(s) moved to Equipment list.`, 'success');
         return true;
       } else {
-        alert('Not enough empty slots in Equipment to move all items. Please free up some space first.');
+        this.showInfoModal('Equipment Full', 'Not enough empty slots in Equipment. Please free up some space first.', 'warning');
         return false;
       }
     } else {
@@ -4276,7 +4277,7 @@ const App = {
       // Show notification
       const formattedCurrent = this.formatFatigueState(currentState);
       const formattedTarget = this.formatFatigueState(targetState);
-      alert(`${woundType}! Fatigue changed from ${formattedCurrent} to ${formattedTarget}.`);
+      this.showInfoModal(woundType, `Fatigue changed from <strong>${formattedCurrent}</strong> to <strong>${formattedTarget}</strong>.`, 'warning');
     }
   },
 
@@ -14807,7 +14808,7 @@ const App = {
       endurance: document.getElementById('endurance-current')?.value || '0',
       willpower: document.getElementById('willpower-current')?.value || '0',
       brawn: document.getElementById('brawn-current')?.value || '0',
-      evade: (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)
+      evade: (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed || this.character.unarmoredDefenseActive)
         ? this.getEvadeWithoutDisplayBonuses().toString() 
         : (document.getElementById('evade-current')?.value || '0')
     };
@@ -14895,16 +14896,17 @@ const App = {
     const evadeField = document.getElementById('evade-current');
     if (evadeField) {
       // Remove display bonuses first if active
-      const baseEvade = (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed)
+      const baseEvade = (this.artfulDodgerDisplayed || this.lightningReflexesDisplayed || this.character.unarmoredDefenseActive)
         ? this.getEvadeWithoutDisplayBonuses()
         : (parseInt(evadeField.value, 10) || 0);
       this.artfulDodgerDisplayed = false;
       this.lightningReflexesDisplayed = false;
       this._lightningReflexesBonus = 0;
+      this.character.unarmoredDefenseActive = false;
       evadeField.value = Math.max(0, baseEvade - 20);
       evadeField.classList.add('rage-penalized');
       // Remove display bonus styling during rage
-      evadeField.classList.remove('artful-dodger-bonus', 'lightning-reflexes-bonus');
+      evadeField.classList.remove('artful-dodger-bonus', 'lightning-reflexes-bonus', 'ud-boosted');
       evadeField.title = '';
     }
     
@@ -15051,6 +15053,10 @@ const App = {
     this.lightningReflexesDisplayed = false;
     this.updateLightningReflexesDisplay();
     
+    // Re-check Unarmored Defense display
+    this.character.unarmoredDefenseActive = false;
+    this.updateUnarmoredDefense();
+    
     // Update UI
     const rageBtn = document.getElementById('btn-rage-toggle');
     const tracker = document.getElementById('rage-tracker');
@@ -15069,7 +15075,7 @@ const App = {
     if (applyFatigue) {
       if (this.character.currentRageIsWaived) {
         // Rank passive: this rage has no fatigue cost — show notification
-        alert('Rage ended! No fatigue — this use of Rage was free (Berserker rank bonus).');
+        this.showInfoModal('Rage Ended', 'No fatigue — this use of Rage was free (Berserker rank bonus).', 'info');
       } else {
         this.increaseFatigueByOne();
       }
@@ -15164,7 +15170,7 @@ const App = {
       this.setFatigueState(newState, true);
       
       // Show notification
-      alert(`Rage ended! Fatigue increased from ${this.formatFatigueState(currentState)} to ${this.formatFatigueState(newState)}.`);
+      this.showInfoModal('Rage Ended', `Fatigue increased from <strong>${this.formatFatigueState(currentState)}</strong> to <strong>${this.formatFatigueState(newState)}</strong>.`, 'warning');
     }
   },
   
@@ -15361,6 +15367,7 @@ const App = {
     let val = parseInt(currField.value, 10) || 0;
     if (this.artfulDodgerDisplayed) val -= 10;
     if (this.lightningReflexesDisplayed) val -= (this._lightningReflexesBonus || 0);
+    if (this.character.unarmoredDefenseActive) val -= 20;
     return Math.max(0, val);
   },
   
@@ -15441,6 +15448,7 @@ const App = {
   _updateEvadeBonusTitle(evadeField) {
     const bonusParts = [];
     if (this.artfulDodgerDisplayed) bonusParts.push('+10 Artful Dodger');
+    if (this.character.unarmoredDefenseActive) bonusParts.push('+20 Unarmored Defense');
     if (this.lightningReflexesDisplayed) {
       const bonus = this._lightningReflexesBonus || 0;
       const mysticismVal = this.getSkillValueByName('Mysticism') || 0;
@@ -15453,7 +15461,7 @@ const App = {
     const refEvade = document.getElementById('ref-evade');
     if (refEvade) {
       refEvade.title = titleText;
-      if (this.lightningReflexesDisplayed || this.artfulDodgerDisplayed) {
+      if (this.lightningReflexesDisplayed || this.artfulDodgerDisplayed || this.character.unarmoredDefenseActive) {
         refEvade.classList.add('lightning-reflexes-bonus');
       } else {
         refEvade.classList.remove('lightning-reflexes-bonus');
@@ -16083,7 +16091,7 @@ const App = {
   
   useNetherWalk() {
     if (!this.character.netherWalkUsesRemaining || this.character.netherWalkUsesRemaining <= 0) {
-      alert('Nether Walk has already been used today.');
+      this.showInfoModal('Nether Walk', 'Nether Walk has already been used today.', 'warning');
       return;
     }
     
@@ -16613,7 +16621,7 @@ const App = {
       // Apply one level of fatigue
       this.applyBruteStrengthFatigue();
     } else {
-      alert('Brute Strength ended. No fatigue applied (Berserker class).');
+      this.showInfoModal('Brute Strength Ended', 'No fatigue applied (Berserker class).', 'info');
     }
     
     this.scheduleAutoSave();
@@ -16647,9 +16655,9 @@ const App = {
       const newState = fatigueOrder[currentIndex + 1];
       this.setFatigueState(newState, true);
       
-      alert(`Brute Strength ended! Fatigue increased from ${this.formatFatigueState(currentState)} to ${this.formatFatigueState(newState)}.`);
+      this.showInfoModal('Brute Strength Ended', `Fatigue increased from <strong>${this.formatFatigueState(currentState)}</strong> to <strong>${this.formatFatigueState(newState)}</strong>.`, 'warning');
     } else {
-      alert('Brute Strength ended! Already at maximum fatigue.');
+      this.showInfoModal('Brute Strength Ended', 'Already at maximum fatigue.', 'warning');
     }
   },
   
@@ -16759,7 +16767,7 @@ const App = {
    */
   openJustAScratchModal() {
     if ((this.character.scratchUsesRemaining || 0) <= 0) {
-      alert('No uses of Just a Scratch remaining today.');
+      this.showInfoModal('Just a Scratch', 'No uses remaining today.', 'warning');
       return;
     }
     
@@ -16828,7 +16836,7 @@ const App = {
     const injuredLocations = this.getInjuredLocations();
     
     if (injuredLocations.length === 0) {
-      alert('No injured hit locations to heal (excluding Major Wounds).');
+      this.showInfoModal('Just a Scratch', 'No injured hit locations to heal (excluding Major Wounds).', 'warning');
       return;
     }
     
@@ -16982,7 +16990,7 @@ const App = {
     this.closeJustAScratchLocationModal();
     
     // Show confirmation
-    alert(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP}).`);
+    this.showFloatingMessage(`Healed ${locName} by ${newHP - currentHP} HP (${currentHP} → ${newHP})`, 'success');
     
     this.scheduleAutoSave();
   },
@@ -17044,13 +17052,13 @@ const App = {
   openMysticHealingModal() {
     const remaining = this.character.mysticHealingRemaining || 0;
     if (remaining <= 0) {
-      alert('No Mystic Healing points remaining today.');
+      this.showInfoModal('Mystic Healing', 'No points remaining today.', 'warning');
       return;
     }
     
     const injuredLocations = this.getInjuredLocations();
     if (injuredLocations.length === 0) {
-      alert('No injured hit locations to heal.');
+      this.showInfoModal('Mystic Healing', 'No injured hit locations to heal.', 'warning');
       return;
     }
     
@@ -17133,7 +17141,7 @@ const App = {
       });
       
       if (totalHealed > remaining) {
-        alert('Cannot heal more than remaining pool.');
+        this.showInfoModal('Mystic Healing', 'Cannot heal more than remaining pool.', 'warning');
         return;
       }
       
@@ -17166,7 +17174,7 @@ const App = {
       this.scheduleAutoSave();
       
       modal.classList.add('hidden');
-      alert(`Mystic Healing: ${healed.join(', ')} (${totalHealed} HP total)`);
+      this.showInfoModal('Mystic Healing', `${healed.join(', ')}<br><br><strong>${totalHealed} HP</strong> total healed.`, 'success');
     });
     
     modal.classList.remove('hidden');
@@ -19709,7 +19717,19 @@ const App = {
     if (!section) return;
     const has = this.hasAbility('Unarmored Defense');
     section.style.display = has ? '' : 'none';
-    if (has) this.updateUnarmoredDefense();
+    if (has) {
+      this.updateUnarmoredDefense();
+    } else if (this.character.unarmoredDefenseActive) {
+      // Ability removed while bonus active — clean up
+      const evadeInput = document.getElementById('evade-current');
+      if (evadeInput) {
+        const val = parseInt(evadeInput.value, 10) || 0;
+        evadeInput.value = Math.max(0, val - 20);
+        evadeInput.classList.remove('ud-boosted');
+        this._updateEvadeBonusTitle(evadeInput);
+      }
+      this.character.unarmoredDefenseActive = false;
+    }
   },
 
   updateUnarmoredDefense() {
@@ -19718,6 +19738,9 @@ const App = {
     const evadeInput = document.getElementById('evade-current');
     if (!evadeInput) return;
 
+    // Don't apply during rage
+    if (this.character.isRaging) return;
+
     // Check: Unburdened + No Armor
     const encStatus = document.getElementById('enc-status')?.textContent?.toLowerCase() || '';
     const isUnburdened = encStatus.includes('unburdened');
@@ -19725,18 +19748,18 @@ const App = {
     const meetsConditions = isUnburdened && isNoArmor;
 
     if (meetsConditions && !this.character.unarmoredDefenseActive) {
-      // Apply +20 to Evade
+      // Add +20 display bonus to Evade (stacks with Artful Dodger)
       const val = parseInt(evadeInput.value, 10) || 0;
-      this.character._udEvadeBefore = val;
       evadeInput.value = val + 20;
       evadeInput.classList.add('ud-boosted');
       this.character.unarmoredDefenseActive = true;
       if (statusEl) statusEl.innerHTML = '<span class="ud-active-indicator">✦ ACTIVE — +20% Evade</span>';
+      this._updateEvadeBonusTitle(evadeInput);
       this.scheduleAutoSave();
     } else if (!meetsConditions && this.character.unarmoredDefenseActive) {
-      // Remove bonus
-      if (this.character._udEvadeBefore !== undefined) evadeInput.value = this.character._udEvadeBefore;
-      else evadeInput.value = Math.max(0, (parseInt(evadeInput.value, 10) || 0) - 20);
+      // Remove display bonus
+      const displayedVal = parseInt(evadeInput.value, 10) || 0;
+      evadeInput.value = Math.max(0, displayedVal - 20);
       evadeInput.classList.remove('ud-boosted');
       this.character.unarmoredDefenseActive = false;
       delete this.character._udEvadeBefore;
@@ -19745,6 +19768,7 @@ const App = {
         else if (!isNoArmor) statusEl.textContent = '⚠ Requires no armor worn';
         else statusEl.textContent = '+20% Evade · No armor + Unburdened (auto)';
       }
+      this._updateEvadeBonusTitle(evadeInput);
       this.scheduleAutoSave();
     }
   },
@@ -19755,6 +19779,8 @@ const App = {
     if (evadeInput) evadeInput.classList.add('ud-boosted');
     const statusEl = document.getElementById('unarmored-defense-status');
     if (statusEl) statusEl.innerHTML = '<span class="ud-active-indicator">✦ ACTIVE — +20% Evade</span>';
+    // Update title to show stacked bonuses
+    this._updateEvadeBonusTitle(evadeInput);
   },
 
   // ============================================
@@ -20106,27 +20132,42 @@ const App = {
     // Find empty prof skill slot and add Read Languages
     const container = document.getElementById('professional-skills-container');
     if (!container) return;
+    
+    let targetRow = null;
     const rows = container.querySelectorAll('.prof-skill-row');
     for (const row of rows) {
       const nameInput = row.querySelector('.prof-skill-name');
-      const currentInput = row.querySelector('.prof-skill-current');
       if (nameInput && !nameInput.value.trim()) {
-        nameInput.value = 'Read Languages';
-        if (currentInput) currentInput.value = baseLevel;
-        nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
-        nameInput.dispatchEvent(new Event('change', { bubbles: true }));
-        // Explicitly refresh info button for Read Languages
-        this._refreshProfSkillInfoButton(row, 'Read Languages');
-        // Hide pending training section
-        this.character.readLanguagesPending = false;
-        const pendingSection = document.getElementById('read-languages-pending-section');
-        if (pendingSection) pendingSection.style.display = 'none';
-        this.scheduleAutoSave();
-        this.showFloatingMessage(`Read Languages added at INT×2 = ${baseLevel}%`, 'success');
-        return;
+        targetRow = row;
+        break;
       }
     }
-    this.showFloatingMessage('No empty professional skill slots available!', 'warning');
+    
+    // No empty slot — create a new row
+    if (!targetRow) {
+      this.addProfessionalSkillRow(false);
+      const updatedRows = container.querySelectorAll('.prof-skill-row');
+      targetRow = updatedRows[updatedRows.length - 1];
+    }
+    
+    if (!targetRow) return;
+    
+    const nameInput = targetRow.querySelector('.prof-skill-name');
+    const currentInput = targetRow.querySelector('.prof-skill-current');
+    if (nameInput) {
+      nameInput.value = 'Read Languages';
+      if (currentInput) currentInput.value = baseLevel;
+      nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      nameInput.dispatchEvent(new Event('change', { bubbles: true }));
+      // Explicitly refresh info button for Read Languages
+      this._refreshProfSkillInfoButton(targetRow, 'Read Languages');
+    }
+    // Hide pending training section
+    this.character.readLanguagesPending = false;
+    const pendingSection = document.getElementById('read-languages-pending-section');
+    if (pendingSection) pendingSection.style.display = 'none';
+    this.scheduleAutoSave();
+    this.showFloatingMessage(`Read Languages added at INT×2 = ${baseLevel}%`, 'success');
   },
 
   handleUseArcaneScrollsPurchase() {
@@ -20213,6 +20254,39 @@ const App = {
       msg.style.opacity = '0';
       setTimeout(() => msg.remove(), 300);
     }, 3000);
+  },
+
+  /**
+   * Show an informational modal dialog (replaces alert()).
+   * @param {string} title - Modal title
+   * @param {string} bodyHTML - HTML content for the body
+   * @param {string} [type='info'] - 'success', 'warning', 'info', 'error'
+   */
+  showInfoModal(title, bodyHTML, type = 'info') {
+    const colors = {
+      success: { accent: '#5a8a5a', border: '#4a7a4a', icon: '✅', bg: 'linear-gradient(135deg, #1a2a1a, #253025)' },
+      warning: { accent: '#8a7a4a', border: '#6a5a2a', icon: '⚠️', bg: 'linear-gradient(135deg, #2a2a1a, #353520)' },
+      info:    { accent: '#5a7a8a', border: '#4a6a7a', icon: 'ℹ️', bg: 'linear-gradient(135deg, #1a2020, #252a2a)' },
+      error:   { accent: '#8a5a5a', border: '#6a3a3a', icon: '❌', bg: 'linear-gradient(135deg, #2a1a1a, #352020)' }
+    };
+    const c = colors[type] || colors.info;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;opacity:0;transition:opacity 0.2s;';
+    const modal = document.createElement('div');
+    modal.style.cssText = `background:${c.bg};border:2px solid ${c.border};border-radius:12px;padding:1.5rem;max-width:420px;width:90%;color:#ccc;text-align:center;transform:scale(0.9);transition:transform 0.2s;`;
+    modal.innerHTML = `
+      <div style="font-size:1.4rem;margin-bottom:0.3rem;">${c.icon}</div>
+      <div style="font-weight:bold;color:${c.accent};font-size:1rem;margin-bottom:0.6rem;">${title}</div>
+      <div style="font-size:0.82rem;line-height:1.5;margin-bottom:1rem;">${bodyHTML}</div>
+      <button class="info-modal-ok-btn" style="padding:0.45rem 2rem;background:${c.accent};color:white;border:1px solid ${c.border};border-radius:5px;cursor:pointer;font-weight:bold;font-size:0.85rem;">OK</button>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; modal.style.transform = 'scale(1)'; });
+    const close = () => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 200); };
+    modal.querySelector('.info-modal-ok-btn').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   },
 
   // ============================================
@@ -22452,7 +22526,7 @@ const App = {
     
     // Check if enough resources
     if (currentAP < 1 || currentMP < 1) {
-      alert('Radiant Burst requires 1 Action Point and 1 Magic Point.\n\nYou have: ' + currentAP + ' AP, ' + currentMP + ' MP');
+      this.showInfoModal('Radiant Burst', `Requires 1 Action Point and 1 Magic Point.<br><br>You have: <strong>${currentAP} AP</strong>, <strong>${currentMP} MP</strong>.`, 'warning');
       return;
     }
     
@@ -30115,7 +30189,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     const rows = container.querySelectorAll(`.${rowClass}`);
     if (rows.length <= 1) {
-      alert(`Cannot remove the last ${typeName} row.`);
+      this.showFloatingMessage(`Cannot remove the last ${typeName} row.`, 'warning');
       return;
     }
     
@@ -30142,7 +30216,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     const rows = container.querySelectorAll('.language-row:not(.native)');
     if (rows.length <= 1) {
-      alert('Cannot remove the last Language row.');
+      this.showFloatingMessage('Cannot remove the last Language row.', 'warning');
       return;
     }
     
@@ -30169,7 +30243,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     const rows = container.querySelectorAll('.belief-row');
     if (rows.length <= 1) {
-      alert(`Cannot remove the last ${typeName} row.`);
+      this.showFloatingMessage(`Cannot remove the last ${typeName} row.`, 'warning');
       return;
     }
     
@@ -30196,7 +30270,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     const rows = container.querySelectorAll('.equipment-row');
     if (rows.length <= 1) {
-      alert('Cannot remove the last Equipment row.');
+      this.showFloatingMessage('Cannot remove the last Equipment row.', 'warning');
       return;
     }
     
@@ -31631,7 +31705,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.closeAddSubclassModal();
     
     // Show confirmation message
-    alert(`Added ${selectedClass} as your ${targetSlot === 'secondary' ? '2nd' : '3rd'} class at Rank 0!\n\nSpent ${expCost} EXP Rolls.`);
+    this.showInfoModal('Class Added', `Added <strong>${selectedClass}</strong> as your ${targetSlot === 'secondary' ? '2nd' : '3rd'} class at Rank 0.<br><br>Spent <strong>${expCost} EXP Rolls</strong>.`, 'success');
     
     // Auto-save
     this.scheduleAutoSave();
@@ -31648,7 +31722,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const classes = this.getCharacterClasses();
     
     if (classes.length === 0) {
-      alert('You must have at least one class to unlock abilities.');
+      this.showInfoModal('No Class', 'You must have at least one class to unlock abilities.', 'warning');
       return;
     }
     
@@ -32774,7 +32848,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       const allNames = [...allAbilities];
       allNames.push(`Characteristic Increase (+1 ${charName.toUpperCase()})`);
       
-      alert(`Unlocked ${allNames.length} ability${allNames.length > 1 ? 'ies' : ''}:\n\n• ${allNames.join('\n• ')}\n\nSpent ${pending.totalCost} EXP Rolls.\n\nAbilities added to Special Abilities on Combat page.`);
+      const abilityListCI = allNames.map(a => `• ${a}`).join('<br>');
+      this.showInfoModal(
+        `Unlocked ${allNames.length} Abilit${allNames.length > 1 ? 'ies' : 'y'}`,
+        `${abilityListCI}<br><br>Spent <strong>${pending.totalCost} EXP Rolls</strong>.<br><em>Added to Special Abilities on Combat page.</em>`,
+        'success'
+      );
       
       this.pendingAbilityUnlock = null;
       this.scheduleAutoSave();
@@ -33053,7 +33132,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Close modal and show success
     this.closeUnlockAbilitiesModal();
     
-    alert(`Unlocked ${newAbilities.length} ability${newAbilities.length > 1 ? 'ies' : ''}:\n\n• ${newAbilities.join('\n• ')}\n\nSpent ${totalCost} EXP Rolls.\n\nAbilities added to Special Abilities on Combat page.`);
+    const abilityList = newAbilities.map(a => `• ${a}`).join('<br>');
+    this.showInfoModal(
+      `Unlocked ${newAbilities.length} Abilit${newAbilities.length > 1 ? 'ies' : 'y'}`,
+      `${abilityList}<br><br>Spent <strong>${totalCost} EXP Rolls</strong>.<br><em>Added to Special Abilities on Combat page.</em>`,
+      'success'
+    );
     
     // Refresh all ability section visibility (so newly purchased abilities show their buttons)
     this.checkBerserkRageVisibility();
@@ -33522,7 +33606,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
     
     this.scheduleAutoSave();
-    alert('Skill improvements applied!');
+    this.showFloatingMessage('Skill improvements applied!', 'success');
   },
 
   /**
@@ -33546,7 +33630,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
     
     this.scheduleAutoSave();
-    alert('Skill improvements applied!');
+    this.showFloatingMessage('Skill improvements applied!', 'success');
   },
 
   /**
@@ -33942,7 +34026,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
     
     if (expCost > expRolls) {
-      alert('Not enough EXP rolls!');
+      this.showInfoModal('Insufficient EXP', 'Not enough EXP rolls to learn this skill.', 'warning');
       return;
     }
     
@@ -33965,7 +34049,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.scheduleAutoSave();
     
     const skillNames = this.skillsToLearn.map(s => s.fullName || s.name).join(', ');
-    alert(`Added new skill${this.skillsToLearn.length > 1 ? 's' : ''}: ${skillNames}`);
+    this.showFloatingMessage(`Added new skill${this.skillsToLearn.length > 1 ? 's' : ''}: ${skillNames}`, 'success');
   },
 
   /**

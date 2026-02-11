@@ -1265,13 +1265,15 @@
 }
 
 [data-theme="dark"] .cw-boosted {
-  color: #5cb85c !important;
-  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
 }
 
 [data-theme="dark"] .his-boosted {
-  color: #805ad5 !important;
-  text-shadow: 0 0 4px rgba(128, 90, 213, 0.3);
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
 }
 
 /* --- Rogue Ranked Abilities - Dark Mode Restoration --- */
@@ -1305,9 +1307,17 @@
 
 [data-theme="dark"] .gh-boosted,
 [data-theme="dark"] .se-boosted,
+[data-theme="dark"] .se-boosted-rogue,
 [data-theme="dark"] .vault-boosted {
-  color: #5cb85c !important;
-  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
+}
+
+[data-theme="dark"] .ud-boosted {
+  background-color: rgba(34, 139, 34, 0.3) !important;
+  border-color: #3a9b3a !important;
+  color: #5fcf5f !important;
 }
 
 [data-theme="dark"] .unarmored-defense-section,

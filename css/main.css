@@ -13906,15 +13906,15 @@ body.dark-mode[data-class-theme] .subsection-header {
 
 /* Climb Walls / Hide in Shadows boost indicator on skills */
 .cw-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 .his-boosted {
-  background-color: rgba(0, 150, 0, 0.15) !important;
-  border: 1px solid #4a4 !important;
-  color: #2a7a2a !important;
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* Rogue ability full-page activation animations */
@@ -14127,8 +14127,9 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .gh-boosted {
-  color: #5cb85c !important;
-  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ===== Sharp Eyed Section ===== */
@@ -14190,8 +14191,9 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .se-boosted-rogue {
-  color: #5cb85c !important;
-  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ===== Vaulting Section ===== */
@@ -14257,8 +14259,9 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .vault-boosted {
-  color: #aaaa44 !important;
-  text-shadow: 0 0 4px rgba(170, 170, 68, 0.3);
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 /* ===== Unarmored Defense (auto-passive) ===== */
@@ -14286,8 +14289,9 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 .ud-boosted {
-  color: #5cbcb0 !important;
-  text-shadow: 0 0 4px rgba(92, 188, 176, 0.3);
+  background-color: rgba(34, 139, 34, 0.2) !important;
+  border-color: #228b22 !important;
+  color: #1a6b1a !important;
 }
 
 .ud-active-indicator {
