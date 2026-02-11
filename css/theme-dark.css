@@ -1174,3 +1174,89 @@
   border: 1px solid #5a5 !important;
   color: #5f5 !important;
 }
+
+/* --- Rogue Ability Sections - Dark Mode --- */
+[data-theme="dark"] .climb-walls-section {
+  background: linear-gradient(135deg, rgba(92, 184, 92, 0.04) 0%, transparent 100%);
+  border-color: rgba(92, 184, 92, 0.25);
+}
+
+[data-theme="dark"] .climb-walls-label {
+  color: #999;
+}
+
+[data-theme="dark"] .btn-climb-walls {
+  background: linear-gradient(135deg, #2a3a2a 0%, #3d4a3d 100%);
+  border-color: rgba(92, 184, 92, 0.3);
+  color: #6dbd6d;
+}
+
+[data-theme="dark"] .btn-climb-walls.active {
+  background: linear-gradient(135deg, rgba(92, 184, 92, 0.15) 0%, rgba(92, 184, 92, 0.25) 100%);
+  border-color: #5cb85c;
+  color: #5cb85c;
+  box-shadow: 0 0 12px rgba(92, 184, 92, 0.5);
+}
+
+[data-theme="dark"] .btn-climb-walls:disabled {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+}
+
+[data-theme="dark"] .hide-in-shadows-section {
+  background: linear-gradient(135deg, rgba(128, 90, 213, 0.04) 0%, transparent 100%);
+  border-color: rgba(128, 90, 213, 0.25);
+}
+
+[data-theme="dark"] .hide-in-shadows-label {
+  color: #999;
+}
+
+[data-theme="dark"] .btn-hide-in-shadows {
+  background: linear-gradient(135deg, #2a2a3a 0%, #3d3a4d 100%);
+  border-color: rgba(128, 90, 213, 0.3);
+  color: #a07de0;
+}
+
+[data-theme="dark"] .btn-hide-in-shadows.active {
+  background: linear-gradient(135deg, rgba(128, 90, 213, 0.15) 0%, rgba(128, 90, 213, 0.25) 100%);
+  border-color: #805ad5;
+  color: #805ad5;
+  box-shadow: 0 0 12px rgba(128, 90, 213, 0.5);
+}
+
+[data-theme="dark"] .sneak-attack-section {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.04) 0%, transparent 100%);
+  border-color: rgba(220, 53, 69, 0.2);
+}
+
+[data-theme="dark"] .sneak-attack-card {
+  color: #bbb;
+}
+
+[data-theme="dark"] .sneak-attack-bullets {
+  color: #dc3545;
+}
+
+[data-theme="dark"] .sneak-attack-defense {
+  color: #999;
+}
+
+[data-theme="dark"] .subterfuge-boosted {
+  color: #e6a317 !important;
+  text-shadow: 0 0 4px rgba(230, 163, 23, 0.3);
+}
+
+[data-theme="dark"] .subterfuge-boosted::after {
+  color: #e6a317;
+}
+
+[data-theme="dark"] .cw-boosted {
+  color: #5cb85c !important;
+  text-shadow: 0 0 4px rgba(92, 184, 92, 0.3);
+}
+
+[data-theme="dark"] .his-boosted {
+  color: #805ad5 !important;
+  text-shadow: 0 0 4px rgba(128, 90, 213, 0.3);
+}

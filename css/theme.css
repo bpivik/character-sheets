@@ -504,3 +504,148 @@ select:focus-visible {
 .attribute-row:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ============================================
+   Combat Ability Section - Parchment Theme Overrides
+   ============================================ */
+
+/* --- Climb Walls --- */
+.climb-walls-section {
+  background: linear-gradient(135deg, rgba(56, 118, 56, 0.08) 0%, rgba(56, 118, 56, 0.03) 100%);
+  border-color: rgba(56, 118, 56, 0.35);
+}
+
+.climb-walls-label {
+  color: var(--text-secondary, #5a4a3a);
+  font-weight: 500;
+}
+
+.btn-climb-walls {
+  background: linear-gradient(135deg, #4a7a4a 0%, #3a6a3a 100%);
+  border-color: rgba(56, 118, 56, 0.5);
+  color: #fff;
+}
+
+.btn-climb-walls:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a6a3a 0%, #2d5a2d 100%);
+  border-color: #3a6a3a;
+  box-shadow: 0 0 8px rgba(56, 118, 56, 0.35);
+}
+
+.btn-climb-walls:disabled {
+  background: #b0a890;
+  border-color: #a09880;
+  color: #887868;
+}
+
+.btn-climb-walls.active {
+  background: linear-gradient(135deg, #2d6a2d 0%, #1f5a1f 100%);
+  border-color: #2d6a2d;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 118, 56, 0.4);
+}
+
+/* --- Hide in Shadows --- */
+.hide-in-shadows-section {
+  background: linear-gradient(135deg, rgba(88, 60, 150, 0.08) 0%, rgba(88, 60, 150, 0.03) 100%);
+  border-color: rgba(88, 60, 150, 0.3);
+}
+
+.hide-in-shadows-label {
+  color: var(--text-secondary, #5a4a3a);
+  font-weight: 500;
+}
+
+.btn-hide-in-shadows {
+  background: linear-gradient(135deg, #6a4aaa 0%, #5a3a9a 100%);
+  border-color: rgba(88, 60, 150, 0.5);
+  color: #fff;
+}
+
+.btn-hide-in-shadows:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a3a9a 0%, #4a2a8a 100%);
+  border-color: #5a3a9a;
+  box-shadow: 0 0 8px rgba(88, 60, 150, 0.35);
+}
+
+.btn-hide-in-shadows.active {
+  background: linear-gradient(135deg, #4a2a8a 0%, #3a1a7a 100%);
+  border-color: #4a2a8a;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(88, 60, 150, 0.4);
+}
+
+/* --- Sneak Attack Info Card --- */
+.sneak-attack-section {
+  background: linear-gradient(135deg, rgba(170, 40, 50, 0.06) 0%, rgba(170, 40, 50, 0.02) 100%);
+  border-color: rgba(170, 40, 50, 0.25);
+}
+
+.sneak-attack-card {
+  color: var(--text-primary, #2a1f14);
+}
+
+.sneak-attack-req {
+  color: var(--text-primary, #2a1f14);
+}
+
+.sneak-attack-divider {
+  background: rgba(170, 40, 50, 0.2);
+}
+
+.sneak-attack-effect {
+  color: var(--text-primary, #2a1f14);
+}
+
+.sneak-attack-bullets {
+  color: #9a2530;
+}
+
+.sneak-attack-defense {
+  color: var(--text-secondary, #5a4a3a);
+}
+
+/* --- Forceful Strike --- */
+.forceful-strike-section {
+  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
+  border: 1px solid rgba(56, 118, 56, 0.25);
+  border-radius: 6px;
+}
+
+.forceful-label {
+  color: var(--text-secondary, #5a4a3a);
+}
+
+/* --- Species Enemy --- */
+.species-enemy-section {
+  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
+  border: 1px solid rgba(56, 118, 56, 0.25);
+  border-radius: 6px;
+}
+
+.se-enemy-tag {
+  color: var(--text-primary, #2a1f14);
+  background: rgba(56, 118, 56, 0.1);
+  border-color: rgba(56, 118, 56, 0.3);
+}
+
+/* --- Subterfuge boost --- */
+.subterfuge-boosted {
+  color: #8a6a10 !important;
+  text-shadow: none;
+}
+
+.subterfuge-boosted::after {
+  color: #8a6a10;
+}
+
+/* --- Climb Walls / Hide in Shadows skill boost --- */
+.cw-boosted {
+  color: #2d6a2d !important;
+  text-shadow: none;
+}
+
+.his-boosted {
+  color: #5a3a9a !important;
+  text-shadow: none;
+}
