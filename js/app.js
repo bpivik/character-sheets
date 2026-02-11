@@ -19838,17 +19838,22 @@ const App = {
   },
 
   getRogueRank() {
-    const classEl = document.getElementById('class-1-name');
-    const rankEl = document.getElementById('class-1-rank');
-    const class2El = document.getElementById('class-2-name');
-    const rank2El = document.getElementById('class-2-rank');
-    let rogueRank = 0;
-    if (classEl && classEl.value.toLowerCase().includes('rogue')) {
-      rogueRank = parseInt(rankEl?.value, 10) || 0;
-    } else if (class2El && class2El.value.toLowerCase().includes('rogue')) {
-      rogueRank = parseInt(rank2El?.value, 10) || 0;
+    const classPrimary = document.getElementById('class-primary');
+    const rankPrimary = document.getElementById('rank-primary');
+    const classSecondary = document.getElementById('class-secondary');
+    const rankSecondary = document.getElementById('rank-secondary');
+    const classTertiary = document.getElementById('class-tertiary');
+    const rankTertiary = document.getElementById('rank-tertiary');
+    if (classPrimary && classPrimary.value.toLowerCase().includes('rogue')) {
+      return parseInt(rankPrimary?.value, 10) || 0;
     }
-    return rogueRank;
+    if (classSecondary && classSecondary.value.toLowerCase().includes('rogue')) {
+      return parseInt(rankSecondary?.value, 10) || 0;
+    }
+    if (classTertiary && classTertiary.value.toLowerCase().includes('rogue')) {
+      return parseInt(rankTertiary?.value, 10) || 0;
+    }
+    return 0;
   },
 
   activateSneakDamage() {
