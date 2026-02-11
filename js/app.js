@@ -543,6 +543,7 @@ const App = {
     this.checkSwashbucklingVisibility();
     this.checkDefensiveReflexesVisibility();
     this.checkArcaneScrollsVisibility();
+    this.checkReadLanguagesPendingVisibility();
     
     // Check if Mental Strength section should be visible
     this.checkMentalStrengthVisibility();
@@ -5075,6 +5076,8 @@ const App = {
         this.checkSwashbucklingVisibility();
       } else if (normalizedName === 'use arcane scrolls') {
         this.checkArcaneScrollsVisibility();
+      } else if (normalizedName === 'read languages') {
+        this.checkReadLanguagesPendingVisibility();
       } else if (normalizedName.startsWith('defensive reflexes')) {
         this.checkDefensiveReflexesVisibility();
       }
@@ -6391,6 +6394,7 @@ const App = {
         if (normalizedName === 'skirmishing') this.checkSkirmishingVisibility();
         if (normalizedName === 'swashbuckling') this.checkSwashbucklingVisibility();
         if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
+        if (normalizedName === 'read languages') this.checkReadLanguagesPendingVisibility();
         if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
         
         // Check if Turn Undead section should now be visible
@@ -6485,6 +6489,7 @@ const App = {
     if (normalizedName === 'skirmishing') this.checkSkirmishingVisibility();
     if (normalizedName === 'swashbuckling') this.checkSwashbucklingVisibility();
     if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
+    if (normalizedName === 'read languages') this.checkReadLanguagesPendingVisibility();
     if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
     
     // Check if Turn Undead section should now be visible
@@ -20014,6 +20019,49 @@ const App = {
     }
   },
 
+  /**
+   * Show/hide the Read Languages pending training section.
+   * Shows when ability is acquired but skill hasn't been added yet.
+   */
+  checkReadLanguagesPendingVisibility() {
+    const section = document.getElementById('read-languages-pending-section');
+    if (!section) return;
+    
+    if (!this.hasAbility('Read Languages')) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    // Check if Read Languages already exists as a professional skill
+    const container = document.getElementById('professional-skills-container');
+    if (container) {
+      const rows = container.querySelectorAll('.prof-skill-row');
+      for (const row of rows) {
+        const nameInput = row.querySelector('.prof-skill-name');
+        if (nameInput && nameInput.value.trim().toLowerCase() === 'read languages') {
+          section.style.display = 'none'; // Already has skill
+          this.character.readLanguagesPending = false;
+          return;
+        }
+      }
+    }
+    
+    // Has ability but no skill — show pending section
+    section.style.display = '';
+    this.character.readLanguagesPending = true;
+    
+    // Wire up button if not already done
+    const btn = document.getElementById('btn-complete-rl-training');
+    if (btn && !btn._rlInit) {
+      btn._rlInit = true;
+      btn.addEventListener('click', () => {
+        this.character.readLanguagesPending = false;
+        this.addReadLanguagesSkill();
+        section.style.display = 'none';
+      });
+    }
+  },
+
   // ============================================
   // READ LANGUAGES - Special handling on ability purchase
   // ============================================
@@ -20039,13 +20087,15 @@ const App = {
 
     document.getElementById('rl-yes-btn').addEventListener('click', () => {
       overlay.remove();
+      this.character.readLanguagesPending = false;
       this.addReadLanguagesSkill();
     });
     document.getElementById('rl-no-btn').addEventListener('click', () => {
       overlay.remove();
-      // Remove the ability since they haven't trained
-      this.removeAbilityByName('Read Languages');
-      this.showFloatingMessage('Read Languages not added — complete thieves\' guild training first.', 'warning');
+      // Keep ability on sheet but mark skill as pending guild training
+      this.character.readLanguagesPending = true;
+      this.scheduleAutoSave();
+      this.showFloatingMessage('Read Languages ability acquired — complete thieves\' guild training to unlock the skill.', 'warning');
     });
   },
 
@@ -20065,6 +20115,12 @@ const App = {
         if (currentInput) currentInput.value = baseLevel;
         nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
         nameInput.dispatchEvent(new Event('change', { bubbles: true }));
+        // Explicitly refresh info button for Read Languages
+        this._refreshProfSkillInfoButton(row, 'Read Languages');
+        // Hide pending training section
+        this.character.readLanguagesPending = false;
+        const pendingSection = document.getElementById('read-languages-pending-section');
+        if (pendingSection) pendingSection.style.display = 'none';
         this.scheduleAutoSave();
         this.showFloatingMessage(`Read Languages added at INT×2 = ${baseLevel}%`, 'success');
         return;
@@ -33032,6 +33088,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkSwashbucklingVisibility();
     this.checkDefensiveReflexesVisibility();
     this.checkArcaneScrollsVisibility();
+    this.checkReadLanguagesPendingVisibility();
     this.checkMentalStrengthVisibility();
     this.checkTurnUndeadVisibility();
     this.checkMonkAbilitiesVisibility();

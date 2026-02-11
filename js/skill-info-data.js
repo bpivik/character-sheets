@@ -682,5 +682,19 @@ const SKILL_INFO = {
     critical: `You've performed your unarmed attack or parry with excellence. Check with your Games Master to see if you gained any advantage over your opponent.`,
     failure: `You've failed in your unarmed attack or parry. Check with your Games Master to see if your opponent gained an advantage over you.`,
     fumble: `You've failed spectacularly in your unarmed attack or parry. Check with your Games Master to see if your opponent gained an advantage over you.`
+  },
+
+  'read languages': {
+    title: 'Read Languages (INT×2) — Rogue',
+    description: `
+      <p>You have learned to decipher written languages, even those you do not normally know. This does not grant complete fluency, but it allows you to piece together words and phrases to interpret meaning.</p>
+      <p>The primary use of this skill is to understand notes, instructions, and treasure maps, though it can also be used to attempt to decipher unknown languages.</p>
+      <p><strong>Requirement:</strong> Oath at 70% or higher and one month of training with the thieves' guild. Only members of a thieves' guild may take this Ranked Ability.</p>
+      <p><em>⚠️ The Games Master should roll this skill check in secret — the rogue does not know if the translation is accurate.</em></p>
+      <p><strong>On Success:</strong> Reveals a few useful pieces of information equal to INT/4.</p>
+    `,
+    critical: `You decipher the text with remarkable clarity, revealing several useful pieces of information equal to your INT/2.`,
+    failure: `You are unable to make sense of the text. No useful information is gleaned.`,
+    fumble: `You believe your translation is correct, but the Games Master provides <strong>false information</strong>. You have no way of knowing the translation is wrong.`
   }
 };

@@ -94,7 +94,8 @@ const SKILL_DEFINITIONS = {
     "survival": { formula: "CON+POW", attrs: ['CON', 'POW'] },
     "teach": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
     "track": { formula: "INT+CON", attrs: ['INT', 'CON'] },
-    "lyrical magic": { formula: "CHA+POW", attrs: ['CHA', 'POW'] }
+    "lyrical magic": { formula: "CHA+POW", attrs: ['CHA', 'POW'] },
+    "read languages": { formula: "INT x2", attrs: ['INT'], multiplier: 2 }
   }
 };
 
