@@ -1474,6 +1474,30 @@ function checkSingleCondition(condition, acquiredAbilities, getSkillValue) {
   // Otherwise it's an ability requirement - check base name (before parentheses)
   const baseCondition = condition.split('(')[0].trim();
   
+  // Special handling for Species Enemy I/II/III/IV/V prereqs
+  // On the sheet these get renamed to "Species Enemy (Orcs)" / "Species Enemies (Orcs, Goblins)"
+  // so we need to count species enemy entries rather than match by exact name
+  const seCondMatch = baseCondition.match(/^species enem(?:y|ies)\s*(i{1,3}|iv|v|\d+)?$/i);
+  if (seCondMatch) {
+    const romanToNum = { 'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5 };
+    const numeral = (seCondMatch[1] || 'i').toLowerCase();
+    const requiredCount = romanToNum[numeral] || parseInt(numeral, 10) || 1;
+    
+    // Count species enemy entries in acquired abilities
+    let seCount = 0;
+    for (const acquired of acquiredAbilities) {
+      const baseAcquired = acquired.split('(')[0].trim().toLowerCase();
+      if (baseAcquired.match(/^species enem(?:y|ies)\s*(?:i{1,3}|iv|v|\d+)?$/i)) {
+        seCount++;
+      }
+    }
+    if (seCount >= requiredCount) {
+      return { met: true };
+    } else {
+      return { met: false, reason: `Species Enemy ${seCondMatch[1] || 'I'} ability` };
+    }
+  }
+  
   // Check if any acquired ability matches (with or without parenthetical suffix)
   for (const acquired of acquiredAbilities) {
     const baseAcquired = acquired.split('(')[0].trim();

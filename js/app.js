@@ -3953,15 +3953,10 @@ const App = {
             } else if (window.ArmorData) {
               const ap = window.ArmorData.getAP(currentArmor);
               if (ap !== null) {
-                // Set AP for recognized armor (including 0 for robes/clothing)
-                const currentAP = apInput.value.trim();
-                const wasAutoFilled = apInput.dataset.autoFilled === 'true';
-                
-                if (!currentAP || currentAP === '0' || wasAutoFilled) {
-                  apInput.value = ap;
-                  apInput.dataset.autoFilled = 'true';
-                  this.scheduleAutoSave();
-                }
+                // Always update AP when switching armor types
+                apInput.value = ap;
+                apInput.dataset.autoFilled = 'true';
+                this.scheduleAutoSave();
               }
             }
           }
@@ -21601,6 +21596,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             { label: 'Extra Action Point', text: 'When wielding two weapons, you gain an extra Action Point, which may be used in one of two ways:' },
             { label: '• Parry', text: 'Use the extra Action Point to Parry one additional attack.' },
             { label: '• Bonus Attack', text: 'Use the extra Action Point to make one additional attack with your offhand weapon. This attack suffers no penalty and may achieve any Special Effect allowed by your main hand weapon.' }
+          ],
+          rank2Benefits: [
+            { label: 'Simultaneous Strike', text: 'Strike with both weapons simultaneously. This attack is 1 Difficulty Grade harder (−20% Combat Skill). If successful, both weapons hit — but only one weapon (your choice) may generate Special Effects.', hasButton: true }
           ]
         };
       case 'Ranger Ranged':
@@ -21611,6 +21609,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             { label: 'Improved Aim', text: "When attacking a target within the weapon's Effective Range, Aiming requires only 1 Turn to steady the weapon, rather than a full Round, and makes the following attack 1 Difficulty Grade easier. Attacks beyond Effective Range follow the standard aiming rules." },
             { label: 'Critical Strike', text: 'Your Critical chance is improved to 1/5th of your final modified skill (20%, or Skill ×0.2) instead of the usual 1/10th.' },
             { label: 'Faster Reload', text: 'You may reduce the Reload time of any ranged weapon by 2. If the weapon\'s Reload time is reduced to 0, it can be readied as a Free Action.' }
+          ],
+          rank2Benefits: [
+            { label: 'Marksman', text: 'You may shift the result of a Hit Location roll to an adjacent location, provided the target is within the weapon\'s Close Range — as per the Marksman Special Effect.' }
           ]
         };
       default:
@@ -22132,6 +22133,46 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       // Ranger specs (Dual Weapon/Ranger Ranged) are always-on passives — no toggle
       const showButton = !isRangerSpec && (isMeleeOrShield || isMastered);
 
+      // Check if Ranger is Rank 2+ for rank 2 benefits
+      let rank2Html = '';
+      if (isRangerSpec && benefitData.rank2Benefits) {
+        const rangerRank = this._getRangerRank();
+        if (rangerRank >= 2) {
+          const isDualStrikeActive = this.character.dualStrikeActive || false;
+          rank2Html = benefitData.rank2Benefits.map(b => {
+            if (b.hasButton) {
+              return `
+                <div class="benefit-item rank2-benefit" style="border-top: 1px solid rgba(201, 165, 90, 0.3); padding-top: 0.4rem; margin-top: 0.3rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                    <button type="button" class="dual-strike-btn${isDualStrikeActive ? ' ds-active' : ''}" id="btn-dual-strike-toggle"
+                      title="${isDualStrikeActive ? 'Click to deactivate Simultaneous Strike' : 'Click to activate: both weapons hit at −20% Combat Skill'}"
+                      style="
+                        padding: 0.25rem 0.55rem; border-radius: 4px; cursor: pointer;
+                        font-size: 0.72rem; transition: all 0.3s ease; font-weight: 600;
+                        letter-spacing: 0.3px; white-space: nowrap;
+                        background: ${isDualStrikeActive ? 'linear-gradient(135deg, #e6512022, #e6512044)' : 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)'};
+                        border: 1px solid ${isDualStrikeActive ? '#e65120' : 'rgba(201, 165, 90, 0.25)'};
+                        color: ${isDualStrikeActive ? '#e65120' : '#888'};
+                        box-shadow: ${isDualStrikeActive ? '0 0 10px rgba(230, 81, 32, 0.6)' : 'none'};
+                      ">
+                      ⚔️ Simultaneous Strike${isDualStrikeActive ? ' ✦' : ''}
+                    </button>
+                    <span style="font-size: 0.75rem; color: #999;">(Rank 2)</span>
+                  </div>
+                  <strong>${b.label}:</strong> ${b.text}
+                </div>
+              `;
+            } else {
+              return `
+                <div class="benefit-item rank2-benefit" style="border-top: 1px solid rgba(201, 165, 90, 0.3); padding-top: 0.4rem; margin-top: 0.3rem;">
+                  <strong>${b.label}:</strong> ${b.text} <span style="font-size: 0.75rem; color: #999;">(Rank 2)</span>
+                </div>
+              `;
+            }
+          }).join('');
+        }
+      }
+
       // Button label and icon
       let btnLabel, btnIcon, btnColor, btnGlow;
       if (isMastered && tierData) {
@@ -22234,6 +22275,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
                 <strong>${b.label}:</strong> ${b.text}
               </div>
             `).join('')}
+            ${rank2Html}
             ${masteryBenefitsHtml}
           </div>
         </div>
@@ -22286,6 +22328,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         this.toggleWeaponSpec(btn.dataset.weapon, btn.dataset.type);
       });
     });
+
+    // Wire up Simultaneous Strike button (Dual Weapon Ranger Rank 2)
+    const dualStrikeBtn = cardsContainer.querySelector('#btn-dual-strike-toggle');
+    if (dualStrikeBtn) {
+      dualStrikeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleDualStrike();
+      });
+    }
 
     // Apply ranged spec load reductions (always automatic)
     this.applyRangedSpecLoadReduction();
@@ -23591,8 +23642,113 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.character.activeWeaponSpecs = [];
     this.character.weaponSpecCritDoubled = false;
     delete this.character.legendaryMultiShot;
+    // Also deactivate Simultaneous Strike if active
+    if (this.character.dualStrikeActive) {
+      this.deactivateDualStrike();
+    }
     this.recalculateCombatBuffs();
     this.releaseBaselineIfClean();
+  },
+
+  /**
+   * Get the highest ranger rank across all class slots
+   */
+  _getRangerRank() {
+    let maxRank = 0;
+    const slots = ['primary', 'secondary', 'tertiary'];
+    for (const slot of slots) {
+      const className = (document.getElementById(`class-${slot}`)?.value || '').trim().toLowerCase();
+      if (className === 'ranger') {
+        const rank = parseInt(document.getElementById(`rank-${slot}`)?.value, 10) || 0;
+        if (rank > maxRank) maxRank = rank;
+      }
+    }
+    return maxRank;
+  },
+
+  /**
+   * Toggle Simultaneous Strike (Dual Weapon Ranger Rank 2)
+   * When active: Combat Skill -20% (one Difficulty Grade harder)
+   * Both weapons hit on a successful roll
+   */
+  toggleDualStrike() {
+    const isActive = this.character.dualStrikeActive || false;
+    
+    if (isActive) {
+      // Deactivate
+      this.deactivateDualStrike();
+    } else {
+      // Activate
+      this.activateDualStrike();
+    }
+  },
+
+  activateDualStrike() {
+    this.character.dualStrikeActive = true;
+    
+    // Apply -20% to combat skill
+    const csInput = document.getElementById('combat-skill-1-percent');
+    if (csInput) {
+      const currentVal = parseInt(csInput.value, 10) || 0;
+      csInput.value = currentVal - 20;
+      csInput.classList.add('forceful-penalized');
+      
+      // Update title
+      const existingTitle = csInput.title || '';
+      csInput.title = existingTitle ? existingTitle + ' | Simultaneous Strike: −20%' : 'Simultaneous Strike: −20% Combat Skill';
+    }
+    
+    // Animate button
+    const btn = document.getElementById('btn-dual-strike-toggle');
+    if (btn) {
+      btn.classList.add('ds-active');
+      btn.style.background = 'linear-gradient(135deg, #e6512022, #e6512044)';
+      btn.style.borderColor = '#e65120';
+      btn.style.color = '#e65120';
+      btn.style.boxShadow = '0 0 10px rgba(230, 81, 32, 0.6)';
+      btn.innerHTML = '⚔️ Simultaneous Strike ✦';
+      btn.title = 'Click to deactivate Simultaneous Strike';
+      
+      // Flash animation
+      btn.style.transform = 'scale(1.15)';
+      setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+    }
+    
+    this.scheduleAutoSave();
+  },
+
+  deactivateDualStrike() {
+    if (!this.character.dualStrikeActive) return;
+    this.character.dualStrikeActive = false;
+    
+    // Remove -20% from combat skill
+    const csInput = document.getElementById('combat-skill-1-percent');
+    if (csInput) {
+      const currentVal = parseInt(csInput.value, 10) || 0;
+      csInput.value = currentVal + 20;
+      
+      // Clean up title
+      csInput.title = (csInput.title || '').replace(/\s*\|\s*Simultaneous Strike: −20%/, '').replace(/^Simultaneous Strike: −20% Combat Skill$/, '');
+      
+      // Only remove penalized class if forceful strike isn't also active
+      if (!this.character.isForcefulStrikeActive) {
+        csInput.classList.remove('forceful-penalized');
+      }
+    }
+    
+    // Update button
+    const btn = document.getElementById('btn-dual-strike-toggle');
+    if (btn) {
+      btn.classList.remove('ds-active');
+      btn.style.background = 'linear-gradient(135deg, #2a2a3a 0%, #3d3a2d 100%)';
+      btn.style.borderColor = 'rgba(201, 165, 90, 0.25)';
+      btn.style.color = '#888';
+      btn.style.boxShadow = 'none';
+      btn.innerHTML = '⚔️ Simultaneous Strike';
+      btn.title = 'Click to activate: both weapons hit at −20% Combat Skill';
+    }
+    
+    this.scheduleAutoSave();
   },
 
   /**
@@ -23633,6 +23789,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (this.character.isForcefulStrikeActive) {
         skillInput.classList.add('forceful-penalized');
         skillInput.title += ' | Forceful Strike: -20%';
+      }
+      // If Simultaneous Strike is also active, add its class too
+      if (this.character.dualStrikeActive) {
+        skillInput.classList.add('forceful-penalized');
+        skillInput.title += ' | Simultaneous Strike: −20%';
       }
     }
 
@@ -27150,6 +27311,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         // Non-combat roll — deactivate immediately
         this.deactivateSpeciesEnemy();
       }
+    }
+
+    // Simultaneous Strike: deactivate after Combat Skill roll
+    if (this.character.dualStrikeActive && isCombatSkillRoll) {
+      this.deactivateDualStrike();
     }
   },
 
