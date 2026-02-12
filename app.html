@@ -1361,7 +1361,12 @@
 
         <!-- Abilities Sections Container -->
         <div class="abilities-sections-container">
-          <!-- Left Column: Class Abilities and Species Abilities -->
+          <!-- Full-width Species Abilities Cards -->
+          <div class="species-abilities-fullwidth" id="species-abilities-cards">
+            <!-- Dynamically populated based on species -->
+          </div>
+
+          <!-- Left Column: Class Abilities -->
           <div class="abilities-left-column">
             <!-- Class Abilities Section (formerly Special Abilities) -->
             <section class="class-abilities-section">
@@ -1375,16 +1380,6 @@
               </div>
               <div class="class-abilities-list" id="class-abilities-list">
                 <!-- Dynamically populated -->
-              </div>
-            </section>
-
-            <!-- Species Abilities Section -->
-            <section class="species-abilities-section">
-              <div class="section-header-row">
-                <h3 class="section-header">Species Abilities</h3>
-              </div>
-              <div class="species-abilities-list" id="species-abilities-list">
-                <!-- Dynamically populated based on species -->
               </div>
             </section>
           </div>
@@ -1855,6 +1850,20 @@
                   </div>
                   <button type="button" class="btn btn-sharp-eyed" id="btn-sharp-eyed-toggle" title="Sharp Eyed: Perception rolls related to vision are 1 Difficulty Grade easier">
                     👁️ Sharp Eyed
+                  </button>
+                </div>
+              </section>
+
+              <section class="stealthy-section" id="stealthy-section" style="display: none;">
+                <div class="section-header-row">
+                  <h3 class="section-header">🥷 Stealthy</h3>
+                </div>
+                <div class="stealthy-content">
+                  <div class="stealthy-info">
+                    <span class="stealthy-label" id="stealthy-status">+20% Stealth · Light armor or less</span>
+                  </div>
+                  <button type="button" class="btn btn-stealthy" id="btn-stealthy-toggle" title="Stealthy: Stealth rolls are 1 Difficulty Grade easier when wearing Light armor or less">
+                    🥷 Stealthy
                   </button>
                 </div>
               </section>

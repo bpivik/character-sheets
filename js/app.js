@@ -534,6 +534,7 @@ const App = {
     this.restoreSubterfugeVisuals();
     this.checkGreatHearingVisibility();
     this.checkSharpEyedVisibility();
+    this.checkStealthyVisibility();
     this.checkVaultingVisibility();
     this.checkUnarmoredDefenseVisibility();
     this.restoreUnarmoredDefenseVisuals();
@@ -1127,70 +1128,17 @@ const App = {
    * @param {boolean} applyPersistentEffects - If true, apply persistent effects (for species changes after init)
    */
   populateSpeciesAbilitiesSection(abilities, applyPersistentEffects = false) {
-    const container = document.getElementById('species-abilities-list');
-    if (!container) return;
+    // Apply ability effects for species abilities
+    if (!abilities || abilities.length === 0) return;
     
-    // Clear existing content
-    container.innerHTML = '';
-    
-    // If no abilities, show a placeholder
-    if (!abilities || abilities.length === 0) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'species-ability-placeholder';
-      placeholder.textContent = 'No species abilities';
-      placeholder.style.cssText = 'padding: 0.5rem; color: #999; font-style: italic;';
-      container.appendChild(placeholder);
-      return;
-    }
-    
-    // Create rows for each ability
-    abilities.forEach((ability, index) => {
-      const row = document.createElement('div');
-      row.className = 'species-ability-row';
-      
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'species-ability-input';
-      input.id = `species-ability-${index}`;
-      input.value = this.toTitleCase(ability);
-      input.dataset.abilityName = ability;
-      
-      // Add event listeners for editing
-      input.addEventListener('blur', (e) => {
-        const newValue = e.target.value.trim();
-        if (newValue) {
-          e.target.value = this.toTitleCase(newValue);
-          e.target.dataset.abilityName = newValue;
-        }
-        this.scheduleAutoSave();
-        // Update spell-like section if this ability was edited
-        this.checkSpellLikeAbilitiesVisibility();
-      });
-      
-      input.addEventListener('input', () => {
-        this.scheduleAutoSave();
-      });
-      
-      const infoBtn = document.createElement('button');
-      infoBtn.type = 'button';
-      infoBtn.className = 'species-ability-info-btn';
-      infoBtn.textContent = 'i';
-      infoBtn.title = 'View ability details';
-      infoBtn.addEventListener('click', () => {
-        this.showAbilityDetail(ability);
-      });
-      
-      row.appendChild(input);
-      row.appendChild(infoBtn);
-      container.appendChild(row);
-      
-      // Apply ability effect (skip persistent if not requested)
+    abilities.forEach(ability => {
       const baseName = ability.split('(')[0].trim().toLowerCase();
-      const effect = this.ABILITY_EFFECTS[baseName];
+      const effect = this.ABILITY_EFFECTS ? this.ABILITY_EFFECTS[baseName] : null;
       if (effect && effect.persistent && !applyPersistentEffects) {
         // Skip persistent effects during init - saved values already include them
-        // Just mark as active
-        this.activeAbilityEffects[baseName] = { active: true };
+        if (this.activeAbilityEffects) {
+          this.activeAbilityEffects[baseName] = { active: true };
+        }
       } else {
         this.applyAbilityEffect(ability);
       }
@@ -1201,49 +1149,42 @@ const App = {
    * Get all species abilities currently displayed
    */
   getSpeciesAbilities() {
-    const abilities = [];
-    const container = document.getElementById('species-abilities-list');
-    if (!container) return abilities;
-    
-    const inputs = container.querySelectorAll('.species-ability-input');
-    inputs.forEach(input => {
-      if (input.value.trim()) {
-        abilities.push(input.value.trim());
-      }
-    });
-    return abilities;
+    // Return from saved character data
+    if (this.character.speciesAbilities && this.character.speciesAbilities.length > 0) {
+      return [...this.character.speciesAbilities];
+    }
+    // Fall back to SpeciesData lookup
+    const speciesInput = document.getElementById('species');
+    const species = speciesInput?.value?.trim().toLowerCase() || '';
+    if (species && window.SpeciesData) {
+      return SpeciesData.getAbilities(species) || [];
+    }
+    return [];
   },
   
   /**
    * Populate species abilities as cards in the right column
    */
   populateSpeciesAbilitiesCards(abilities) {
-    const grid = document.querySelector('.ability-cards-grid');
-    if (!grid) return;
+    const container = document.getElementById('species-abilities-cards');
+    if (!container) return;
     
-    // Remove any previously injected species card sections
-    grid.querySelectorAll('.species-ability-card-section').forEach(el => el.remove());
+    container.innerHTML = '';
     
     if (!abilities || abilities.length === 0) return;
     
-    // Find the first existing child to insert before (so species cards go at the top)
-    const firstChild = grid.firstElementChild;
-    
-    // Abilities that already have their own dedicated interactive sections
-    const SKIP_ABILITIES = [
+    // Abilities that have dedicated interactive button sections
+    const BUTTON_ABILITIES = [
       'diving strike', 'radiant burst', 'spell-like abilities',
-      'spell-like ability (speak with animals - foxes)'
+      'spell-like ability (speak with animals - foxes)',
+      'sharp eyed', 'stealthy'
     ];
     
-    abilities.forEach(ability => {
-      const abilityLower = ability.toLowerCase();
-      
-      // Skip abilities that have their own dedicated sections
-      if (SKIP_ABILITIES.some(skip => abilityLower.includes(skip) || skip.includes(abilityLower))) {
-        return;
-      }
-      
-      // Get the bold summary from the description
+    const infoAbilities = abilities.filter(a => 
+      !BUTTON_ABILITIES.some(skip => a.toLowerCase().includes(skip) || skip.includes(a.toLowerCase()))
+    );
+    
+    infoAbilities.forEach(ability => {
       let summaryText = '';
       if (window.AbilityDescriptions) {
         const desc = AbilityDescriptions.getDescription(ability);
@@ -1260,7 +1201,6 @@ const App = {
       }
       summaryText = this.replaceDynamicPlaceholders(summaryText || 'Species ability');
       
-      // Build the section — same structure as Climb Walls, Sharp Eyed, etc.
       const section = document.createElement('section');
       section.className = 'species-ability-card-section';
       section.dataset.speciesAbility = ability;
@@ -1275,19 +1215,17 @@ const App = {
         </div>
       `;
       
-      // Click opens the detail modal
       section.addEventListener('click', () => {
         this.showAbilityDetail(ability);
       });
       section.title = 'Click for full details';
       
-      // Insert at the top of the grid
-      if (firstChild) {
-        grid.insertBefore(section, firstChild);
-      } else {
-        grid.appendChild(section);
-      }
+      container.appendChild(section);
     });
+    
+    // Trigger visibility checks for button abilities that may come from species
+    this.checkSharpEyedVisibility();
+    this.checkStealthyVisibility();
   },
   
   /**
@@ -5191,6 +5129,8 @@ const App = {
         this.checkGreatHearingVisibility();
       } else if (normalizedName === 'sharp eyed') {
         this.checkSharpEyedVisibility();
+      } else if (normalizedName === 'stealthy') {
+        this.checkStealthyVisibility();
       } else if (normalizedName === 'vaulting') {
         this.checkVaultingVisibility();
       } else if (normalizedName === 'unarmored defense') {
@@ -6516,6 +6456,7 @@ const App = {
         if (normalizedName === 'subterfuge') this.checkSubterfugeVisibility();
         if (normalizedName === 'great hearing') this.checkGreatHearingVisibility();
         if (normalizedName === 'sharp eyed') this.checkSharpEyedVisibility();
+        if (normalizedName === 'stealthy') this.checkStealthyVisibility();
         if (normalizedName === 'vaulting') this.checkVaultingVisibility();
         if (normalizedName === 'unarmored defense') this.checkUnarmoredDefenseVisibility();
         if (normalizedName === 'weapon precision') this.checkWeaponPrecisionVisibility();
@@ -6613,6 +6554,7 @@ const App = {
     if (normalizedName === 'subterfuge') this.checkSubterfugeVisibility();
     if (normalizedName === 'great hearing') this.checkGreatHearingVisibility();
     if (normalizedName === 'sharp eyed') this.checkSharpEyedVisibility();
+    if (normalizedName === 'stealthy') this.checkStealthyVisibility();
     if (normalizedName === 'vaulting') this.checkVaultingVisibility();
     if (normalizedName === 'unarmored defense') this.checkUnarmoredDefenseVisibility();
     if (normalizedName === 'weapon precision') this.checkWeaponPrecisionVisibility();
@@ -7717,16 +7659,13 @@ const App = {
     // Notes - save rich text sections and journal
     this.saveNotesData();
     
-    // Species Abilities
-    this.character.speciesAbilities = [];
-    const speciesContainer = document.getElementById('species-abilities-list');
-    if (speciesContainer) {
-      const speciesInputs = speciesContainer.querySelectorAll('.species-ability-input');
-      speciesInputs.forEach(input => {
-        if (input.value.trim()) {
-          this.character.speciesAbilities.push(input.value.trim());
-        }
-      });
+    // Species Abilities - save from SpeciesData or existing saved data
+    if (!this.character.speciesAbilities || this.character.speciesAbilities.length === 0) {
+      const speciesInput = document.getElementById('species');
+      const species = speciesInput?.value?.trim().toLowerCase() || '';
+      if (species && window.SpeciesData) {
+        this.character.speciesAbilities = SpeciesData.getAbilities(species) || [];
+      }
     }
     
     // Berserk Rage state (already tracked in this.character but ensure it's captured)
@@ -22600,6 +22539,72 @@ const App = {
   },
 
   // ============================================
+  // STEALTHY ABILITY (Toggle +20% Stealth)
+  // ============================================
+
+  checkStealthyVisibility() {
+    const section = document.getElementById('stealthy-section');
+    if (!section) return;
+    const has = this.hasAbility('Stealthy');
+    section.style.display = has ? '' : 'none';
+    if (has) this.initStealthy();
+  },
+
+  initStealthy() {
+    const btn = document.getElementById('btn-stealthy-toggle');
+    if (!btn || btn._stealthyInit) return;
+    btn._stealthyInit = true;
+    btn.addEventListener('click', () => {
+      if (this.character.stealthyActive) {
+        this.deactivateStealthy();
+      } else {
+        this.activateStealthy();
+      }
+    });
+    if (this.character.stealthyActive) this.restoreStealthyVisuals();
+  },
+
+  activateStealthy() {
+    if (this.character.stealthyActive) return;
+    this.character.stealthyActive = true;
+    const input = document.getElementById('stealth-current');
+    if (input) {
+      const val = parseInt(input.value, 10) || 0;
+      this.character._stealthPercBefore = val;
+      input.value = val + 20;
+      input.classList.add('stealthy-boosted');
+      input.title = `Stealthy: +20% Stealth (base ${val}%)`;
+    }
+    this.showRogueAbilityAnimation('stealthy-anim-overlay', '🥷', 'Stealthy!');
+    const btn = document.getElementById('btn-stealthy-toggle');
+    if (btn) { btn.textContent = '🥷 Stealthy ACTIVE — Click to Deactivate'; btn.classList.add('stealthy-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  deactivateStealthy() {
+    if (!this.character.stealthyActive) return;
+    this.character.stealthyActive = false;
+    const input = document.getElementById('stealth-current');
+    if (input) {
+      if (this.character._stealthPercBefore !== undefined) input.value = this.character._stealthPercBefore;
+      else input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 20);
+      input.classList.remove('stealthy-boosted');
+      input.title = '';
+      delete this.character._stealthPercBefore;
+    }
+    const btn = document.getElementById('btn-stealthy-toggle');
+    if (btn) { btn.textContent = '🥷 Stealthy'; btn.classList.remove('stealthy-active-btn'); }
+    this.scheduleAutoSave();
+  },
+
+  restoreStealthyVisuals() {
+    const input = document.getElementById('stealth-current');
+    if (input) { input.classList.add('stealthy-boosted'); const bv = this.character._stealthPercBefore; input.title = bv !== undefined ? `Stealthy: +20% Stealth (base ${bv}%)` : 'Stealthy: +20% Stealth'; }
+    const btn = document.getElementById('btn-stealthy-toggle');
+    if (btn) { btn.textContent = '🥷 Stealthy ACTIVE — Click to Deactivate'; btn.classList.add('stealthy-active-btn'); }
+  },
+
+  // ============================================
   // VAULTING ABILITY (Toggle +20% Acrobatics)
   // ============================================
 
@@ -26239,12 +26244,18 @@ const App = {
       }
     }
     
-    // Check species abilities
-    const speciesAbilities = document.getElementById('species-abilities-list');
-    if (speciesAbilities) {
-      const inputs = speciesAbilities.querySelectorAll('.species-ability-input');
-      for (const input of inputs) {
-        if (input.value.toLowerCase().trim() === normalizedName) {
+    // Check species abilities (from saved data or SpeciesData)
+    if (this.character.speciesAbilities && this.character.speciesAbilities.length > 0) {
+      if (this.character.speciesAbilities.some(a => a.toLowerCase().trim() === normalizedName)) {
+        return true;
+      }
+    } else {
+      // Fall back to SpeciesData lookup
+      const speciesInput = document.getElementById('species');
+      const species = speciesInput?.value?.trim().toLowerCase() || '';
+      if (species && window.SpeciesData) {
+        const abilities = SpeciesData.getAbilities(species);
+        if (abilities.some(a => a.toLowerCase().trim() === normalizedName)) {
           return true;
         }
       }
@@ -26460,23 +26471,22 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Set the selected Spell-Like Ability
    */
   setSpellLikeAbility(spellName) {
-    // Find the Spell-Like Abilities input in species abilities
-    const container = document.getElementById('species-abilities-list');
-    if (!container) return;
-    
-    const inputs = container.querySelectorAll('.species-ability-input');
-    for (const input of inputs) {
-      const baseName = input.value.split('(')[0].trim().toLowerCase();
-      if (baseName === 'spell-like abilities') {
-        // Update the input value with the selected spell
-        input.value = `Spell-Like Abilities (${spellName})`;
-        input.dataset.abilityName = `Spell-Like Abilities (${spellName})`;
-        break;
+    // Update species abilities in character data
+    if (this.character.speciesAbilities) {
+      for (let i = 0; i < this.character.speciesAbilities.length; i++) {
+        const baseName = this.character.speciesAbilities[i].split('(')[0].trim().toLowerCase();
+        if (baseName === 'spell-like abilities') {
+          this.character.speciesAbilities[i] = `Spell-Like Abilities (${spellName})`;
+          break;
+        }
       }
     }
     
     // Update the spell info section
     this.updateSpellLikeSection(spellName);
+    
+    // Refresh the species cards
+    this.populateSpeciesAbilitiesCards(this.character.speciesAbilities);
     
     this.scheduleAutoSave();
   },
@@ -26490,20 +26500,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (!section) return;
     
     // Check species abilities for Spell-Like Abilities
-    const container = document.getElementById('species-abilities-list');
-    if (!container) {
-      section.style.display = 'none';
-      if (divider) divider.style.display = 'none';
-      return;
-    }
+    const speciesAbilities = this.getSpeciesAbilities();
     
     let spellName = null;
-    const inputs = container.querySelectorAll('.species-ability-input');
-    for (const input of inputs) {
-      const value = input.value.trim();
-      if (value.toLowerCase().startsWith('spell-like abilities')) {
-        // Extract spell name from parentheses if present
-        const match = value.match(/\(([^)]+)\)/);
+    for (const ability of speciesAbilities) {
+      if (ability.toLowerCase().startsWith('spell-like abilities')) {
+        const match = ability.match(/\(([^)]+)\)/);
         if (match) {
           spellName = match[1];
         }
@@ -31230,13 +31232,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           }
         }
         // Check if there are any species abilities
-        const speciesContainer = document.getElementById('species-abilities-list');
-        if (speciesContainer) {
-          const inputs = speciesContainer.querySelectorAll('.species-ability-input');
-          for (const input of inputs) {
-            if (input.value.trim()) return true;
-          }
-        }
+        const speciesAbilitiesCheck = this.getSpeciesAbilities();
+        if (speciesAbilitiesCheck.length > 0) return true;
         return false;
       },
       render: () => {
@@ -31256,16 +31253,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         }
         
         // Collect species abilities
-        const speciesAbilities = [];
-        const speciesContainer = document.getElementById('species-abilities-list');
-        if (speciesContainer) {
-          const inputs = speciesContainer.querySelectorAll('.species-ability-input');
-          inputs.forEach(input => {
-            if (input.value.trim()) {
-              speciesAbilities.push(input.value.trim());
-            }
-          });
-        }
+        const speciesAbilities = this.getSpeciesAbilities();
         
         // Sort each group alphabetically
         classAbilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -36784,6 +36772,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkSubterfugeVisibility();
     this.checkGreatHearingVisibility();
     this.checkSharpEyedVisibility();
+    this.checkStealthyVisibility();
     this.checkVaultingVisibility();
     this.checkUnarmoredDefenseVisibility();
     this.checkSneakAttackBonusDamage();
