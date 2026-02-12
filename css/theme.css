@@ -509,17 +509,6 @@ select:focus-visible {
    Combat Ability Section - Parchment Theme Overrides
    ============================================ */
 
-/* --- Forceful Strike --- */
-.forceful-strike-section {
-  background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);
-  border: 1px solid rgba(56, 118, 56, 0.25);
-  border-radius: 6px;
-}
-
-.forceful-label {
-  color: var(--text-secondary, #5a4a3a);
-}
-
 /* --- Species Enemy --- */
 .species-enemy-section {
   background: linear-gradient(135deg, rgba(56, 118, 56, 0.06) 0%, transparent 100%);

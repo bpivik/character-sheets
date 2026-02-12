@@ -1409,13 +1409,13 @@ input.weapon-damage.rage-boosted,
    ============================================ */
 .forceful-strike-section {
   padding: 0.5rem;
-  background: linear-gradient(135deg, #1a2a1a 0%, #203d20 100%);
+  background: linear-gradient(135deg, #1a2a1a 0%, #243824 100%);
   border: 2px solid #4a8b4a;
   border-radius: 6px;
 }
 
 .forceful-strike-section .section-header {
-  color: #6b6;
+  color: #7dc87d;
   text-shadow: 0 0 10px rgba(102, 187, 102, 0.5);
   font-size: 0.85rem;
   margin-bottom: 0.25rem;
@@ -1429,13 +1429,14 @@ input.weapon-damage.rage-boosted,
 }
 
 .forceful-strike-info {
-  color: #aaa;
-  font-size: 0.7rem;
+  color: #88aa88;
+  font-size: 0.72rem;
   text-align: center;
+  font-style: italic;
 }
 
 .forceful-label {
-  color: #9d9;
+  color: #88aa88;
 }
 
 .forceful-strike-toggle {
@@ -1443,9 +1444,9 @@ input.weapon-damage.rage-boosted,
 }
 
 .btn-forceful {
-  background: linear-gradient(135deg, #2d5a2d 0%, #3d7a3d 50%, #2d5a2d 100%);
+  background: linear-gradient(135deg, #1a3a1a 0%, #2a5a2a 50%, #1a3a1a 100%);
   color: white;
-  border: 1px solid #6b6;
+  border: 1px solid #4a8b4a;
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-weight: bold;
@@ -1462,14 +1463,14 @@ input.weapon-damage.rage-boosted,
 }
 
 .btn-forceful:hover {
-  background: linear-gradient(135deg, #3d6a3d 0%, #4d8a4d 50%, #3d6a3d 100%);
+  background: linear-gradient(135deg, #2a4a2a 0%, #3a6a3a 50%, #2a4a2a 100%);
   box-shadow: 0 4px 12px rgba(102, 187, 102, 0.5);
 }
 
 .btn-forceful.active {
-  background: linear-gradient(135deg, #4a9a4a 0%, #5aba5a 50%, #4a9a4a 100%);
+  background: linear-gradient(135deg, #2a5a2a 0%, #3a7a3a 50%, #2a5a2a 100%);
   animation: forceful-pulse 1.5s infinite;
-  border-color: #8d8;
+  border-color: #7dc87d;
 }
 
 @keyframes forceful-pulse {

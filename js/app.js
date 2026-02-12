@@ -1261,7 +1261,8 @@ const App = {
     'determination': { emoji: '🔥' },
     'hospitality': { emoji: '🏰' },
     'graceful strike': { emoji: '🌊' },
-    'mounted combat': { emoji: '🐎' },
+    'mounted combat': { emoji: '🐎', summary: 'Fight effectively from horseback with full combat skills' },
+    'mounted combat mastery': { emoji: '🐎', summary: 'Master rider — shield size +1 step, ignore 2 Ride difficulty grades' },
     'cleric magical items': { emoji: '📿' },
     "thieves' cant": { emoji: '🗝️' },
     "druids' cant": { emoji: '🌿' },
@@ -1325,6 +1326,9 @@ const App = {
     const hasGreaterSweeping = classAbilities.some(a => a.toLowerCase().includes('greater sweeping strike'));
     const hasSweeping = classAbilities.some(a => a.toLowerCase() === 'sweeping strike');
 
+    // Handle Mounted Combat override: Mastery replaces base
+    const hasMountedMastery = classAbilities.some(a => a.toLowerCase().includes('mounted combat mastery'));
+
     // Handle Inspire Courage: find highest version
     const inspireVersions = classAbilities.filter(a => a.toLowerCase().includes('inspire courage'));
     let highestInspire = null;
@@ -1356,6 +1360,9 @@ const App = {
       // Sweeping Strike: skip base if Greater exists
       if (baseName === 'sweeping strike' && hasGreaterSweeping) return;
 
+      // Mounted Combat: skip base if Mastery exists
+      if (baseName === 'mounted combat' && hasMountedMastery) return;
+
       // Inspire Courage: only show the highest version
       if (abilityLower.includes('inspire courage')) {
         if (ability !== highestInspire) return;
@@ -1368,9 +1375,11 @@ const App = {
       if (generated.has(cardKey)) return;
       generated.add(cardKey);
 
-      // Get summary from AbilityDescriptions
+      // Get summary from def override or AbilityDescriptions
       let summaryText = '';
-      if (window.AbilityDescriptions) {
+      if (def.summary) {
+        summaryText = def.summary;
+      } else if (window.AbilityDescriptions) {
         const desc = AbilityDescriptions.getDescription(ability) || AbilityDescriptions.getDescription(baseName);
         if (desc) {
           const tmp = document.createElement('div');
@@ -19482,7 +19491,7 @@ const App = {
     const toggleBtn = document.getElementById('btn-forceful-toggle');
     if (toggleBtn) {
       toggleBtn.classList.add('active');
-      toggleBtn.textContent = '⚡ Forceful Strike ACTIVE';
+      toggleBtn.textContent = '⚡ ACTIVE — Click to Deactivate';
     }
     
     this.scheduleAutoSave();
@@ -19504,7 +19513,7 @@ const App = {
     const toggleBtn2 = document.getElementById('btn-forceful-toggle');
     if (toggleBtn2) {
       toggleBtn2.classList.remove('active');
-      toggleBtn2.textContent = '⚡ Forceful Strike';
+      toggleBtn2.textContent = 'Activate';
     }
     
     this.scheduleAutoSave();
@@ -19518,7 +19527,7 @@ const App = {
     const toggleBtn = document.getElementById('btn-forceful-toggle');
     if (toggleBtn) {
       toggleBtn.classList.add('active');
-      toggleBtn.textContent = '⚡ Forceful Strike ACTIVE';
+      toggleBtn.textContent = '⚡ ACTIVE — Click to Deactivate';
     }
     
     // Re-apply visual indicators
