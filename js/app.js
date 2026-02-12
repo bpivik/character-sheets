@@ -21734,7 +21734,7 @@ const App = {
     if ((this.character.magicSurgeUsesRemaining || 0) <= 0) return;
     
     const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
-    const maxMP = parseInt(document.getElementById('magic-points-total')?.textContent, 10) || 0;
+    const maxMP = parseInt(document.getElementById('magic-points-original')?.value, 10) || 0;
     
     let overlay = document.getElementById('magic-surge-overlay');
     if (overlay) overlay.remove();
@@ -21781,7 +21781,7 @@ const App = {
    */
   showMagicSurgeManualEntry() {
     const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
-    const maxMP = parseInt(document.getElementById('magic-points-total')?.textContent, 10) || 0;
+    const maxMP = parseInt(document.getElementById('magic-points-original')?.value, 10) || 0;
     
     let overlay = document.getElementById('magic-surge-manual-overlay');
     if (overlay) overlay.remove();
@@ -21853,11 +21853,11 @@ const App = {
    */
   applyMagicSurge(roll) {
     const mpInput = document.getElementById('magic-points-current');
-    const mpTotal = document.getElementById('magic-points-total');
+    const mpTotal = document.getElementById('magic-points-original');
     if (!mpInput) return;
     
     const currentMP = parseInt(mpInput.value, 10) || 0;
-    const maxMP = parseInt(mpTotal?.textContent, 10) || 99;
+    const maxMP = parseInt(mpTotal?.value, 10) || 99;
     const newMP = Math.min(currentMP + roll, maxMP);
     const gained = newMP - currentMP;
     
