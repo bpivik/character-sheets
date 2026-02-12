@@ -9313,88 +9313,48 @@ input.combat-skill-percent.damage-boosted {
   color: white;
 }
 
-/* Species Abilities Cards (right column - styled like ability cards) */
-.species-abilities-cards {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-
-.species-abilities-cards:empty {
-  display: none;
-}
-
-.species-ability-card {
+/* Species Abilities Cards (injected into ability-cards-grid as sections) */
+.species-ability-card-section {
   padding: 0.5rem;
   background: linear-gradient(135deg, #14272a 0%, #1c3035 100%);
   border: 2px solid #3a8a8a;
   border-radius: 6px;
   cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.species-ability-card:hover {
-  box-shadow: 0 4px 14px rgba(58, 138, 138, 0.35);
-  transform: translateY(-1px);
+.species-ability-card-section:hover {
+  box-shadow: 0 3px 12px rgba(58, 138, 138, 0.3);
+  border-color: #5aaaaa;
 }
 
-.species-ability-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-bottom: 0.35rem;
-}
-
-.species-ability-card-name {
-  font-family: 'Cinzel', serif;
-  font-size: 0.88rem;
-  font-weight: 700;
+.species-ability-card-section .section-header {
   color: #6dcfcf;
   text-shadow: 0 0 10px rgba(109, 207, 207, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1.2;
-}
-
-.species-ability-card-desc {
-  font-size: 0.82rem;
-  color: #a0bfbf;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.species-ability-card-desc strong {
-  font-weight: 600;
-  color: #c8e0e0;
-}
-
-.species-ability-card.full-width {
-  grid-column: 1 / -1;
-}
-
-.species-ability-card-tap {
-  display: block;
-  text-align: center;
-  font-size: 0.68rem;
-  color: #5a9a9a;
-  margin-top: 0.3rem;
-  font-style: italic;
-}
-
-.species-abilities-cards-placeholder {
-  grid-column: 1 / -1;
-  padding: 0.75rem;
-  color: #5a7a7a;
-  font-style: italic;
   font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.species-ability-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
   text-align: center;
-  background: linear-gradient(135deg, #14272a 0%, #1c3035 100%);
-  border: 2px dashed #2a5a5a;
-  border-radius: 6px;
+}
+
+.species-ability-card-label {
+  color: #80b8b8;
+  font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.species-ability-card-tap-hint {
+  font-size: 0.65rem;
+  color: #4a8888;
+  font-style: italic;
+  margin-top: 0.1rem;
 }
 
 /* Dynamic Class Abilities List */

@@ -1218,81 +1218,75 @@ const App = {
    * Populate species abilities as cards in the right column
    */
   populateSpeciesAbilitiesCards(abilities) {
-    const container = document.getElementById('species-abilities-cards');
-    if (!container) return;
+    const grid = document.querySelector('.ability-cards-grid');
+    if (!grid) return;
     
-    container.innerHTML = '';
+    // Remove any previously injected species card sections
+    grid.querySelectorAll('.species-ability-card-section').forEach(el => el.remove());
     
-    if (!abilities || abilities.length === 0) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'species-abilities-cards-placeholder';
-      placeholder.textContent = 'No species abilities — select a species on the Character page';
-      container.appendChild(placeholder);
-      return;
-    }
+    if (!abilities || abilities.length === 0) return;
+    
+    // Find the first existing child to insert before (so species cards go at the top)
+    const firstChild = grid.firstElementChild;
+    
+    // Abilities that already have their own dedicated interactive sections
+    const SKIP_ABILITIES = [
+      'diving strike', 'radiant burst', 'spell-like abilities',
+      'spell-like ability (speak with animals - foxes)'
+    ];
     
     abilities.forEach(ability => {
-      const card = document.createElement('section');
-      card.className = 'species-ability-card';
+      const abilityLower = ability.toLowerCase();
       
-      // Get description from AbilityDescriptions
-      let descPlain = '';
+      // Skip abilities that have their own dedicated sections
+      if (SKIP_ABILITIES.some(skip => abilityLower.includes(skip) || skip.includes(abilityLower))) {
+        return;
+      }
+      
+      // Get the bold summary from the description
+      let summaryText = '';
       if (window.AbilityDescriptions) {
         const desc = AbilityDescriptions.getDescription(ability);
         if (desc) {
-          // Strip HTML for the card preview - get just the bold summary line
           const tmp = document.createElement('div');
           tmp.innerHTML = desc;
-          // Try to get just the first strong/bold text as summary
           const firstStrong = tmp.querySelector('strong');
           if (firstStrong) {
-            descPlain = firstStrong.textContent || '';
+            summaryText = firstStrong.textContent || '';
           } else {
-            descPlain = (tmp.textContent || '').substring(0, 120);
+            summaryText = (tmp.textContent || '').substring(0, 100);
           }
         }
       }
+      summaryText = this.replaceDynamicPlaceholders(summaryText || 'Species ability');
       
-      // Replace dynamic placeholders
-      if (descPlain) {
-        descPlain = this.replaceDynamicPlaceholders(descPlain);
-      }
+      // Build the section — same structure as Climb Walls, Sharp Eyed, etc.
+      const section = document.createElement('section');
+      section.className = 'species-ability-card-section';
+      section.dataset.speciesAbility = ability;
       
-      // Header row with name
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'species-ability-card-header';
+      section.innerHTML = `
+        <div class="section-header-row">
+          <h3 class="section-header">${this.toTitleCase(ability)}</h3>
+        </div>
+        <div class="species-ability-card-content">
+          <span class="species-ability-card-label">${summaryText}</span>
+          <span class="species-ability-card-tap-hint">tap for details</span>
+        </div>
+      `;
       
-      const nameEl = document.createElement('h3');
-      nameEl.className = 'species-ability-card-name';
-      nameEl.textContent = this.toTitleCase(ability);
-      headerDiv.appendChild(nameEl);
-      
-      // Description summary
-      const descDiv = document.createElement('div');
-      descDiv.className = 'species-ability-card-desc';
-      descDiv.textContent = descPlain || 'No description available.';
-      
-      // "Tap for details" hint
-      const tapHint = document.createElement('span');
-      tapHint.className = 'species-ability-card-tap';
-      tapHint.textContent = 'tap for details';
-      
-      card.appendChild(headerDiv);
-      card.appendChild(descDiv);
-      card.appendChild(tapHint);
-      
-      // Click to open full detail modal
-      card.addEventListener('click', () => {
+      // Click opens the detail modal
+      section.addEventListener('click', () => {
         this.showAbilityDetail(ability);
       });
-      card.title = 'Click for full details';
+      section.title = 'Click for full details';
       
-      // Cards with very short descriptions go full-width if only 1-2 total
-      if (abilities.length <= 2) {
-        card.classList.add('full-width');
+      // Insert at the top of the grid
+      if (firstChild) {
+        grid.insertBefore(section, firstChild);
+      } else {
+        grid.appendChild(section);
       }
-      
-      container.appendChild(card);
     });
   },
   
