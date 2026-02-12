@@ -620,6 +620,8 @@ select:focus-visible {
 .weaving-summary-diff { color: #8a6010; }
 .weaving-summary-time { color: #a05030; }
 .weaving-lock-note { color: #8a6010; }
+.weaving-amplify-note { color: #a04520; background: rgba(160, 69, 32, 0.08); }
+.stat-weave-no-effect { opacity: 0.5; }
 
 /* --- Arcane Flux Modal (Parchment) --- */
 .arcane-flux-modal.flux-minor {
@@ -675,6 +677,11 @@ select:focus-visible {
 .damage-title { color: #a05030; }
 .damage-spell-name { color: #333; }
 .damage-crit-note { color: #8a6010; }
+.damage-amplify-note { color: #a04520; background: rgba(160, 69, 32, 0.08); border-color: rgba(160, 69, 32, 0.2); }
+.damage-amplify-badge { color: #a04520; background: rgba(160, 69, 32, 0.1); }
+.damage-amplify-calc { color: #a04520; }
+.damage-amplified-total { color: #a04520 !important; border-top-color: rgba(160, 69, 32, 0.25); }
+.damage-manual-amplify { color: #a04520; background: rgba(160, 69, 32, 0.06); border-color: rgba(160, 69, 32, 0.2); }
 
 .damage-info-block {
   background: rgba(0, 0, 0, 0.03);

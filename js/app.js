@@ -10211,6 +10211,9 @@ const App = {
 
     // Update cast time display
     this._updateWeavingCastTime(m);
+
+    // Update Duration (Lingering), Area (Expanding), Amplify note
+    this._updateWeavingEffects(m);
   },
 
   /**
@@ -10326,6 +10329,154 @@ const App = {
   },
 
   /**
+   * Update Duration, Area, and Amplify display based on active weaves
+   */
+  _updateWeavingEffects(m) {
+    const d = m.spellDetails;
+    if (!d) return;
+
+    const hasLingering = m.activeWeaves?.some(w => w.name === 'lingering');
+    const hasExpanding = m.activeWeaves?.some(w => w.name === 'expanding');
+    const hasAmplify = m.activeWeaves?.some(w => w.name === 'amplify');
+
+    // Store amplify flag for damage modal
+    m._hasAmplify = hasAmplify;
+
+    // --- DURATION (Lingering: double it) ---
+    const durEl = document.getElementById('cast-stat-duration');
+    if (durEl) {
+      const baseDur = d.duration || '—';
+      if (hasLingering && baseDur !== '—') {
+        const doubled = this._doubleDuration(baseDur);
+        if (doubled !== baseDur) {
+          durEl.innerHTML = `<span class="stat-time-stepped">${doubled}</span>`;
+          durEl.classList.add('stat-time-increased');
+        } else {
+          // Duration is Instant/Permanent/See Below — can't double
+          durEl.innerHTML = `<span class="stat-weave-no-effect">${baseDur}</span>`;
+          durEl.classList.add('stat-time-increased');
+        }
+      } else {
+        durEl.textContent = baseDur;
+        durEl.classList.remove('stat-time-increased');
+      }
+    }
+
+    // --- AREA (Expanding: double targets/radius) ---
+    const areaEl = document.getElementById('cast-stat-area');
+    if (areaEl) {
+      const baseArea = d.area || '—';
+      if (hasExpanding && baseArea !== '—') {
+        const doubled = this._doubleArea(baseArea);
+        if (doubled !== baseArea) {
+          areaEl.innerHTML = `<span class="stat-time-stepped">${doubled}</span>`;
+          areaEl.classList.add('stat-time-increased');
+        } else {
+          areaEl.textContent = baseArea;
+          areaEl.classList.remove('stat-time-increased');
+        }
+      } else {
+        areaEl.textContent = baseArea;
+        areaEl.classList.remove('stat-time-increased');
+      }
+    }
+
+    // --- AMPLIFY note (shown in weaving summary area) ---
+    let amplifyNote = document.getElementById('weaving-amplify-note');
+    if (hasAmplify) {
+      if (!amplifyNote) {
+        amplifyNote = document.createElement('div');
+        amplifyNote.id = 'weaving-amplify-note';
+        amplifyNote.className = 'weaving-amplify-note';
+        const summaryEl = document.getElementById('weaving-summary');
+        if (summaryEl) summaryEl.parentNode.insertBefore(amplifyNote, summaryEl.nextSibling);
+      }
+      amplifyNote.textContent = '🔥 Amplify: +50% damage (half again, rounded up)';
+      amplifyNote.style.display = '';
+    } else {
+      if (amplifyNote) amplifyNote.style.display = 'none';
+    }
+  },
+
+  /**
+   * Double a duration string for Lingering weave
+   * e.g. "2 Minutes/Intensity" → "4 Minutes/Intensity"
+   *       "1 Hour" → "2 Hours"
+   *       "See Below" → "See Below" (unchanged)
+   *       "Instant" → "Instant" (unchanged)
+   *       "Permanent" → "Permanent" (unchanged)
+   */
+  _doubleDuration(dur) {
+    // Don't double these
+    const noDouble = /^(instant|permanent|see below|special|n\/a|—)/i;
+    if (noDouble.test(dur.trim())) return dur;
+
+    // Match leading number and double it: "2 Minutes/Intensity" → "4 Minutes/Intensity"
+    const numMatch = dur.match(/^(\d+)\s*(.*)/);
+    if (numMatch) {
+      const doubled = parseInt(numMatch[1], 10) * 2;
+      return doubled + ' ' + numMatch[2];
+    }
+
+    // Handle "X Rounds", "X+Xd6 Minutes" etc. with complex expressions
+    // Try to double the first number found
+    const firstNum = dur.match(/(\d+)/);
+    if (firstNum) {
+      const original = parseInt(firstNum[1], 10);
+      return dur.replace(firstNum[1], String(original * 2));
+    }
+
+    return dur; // Can't parse — return unchanged
+  },
+
+  /**
+   * Double area/targets for Expanding weave
+   * e.g. "1 Target" → "2 Targets"
+   *       "30' Radius" → "60' Radius"
+   *       "15' x 15'" → "30' x 30'"
+   *       "10' x 60' Path" → "20' x 120' Path"
+   */
+  _doubleArea(area) {
+    // Target doubling: "1 Target" → "2 Targets", "3 Targets" → "6 Targets"
+    const targetMatch = area.match(/^(\d+)\s*Target(s?)$/i);
+    if (targetMatch) {
+      const doubled = parseInt(targetMatch[1], 10) * 2;
+      return doubled + ' Target' + (doubled !== 1 ? 's' : '');
+    }
+
+    // Radius/diameter: "30' Radius" → "60' Radius"
+    const radiusMatch = area.match(/^(\d+)([''′])\s*(Radius|Diameter|Cone|Cube|Sphere)/i);
+    if (radiusMatch) {
+      const doubled = parseInt(radiusMatch[1], 10) * 2;
+      return doubled + radiusMatch[2] + ' ' + radiusMatch[3];
+    }
+
+    // Path/area: "10' x 60' Path" → "20' x 120' Path"
+    const pathMatch = area.match(/^(\d+)([''′])\s*x\s*(\d+)([''′])\s*(.*)/i);
+    if (pathMatch) {
+      const d1 = parseInt(pathMatch[1], 10) * 2;
+      const d2 = parseInt(pathMatch[3], 10) * 2;
+      return d1 + pathMatch[2] + ' x ' + d2 + pathMatch[4] + (pathMatch[5] ? ' ' + pathMatch[5] : '');
+    }
+
+    // Simple number with foot mark: "60'" → "120'"
+    const simpleMatch = area.match(/^(\d+)([''′])\s*(.*)/);
+    if (simpleMatch) {
+      const doubled = parseInt(simpleMatch[1], 10) * 2;
+      return doubled + simpleMatch[2] + (simpleMatch[3] ? ' ' + simpleMatch[3] : '');
+    }
+
+    // General: try to double first number found
+    const firstNum = area.match(/(\d+)/);
+    if (firstNum) {
+      const original = parseInt(firstNum[1], 10);
+      return area.replace(firstNum[1], String(original * 2));
+    }
+
+    return area; // Can't parse
+  },
+
+  /**
    * Disable/enable weaving checkboxes based on intensity level
    * If intensity > 1, weaving is disabled. If intensity returns to 1, re-enable.
    */
@@ -10344,9 +10495,12 @@ const App = {
       });
       m.activeWeaves = [];
       m._weavingDifficulty = null;
+      m._hasAmplify = false;
       document.getElementById('weaving-summary').classList.add('hidden');
       document.getElementById('weaving-lock-note').classList.add('hidden');
       weavingSection.classList.add('weaving-locked-by-intensity');
+      // Reset duration/area/amplify displays
+      this._updateWeavingEffects(m);
     } else {
       // Re-enable weaving
       checkboxes.forEach(cb => {
@@ -11464,6 +11618,7 @@ const App = {
   _showDamageModal(m) {
     const info = m._damageInfo;
     const isCrit = m._isCritical;
+    const hasAmplify = m._hasAmplify || false;
 
     // Build the dice expression string for display
     const diceExpr = info.bonus > 0 ? `${info.dice}+${info.bonus}` : info.dice;
@@ -11491,6 +11646,7 @@ const App = {
     overlay.className = 'modal-overlay damage-modal-overlay';
 
     const critNote = isCrit ? '<div class="damage-crit-note">✨ Critical Success — Maximum potency!</div>' : '';
+    const amplifyNote = hasAmplify ? '<div class="damage-amplify-note">🔥 Amplify Weave: +50% damage (half again, rounded up)</div>' : '';
     const damageTypeIcon = this._getDamageTypeIcon(info.type);
 
     overlay.innerHTML = `
@@ -11498,10 +11654,11 @@ const App = {
         <h3 class="damage-title">${damageTypeIcon} Damage Resolution</h3>
         <div class="damage-spell-name">${m.spellName}</div>
         ${critNote}
+        ${amplifyNote}
         <div class="damage-info-block">
           <div class="damage-formula-row">
             <span class="damage-formula-label">Damage:</span>
-            <span class="damage-formula-value">${diceExpr}</span>
+            <span class="damage-formula-value">${diceExpr}${hasAmplify ? ' <span class="damage-amplify-badge">+50%</span>' : ''}</span>
             <span class="damage-type-badge damage-type-${info.type || 'magical'}">${info.type || 'magical'}</span>
           </div>
           <div class="damage-loc-row">
@@ -11541,6 +11698,7 @@ const App = {
     const info = m._damageInfo;
     const SDD = window.SpellDamageData;
     const diceExpr = info.bonus > 0 ? `${info.dice}+${info.bonus}` : info.dice;
+    const hasAmplify = m._hasAmplify || false;
 
     // Hide prompt buttons
     overlay.querySelector('.damage-prompt').style.display = 'none';
@@ -11552,12 +11710,26 @@ const App = {
     // Roll damage
     const dmgRoll = SDD.rollDice(diceExpr);
     const rollBreakdown = dmgRoll.rolls.join(' + ') + (dmgRoll.bonus ? ` + ${dmgRoll.bonus}` : '');
+    const baseDamage = dmgRoll.total;
+
+    // Amplify: +50% (half again, rounded up)
+    let finalDamage = baseDamage;
+    let amplifyHTML = '';
+    if (hasAmplify) {
+      const amplifyBonus = Math.ceil(baseDamage / 2);
+      finalDamage = baseDamage + amplifyBonus;
+      amplifyHTML = `
+        <div class="damage-amplify-calc">🔥 Amplify: ${baseDamage} + ${amplifyBonus} (half, rounded up) = <strong>${finalDamage}</strong></div>
+      `;
+    }
 
     let html = `
       <div class="damage-roll-result">
         <div class="damage-roll-header">🎲 Damage Roll: ${diceExpr}</div>
         <div class="damage-roll-breakdown">${rollBreakdown}</div>
-        <div class="damage-roll-total">${dmgRoll.total} damage</div>
+        <div class="damage-roll-total">${hasAmplify ? baseDamage + ' base' : baseDamage + ' damage'}</div>
+        ${amplifyHTML}
+        ${hasAmplify ? `<div class="damage-roll-total damage-amplified-total">${finalDamage} total damage</div>` : ''}
       </div>
     `;
 
@@ -11575,7 +11747,7 @@ const App = {
       html += `
         <div class="damage-location-result">
           <div class="damage-loc-header">🎯 Hit Locations</div>
-          <div class="damage-loc-name">All Hit Locations — ${dmgRoll.total} damage to each</div>
+          <div class="damage-loc-name">All Hit Locations — ${finalDamage} damage to each</div>
         </div>
       `;
     } else if (loc.type === 'roll') {
@@ -11617,6 +11789,7 @@ const App = {
   _manualRollDamage(m, overlay) {
     const info = m._damageInfo;
     const diceExpr = info.bonus > 0 ? `${info.dice}+${info.bonus}` : info.dice;
+    const hasAmplify = m._hasAmplify || false;
 
     // Hide prompt buttons
     overlay.querySelector('.damage-prompt').style.display = 'none';
@@ -11639,6 +11812,10 @@ const App = {
       locInstructions = 'See spell description for Hit Location rules.';
     }
 
+    const amplifyReminder = hasAmplify
+      ? `<div class="damage-manual-amplify">🔥 <strong>Amplify:</strong> Add half your rolled damage (rounded up) to the total.</div>`
+      : '';
+
     let html = `
       <div class="damage-manual-instructions">
         <div class="damage-manual-header">🎲 Roll the following:</div>
@@ -11646,6 +11823,7 @@ const App = {
           <span class="damage-manual-label">Damage:</span>
           <span class="damage-manual-value">${diceExpr}</span>
         </div>
+        ${amplifyReminder}
         <div class="damage-manual-loc">
           ${locInstructions}
         </div>
