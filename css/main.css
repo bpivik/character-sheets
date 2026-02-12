@@ -10072,15 +10072,27 @@ input.combat-skill-percent.damage-boosted {
 
 .deity-input {
   width: 100%;
-  padding: 0.4rem 0.4rem;
+  padding: 0.3rem 0.4rem;
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   box-sizing: border-box;
+  font-size: 0.82rem;
 }
 
 .deity-input:focus {
   outline: none;
   border-color: var(--input-focus);
+}
+
+/* Magic table deity column — compact */
+.magic-deity-col {
+  min-width: 80px;
+  max-width: 120px;
+}
+
+.magic-deity-col .deity-input {
+  padding: 0.2rem 0.3rem;
+  font-size: 0.78rem;
 }
 
 .syrin-note {

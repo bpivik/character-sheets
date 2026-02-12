@@ -11512,8 +11512,8 @@ const App = {
         </div>
         <div class="damage-prompt">How do you want to resolve damage?</div>
         <div class="damage-prompt-buttons">
-          <button type="button" class="btn flux-btn flux-btn-system" id="damage-btn-auto">⚡ Auto-Roll</button>
           <button type="button" class="btn flux-btn flux-btn-roll-self" id="damage-btn-manual">🎲 Roll Myself</button>
+          <button type="button" class="btn flux-btn flux-btn-system" id="damage-btn-auto">⚡ Auto-Roll</button>
         </div>
         <div class="damage-result-area" id="damage-result-area" style="display:none;"></div>
         <div class="damage-close-area" id="damage-close-area" style="display:none;">
@@ -11561,14 +11561,14 @@ const App = {
       </div>
     `;
 
-    // Roll hit locations
+    // Roll hit locations — show d20 roll numbers only
     const loc = info.locations;
     if (loc.type === 'single') {
-      const hitLoc = SDD.rollHitLocation();
+      const roll = Math.floor(Math.random() * 20) + 1;
       html += `
         <div class="damage-location-result">
-          <div class="damage-loc-header">🎯 Hit Location (d20): ${hitLoc.roll}</div>
-          <div class="damage-loc-name">${hitLoc.location}</div>
+          <div class="damage-loc-header">🎯 Hit Location</div>
+          <div class="damage-loc-name">d20: <strong>${roll}</strong></div>
         </div>
       `;
     } else if (loc.type === 'all') {
@@ -11582,15 +11582,15 @@ const App = {
       // Roll how many locations
       const locCountRoll = SDD.rollDice(loc.dice);
       const locCount = Math.max(1, locCountRoll.total);
-      const locations = [];
+      const rolls = [];
       for (let i = 0; i < locCount; i++) {
-        locations.push(SDD.rollHitLocation());
+        rolls.push(Math.floor(Math.random() * 20) + 1);
       }
-      const locList = locations.map(l => `<span class="damage-loc-item">d20: ${l.roll} → <strong>${l.location}</strong></span>`).join('');
+      const rollList = rolls.map(r => `<span class="damage-loc-item">d20: <strong>${r}</strong></span>`).join('');
       html += `
         <div class="damage-location-result">
           <div class="damage-loc-header">🎯 ${locCount} Hit Location${locCount > 1 ? 's' : ''} (${loc.dice} = ${locCount})</div>
-          <div class="damage-loc-list">${locList}</div>
+          <div class="damage-loc-list">${rollList}</div>
         </div>
       `;
     } else if (loc.type === 'varies') {
@@ -13698,6 +13698,37 @@ const App = {
         this.syncMusicianshipToProfSkills(musicianshipMagic.value);
       });
     }
+
+    // Deity mirror sync: character page ↔ magic page deity fields
+    this._setupDeityMirrorSync();
+  },
+
+  /**
+   * Sync deity-name (character header) with deity-mirror inputs on magic pages
+   */
+  _setupDeityMirrorSync() {
+    const mainDeity = document.getElementById('deity-name');
+    const mirrors = document.querySelectorAll('.deity-mirror');
+    if (!mainDeity) return;
+
+    // Main → mirrors
+    mainDeity.addEventListener('input', () => {
+      mirrors.forEach(m => { m.value = mainDeity.value; });
+    });
+
+    // Mirrors → main + other mirrors
+    mirrors.forEach(mirror => {
+      mirror.addEventListener('input', () => {
+        mainDeity.value = mirror.value;
+        mirrors.forEach(m => { if (m !== mirror) m.value = mirror.value; });
+        // Save
+        if (this.character.magic) {
+          this.character.magic.deity = mirror.value;
+        }
+        this.character.deity = mirror.value;
+        this.scheduleAutoSave();
+      });
+    });
   },
 
   /**
@@ -13749,6 +13780,12 @@ const App = {
     
     // Also sync from Professional Skills to Magic page
     this.syncProfessionalSkillsToMagicPage();
+
+    // Sync deity mirrors from main deity field
+    const mainDeity = document.getElementById('deity-name');
+    if (mainDeity) {
+      document.querySelectorAll('.deity-mirror').forEach(m => { m.value = mainDeity.value; });
+    }
   },
   
   /**
@@ -13771,17 +13808,43 @@ const App = {
       if (!config) continue;
       
       // Sync to magic page if professional skill has a value
-      // Don't check class relevance - if the skill exists in Prof Skills, sync it
-      const profValue = currentInput.value;
+      // CRITICAL: Use originalValue (unpenalized) to prevent double-penalty.
+      // The fatigue/ENC penalty system will apply its own penalties to the magic input.
+      const profValue = currentInput.dataset.originalValue || currentInput.value;
       if (profValue !== '' && profValue !== null && profValue !== undefined) {
         const magicInput = document.getElementById(config.magicId);
         if (magicInput) {
+          // Update the originalValue on the magic input to match the prof skill's original
+          magicInput.dataset.originalValue = profValue;
+          // Set the displayed value (penalties will be reapplied by applyAllPenalties)
           magicInput.value = profValue;
-          // Dispatch events so any listeners update
+          // Flag to prevent input listener from re-setting originalValue
+          this._syncingMagicFromProf = true;
           magicInput.dispatchEvent(new Event('input', { bubbles: true }));
+          this._syncingMagicFromProf = false;
         }
       }
     }
+    
+    // Re-apply penalties so magic page inputs show correct penalized values
+    this.applyAllPenalties();
+    
+    // Sync penalized values from page 1 magic inputs to page 2 mirror inputs
+    document.querySelectorAll('.sync-magic').forEach(p2Input => {
+      const syncTargetId = p2Input.dataset.sync;
+      const p1Input = document.getElementById(syncTargetId);
+      if (p1Input) {
+        p2Input.value = p1Input.value;
+        // Copy penalty styling
+        p2Input.classList.remove('fatigue-penalized', 'fatigue-severe', 'fatigue-incapacitated', 'enc-penalized-value', 'enc-burdened-penalty');
+        if (p1Input.classList.contains('fatigue-penalized')) p2Input.classList.add('fatigue-penalized');
+        if (p1Input.classList.contains('fatigue-severe')) p2Input.classList.add('fatigue-severe');
+        if (p1Input.classList.contains('fatigue-incapacitated')) p2Input.classList.add('fatigue-incapacitated');
+        if (p1Input.classList.contains('enc-penalized-value')) p2Input.classList.add('enc-penalized-value');
+        if (p1Input.classList.contains('enc-burdened-penalty')) p2Input.classList.add('enc-burdened-penalty');
+        p2Input.title = p1Input.title;
+      }
+    });
   },
   
   /**
@@ -14012,6 +14075,9 @@ const App = {
       const input = document.getElementById(id);
       if (!input) return;
       input.addEventListener('input', (e) => {
+        // Skip originalValue update when syncing from professional skills (prevents double-penalty)
+        if (this._syncingMagicFromProf) return;
+        
         if (e.target.classList.contains('enc-penalized-value') || e.target.classList.contains('fatigue-penalized')) {
           // User editing a penalized field — treat as new original
           e.target.dataset.originalValue = e.target.value;
