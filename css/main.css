@@ -10663,6 +10663,33 @@ input.combat-skill-percent.damage-boosted {
   color: #b89840;
 }
 
+/* ── Rank-up Spell Picker Groups ── */
+.rankup-rank-group {
+  margin-bottom: 0.3rem;
+}
+
+.rankup-rank-label {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #70b0e0;
+  padding: 0.3rem 0.5rem;
+  background: rgba(70, 130, 220, 0.08);
+  border-bottom: 1px solid rgba(70, 130, 220, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.spell-pick-maxed {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.spell-pick-expensive {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .spell-table {
   width: 100%;
   border-collapse: collapse;

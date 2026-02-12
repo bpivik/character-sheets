@@ -727,6 +727,12 @@ select:focus-visible {
   color: #7a5a20;
 }
 
+.rankup-rank-label {
+  color: #2a5090;
+  background: rgba(40, 80, 150, 0.06);
+  border-bottom-color: rgba(40, 80, 150, 0.15);
+}
+
 /* --- Spell Weaving (Parchment) --- */
 .cast-modal-weaving {
   background: rgba(100, 60, 150, 0.06);

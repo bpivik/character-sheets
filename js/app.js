@@ -630,6 +630,11 @@ const App = {
       
       // Ensure sorcerer weaving charts are visible (safety call after full init)
       this.updateWeavingChartVisibility();
+      
+      // Auto-grant Read Magic cantrip for mages
+      if (this.isMageClass()) {
+        this._ensureReadMagic();
+      }
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -1387,6 +1392,11 @@ const App = {
           
           // Update Rank 1 spell note for Paladin/Ranger
           this.updateRank1SpellNote();
+          
+          // Mage rank-up features: auto-grant Read Magic + 3 free spells
+          if (newRank > previousRank) {
+            this._checkMageRankUp(fieldId, previousRank, newRank);
+          }
           
           this.scheduleAutoSave();
         };
@@ -9065,6 +9075,14 @@ const App = {
     });
   },
 
+  isMageClass() {
+    const classes = ['class-primary', 'class-secondary', 'class-tertiary'];
+    return classes.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().toLowerCase() === 'mage';
+    });
+  },
+
   /**
    * Show/hide the Sorcerer Spell Weaving charts on both magic pages
    */
@@ -9495,6 +9513,22 @@ const App = {
       }
       this.updateSpellFillButtons();
       close();
+      
+      // Scribing notice for mage spells (not sorcerer — they cast innately)
+      if (className.toLowerCase() === 'mage' && addedCount > 0) {
+        const spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
+        if (spellRank > 0) {
+          const time = this._SCRIBING_TIME[spellRank] || 'Unknown';
+          this._showInfoModal(
+            '📜 Spells Scribed',
+            `Added <strong>${addedCount}</strong> spell(s) to your Rank ${spellRank} spellbook.<br><br>` +
+            `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.6rem; background:rgba(100,150,200,0.1); border:1px solid rgba(100,150,200,0.2); border-radius:5px;">` +
+            `<span style="font-size:1.1rem;">⏱️</span>` +
+            `<span style="font-size:0.85rem;">Scribing each Rank ${spellRank} spell requires <strong>${time}</strong> of downtime.</span>` +
+            `</div>`
+          );
+        }
+      }
     });
     
     setTimeout(() => searchInput.focus(), 100);
@@ -10000,6 +10034,392 @@ const App = {
    * Show a simple info modal
    */
   // =========================================================================
+  //  MAGE RANK-UP FEATURES
+  // =========================================================================
+
+  /**
+   * Scribing time by spell rank
+   */
+  _SCRIBING_TIME: { 0: 'No scribing needed', 1: '1 Hour', 2: '3 Hours', 3: '5 Hours', 4: '7 Hours', 5: '9 Hours' },
+
+  /**
+   * Show scribing time notification after adding a spell
+   */
+  _showScribingNotice(spellName, spellRank) {
+    const time = this._SCRIBING_TIME[spellRank] || 'Unknown';
+    if (spellRank === 0) return; // cantrips don't need scribing
+    this._showInfoModal(
+      '📜 Spell Scribed',
+      `<strong>${spellName}</strong> has been added to your spellbook.<br><br>` +
+      `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.6rem; background:rgba(100,150,200,0.1); border:1px solid rgba(100,150,200,0.2); border-radius:5px;">` +
+      `<span style="font-size:1.1rem;">⏱️</span>` +
+      `<span style="font-size:0.85rem;">Scribing a Rank ${spellRank} spell requires <strong>${time}</strong> of downtime.</span>` +
+      `</div>`
+    );
+  },
+
+  /**
+   * Check mage rank-up: auto-grant Read Magic + 3 free spells on rank increase
+   */
+  _checkMageRankUp(fieldId, previousRank, newRank) {
+    // Determine which class index changed
+    const classMap = {
+      'rank-primary': 'class-primary',
+      'rank-secondary': 'class-secondary',
+      'rank-tertiary': 'class-tertiary'
+    };
+    const classFieldId = classMap[fieldId];
+    if (!classFieldId) return;
+    
+    const className = (document.getElementById(classFieldId)?.value || '').trim().toLowerCase();
+    if (className !== 'mage') return;
+    
+    // Auto-grant Read Magic cantrip if not already known
+    this._ensureReadMagic();
+    
+    // Offer 3 free research spells (ranks below new rank)
+    if (newRank >= 2 && newRank > previousRank) {
+      // Slight delay to let recalculations finish
+      setTimeout(() => {
+        this._openMageRankUpSpellsModal(newRank);
+      }, 300);
+    }
+  },
+
+  /**
+   * Ensure Read Magic cantrip is in the mage's cantrips list
+   */
+  _ensureReadMagic() {
+    const existing = this.getExistingSpellsInRank('cantrips');
+    if (existing.some(s => s.toLowerCase() === 'read magic')) return;
+    
+    const cost = window.SpellData ? window.SpellData.getSpellCost('Read Magic') : '1';
+    this.addSpellRow('cantrips', {
+      name: 'Read Magic',
+      cost: cost || '1',
+      memorized: false,
+      classSpell: 'mage'
+    });
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Open the modal for picking 3 free research spells on mage rank-up
+   */
+  _openMageRankUpSpellsModal(newRank) {
+    const maxSpellRank = newRank - 1; // can learn from ranks below new rank
+    
+    // Gather all available spells from eligible ranks
+    const classList = window.ClassSpellLists?.mage;
+    if (!classList) return;
+    
+    const eligibleRanks = [];
+    for (let r = 1; r <= maxSpellRank; r++) {
+      const key = `rank${r}`;
+      if (classList[key] && classList[key].length > 0) {
+        eligibleRanks.push({ key, rank: r, label: `Rank ${r}` });
+      }
+    }
+    
+    if (eligibleRanks.length === 0) return;
+    
+    // Get all existing spells
+    const existingByRank = {};
+    eligibleRanks.forEach(er => {
+      existingByRank[er.key] = this.getExistingSpellsInRank(er.key).map(s => s.toLowerCase());
+    });
+    
+    let overlay = document.getElementById('mage-rankup-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'mage-rankup-overlay';
+    overlay.className = 'modal-overlay';
+    
+    // Build spell list grouped by rank
+    let spellListHTML = '';
+    eligibleRanks.forEach(er => {
+      const spells = classList[er.key].slice().sort((a, b) => a.localeCompare(b));
+      spellListHTML += `<div class="rankup-rank-group"><div class="rankup-rank-label">${er.label}</div>`;
+      spells.forEach(spell => {
+        const isExisting = existingByRank[er.key].includes(spell.toLowerCase());
+        const disabledAttr = isExisting ? 'disabled' : '';
+        const existingClass = isExisting ? 'spell-pick-existing' : '';
+        const tag = isExisting ? '<span class="spell-pick-tag">(already known)</span>' : '';
+        spellListHTML += `<label class="spell-pick-row ${existingClass}">
+          <input type="checkbox" class="spell-pick-cb rankup-spell-cb" data-spell="${this._escAttr(spell)}" data-rank="${er.key}" data-rank-num="${er.rank}" ${disabledAttr}>
+          <span class="spell-pick-name">${spell}</span>${tag}
+        </label>`;
+      });
+      spellListHTML += '</div>';
+    });
+    
+    overlay.innerHTML = `
+      <div class="modal-content spell-picker-modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>📖 Rank ${newRank} — Research Spells</h3>
+          <button class="modal-close" id="rankup-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 0.6rem 1rem; font-size: 0.85rem; color: #bbb;">
+          Congratulations on reaching Rank ${newRank}! Through dedicated research, you may add <strong>3 new spells</strong> of any Rank below ${newRank} to your spellbook. You may mix and match between spell Ranks.
+        </div>
+        <div class="spell-picker-toolbar">
+          <input type="text" class="spell-picker-search" id="rankup-search" placeholder="Search spells…">
+          <span class="spell-picker-count" id="rankup-count">0 / 3 selected</span>
+        </div>
+        <div class="spell-picker-list" id="rankup-spell-list" style="max-height: 45vh;">
+          ${spellListHTML}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="rankup-skip">Skip</button>
+          <button type="button" class="btn btn-primary" id="rankup-add" disabled>Add Selected (0/3)</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('rankup-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.getElementById('rankup-skip').addEventListener('click', close);
+    
+    // Search filter
+    const searchInput = document.getElementById('rankup-search');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase();
+      overlay.querySelectorAll('.spell-pick-row').forEach(row => {
+        const name = row.querySelector('.spell-pick-name')?.textContent?.toLowerCase() || '';
+        row.style.display = name.includes(q) ? '' : 'none';
+      });
+    });
+    
+    // Selection logic — max 3
+    const countEl = document.getElementById('rankup-count');
+    const addBtn = document.getElementById('rankup-add');
+    
+    const updateSelection = () => {
+      const checked = overlay.querySelectorAll('.rankup-spell-cb:checked:not(:disabled)');
+      const count = checked.length;
+      countEl.textContent = `${count} / 3 selected`;
+      addBtn.textContent = `Add Selected (${count}/3)`;
+      addBtn.disabled = count === 0;
+      
+      // Disable unchecked boxes if 3 are already selected
+      overlay.querySelectorAll('.rankup-spell-cb:not(:disabled)').forEach(cb => {
+        if (!cb.checked && count >= 3) {
+          cb.parentElement.classList.add('spell-pick-maxed');
+        } else {
+          cb.parentElement.classList.remove('spell-pick-maxed');
+        }
+      });
+    };
+    
+    overlay.querySelectorAll('.rankup-spell-cb:not(:disabled)').forEach(cb => {
+      cb.addEventListener('change', updateSelection);
+    });
+    
+    // Add selected spells
+    addBtn.addEventListener('click', () => {
+      const selected = [];
+      overlay.querySelectorAll('.rankup-spell-cb:checked:not(:disabled)').forEach(cb => {
+        selected.push({ name: cb.dataset.spell, rankKey: cb.dataset.rank, rankNum: parseInt(cb.dataset.rankNum, 10) });
+      });
+      
+      if (selected.length === 0) return;
+      
+      selected.forEach(s => {
+        const cost = window.SpellData ? window.SpellData.getSpellCost(s.name) : '';
+        this.addSpellRow(s.rankKey, {
+          name: s.name,
+          cost: cost || '',
+          memorized: false,
+          classSpell: 'mage'
+        });
+      });
+      
+      this.scheduleAutoSave();
+      this.updateSpellFillButtons();
+      close();
+      
+      // Show scribing summary
+      const summary = selected.map(s => `<strong>${s.name}</strong> (Rank ${s.rankNum}) — ${this._SCRIBING_TIME[s.rankNum]}`).join('<br>');
+      this._showInfoModal(
+        '📜 Spells Scribed',
+        `The following spells have been added to your spellbook:<br><br>${summary}<br><br>` +
+        `<span style="font-size:0.82rem; color:#999;">Remember: scribing requires the noted downtime per spell.</span>`
+      );
+    });
+  },
+
+  // =========================================================================
+  //  EXP: LEARN NEW SPELLS
+  // =========================================================================
+
+  /**
+   * Open the Learn New Spells modal (from EXP spending)
+   */
+  _openExpLearnSpellModal() {
+    this.closeExpModal();
+    
+    const currentExp = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
+    
+    // Determine which caster class the character has (mage, sorcerer, etc.)
+    const charClasses = [
+      { name: (document.getElementById('class-primary')?.value || '').trim().toLowerCase(), rank: parseInt(document.getElementById('rank-primary')?.value, 10) || 0 },
+      { name: (document.getElementById('class-secondary')?.value || '').trim().toLowerCase(), rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0 },
+      { name: (document.getElementById('class-tertiary')?.value || '').trim().toLowerCase(), rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0 }
+    ].filter(c => c.name && c.rank > 0);
+    
+    const mageClass = charClasses.find(c => c.name === 'mage');
+    if (!mageClass) {
+      this._showInfoModal('📚 No Mage Class', 'Only mages can learn new spells through EXP spending. Sorcerers learn spells through their innate abilities.');
+      return;
+    }
+    
+    const mageRank = mageClass.rank;
+    const classList = window.ClassSpellLists?.mage;
+    if (!classList) return;
+    
+    // Build eligible ranks (up to mage's current rank)
+    const eligibleRanks = [];
+    for (let r = 1; r <= mageRank; r++) {
+      const key = `rank${r}`;
+      if (classList[key] && classList[key].length > 0) {
+        eligibleRanks.push({ key, rank: r, label: `Rank ${r}`, cost: r });
+      }
+    }
+    
+    if (eligibleRanks.length === 0) {
+      this._showInfoModal('📚 No Spells Available', 'No spell ranks are available at your current mage rank.');
+      return;
+    }
+    
+    // Get existing spells
+    const existingByRank = {};
+    eligibleRanks.forEach(er => {
+      existingByRank[er.key] = this.getExistingSpellsInRank(er.key).map(s => s.toLowerCase());
+    });
+    
+    let overlay = document.getElementById('exp-learn-spell-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'exp-learn-spell-overlay';
+    overlay.className = 'modal-overlay';
+    
+    // Build spell list grouped by rank with EXP cost shown
+    let spellListHTML = '';
+    eligibleRanks.forEach(er => {
+      const spells = classList[er.key].slice().sort((a, b) => a.localeCompare(b));
+      spellListHTML += `<div class="rankup-rank-group"><div class="rankup-rank-label">${er.label} <span style="font-size:0.75rem; color:#d4a843;">(${er.cost} EXP each)</span></div>`;
+      spells.forEach(spell => {
+        const isExisting = existingByRank[er.key].includes(spell.toLowerCase());
+        const tooExpensive = er.cost > currentExp;
+        const disabled = isExisting || tooExpensive;
+        const disabledAttr = disabled ? 'disabled' : '';
+        const existingClass = isExisting ? 'spell-pick-existing' : (tooExpensive ? 'spell-pick-expensive' : '');
+        let tag = '';
+        if (isExisting) tag = '<span class="spell-pick-tag">(already known)</span>';
+        else if (tooExpensive) tag = '<span class="spell-pick-tag" style="color:#c06060;">(not enough EXP)</span>';
+        spellListHTML += `<label class="spell-pick-row ${existingClass}">
+          <input type="radio" name="exp-learn-spell" class="spell-swap-radio exp-learn-radio" data-spell="${this._escAttr(spell)}" data-rank="${er.key}" data-rank-num="${er.rank}" data-cost="${er.cost}" ${disabledAttr}>
+          <span class="spell-pick-name">${spell}</span>${tag}
+        </label>`;
+      });
+      spellListHTML += '</div>';
+    });
+    
+    overlay.innerHTML = `
+      <div class="modal-content spell-picker-modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>📚 Learn New Spell</h3>
+          <button class="modal-close" id="exp-learn-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 0.6rem 1rem; font-size: 0.85rem; color: #bbb;">
+          Spend EXP Rolls to learn a new spell. The cost equals the spell's Rank.
+          <div style="margin-top: 0.4rem; font-weight: 700; color: #e0e0e0;">Available EXP: <span id="exp-learn-avail" style="color: #70d070;">${currentExp}</span></div>
+        </div>
+        <div class="spell-picker-toolbar">
+          <input type="text" class="spell-picker-search" id="exp-learn-search" placeholder="Search spells…">
+          <span class="spell-picker-count" id="exp-learn-cost-display">Select a spell</span>
+        </div>
+        <div class="spell-picker-list" id="exp-learn-spell-list" style="max-height: 45vh;">
+          ${spellListHTML}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="exp-learn-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="exp-learn-confirm" disabled>Learn Spell</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('exp-learn-close').addEventListener('click', close);
+    document.getElementById('exp-learn-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    // Search filter
+    document.getElementById('exp-learn-search').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      overlay.querySelectorAll('.spell-pick-row').forEach(row => {
+        const name = row.querySelector('.spell-pick-name')?.textContent?.toLowerCase() || '';
+        row.style.display = name.includes(q) ? '' : 'none';
+      });
+    });
+    
+    // Selection
+    const confirmBtn = document.getElementById('exp-learn-confirm');
+    const costDisplay = document.getElementById('exp-learn-cost-display');
+    
+    overlay.querySelectorAll('.exp-learn-radio').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const cost = parseInt(radio.dataset.cost, 10);
+        costDisplay.innerHTML = `Cost: <strong>${cost} EXP</strong>`;
+        confirmBtn.disabled = false;
+      });
+    });
+    
+    // Confirm
+    confirmBtn.addEventListener('click', () => {
+      const selected = overlay.querySelector('.exp-learn-radio:checked');
+      if (!selected) return;
+      
+      const spellName = selected.dataset.spell;
+      const rankKey = selected.dataset.rank;
+      const rankNum = parseInt(selected.dataset.rankNum, 10);
+      const expCost = parseInt(selected.dataset.cost, 10);
+      
+      // Deduct EXP
+      const expField = document.getElementById('exp-rolls');
+      const currentExpNow = parseInt(expField?.value, 10) || 0;
+      if (currentExpNow < expCost) {
+        this._showInfoModal('❌ Insufficient EXP', `You need ${expCost} EXP Roll(s) but only have ${currentExpNow}.`);
+        return;
+      }
+      
+      expField.value = currentExpNow - expCost;
+      this.character.info.expRolls = expField.value;
+      
+      // Add the spell
+      const cost = window.SpellData ? window.SpellData.getSpellCost(spellName) : '';
+      this.addSpellRow(rankKey, {
+        name: spellName,
+        cost: cost || '',
+        memorized: false,
+        classSpell: 'mage'
+      });
+      
+      this.scheduleAutoSave();
+      this.updateSpellFillButtons();
+      close();
+      
+      // Show scribing notice
+      this._showScribingNotice(spellName, rankNum);
+    });
+  },
+
+  // =========================================================================
   //  ADD MAGE SPELL — Choose / Roll / Auto / Add All
   // =========================================================================
 
@@ -10229,6 +10649,7 @@ const App = {
     
     document.getElementById('mage-result-add').addEventListener('click', () => {
       const cost = window.SpellData ? window.SpellData.getSpellCost(spellName) : '';
+      const spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
       this.addSpellRow(rankKey, {
         name: spellName,
         cost: cost || '',
@@ -10238,6 +10659,7 @@ const App = {
       this.scheduleAutoSave();
       this.updateSpellFillButtons();
       close();
+      this._showScribingNotice(spellName, spellRank);
     });
   },
 
@@ -10280,7 +10702,11 @@ const App = {
         });
         this.scheduleAutoSave();
         this.updateSpellFillButtons();
-        this._showInfoModal('📚 Spells Added', `Added <strong>${count}</strong> spell(s) to your ${rankLabel} spellbook.`);
+        const spellRank = rankKey === 'cantrips' ? 0 : parseInt(rankKey.replace('rank', ''), 10) || 0;
+        const scribeNote = spellRank > 0 
+          ? `<br><span style="font-size:0.82rem; color:#999;">⏱️ Each Rank ${spellRank} spell requires <strong>${this._SCRIBING_TIME[spellRank]}</strong> of downtime to scribe.</span>` 
+          : '';
+        this._showInfoModal('📚 Spells Added', `Added <strong>${count}</strong> spell(s) to your ${rankLabel} spellbook.${scribeNote}`);
       }
     );
   },
@@ -33790,6 +34216,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
                 <span class="exp-option-icon">🎭</span>
                 <span class="exp-option-text">Add New Sub-class</span>
               </button>
+              <button type="button" class="btn exp-option-btn" id="exp-btn-learn-spells">
+                <span class="exp-option-icon">📖</span>
+                <span class="exp-option-text">Learn New Spells</span>
+              </button>
             </div>
           </div>
         </div>
@@ -33835,6 +34265,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       
       document.getElementById('exp-btn-add-subclass').addEventListener('click', () => {
         this.openAddSubclassModal();
+      });
+      
+      document.getElementById('exp-btn-learn-spells').addEventListener('click', () => {
+        this._openExpLearnSpellModal();
       });
     }
     
