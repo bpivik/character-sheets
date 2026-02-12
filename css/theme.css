@@ -733,6 +733,24 @@ select:focus-visible {
   border-bottom-color: rgba(40, 80, 150, 0.15);
 }
 
+.spell-col-header {
+  color: #2a5090;
+  background: rgba(40, 80, 150, 0.06);
+  border-bottom-color: rgba(40, 80, 150, 0.15);
+}
+
+.spell-col-cost {
+  color: #8a6420;
+}
+
+.spell-col-container {
+  border-color: rgba(0,0,0,0.1);
+}
+
+.spell-col {
+  border-right-color: rgba(0,0,0,0.06);
+}
+
 /* --- Spell Weaving (Parchment) --- */
 .cast-modal-weaving {
   background: rgba(100, 60, 150, 0.06);

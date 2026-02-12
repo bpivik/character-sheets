@@ -10690,6 +10690,72 @@ input.combat-skill-percent.damage-boosted {
   cursor: default;
 }
 
+/* ── Spell Column Layout (multi-rank modals) ── */
+.spell-col-modal {
+  max-width: 90vw !important;
+  width: auto !important;
+}
+
+.spell-col-container {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  max-height: 50vh;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+}
+
+.spell-col {
+  min-width: 180px;
+  max-width: 240px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.spell-col:last-child {
+  border-right: none;
+}
+
+.spell-col-header {
+  font-weight: 700;
+  font-size: 0.80rem;
+  color: #70b0e0;
+  padding: 0.35rem 0.5rem;
+  background: rgba(70, 130, 220, 0.08);
+  border-bottom: 1px solid rgba(70, 130, 220, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.spell-col-cost {
+  font-weight: 400;
+  font-size: 0.70rem;
+  color: #d4a843;
+}
+
+.spell-col-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.1rem 0;
+}
+
+.spell-col-body .spell-pick-row {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.78rem;
+}
+
+.spell-col-body .spell-pick-name {
+  font-size: 0.78rem;
+}
+
+.spell-col-body .spell-pick-tag {
+  font-size: 0.65rem;
+}
+
 .spell-table {
   width: 100%;
   border-collapse: collapse;
