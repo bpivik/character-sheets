@@ -1467,8 +1467,8 @@
 
 /* --- Familiar Section (Dark) --- */
 [data-theme="dark"] .familiar-section {
-  background: linear-gradient(135deg, rgba(75, 0, 130, 0.15), rgba(138, 43, 226, 0.1));
-  border-color: rgba(160, 80, 200, 0.35);
+  background: linear-gradient(135deg, #1a1528 0%, #231a35 100%);
+  border-color: #7a4f9e;
 }
 
 [data-theme="dark"] .familiar-section .section-header {
@@ -1476,8 +1476,8 @@
 }
 
 [data-theme="dark"] .familiar-type-row {
-  background: rgba(138, 43, 226, 0.15);
-  border-color: rgba(160, 80, 200, 0.3);
+  background: rgba(138, 43, 226, 0.18);
+  border-color: rgba(160, 80, 200, 0.35);
 }
 
 [data-theme="dark"] .familiar-type-label {

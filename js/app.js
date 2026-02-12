@@ -14625,7 +14625,11 @@ const App = {
         magicInput.addEventListener('input', (e) => {
           // Don't sync back to prof skill during a prof→magic sync (prevents circular cascade)
           if (this._syncingMagicFromProf) return;
-          this.syncMagicToProfSkill(config.magicId, e.target.value);
+          // Debounce the sync to allow multi-digit typing without value reset
+          clearTimeout(magicInput._magicSyncTimer);
+          magicInput._magicSyncTimer = setTimeout(() => {
+            this.syncMagicToProfSkill(config.magicId, magicInput.value);
+          }, 400);
         });
       }
     });
@@ -14648,7 +14652,8 @@ const App = {
         if (e.target.classList.contains('enc-penalized-value') || e.target.classList.contains('fatigue-penalized')) {
           // User editing a penalized field — treat as new original
           e.target.dataset.originalValue = e.target.value;
-          setTimeout(() => this.applyAllPenalties(), 10);
+          clearTimeout(input._penaltyReapplyTimer);
+          input._penaltyReapplyTimer = setTimeout(() => this.applyAllPenalties(), 400);
         } else {
           if (e.target.dataset.originalValue !== undefined) {
             e.target.dataset.originalValue = e.target.value;
@@ -22089,6 +22094,11 @@ const App = {
     
     const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
     const maxMP = parseInt(document.getElementById('magic-points-original')?.value, 10) || 0;
+    
+    if (currentMP >= maxMP) {
+      this._showInfoModal('⚡ Magic Surge', 'Your Magic Points are already at maximum. There is nothing to recover.');
+      return;
+    }
     
     let overlay = document.getElementById('magic-surge-overlay');
     if (overlay) overlay.remove();
