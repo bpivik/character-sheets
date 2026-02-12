@@ -1061,6 +1061,7 @@ const App = {
       // Populate the Species Abilities section (replaces old content)
       // Pass true to apply persistent effects since this is a user-initiated species change
       this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
+      this.populateSpeciesAbilitiesCards(newData ? newData.abilities : []);
       
       // Update spell-like section visibility (hide if new species doesn't have it)
       this.checkSpellLikeAbilitiesVisibility();
@@ -1214,6 +1215,72 @@ const App = {
   },
   
   /**
+   * Populate species abilities as cards in the right column
+   */
+  populateSpeciesAbilitiesCards(abilities) {
+    const container = document.getElementById('species-abilities-cards');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!abilities || abilities.length === 0) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'species-abilities-cards-placeholder';
+      placeholder.textContent = 'No species abilities — select a species on the Character page';
+      container.appendChild(placeholder);
+      return;
+    }
+    
+    abilities.forEach(ability => {
+      const card = document.createElement('div');
+      card.className = 'species-ability-card';
+      
+      // Get description from AbilityDescriptions
+      let descHTML = '';
+      let descPlain = '';
+      if (window.AbilityDescriptions) {
+        const desc = AbilityDescriptions.getDescription(ability);
+        if (desc) {
+          descHTML = desc;
+          // Strip HTML for the card preview
+          const tmp = document.createElement('div');
+          tmp.innerHTML = desc;
+          descPlain = tmp.textContent || tmp.innerText || '';
+        }
+      }
+      
+      // Replace dynamic placeholders
+      if (descPlain) {
+        descPlain = this.replaceDynamicPlaceholders(descPlain);
+      }
+      
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'species-ability-card-name';
+      nameDiv.textContent = this.toTitleCase(ability);
+      
+      const descDiv = document.createElement('div');
+      descDiv.className = 'species-ability-card-desc';
+      descDiv.textContent = descPlain || 'No description available.';
+      
+      card.appendChild(nameDiv);
+      card.appendChild(descDiv);
+      
+      // Click to open full detail modal
+      card.addEventListener('click', () => {
+        this.showAbilityDetail(ability);
+      });
+      card.title = 'Click for full details';
+      
+      // If description is long, keep at 2-col. If only 1-2 abilities, make full width
+      if (abilities.length <= 2) {
+        card.classList.add('full-width');
+      }
+      
+      container.appendChild(card);
+    });
+  },
+  
+  /**
    * Initialize species abilities section on page load
    */
   initSpeciesAbilities() {
@@ -1223,20 +1290,24 @@ const App = {
     // Check if there are saved species abilities first
     if (this.character.speciesAbilities && this.character.speciesAbilities.length > 0) {
       this.populateSpeciesAbilitiesSection(this.character.speciesAbilities);
+      this.populateSpeciesAbilitiesCards(this.character.speciesAbilities);
       return;
     }
     
     if (!species || !window.SpeciesData) {
       // Show placeholder for no species
       this.populateSpeciesAbilitiesSection([]);
+      this.populateSpeciesAbilitiesCards([]);
       return;
     }
     
     const speciesData = window.SpeciesData.getSpecies(species);
     if (speciesData && speciesData.abilities) {
       this.populateSpeciesAbilitiesSection(speciesData.abilities);
+      this.populateSpeciesAbilitiesCards(speciesData.abilities);
     } else {
       this.populateSpeciesAbilitiesSection([]);
+      this.populateSpeciesAbilitiesCards([]);
     }
   },
   

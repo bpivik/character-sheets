@@ -936,7 +936,42 @@
   color: white;
 }
 
+/* Species Abilities Cards - Dark Mode */
+[data-theme="dark"] .species-abilities-cards-section {
+  background: rgba(0,0,0,0.3);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .species-ability-card {
+  background: linear-gradient(135deg, rgba(40,38,35,0.9), rgba(50,45,40,0.9));
+  border-color: var(--border-color);
+  border-left-color: var(--accent-color);
+}
+
+[data-theme="dark"] .species-ability-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .species-ability-card-name {
+  color: var(--header-color);
+}
+
+[data-theme="dark"] .species-ability-card-desc {
+  color: #b0a898;
+}
+
+[data-theme="dark"] .species-ability-card-desc strong {
+  color: #d4c8b8;
+}
+
+[data-theme="dark"] .species-abilities-cards-placeholder {
+  color: #777;
+}
+
 [data-theme="dark"] .class-abilities-section {
+  background: rgba(0,0,0,0.3);
+  border-color: var(--border-color);
+}
   background: rgba(0,0,0,0.3);
   border-color: var(--border-color);
 }
