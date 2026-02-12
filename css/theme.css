@@ -591,6 +591,7 @@ select:focus-visible {
 }
 
 .weaving-label { color: #5a2d7a; }
+.weaving-toggle-arrow { color: #5a2d7a; }
 .weaving-max-note { color: #888; }
 
 .weaving-option {

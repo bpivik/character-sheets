@@ -151,7 +151,7 @@
             </div>
             <div class="field-row">
               <label class="field-label">Deity</label>
-              <input type="text" id="deity-name" class="field-input deity-input" placeholder="">
+              <input type="text" id="deity-name" class="field-input" placeholder="">
             </div>
             <div class="prereq-skills">
               <div class="prereq-row">
@@ -951,10 +951,12 @@
 
           <!-- Sorcerer Weaving Controls (hidden for non-sorcery) -->
           <div class="cast-modal-weaving hidden" id="cast-weaving-section">
-            <div class="weaving-header-row">
+            <div class="weaving-header-row weaving-toggle" id="weaving-toggle">
+              <span class="weaving-toggle-arrow" id="weaving-toggle-arrow">▶</span>
               <span class="weaving-label">🌀 Spell Weaving</span>
               <span class="weaving-max-note">(max 2, cannot combine with Intensity)</span>
             </div>
+            <div class="weaving-body hidden" id="weaving-body">
             <div class="weaving-options" id="weaving-options">
               <label class="weaving-option" title="Increase damage/effect by half of rolled damage. +3 MP, Formidable difficulty, +1 Cast Time.">
                 <input type="checkbox" class="weaving-check" data-weave="amplify" data-mp="3" data-difficulty="formidable">
@@ -1001,6 +1003,7 @@
             <div class="weaving-lock-note hidden" id="weaving-lock-note">
               ⚠ Intensity is locked at 1 while Weaving is active.
             </div>
+            </div><!-- end weaving-body -->
           </div>
 
           <!-- Armor Warning -->

@@ -72,7 +72,7 @@ const ClassAbilities = {
   },
   
   sorcerer: {
-    rank1: ["Familiar"]
+    rank1: ["Innate Magic", "Arcane Spellcaster", "Spontaneous Casting", "Familiar"]
   },
   
   warlord: {

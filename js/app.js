@@ -9966,6 +9966,24 @@ const App = {
         });
         m._weavingListenersAttached = true;
       }
+
+      // Weaving toggle (expand/collapse) — reset to collapsed each time
+      const weavingBody = document.getElementById('weaving-body');
+      const weavingArrow = document.getElementById('weaving-toggle-arrow');
+      const weavingToggle = document.getElementById('weaving-toggle');
+      if (weavingBody) weavingBody.classList.add('hidden');
+      if (weavingArrow) weavingArrow.textContent = '▶';
+      if (weavingToggle && !m._weavingToggleAttached) {
+        weavingToggle.addEventListener('click', () => {
+          const body = document.getElementById('weaving-body');
+          const arrow = document.getElementById('weaving-toggle-arrow');
+          if (body) {
+            body.classList.toggle('hidden');
+            if (arrow) arrow.textContent = body.classList.contains('hidden') ? '▶' : '▼';
+          }
+        });
+        m._weavingToggleAttached = true;
+      }
     } else {
       weavingSection.classList.add('hidden');
       m.activeWeaves = [];
