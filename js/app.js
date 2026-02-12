@@ -9312,8 +9312,19 @@ const App = {
         window.ClassSpellLists.sorcerer && window.ClassSpellLists.sorcerer[rankKey] &&
         window.ClassSpellLists.sorcerer[rankKey].length > 0;
       
-      // Build button HTML — only sorcerer-specific and clear buttons
+      // Check if mage has access to this rank's spells
+      const mageClass = availableClasses.find(c => c.name.toLowerCase() === 'mage');
+      const mageHasRank = mageClass && window.ClassSpellLists && 
+        window.ClassSpellLists.mage && window.ClassSpellLists.mage[rankKey] &&
+        window.ClassSpellLists.mage[rankKey].length > 0;
+      
+      // Build button HTML — class-specific and clear buttons
       let buttonsHTML = '';
+      
+      // Mage "Add Mage Spell" button
+      if (mageHasRank) {
+        buttonsHTML += `<button type="button" class="btn btn-small btn-add-mage-spell" data-rank="${rankKey}" title="Add a mage spell (choose, roll, or auto)">📖 Add Mage Spell</button>`;
+      }
       
       // Sorcerer "Add Sorcerer Spell" button
       if (sorcererHasRank) {
@@ -9350,6 +9361,13 @@ const App = {
       if (sorcSpellBtn) {
         sorcSpellBtn.addEventListener('click', () => {
           this._openAddSorcererSpellModal(sorcSpellBtn.dataset.rank);
+        });
+      }
+      
+      const mageSpellBtn = actionsBar.querySelector('.btn-add-mage-spell');
+      if (mageSpellBtn) {
+        mageSpellBtn.addEventListener('click', () => {
+          this._openAddMageSpellModal(mageSpellBtn.dataset.rank);
         });
       }
       
@@ -9981,6 +9999,292 @@ const App = {
   /**
    * Show a simple info modal
    */
+  // =========================================================================
+  //  ADD MAGE SPELL — Choose / Roll / Auto / Add All
+  // =========================================================================
+
+  /**
+   * Open the "How would you like to add a spell?" modal for Mage
+   */
+  _openAddMageSpellModal(rankKey) {
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')} Spell`;
+    
+    let overlay = document.getElementById('mage-add-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'mage-add-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 420px;">
+        <div class="modal-header">
+          <h3>📖 Add ${rankLabel}</h3>
+          <button class="modal-close" id="mage-add-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <p style="font-size: 0.88rem; margin-bottom: 0.8rem; color: #bbb;">How would you like to determine your new spell?</p>
+          <div class="sorc-add-options">
+            <button type="button" class="btn mage-add-option-btn" id="mage-add-choose">
+              <span class="sorc-add-icon">📋</span>
+              <span class="mage-add-label">Choose Myself</span>
+              <span class="mage-add-desc">Pick from the full spell list</span>
+            </button>
+            <button type="button" class="btn mage-add-option-btn" id="mage-add-roll">
+              <span class="sorc-add-icon">🎲</span>
+              <span class="mage-add-label">Roll Myself</span>
+              <span class="mage-add-desc">Enter your d100 roll result</span>
+            </button>
+            <button type="button" class="btn mage-add-option-btn" id="mage-add-auto">
+              <span class="sorc-add-icon">⚡</span>
+              <span class="mage-add-label">Auto-Roll</span>
+              <span class="mage-add-desc">System rolls d100 on the table</span>
+            </button>
+            <button type="button" class="btn mage-add-option-btn mage-add-all-btn" id="mage-add-all">
+              <span class="sorc-add-icon">📚</span>
+              <span class="mage-add-label">Add All Spells</span>
+              <span class="mage-add-desc">Adds every spell in this rank (not RAW)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('mage-add-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    document.getElementById('mage-add-choose').addEventListener('click', () => {
+      close();
+      this._mageSpellChoose(rankKey);
+    });
+    
+    document.getElementById('mage-add-roll').addEventListener('click', () => {
+      close();
+      this._mageSpellRollManual(rankKey);
+    });
+    
+    document.getElementById('mage-add-auto').addEventListener('click', () => {
+      close();
+      this._mageSpellRollAuto(rankKey);
+    });
+    
+    document.getElementById('mage-add-all').addEventListener('click', () => {
+      close();
+      this._mageSpellAddAll(rankKey);
+    });
+  },
+
+  /**
+   * Mage Choose — open the spell picker
+   */
+  _mageSpellChoose(rankKey) {
+    const classList = window.ClassSpellLists.mage;
+    if (!classList || !classList[rankKey]) return;
+    
+    const allSpells = classList[rankKey].slice().sort((a, b) => a.localeCompare(b));
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    const existingLower = existingSpells.map(s => s.toLowerCase());
+    
+    this._openSpellPickerModal('mage', rankKey, allSpells, existingLower);
+  },
+
+  /**
+   * Mage Roll Myself — enter d100 roll and look up on the table
+   */
+  _mageSpellRollManual(rankKey) {
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')}`;
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'mage-roll-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 380px;">
+        <div class="modal-header">
+          <h3>🎲 Roll ${rankLabel} Spell</h3>
+          <button class="modal-close" id="mage-roll-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem; text-align: center;">
+          <p style="font-size: 0.85rem; color: #bbb; margin-bottom: 0.8rem;">Enter your d100 roll (1–100):</p>
+          <input type="number" id="mage-roll-input" min="1" max="100" 
+                 style="width: 80px; text-align: center; font-size: 1.3rem; font-weight: 700; padding: 0.4rem; border: 2px solid #555; border-radius: 6px; background: #1a1a2e; color: #e0e0e0;">
+          <div id="mage-roll-preview" style="margin-top: 0.8rem; font-size: 0.95rem; min-height: 1.5em; color: #70b0e0;"></div>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="mage-roll-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="mage-roll-confirm" disabled>Add Spell</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('mage-roll-close').addEventListener('click', close);
+    document.getElementById('mage-roll-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    const input = document.getElementById('mage-roll-input');
+    const preview = document.getElementById('mage-roll-preview');
+    const confirmBtn = document.getElementById('mage-roll-confirm');
+    
+    let resolvedSpell = null;
+    
+    input.addEventListener('input', () => {
+      const val = parseInt(input.value, 10);
+      if (val >= 1 && val <= 100 && window.SorcererSpellTables) {
+        resolvedSpell = window.SorcererSpellTables.lookup(rankKey, val);
+        if (resolvedSpell) {
+          preview.innerHTML = `<strong>${resolvedSpell}</strong>`;
+          confirmBtn.disabled = false;
+        } else {
+          preview.textContent = 'No spell found for that roll';
+          confirmBtn.disabled = true;
+          resolvedSpell = null;
+        }
+      } else {
+        preview.textContent = '';
+        confirmBtn.disabled = true;
+        resolvedSpell = null;
+      }
+    });
+    
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && resolvedSpell) confirmBtn.click();
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      if (!resolvedSpell) return;
+      const roll = parseInt(input.value, 10);
+      close();
+      this._addMageRolledSpell(rankKey, resolvedSpell, roll);
+    });
+    
+    setTimeout(() => input.focus(), 100);
+  },
+
+  /**
+   * Mage Auto-Roll — system rolls d100 and shows result
+   */
+  _mageSpellRollAuto(rankKey) {
+    if (!window.SorcererSpellTables) return;
+    
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const spell = window.SorcererSpellTables.lookup(rankKey, roll);
+    
+    if (!spell) {
+      this._showInfoModal('🎲 Roll Error', 'Could not resolve a spell for that roll.');
+      return;
+    }
+    
+    this._addMageRolledSpell(rankKey, spell, roll);
+  },
+
+  /**
+   * Show mage rolled result and add the spell
+   */
+  _addMageRolledSpell(rankKey, spellName, roll) {
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')}`;
+    
+    // Check if already known
+    const existing = this.getExistingSpellsInRank(rankKey);
+    const isDuplicate = existing.some(s => s.toLowerCase() === spellName.toLowerCase());
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'mage-result-overlay';
+    overlay.className = 'modal-overlay';
+    
+    const dupeWarning = isDuplicate 
+      ? `<div style="margin-top: 0.6rem; padding: 0.4rem 0.6rem; background: rgba(200, 150, 50, 0.15); border: 1px solid rgba(200, 150, 50, 0.3); border-radius: 5px; font-size: 0.82rem; color: #d4a843;">
+           ⚠️ You already know this spell. You may re-roll or keep it (GM discretion).
+         </div>` 
+      : '';
+    
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>🎲 ${rankLabel} Spell Rolled</h3>
+          <button class="modal-close" id="mage-result-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem; text-align: center;">
+          <div style="font-size: 0.82rem; color: #999; margin-bottom: 0.3rem;">d100 Roll: <strong style="color: #e0e0e0;">${roll}</strong></div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #70b0e0; margin: 0.5rem 0;">${spellName}</div>
+          ${dupeWarning}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="mage-result-reroll">🎲 Re-Roll</button>
+          <button type="button" class="btn btn-primary" id="mage-result-add">${isDuplicate ? 'Add Anyway' : 'Add to Spellbook'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('mage-result-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    document.getElementById('mage-result-reroll').addEventListener('click', () => {
+      close();
+      this._mageSpellRollAuto(rankKey);
+    });
+    
+    document.getElementById('mage-result-add').addEventListener('click', () => {
+      const cost = window.SpellData ? window.SpellData.getSpellCost(spellName) : '';
+      this.addSpellRow(rankKey, {
+        name: spellName,
+        cost: cost || '',
+        memorized: false,
+        classSpell: 'mage'
+      });
+      this.scheduleAutoSave();
+      this.updateSpellFillButtons();
+      close();
+    });
+  },
+
+  /**
+   * Mage Add All — warn then add every spell in the rank
+   */
+  _mageSpellAddAll(rankKey) {
+    const classList = window.ClassSpellLists.mage;
+    if (!classList || !classList[rankKey]) return;
+    
+    const allSpells = classList[rankKey];
+    const existing = this.getExistingSpellsInRank(rankKey);
+    const existingLower = existing.map(s => s.toLowerCase());
+    const newSpells = allSpells.filter(s => !existingLower.includes(s.toLowerCase()));
+    
+    if (newSpells.length === 0) {
+      this._showInfoModal('📚 All Spells Known', 'You already have every spell in this rank.');
+      return;
+    }
+    
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')}`;
+    
+    this._showWarningModal(
+      '📚 Add All Spells',
+      `This will add <strong>${newSpells.length}</strong> spell(s) to your ${rankLabel} list.<br><br>` +
+      `<span style="color: #d4a843;">⚠️ This is <strong>not Rules as Written</strong>. Mages normally learn spells through study, scrolls, and leveling — not by knowing everything at once. Use at your own table's discretion.</span>`,
+      `Add ${newSpells.length} Spells`,
+      'Cancel',
+      () => {
+        let count = 0;
+        newSpells.forEach(spellName => {
+          const cost = window.SpellData ? window.SpellData.getSpellCost(spellName) : '';
+          this.addSpellRow(rankKey, {
+            name: spellName,
+            cost: cost || '',
+            memorized: false,
+            classSpell: 'mage'
+          });
+          count++;
+        });
+        this.scheduleAutoSave();
+        this.updateSpellFillButtons();
+        this._showInfoModal('📚 Spells Added', `Added <strong>${count}</strong> spell(s) to your ${rankLabel} spellbook.`);
+      }
+    );
+  },
+
   _showInfoModal(title, bodyHTML) {
     let overlay = document.getElementById('info-modal-overlay');
     if (overlay) overlay.remove();

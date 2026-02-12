@@ -681,6 +681,52 @@ select:focus-visible {
   background: rgba(90, 50, 130, 0.14);
 }
 
+.spell-actions-bar .btn-add-mage-spell {
+  background: rgba(40, 80, 150, 0.06);
+  border-color: rgba(40, 80, 150, 0.3);
+  color: #2a5090;
+}
+
+.spell-actions-bar .btn-add-mage-spell:hover {
+  background: rgba(40, 80, 150, 0.14);
+}
+
+.mage-add-option-btn {
+  background: rgba(40, 80, 150, 0.06);
+  border-color: rgba(40, 80, 150, 0.2);
+}
+
+.mage-add-option-btn:hover {
+  background: rgba(40, 80, 150, 0.12);
+  border-color: rgba(40, 80, 150, 0.35);
+}
+
+.mage-add-label {
+  color: #2a5090;
+}
+
+.mage-add-desc {
+  color: #777;
+}
+
+.mage-add-all-btn {
+  background: rgba(140, 100, 30, 0.06);
+  border-color: rgba(140, 100, 30, 0.2);
+}
+
+.mage-add-all-btn:hover {
+  background: rgba(140, 100, 30, 0.12);
+  border-color: rgba(140, 100, 30, 0.35);
+}
+
+.mage-add-all-btn .mage-add-label {
+  color: #8a6420;
+}
+
+.mage-add-all-btn .mage-add-desc {
+  color: #7a5a20;
+}
+
 /* --- Spell Weaving (Parchment) --- */
 .cast-modal-weaving {
   background: rgba(100, 60, 150, 0.06);

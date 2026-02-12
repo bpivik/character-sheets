@@ -10551,6 +10551,24 @@ input.combat-skill-percent.damage-boosted {
   border-color: rgba(138, 80, 220, 0.6);
 }
 
+/* ── Add Mage Spell Button ── */
+.spell-actions-bar .btn-add-mage-spell {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid rgba(70, 130, 220, 0.4);
+  line-height: 1.2;
+  white-space: nowrap;
+  background: rgba(70, 130, 220, 0.1);
+  color: #6090d0;
+}
+
+.spell-actions-bar .btn-add-mage-spell:hover {
+  background: rgba(70, 130, 220, 0.2);
+  border-color: rgba(70, 130, 220, 0.6);
+}
+
 /* ── Sorcerer Add Spell Options ── */
 .sorc-add-options {
   display: flex;
@@ -10592,6 +10610,57 @@ input.combat-skill-percent.damage-boosted {
   font-size: 0.75rem;
   color: #999;
   display: block;
+}
+
+/* ── Mage Add Spell Options ── */
+.mage-add-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(70, 130, 220, 0.08);
+  border: 1px solid rgba(70, 130, 220, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.mage-add-option-btn:hover {
+  background: rgba(70, 130, 220, 0.18);
+  border-color: rgba(70, 130, 220, 0.45);
+}
+
+.mage-add-label {
+  font-weight: 700;
+  font-size: 0.90rem;
+  color: #70b0e0;
+  display: block;
+}
+
+.mage-add-desc {
+  font-size: 0.75rem;
+  color: #999;
+  display: block;
+}
+
+/* Add All Spells — muted warning style */
+.mage-add-all-btn {
+  background: rgba(200, 150, 50, 0.06);
+  border-color: rgba(200, 150, 50, 0.2);
+}
+
+.mage-add-all-btn:hover {
+  background: rgba(200, 150, 50, 0.14);
+  border-color: rgba(200, 150, 50, 0.35);
+}
+
+.mage-add-all-btn .mage-add-label {
+  color: #d4a843;
+}
+
+.mage-add-all-btn .mage-add-desc {
+  color: #b89840;
 }
 
 .spell-table {
