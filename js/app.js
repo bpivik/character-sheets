@@ -520,6 +520,7 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkDetectMagicVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -577,6 +578,9 @@ const App = {
     
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
+    
+    // Generate info cards for class abilities without dedicated buttons
+    this.updateClassAbilityInfoCards();
     
     // Final initialization sequence - ensure all ENC-dependent abilities are properly applied
     // Use setTimeout to ensure DOM is fully rendered
@@ -1233,6 +1237,206 @@ const App = {
     this.checkSharpEyedVisibility();
     this.checkStealthyVisibility();
   },
+
+  // ============================================
+  // CLASS ABILITY INFO CARDS (dynamic generation)
+  // ============================================
+
+  // Abilities that get info cards (not buttons). Key = lowercase ability name.
+  // emoji + summary are used for the card display.
+  CLASS_INFO_CARD_DEFS: {
+    'armor proficiency': { emoji: '🛡️' },
+    'combat proficiency': { emoji: '⚔️' },
+    'unarmed proficiency': { emoji: '🥊' },
+    'arcane spellcaster': { emoji: '🔮' },
+    'bard spellcaster': { emoji: '🎵' },
+    'divine spellcasting': { emoji: '✝️' },
+    'spontaneous casting': { emoji: '⚡' },
+    'innate magic': { emoji: '🌟' },
+    'artful dodger': { emoji: '💨' },
+    'resilient': { emoji: '💪' },
+    'lightning reflexes': { emoji: '⚡' },
+    'quick': { emoji: '🏃' },
+    'fleet of foot': { emoji: '💨' },
+    'determination': { emoji: '🔥' },
+    'hospitality': { emoji: '🏰' },
+    'graceful strike': { emoji: '🌊' },
+    'mounted combat': { emoji: '🐎' },
+    'cleric magical items': { emoji: '📿' },
+    "thieves' cant": { emoji: '🗝️' },
+    "druids' cant": { emoji: '🌿' },
+    "language (druids' cant)": { emoji: '🌿' },
+    "language (thieves' cant)": { emoji: '🗝️' },
+    'immune to disease': { emoji: '🛡️' },
+    'immune to poison': { emoji: '☠️' },
+    'immunity to disease': { emoji: '🛡️' },
+    'immunity to poison': { emoji: '☠️' },
+    'immunity to fear': { emoji: '🦁' },
+    'immunity to fear (10\' radius)': { emoji: '🦁' },
+    'fascinate': { emoji: '🎭' },
+    'counter song': { emoji: '🎶' },
+    'enchantment resistance': { emoji: '🧠' },
+    'sweeping strike': { emoji: '🌀' },
+    'greater sweeping strike': { emoji: '🌀' },
+    'inspire courage': { emoji: '🎺' },
+    'inspire courage i': { emoji: '🎺' },
+    'inspire courage ii': { emoji: '🎺' },
+    'inspire courage iii': { emoji: '🎺' },
+    'inspire courage 1': { emoji: '🎺' },
+    'inspire courage 2': { emoji: '🎺' },
+    'inspire courage 3': { emoji: '🎺' },
+    'flurry of blows': { emoji: '👊' },
+    'meditation': { emoji: '🧘' },
+    'tactical shift': { emoji: '♟️' },
+    'commander': { emoji: '👑' },
+    'commanding presence': { emoji: '👑' },
+    'mysticism': { emoji: '✨' },
+    'identify plants and animals': { emoji: '🌿' },
+    'identify pure water': { emoji: '💧' },
+  },
+
+  /**
+   * Update class ability info cards in the ability-cards-grid.
+   * Generates info-only cards for abilities that don't have dedicated interactive sections.
+   */
+  updateClassAbilityInfoCards() {
+    const grid = document.querySelector('.ability-cards-grid');
+    if (!grid) return;
+
+    // Remove all existing class info cards
+    grid.querySelectorAll('.class-info-card-section').forEach(el => el.remove());
+
+    // Collect current class abilities
+    const classAbilities = [];
+    const classContainer = document.getElementById('class-abilities-list');
+    if (classContainer) {
+      classContainer.querySelectorAll('.class-ability-input').forEach(input => {
+        const val = input.value.trim();
+        if (val) classAbilities.push(val);
+      });
+    }
+
+    if (classAbilities.length === 0) return;
+
+    // Track which info cards we've already generated (for dedup of Inspire Courage variants)
+    const generated = new Set();
+
+    // Handle Sweeping Strike override: Greater replaces base
+    const hasGreaterSweeping = classAbilities.some(a => a.toLowerCase().includes('greater sweeping strike'));
+    const hasSweeping = classAbilities.some(a => a.toLowerCase() === 'sweeping strike');
+
+    // Handle Inspire Courage: find highest version
+    const inspireVersions = classAbilities.filter(a => a.toLowerCase().includes('inspire courage'));
+    let highestInspire = null;
+    if (inspireVersions.length > 0) {
+      // Pick the highest version
+      const ranked = inspireVersions.sort((a, b) => {
+        const getLevel = s => {
+          const low = s.toLowerCase();
+          if (low.includes('iii') || low.includes('3')) return 3;
+          if (low.includes('ii') || low.includes('2')) return 2;
+          return 1;
+        };
+        return getLevel(b) - getLevel(a);
+      });
+      highestInspire = ranked[0];
+    }
+
+    classAbilities.forEach(ability => {
+      const abilityLower = ability.toLowerCase().trim();
+      const baseName = abilityLower.split('(')[0].trim();
+
+      // Skip if this ability has a dedicated interactive section
+      if (this._hasInteractiveSection(baseName)) return;
+
+      // Check if it's an info card ability
+      let def = this.CLASS_INFO_CARD_DEFS[abilityLower] || this.CLASS_INFO_CARD_DEFS[baseName];
+      if (!def) return;
+
+      // Sweeping Strike: skip base if Greater exists
+      if (baseName === 'sweeping strike' && hasGreaterSweeping) return;
+
+      // Inspire Courage: only show the highest version
+      if (abilityLower.includes('inspire courage')) {
+        if (ability !== highestInspire) return;
+        if (generated.has('inspire courage')) return;
+        generated.add('inspire courage');
+      }
+
+      // Dedup
+      const cardKey = baseName;
+      if (generated.has(cardKey)) return;
+      generated.add(cardKey);
+
+      // Get summary from AbilityDescriptions
+      let summaryText = '';
+      if (window.AbilityDescriptions) {
+        const desc = AbilityDescriptions.getDescription(ability) || AbilityDescriptions.getDescription(baseName);
+        if (desc) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = desc;
+          const firstStrong = tmp.querySelector('strong');
+          if (firstStrong) {
+            summaryText = firstStrong.textContent || '';
+          } else {
+            summaryText = (tmp.textContent || '').substring(0, 100);
+          }
+        }
+      }
+      summaryText = this.replaceDynamicPlaceholders(summaryText || '');
+
+      const section = document.createElement('section');
+      section.className = 'class-info-card-section';
+      section.dataset.classInfoAbility = abilityLower;
+
+      const displayName = this.toTitleCase(ability);
+      section.innerHTML = `
+        <div class="section-header-row">
+          <h3 class="section-header">${def.emoji} ${displayName}</h3>
+        </div>
+        <div class="class-info-card-content">
+          <span class="class-info-card-label">${summaryText}</span>
+          <span class="class-info-card-tap-hint">tap for details</span>
+        </div>
+      `;
+
+      section.addEventListener('click', () => {
+        this.showAbilityDetail(ability);
+      });
+      section.title = 'Click for full details';
+
+      grid.appendChild(section);
+    });
+  },
+
+  /**
+   * Check if an ability has a dedicated interactive section (button/toggle)
+   */
+  _hasInteractiveSection(baseName) {
+    const INTERACTIVE_ABILITIES = [
+      'berserk rage', 'brute strength', 'climb walls', 'commanding',
+      'cure disease', 'detect evil', 'detect magic and illusions',
+      'divine protection', 'forceful strike', 'great hearing',
+      'hide in shadows', 'holy smite', 'holy strike', 'improved aim',
+      'just a scratch', 'lay on hands', 'mental strength', 'mystic healing',
+      'nether walk', 'pain control', 'perfection', 'powerful concentration',
+      'quivering palm', 'read languages', 'shape change', 'sharp eyed',
+      'stealthy', 'sneak attack', 'species enemy', 'turn undead',
+      'vaulting', 'animal companion', 'use arcane scrolls',
+      'circle of power', 'familiar', 'magic surge', 'defensive reflexes',
+      'skirmishing', 'swashbuckling', 'unarmored defense', 'weapon precision',
+      'weapon specialization', 'subterfuge', 'second wind',
+      // Rank titles (no card needed)
+      'grand master', 'high master', 'legendary master', 'war marshal',
+      'lord commander', 'battle captain', 'weapon master',
+      // Monk abilities section covers these
+      'heart slow', 'indomitable',
+      // Greater variants of interactive abilities
+      'greater holy smite', 'greater turning', 'greater brute strength',
+      'improved holy smite',
+    ];
+    return INTERACTIVE_ABILITIES.some(a => baseName.includes(a) || a.includes(baseName));
+  },
   
   /**
    * Initialize species abilities section on page load
@@ -1414,6 +1618,7 @@ const App = {
           
           // Update button/info divider visibility (rank changes may show/hide sections)
           this.updateAbilityDividerVisibility();
+    this.updateClassAbilityInfoCards();
           
           // Update Rank 1 spell note for Paladin/Ranger
           this.updateRank1SpellNote();
@@ -1579,6 +1784,7 @@ const App = {
                 this.updateClassSpells(previousClasses);
                 this.updateClassAbilities(previousClasses);
                 this.updateAbilityDividerVisibility();
+    this.updateClassAbilityInfoCards();
                 // Auto-grant Read Magic cantrip for mages
                 if (this.isMageClass()) {
                   this._ensureReadMagic();
@@ -5062,6 +5268,7 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkDetectMagicVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -5620,6 +5827,7 @@ const App = {
         row.remove();
         this.reindexClassAbilityRows();
         this.updateAbilityDividerVisibility();
+    this.updateClassAbilityInfoCards();
         return;
       }
     }
@@ -6449,6 +6657,7 @@ const App = {
         if (normalizedName === 'holy strike') this.checkHolyStrikeVisibility();
         if (normalizedName === 'lay on hands') this.checkLayOnHandsVisibility();
         if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
+        if (normalizedName === 'detect magic and illusions') this.checkDetectMagicVisibility();
         if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
         if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -6547,6 +6756,7 @@ const App = {
     if (normalizedName === 'holy strike') this.checkHolyStrikeVisibility();
     if (normalizedName === 'lay on hands') this.checkLayOnHandsVisibility();
     if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
+    if (normalizedName === 'detect magic and illusions') this.checkDetectMagicVisibility();
     if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
     if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -6609,6 +6819,7 @@ const App = {
     
     // Update button/info divider visibility
     this.updateAbilityDividerVisibility();
+    this.updateClassAbilityInfoCards();
     
     return !!newInput;
   },
@@ -14043,6 +14254,7 @@ const App = {
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkDetectMagicVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -19268,13 +19480,9 @@ const App = {
     
     // Update UI
     const toggleBtn = document.getElementById('btn-forceful-toggle');
-    const btnText = document.getElementById('forceful-btn-text');
-    
     if (toggleBtn) {
       toggleBtn.classList.add('active');
-    }
-    if (btnText) {
-      btnText.textContent = '⚡ Forceful Strike Active ⚡';
+      toggleBtn.textContent = '⚡ Forceful Strike ACTIVE';
     }
     
     this.scheduleAutoSave();
@@ -19293,14 +19501,10 @@ const App = {
     this.releaseBaselineIfClean();
     
     // Update UI
-    const toggleBtn = document.getElementById('btn-forceful-toggle');
-    const btnText = document.getElementById('forceful-btn-text');
-    
-    if (toggleBtn) {
-      toggleBtn.classList.remove('active');
-    }
-    if (btnText) {
-      btnText.textContent = 'Activate Forceful Strike';
+    const toggleBtn2 = document.getElementById('btn-forceful-toggle');
+    if (toggleBtn2) {
+      toggleBtn2.classList.remove('active');
+      toggleBtn2.textContent = '⚡ Forceful Strike';
     }
     
     this.scheduleAutoSave();
@@ -19312,13 +19516,9 @@ const App = {
    */
   restoreForcefulStrikeState() {
     const toggleBtn = document.getElementById('btn-forceful-toggle');
-    const btnText = document.getElementById('forceful-btn-text');
-    
     if (toggleBtn) {
       toggleBtn.classList.add('active');
-    }
-    if (btnText) {
-      btnText.textContent = '⚡ Forceful Strike Active ⚡';
+      toggleBtn.textContent = '⚡ Forceful Strike ACTIVE';
     }
     
     // Re-apply visual indicators
@@ -19433,7 +19633,7 @@ const App = {
     if (toggleBtn) {
       toggleBtn.classList.add('active');
     }
-    if (btnText) {
+    if (toggleBtn) {
       btnText.textContent = '💪 Brute Strength Active - Click to End';
     }
     
@@ -19474,7 +19674,7 @@ const App = {
     if (toggleBtn) {
       toggleBtn.classList.remove('active');
     }
-    if (btnText) {
+    if (toggleBtn) {
       btnText.textContent = 'Use Brute Strength';
     }
     
@@ -19540,7 +19740,7 @@ const App = {
     if (toggleBtn) {
       toggleBtn.classList.add('active');
     }
-    if (btnText) {
+    if (toggleBtn) {
       btnText.textContent = '💪 Brute Strength Active - Click to End';
     }
     
@@ -20950,6 +21150,82 @@ const App = {
         </div>
       </div>`;
     this.showResultModal('👁️ Detect Evil', resultHTML);
+  },
+
+  // ============================================
+  // DETECT MAGIC AND ILLUSIONS (Willpower Roll)
+  // ============================================
+
+  checkDetectMagicVisibility() {
+    const section = document.getElementById('detect-magic-section');
+    if (!section) return;
+    if (this.hasAbility('Detect Magic and Illusions')) {
+      section.style.display = '';
+      this.setupDetectMagicListeners();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  setupDetectMagicListeners() {
+    const btn = document.getElementById('btn-detect-magic-use');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.useDetectMagic());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  useDetectMagic() {
+    // Get Willpower value
+    const wpInput = document.getElementById('willpower-current');
+    const wpValue = parseInt(wpInput?.value, 10) || 0;
+    
+    if (wpValue <= 0) {
+      this.showResultModal('✨ Detect Magic', `
+        <div class="modal-result-body">
+          <div class="result-icon">✨</div>
+          <div class="result-title" style="color:#80b0ff;">Detect Magic</div>
+          <div class="result-detail"><p>Willpower skill is 0 — cannot attempt detection.</p></div>
+        </div>`);
+      return;
+    }
+    
+    // Roll d100
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const isCritical = roll <= Math.ceil(wpValue / 10);
+    const isFumble = roll >= (100 - Math.ceil((100 - wpValue) / 10) + 1);
+    const isSuccess = roll <= wpValue;
+    
+    let resultType, resultColor, resultText;
+    if (isCritical && isSuccess) {
+      resultType = 'CRITICAL SUCCESS';
+      resultColor = '#4ade80';
+      resultText = 'You detect the <strong>presence, direction, and approximate strength</strong> of all magical auras, areas, or items nearby.';
+    } else if (isSuccess) {
+      resultType = 'SUCCESS';
+      resultColor = '#80b0ff';
+      resultText = 'You detect the <strong>presence of magical auras, areas, or items</strong> nearby. You cannot determine the nature or type of magic, only that magic is present.';
+    } else if (isFumble) {
+      resultType = 'FUMBLE';
+      resultColor = '#ff4444';
+      resultText = 'You sense nothing — or perhaps sense something that isn\'t there. The GM may provide <strong>false information</strong>.';
+    } else {
+      resultType = 'FAILURE';
+      resultColor = '#cc8844';
+      resultText = 'You sense <strong>nothing unusual</strong> in the area. Magic may still be present, but you cannot detect it.';
+    }
+    
+    const resultHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">✨</div>
+        <div class="result-title" style="color:#80b0ff;">Detect Magic & Illusions</div>
+        <div class="result-detail">
+          <p><strong>Willpower:</strong> ${wpValue}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
+          <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
+          <p style="margin-top:0.4rem;">${resultText}</p>
+        </div>
+      </div>`;
+    this.showResultModal('✨ Detect Magic', resultHTML);
   },
 
   // ============================================
@@ -36767,6 +37043,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
+    this.checkDetectMagicVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();

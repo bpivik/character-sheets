@@ -1959,6 +1959,99 @@ input.weapon-damage.rage-boosted,
 }
 
 /* ========================================
+   DETECT MAGIC SECTION
+   ======================================== */
+.detect-magic-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a2a 0%, #202040 100%);
+  border: 2px solid #6080c0;
+  border-radius: 6px;
+}
+
+.detect-magic-section .section-header {
+  color: #80b0ff;
+  text-shadow: 0 0 10px rgba(128, 176, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.detect-magic-content {
+  display: flex; flex-direction: column; gap: 0.35rem; align-items: center; text-align: center;
+}
+
+.detect-magic-info { width: 100%; }
+
+.detect-magic-label {
+  color: #7090bb; font-size: 0.72rem; font-style: italic;
+}
+
+.btn-detect-magic {
+  width: 100%;
+  background: linear-gradient(135deg, #1a2a4a 0%, #2a3a6a 50%, #1a2a4a 100%);
+  color: white;
+  border: 1px solid #6080c0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(96, 128, 192, 0.4);
+}
+
+.btn-detect-magic:hover {
+  background: linear-gradient(135deg, #2a3a5a 0%, #3a4a7a 50%, #2a3a5a 100%);
+  box-shadow: 0 4px 12px rgba(128, 176, 255, 0.5);
+}
+
+/* ========================================
+   CLASS ABILITY INFO CARDS (dynamic)
+   ======================================== */
+.class-info-card-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #2a2418 0%, #352e20 100%);
+  border: 2px solid #9a8a5a;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.class-info-card-section:hover {
+  box-shadow: 0 3px 12px rgba(154, 138, 90, 0.3);
+  border-color: #baa870;
+}
+
+.class-info-card-section .section-header {
+  color: #d4b870;
+  text-shadow: 0 0 10px rgba(212, 184, 112, 0.4);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.class-info-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: center;
+  text-align: center;
+}
+
+.class-info-card-label {
+  color: #b0a080;
+  font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.class-info-card-tap-hint {
+  font-size: 0.65rem;
+  color: #7a6a4a;
+  font-style: italic;
+  margin-top: 0.1rem;
+}
+
+/* ========================================
    CURE DISEASE SECTION
    ======================================== */
 .cure-disease-section {
