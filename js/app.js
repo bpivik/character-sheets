@@ -9298,6 +9298,11 @@ const App = {
       const sorcererSwapRanks = this._getSorcererSwapRanks(sorcererClass);
       const canSwapThisRank = sorcererSwapRanks.includes(rankKey);
       
+      // Check if sorcerer has access to this rank's spells
+      const sorcererHasRank = sorcererClass && window.ClassSpellLists && 
+        window.ClassSpellLists.sorcerer && window.ClassSpellLists.sorcerer[rankKey] &&
+        window.ClassSpellLists.sorcerer[rankKey].length > 0;
+      
       // Build button HTML - always start with Add Spell button
       let buttonsHTML = `<button type="button" class="btn btn-small btn-add-spell" data-rank="${rankKey}" title="Add an empty spell row">+ Add Spell</button>`;
       
@@ -9305,6 +9310,11 @@ const App = {
         const display = classDisplay[c.name] || { label: this.toTitleCase(c.name), icon: '📖' };
         buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Choose ${display.label} spells to add">${display.icon} Fill ${display.label}</button>`;
       });
+      
+      // Sorcerer "Add Sorcerer Spell" button
+      if (sorcererHasRank) {
+        buttonsHTML += `<button type="button" class="btn btn-small btn-add-sorcerer-spell" data-rank="${rankKey}" title="Add a sorcerer spell (choose, roll, or auto)">🔮 Add Sorcerer Spell</button>`;
+      }
       
       // Sorcerer swap button
       if (canSwapThisRank) {
@@ -9343,6 +9353,13 @@ const App = {
         clearBtn.addEventListener('click', () => {
           const rank = clearBtn.dataset.rank;
           this.clearSpellsInRank(rank);
+        });
+      }
+      
+      const sorcSpellBtn = actionsBar.querySelector('.btn-add-sorcerer-spell');
+      if (sorcSpellBtn) {
+        sorcSpellBtn.addEventListener('click', () => {
+          this._openAddSorcererSpellModal(sorcSpellBtn.dataset.rank);
         });
       }
       
@@ -9512,10 +9529,61 @@ const App = {
     // Track swaps per character rank advancement (one swap per rank per eligible rank-key)
     if (!this.character.sorcererSwaps) this.character.sorcererSwaps = {};
     if (this.character.sorcererSwaps[`${trackKey}_${rankKey}`]) {
-      // Already used swap for this rank-key at this character rank
-      this._showInfoModal('🔄 Swap Already Used', `You have already used your ${rankLabel} swap at Rank ${currentRank}. You may swap again when you advance to the next rank.`);
+      // Already used swap - warn but allow
+      this._showWarningModal(
+        '⚠️ Swap Already Used',
+        `You have already used your ${rankLabel} swap at Rank ${currentRank}.<br><br>` +
+        `<strong>Rules as Written:</strong> Sorcerers may only swap one spell per eligible rank each time they advance. ` +
+        `Continuing would break the RAW rules.`,
+        'Continue Anyway',
+        'Cancel',
+        () => this._showSorcererSwapStep1(rankKey, existingSpells, rankLabel, trackKey, currentRank)
+      );
       return;
     }
+    
+    this._showSorcererSwapStep1(rankKey, existingSpells, rankLabel, trackKey, currentRank);
+  },
+
+  /**
+   * Show a warning modal with Continue / Cancel buttons
+   */
+  _showWarningModal(title, bodyHTML, confirmText, cancelText, onConfirm) {
+    let overlay = document.getElementById('warning-modal-overlay');
+    if (overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.id = 'warning-modal-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 440px;">
+        <div class="modal-header">
+          <h3>${title}</h3>
+          <button class="modal-close" id="warning-modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem; font-size: 0.90rem; line-height: 1.5;">
+          ${bodyHTML}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="warning-modal-cancel">${cancelText}</button>
+          <button type="button" class="btn btn-primary" id="warning-modal-confirm">${confirmText}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    document.getElementById('warning-modal-close').addEventListener('click', close);
+    document.getElementById('warning-modal-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.getElementById('warning-modal-confirm').addEventListener('click', () => {
+      close();
+      if (onConfirm) onConfirm();
+    });
+  },
+
+  /**
+   * Step 1 of Sorcerer swap — pick spell to remove
+   */
+  _showSorcererSwapStep1(rankKey, existingSpells, rankLabel, trackKey, currentRank) {
     
     let overlay = document.getElementById('spell-swap-overlay');
     if (overlay) overlay.remove();
@@ -9671,20 +9739,253 @@ const App = {
     // Find the row with the old spell
     const rows = tbody.querySelectorAll('tr');
     for (const row of rows) {
-      const nameInput = row.querySelector('.spell-name-input');
+      const nameInput = row.querySelector('.spell-name');
       if (nameInput && nameInput.value.toLowerCase() === oldSpell.toLowerCase()) {
         nameInput.value = newSpell;
         // Update cost
         const cost = window.SpellData ? window.SpellData.getSpellCost(newSpell) : '';
-        const costInput = row.querySelector('.spell-cost-input');
+        const costInput = row.querySelector('.spell-cost');
         if (costInput && cost) costInput.value = cost;
         // Unmemorize the swapped spell
-        const memCb = row.querySelector('.spell-memorize-cb');
+        const memCb = row.querySelector('.spell-memorized');
         if (memCb) memCb.checked = false;
         nameInput.dispatchEvent(new Event('change', { bubbles: true }));
         break;
       }
     }
+  },
+
+  // =========================================================================
+  //  ADD SORCERER SPELL — Choose / Roll / Auto
+  // =========================================================================
+
+  /**
+   * Open the "How would you like to add a spell?" modal
+   */
+  _openAddSorcererSpellModal(rankKey) {
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')} Spell`;
+    
+    let overlay = document.getElementById('sorc-add-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'sorc-add-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 420px;">
+        <div class="modal-header">
+          <h3>🔮 Add ${rankLabel}</h3>
+          <button class="modal-close" id="sorc-add-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <p style="font-size: 0.88rem; margin-bottom: 0.8rem; color: #bbb;">How would you like to determine your new spell?</p>
+          <div class="sorc-add-options">
+            <button type="button" class="btn sorc-add-option-btn" id="sorc-add-choose">
+              <span class="sorc-add-icon">📋</span>
+              <span class="sorc-add-label">Choose Myself</span>
+              <span class="sorc-add-desc">Pick from the full spell list</span>
+            </button>
+            <button type="button" class="btn sorc-add-option-btn" id="sorc-add-roll">
+              <span class="sorc-add-icon">🎲</span>
+              <span class="sorc-add-label">Roll Myself</span>
+              <span class="sorc-add-desc">Enter your d100 roll result</span>
+            </button>
+            <button type="button" class="btn sorc-add-option-btn" id="sorc-add-auto">
+              <span class="sorc-add-icon">⚡</span>
+              <span class="sorc-add-label">Auto-Roll</span>
+              <span class="sorc-add-desc">System rolls d100 on the table</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('sorc-add-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    document.getElementById('sorc-add-choose').addEventListener('click', () => {
+      close();
+      this._sorcererSpellChoose(rankKey);
+    });
+    
+    document.getElementById('sorc-add-roll').addEventListener('click', () => {
+      close();
+      this._sorcererSpellRollManual(rankKey);
+    });
+    
+    document.getElementById('sorc-add-auto').addEventListener('click', () => {
+      close();
+      this._sorcererSpellRollAuto(rankKey);
+    });
+  },
+
+  /**
+   * Choose — open the spell picker (same as mage fill, but for sorcerer)
+   */
+  _sorcererSpellChoose(rankKey) {
+    const classList = window.ClassSpellLists.sorcerer;
+    if (!classList || !classList[rankKey]) return;
+    
+    const allSpells = classList[rankKey].slice().sort((a, b) => a.localeCompare(b));
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    const existingLower = existingSpells.map(s => s.toLowerCase());
+    
+    this._openSpellPickerModal('sorcerer', rankKey, allSpells, existingLower);
+  },
+
+  /**
+   * Roll Myself — enter d100 roll and look up on the table
+   */
+  _sorcererSpellRollManual(rankKey) {
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')}`;
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'sorc-roll-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 380px;">
+        <div class="modal-header">
+          <h3>🎲 Roll ${rankLabel} Spell</h3>
+          <button class="modal-close" id="sorc-roll-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem; text-align: center;">
+          <p style="font-size: 0.85rem; color: #bbb; margin-bottom: 0.8rem;">Enter your d100 roll (1–100):</p>
+          <input type="number" id="sorc-roll-input" min="1" max="100" 
+                 style="width: 80px; text-align: center; font-size: 1.3rem; font-weight: 700; padding: 0.4rem; border: 2px solid #555; border-radius: 6px; background: #1a1a2e; color: #e0e0e0;">
+          <div id="sorc-roll-preview" style="margin-top: 0.8rem; font-size: 0.95rem; min-height: 1.5em; color: #90c0ff;"></div>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="sorc-roll-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="sorc-roll-confirm" disabled>Add Spell</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('sorc-roll-close').addEventListener('click', close);
+    document.getElementById('sorc-roll-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    const input = document.getElementById('sorc-roll-input');
+    const preview = document.getElementById('sorc-roll-preview');
+    const confirmBtn = document.getElementById('sorc-roll-confirm');
+    
+    let resolvedSpell = null;
+    
+    input.addEventListener('input', () => {
+      const val = parseInt(input.value, 10);
+      if (val >= 1 && val <= 100 && window.SorcererSpellTables) {
+        resolvedSpell = window.SorcererSpellTables.lookup(rankKey, val);
+        if (resolvedSpell) {
+          preview.innerHTML = `<strong>${resolvedSpell}</strong>`;
+          confirmBtn.disabled = false;
+        } else {
+          preview.textContent = 'No spell found for that roll';
+          confirmBtn.disabled = true;
+          resolvedSpell = null;
+        }
+      } else {
+        preview.textContent = '';
+        confirmBtn.disabled = true;
+        resolvedSpell = null;
+      }
+    });
+    
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && resolvedSpell) confirmBtn.click();
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      if (!resolvedSpell) return;
+      const roll = parseInt(input.value, 10);
+      close();
+      this._addSorcererRolledSpell(rankKey, resolvedSpell, roll);
+    });
+    
+    setTimeout(() => input.focus(), 100);
+  },
+
+  /**
+   * Auto-Roll — system rolls d100 and shows result
+   */
+  _sorcererSpellRollAuto(rankKey) {
+    if (!window.SorcererSpellTables) return;
+    
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const spell = window.SorcererSpellTables.lookup(rankKey, roll);
+    
+    if (!spell) {
+      this._showInfoModal('🎲 Roll Error', 'Could not resolve a spell for that roll.');
+      return;
+    }
+    
+    this._addSorcererRolledSpell(rankKey, spell, roll);
+  },
+
+  /**
+   * Show rolled result and add the spell
+   */
+  _addSorcererRolledSpell(rankKey, spellName, roll) {
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')}`;
+    
+    // Check if already known
+    const existing = this.getExistingSpellsInRank(rankKey);
+    const isDuplicate = existing.some(s => s.toLowerCase() === spellName.toLowerCase());
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'sorc-result-overlay';
+    overlay.className = 'modal-overlay';
+    
+    const dupeWarning = isDuplicate 
+      ? `<div style="margin-top: 0.6rem; padding: 0.4rem 0.6rem; background: rgba(200, 150, 50, 0.15); border: 1px solid rgba(200, 150, 50, 0.3); border-radius: 5px; font-size: 0.82rem; color: #d4a843;">
+           ⚠️ You already know this spell. You may re-roll or keep it (GM discretion).
+         </div>` 
+      : '';
+    
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>🎲 ${rankLabel} Spell Rolled</h3>
+          <button class="modal-close" id="sorc-result-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem; text-align: center;">
+          <div style="font-size: 0.82rem; color: #999; margin-bottom: 0.3rem;">d100 Roll: <strong style="color: #e0e0e0;">${roll}</strong></div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #90c0ff; margin: 0.5rem 0;">${spellName}</div>
+          ${dupeWarning}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="sorc-result-reroll">🎲 Re-Roll</button>
+          <button type="button" class="btn btn-primary" id="sorc-result-add">${isDuplicate ? 'Add Anyway' : 'Add to Spellbook'}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('sorc-result-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    document.getElementById('sorc-result-reroll').addEventListener('click', () => {
+      close();
+      this._sorcererSpellRollAuto(rankKey);
+    });
+    
+    document.getElementById('sorc-result-add').addEventListener('click', () => {
+      // Add the spell
+      const cost = window.SpellData ? window.SpellData.getSpellCost(spellName) : '';
+      this.addSpellRow(rankKey, {
+        name: spellName,
+        cost: cost || '',
+        memorized: false,
+        classSpell: 'sorcerer'
+      });
+      this.scheduleAutoSave();
+      this.updateSpellFillButtons();
+      close();
+    });
   },
 
   /**

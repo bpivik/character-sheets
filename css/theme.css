@@ -653,6 +653,34 @@ select:focus-visible {
   accent-color: #5a2d7a;
 }
 
+.sorc-add-option-btn {
+  background: rgba(90, 50, 130, 0.06);
+  border-color: rgba(90, 50, 130, 0.2);
+}
+
+.sorc-add-option-btn:hover {
+  background: rgba(90, 50, 130, 0.12);
+  border-color: rgba(90, 50, 130, 0.35);
+}
+
+.sorc-add-label {
+  color: #5a2d7a;
+}
+
+.sorc-add-desc {
+  color: #777;
+}
+
+.spell-actions-bar .btn-add-sorcerer-spell {
+  background: rgba(90, 50, 130, 0.06);
+  border-color: rgba(90, 50, 130, 0.3);
+  color: #5a2d7a;
+}
+
+.spell-actions-bar .btn-add-sorcerer-spell:hover {
+  background: rgba(90, 50, 130, 0.14);
+}
+
 /* --- Spell Weaving (Parchment) --- */
 .cast-modal-weaving {
   background: rgba(100, 60, 150, 0.06);
