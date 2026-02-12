@@ -1167,11 +1167,15 @@ const App = {
    */
   populateSpeciesAbilitiesCards(abilities) {
     const container = document.getElementById('species-abilities-cards');
+    const sectionEl = document.getElementById('species-abilities-section');
     if (!container) return;
     
     container.innerHTML = '';
     
-    if (!abilities || abilities.length === 0) return;
+    if (!abilities || abilities.length === 0) {
+      if (sectionEl) sectionEl.style.display = 'none';
+      return;
+    }
     
     // Abilities that have dedicated interactive button sections
     const BUTTON_ABILITIES = [
@@ -1183,6 +1187,8 @@ const App = {
     const infoAbilities = abilities.filter(a => 
       !BUTTON_ABILITIES.some(skip => a.toLowerCase().includes(skip) || skip.includes(a.toLowerCase()))
     );
+    
+    if (sectionEl) sectionEl.style.display = infoAbilities.length > 0 ? '' : 'none';
     
     infoAbilities.forEach(ability => {
       let summaryText = '';

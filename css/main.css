@@ -9222,15 +9222,21 @@ input.combat-skill-percent.damage-boosted {
   align-items: start;
 }
 
-/* Full-width species abilities row spanning both columns */
+/* Full-width species abilities cards inside section */
+.species-abilities-section {
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
 .species-abilities-fullwidth {
-  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.5rem;
 }
 
-.species-abilities-fullwidth:empty {
+.species-abilities-fullwidth:empty + .species-abilities-section,
+.species-abilities-section:has(.species-abilities-fullwidth:empty) {
   display: none;
 }
 
