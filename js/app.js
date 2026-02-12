@@ -28162,40 +28162,115 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const currentInit = parseInt(document.getElementById('initiative-current')?.value, 10) || 0;
     
     modal.innerHTML = `
-      <div class="modal-content scratch-modal-content" style="max-width: 320px; text-align: center;">
+      <div class="modal-content scratch-modal-content" style="max-width: 340px; text-align: center;">
         <div class="modal-header">
           <h3>🎲 Initiative Roll</h3>
           <button class="modal-close" id="init-roll-close">&times;</button>
         </div>
-        <div class="modal-body">
-          <p style="font-size: 0.9rem;">Ready to roll for Initiative?</p>
-          <p style="font-size: 0.8rem; color: #999;">Current Initiative bonus: <strong>${currentInit}</strong></p>
-        </div>
-        <div class="modal-footer" style="justify-content: center; gap: 0.75rem;">
-          <button type="button" class="btn btn-secondary" id="init-roll-cancel">Cancel</button>
-          <button type="button" class="btn btn-primary" id="init-roll-yes">Roll!</button>
+        <div class="modal-body" style="padding: 1rem;">
+          <p style="font-size: 0.92rem; margin: 0 0 0.3rem;">Roll 1d10 + Initiative Bonus</p>
+          <p style="font-size: 0.85rem; color: #999; margin: 0 0 1rem;">Current Initiative bonus: <strong>${currentInit}</strong></p>
+          <div style="display: flex; gap: 0.6rem; justify-content: center;">
+            <button type="button" class="btn btn-secondary" id="init-roll-myself" style="flex: 1; padding: 0.5rem;">Roll Myself</button>
+            <button type="button" class="btn btn-primary" id="init-roll-auto" style="flex: 1; padding: 0.5rem;">Auto-Roll</button>
+          </div>
         </div>
       </div>
     `;
     
-    document.getElementById('init-roll-close').addEventListener('click', () => modal.classList.add('hidden'));
-    document.getElementById('init-roll-cancel').addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+    const closeModal = () => modal.classList.add('hidden');
+    document.getElementById('init-roll-close').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     
-    document.getElementById('init-roll-yes').addEventListener('click', () => {
-      modal.classList.add('hidden');
+    document.getElementById('init-roll-auto').addEventListener('click', () => {
+      closeModal();
       this.rollInitiativeD10();
+    });
+    
+    document.getElementById('init-roll-myself').addEventListener('click', () => {
+      closeModal();
+      this.showInitiativeManualEntry();
     });
     
     modal.classList.remove('hidden');
   },
-  
-  rollInitiativeD10() {
-    const d10 = Math.floor(Math.random() * 10) + 1;
-    const currentInit = parseInt(document.getElementById('initiative-current')?.value, 10) || 0;
-    const total = currentInit + d10;
+
+  showInitiativeManualEntry() {
+    let modal = document.getElementById('init-manual-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'init-manual-modal';
+      modal.className = 'modal-overlay hidden';
+      document.body.appendChild(modal);
+    }
     
-    // Show result modal
+    const currentInit = parseInt(document.getElementById('initiative-current')?.value, 10) || 0;
+    
+    modal.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 340px; text-align: center;">
+        <div class="modal-header">
+          <h3>🎲 Enter Your Roll</h3>
+          <button class="modal-close" id="init-manual-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <p style="font-size: 0.85rem; color: #999; margin: 0 0 0.8rem;">Initiative bonus: <strong>${currentInit}</strong></p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.8rem;">
+            <label style="font-size: 0.92rem; font-weight: 600;">d10 Result:</label>
+            <input type="number" id="init-manual-input" min="1" max="10" placeholder="1-10" 
+              style="width: 70px; padding: 0.4rem; text-align: center; font-size: 1.1rem; font-weight: 700; border: 2px solid #8b7355; border-radius: 6px;">
+          </div>
+          <div id="init-manual-preview" style="font-size: 0.85rem; color: #999; min-height: 1.4em;"></div>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 0.6rem;">
+          <button type="button" class="btn btn-secondary" id="init-manual-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="init-manual-confirm" disabled>Confirm</button>
+        </div>
+      </div>
+    `;
+    
+    const closeModal = () => modal.classList.add('hidden');
+    document.getElementById('init-manual-close').addEventListener('click', closeModal);
+    document.getElementById('init-manual-cancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    
+    const input = document.getElementById('init-manual-input');
+    const preview = document.getElementById('init-manual-preview');
+    const confirmBtn = document.getElementById('init-manual-confirm');
+    
+    input.addEventListener('input', () => {
+      const val = parseInt(input.value, 10);
+      if (val >= 1 && val <= 10) {
+        const total = currentInit + val;
+        preview.innerHTML = `${currentInit} + ${val} = <strong style="font-size: 1.1rem; color: #4fc3f7;">${total}</strong>`;
+        confirmBtn.disabled = false;
+      } else {
+        preview.textContent = '';
+        confirmBtn.disabled = true;
+      }
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      const val = parseInt(input.value, 10);
+      if (val >= 1 && val <= 10) {
+        closeModal();
+        this.showInitiativeResult(val, currentInit);
+      }
+    });
+    
+    // Allow Enter to confirm
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !confirmBtn.disabled) {
+        confirmBtn.click();
+      }
+    });
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => input.focus(), 100);
+  },
+
+  showInitiativeResult(d10, bonus) {
+    const total = bonus + d10;
+    
     let modal = document.getElementById('init-result-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -28211,8 +28286,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           <button class="modal-close" id="init-result-close">&times;</button>
         </div>
         <div class="modal-body" style="padding: 1rem;">
-          <div style="font-size: 0.8rem; color: #999; margin-bottom: 0.5rem;">
-            Base ${currentInit} + d10 roll: ${d10}
+          <div style="font-size: 0.88rem; color: #999; margin-bottom: 0.5rem;">
+            Base ${bonus} + d10 roll: ${d10}
           </div>
           <div style="font-size: 2rem; font-weight: bold; color: #4fc3f7; margin: 0.5rem 0;">
             ${total}
@@ -28233,6 +28308,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     
     modal.classList.remove('hidden');
+  },
+  
+  rollInitiativeD10() {
+    const d10 = Math.floor(Math.random() * 10) + 1;
+    const currentInit = parseInt(document.getElementById('initiative-current')?.value, 10) || 0;
+    this.showInitiativeResult(d10, currentInit);
   },
   
   applyInitiativePenalty(encStatus, fatigue) {

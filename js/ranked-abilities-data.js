@@ -1525,6 +1525,42 @@ const RANKED_CLASS_ABILITIES = {
       summary: "+1 bonus AP for Reactive Actions, usable four times per combat"
     },
   ],
+
+  sorcerer: [
+    // Rank 1
+    { 
+      name: "Mental Strength I", 
+      rank: 1, 
+      prereqs: "Arcane Sorcery 60%",
+      summary: "1/day: 2 grades easier on Willpower vs mind magic; 1 grade easier to Disbelieve"
+    },
+    { 
+      name: "Powerful Concentration", 
+      rank: 1, 
+      prereqs: "Arcane Sorcery 50%",
+      summary: "Willpower tests to maintain spell Concentration are 1 grade easier"
+    },
+    { 
+      name: "Weapon Precision", 
+      rank: 1, 
+      prereqs: null,
+      summary: "Use STR+DEX for Damage Bonus with finesse weapons (daggers, rapiers, slings, etc.)"
+    },
+    
+    // Rank 2
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength II", 
+      rank: 2, 
+      prereqs: "Mental Strength I; Arcane Sorcery 80%",
+      summary: "As Mental Strength I, but usable 2/day"
+    },
+  ],
 };
 
 /**
