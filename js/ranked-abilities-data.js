@@ -1560,6 +1560,60 @@ const RANKED_CLASS_ABILITIES = {
       prereqs: "Mental Strength I; Arcane Sorcery 80%",
       summary: "As Mental Strength I, but usable 2/day"
     },
+
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Magic Surge", 
+      rank: 3, 
+      prereqs: null,
+      summary: "1/day: Regain 1d6 Magic Points instantly (costs 1 AP in combat)"
+    },
+    { 
+      name: "Mental Strength III", 
+      rank: 3, 
+      prereqs: "Mental Strength II; Arcane Sorcery 100%",
+      summary: "As Mental Strength I, but usable 3/day"
+    },
+
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Mental Strength IV", 
+      rank: 4, 
+      prereqs: "Mental Strength III; Arcane Sorcery 120%",
+      summary: "As Mental Strength I, but usable 4/day"
+    },
+
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    { 
+      name: "Legendary Sorcerer", 
+      rank: 5, 
+      prereqs: null,
+      summary: "Cast any spell without components. Wordless & Stillness weaves built-in (MP/time costs still apply)"
+    },
+    { 
+      name: "Mental Strength V", 
+      rank: 5, 
+      prereqs: "Mental Strength IV; Arcane Sorcery 140%",
+      summary: "As Mental Strength I, but usable 5/day"
+    },
   ],
 };
 

@@ -544,6 +544,7 @@ const App = {
     this.checkDefensiveReflexesVisibility();
     this.checkArcaneScrollsVisibility();
     this.checkFamiliarVisibility();
+    this.checkMagicSurgeVisibility();
     this.checkReadLanguagesPendingVisibility();
     
     // Check if Mental Strength section should be visible
@@ -6411,6 +6412,7 @@ const App = {
         if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
         if (normalizedName === 'read languages') this.checkReadLanguagesPendingVisibility();
         if (normalizedName === 'familiar') this.checkFamiliarVisibility();
+        if (normalizedName === 'magic surge') this.checkMagicSurgeVisibility();
         if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
         
         // Check if Turn Undead section should now be visible
@@ -6507,6 +6509,7 @@ const App = {
     if (normalizedName === 'use arcane scrolls') this.checkArcaneScrollsVisibility();
     if (normalizedName === 'read languages') this.checkReadLanguagesPendingVisibility();
     if (normalizedName === 'familiar') this.checkFamiliarVisibility();
+    if (normalizedName === 'magic surge') this.checkMagicSurgeVisibility();
     if (normalizedName.startsWith('defensive reflexes')) this.checkDefensiveReflexesVisibility();
     
     // Check if Turn Undead section should now be visible
@@ -12568,6 +12571,7 @@ const App = {
     this.checkWeaponSpecVisibility();
     this.checkMonkAbilitiesVisibility();
     this.checkFamiliarVisibility();
+    this.checkMagicSurgeVisibility();
     
     // Update weapon master tier (rank may have changed)
     if (this.character.weaponMaster) {
@@ -13690,8 +13694,8 @@ const App = {
       const familiarDisplay = document.getElementById('familiar-type-display');
       if (familiarDisplay) familiarDisplay.textContent = 'Not yet chosen';
       this.checkFamiliarVisibility();
+      this.checkMagicSurgeVisibility();
     }
-    
     // Remove Fighter's Weapon Master data
     if (classKey === 'fighter') {
       if (this.character.weaponMaster) {
@@ -15404,6 +15408,18 @@ const App = {
         messages.push(`<strong>Mental Strength uses restored:</strong> ${prevUses} → ${maxUses}`);
       } else {
         messages.push(`<strong>Mental Strength:</strong> Already at maximum (${maxUses} uses)`);
+      }
+    }
+    
+    // Reset Magic Surge daily use
+    if (this.hasAbility('Magic Surge')) {
+      const prevUses = this.character.magicSurgeUsesRemaining || 0;
+      this.character.magicSurgeUsesRemaining = 1;
+      this.updateMagicSurgeDisplay();
+      if (prevUses < 1) {
+        messages.push(`<strong>Magic Surge restored:</strong> 1 use available`);
+      } else {
+        messages.push(`<strong>Magic Surge:</strong> Already available`);
       }
     }
     
@@ -21652,6 +21668,247 @@ const App = {
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.remove();
     });
+  },
+
+  /**
+   * Show/hide the Magic Surge section.
+   * Visible when sorcerer has the Magic Surge ability.
+   */
+  checkMagicSurgeVisibility() {
+    const section = document.getElementById('magic-surge-section');
+    if (!section) return;
+    
+    if (!this.hasAbility('Magic Surge')) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    section.style.display = '';
+    this.initMagicSurge();
+  },
+
+  /**
+   * Initialize Magic Surge system
+   */
+  initMagicSurge() {
+    // Initialize uses if not set
+    if (this.character.magicSurgeUsesRemaining === undefined || this.character.magicSurgeUsesRemaining === null) {
+      this.character.magicSurgeUsesRemaining = 1;
+    }
+    
+    this.updateMagicSurgeDisplay();
+    
+    const useBtn = document.getElementById('btn-magic-surge-use');
+    const resetBtn = document.getElementById('btn-reset-magic-surge');
+    
+    if (useBtn && !useBtn._msInit) {
+      useBtn._msInit = true;
+      useBtn.addEventListener('click', () => this.showMagicSurgeModal());
+    }
+    
+    if (resetBtn && !resetBtn._msInit) {
+      resetBtn._msInit = true;
+      resetBtn.addEventListener('click', () => {
+        this.character.magicSurgeUsesRemaining = 1;
+        this.updateMagicSurgeDisplay();
+        this.scheduleAutoSave();
+      });
+    }
+  },
+
+  /**
+   * Update Magic Surge display
+   */
+  updateMagicSurgeDisplay() {
+    const usesEl = document.getElementById('magic-surge-uses');
+    if (usesEl) usesEl.textContent = this.character.magicSurgeUsesRemaining || 0;
+    
+    const useBtn = document.getElementById('btn-magic-surge-use');
+    if (useBtn) useBtn.disabled = (this.character.magicSurgeUsesRemaining || 0) <= 0;
+  },
+
+  /**
+   * Show Magic Surge modal with Auto-Roll / Roll Myself options
+   */
+  showMagicSurgeModal() {
+    if ((this.character.magicSurgeUsesRemaining || 0) <= 0) return;
+    
+    const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
+    const maxMP = parseInt(document.getElementById('magic-points-total')?.textContent, 10) || 0;
+    
+    let overlay = document.getElementById('magic-surge-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'magic-surge-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 360px; text-align: center;">
+        <div class="modal-header">
+          <h3>⚡ Magic Surge</h3>
+          <button class="modal-close" id="ms-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <p style="font-size: 0.92rem; margin: 0 0 0.3rem;">Regain <strong>1d6 Magic Points</strong></p>
+          <p style="font-size: 0.85rem; color: #999; margin: 0 0 0.8rem;">Current MP: <strong>${currentMP}</strong> / ${maxMP}</p>
+          <div style="display: flex; gap: 0.6rem; justify-content: center;">
+            <button type="button" class="btn btn-secondary" id="ms-roll-myself" style="flex: 1; padding: 0.5rem;">Roll Myself</button>
+            <button type="button" class="btn btn-primary" id="ms-auto-roll" style="flex: 1; padding: 0.5rem;">Auto-Roll</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('ms-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    document.getElementById('ms-auto-roll').addEventListener('click', () => {
+      close();
+      const roll = Math.floor(Math.random() * 6) + 1;
+      this.applyMagicSurge(roll);
+    });
+    
+    document.getElementById('ms-roll-myself').addEventListener('click', () => {
+      close();
+      this.showMagicSurgeManualEntry();
+    });
+  },
+
+  /**
+   * Show manual entry modal for Magic Surge
+   */
+  showMagicSurgeManualEntry() {
+    const currentMP = parseInt(document.getElementById('magic-points-current')?.value, 10) || 0;
+    const maxMP = parseInt(document.getElementById('magic-points-total')?.textContent, 10) || 0;
+    
+    let overlay = document.getElementById('magic-surge-manual-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'magic-surge-manual-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 360px; text-align: center;">
+        <div class="modal-header">
+          <h3>⚡ Enter Your Roll</h3>
+          <button class="modal-close" id="ms-manual-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <p style="font-size: 0.85rem; color: #999; margin: 0 0 0.8rem;">Current MP: <strong>${currentMP}</strong> / ${maxMP}</p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.8rem;">
+            <label style="font-size: 0.92rem; font-weight: 600;">d6 Result:</label>
+            <input type="number" id="ms-manual-input" min="1" max="6" placeholder="1-6" 
+              style="width: 70px; padding: 0.4rem; text-align: center; font-size: 1.1rem; font-weight: 700; border: 2px solid #2a6cb8; border-radius: 6px;">
+          </div>
+          <div id="ms-manual-preview" style="font-size: 0.85rem; color: #999; min-height: 1.4em;"></div>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 0.6rem;">
+          <button type="button" class="btn btn-secondary" id="ms-manual-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="ms-manual-confirm" disabled>Confirm</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('ms-manual-close').addEventListener('click', close);
+    document.getElementById('ms-manual-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    const input = document.getElementById('ms-manual-input');
+    const preview = document.getElementById('ms-manual-preview');
+    const confirmBtn = document.getElementById('ms-manual-confirm');
+    
+    input.addEventListener('input', () => {
+      const val = parseInt(input.value, 10);
+      if (val >= 1 && val <= 6) {
+        const newMP = Math.min(currentMP + val, maxMP);
+        preview.innerHTML = `${currentMP} + ${val} = <strong style="font-size: 1.1rem; color: #4fc3f7;">${newMP} MP</strong>`;
+        confirmBtn.disabled = false;
+      } else {
+        preview.textContent = '';
+        confirmBtn.disabled = true;
+      }
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      const val = parseInt(input.value, 10);
+      if (val >= 1 && val <= 6) {
+        close();
+        this.applyMagicSurge(val);
+      }
+    });
+    
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !confirmBtn.disabled) confirmBtn.click();
+    });
+    
+    setTimeout(() => input.focus(), 100);
+  },
+
+  /**
+   * Apply Magic Surge result — add MP and show result
+   */
+  applyMagicSurge(roll) {
+    const mpInput = document.getElementById('magic-points-current');
+    const mpTotal = document.getElementById('magic-points-total');
+    if (!mpInput) return;
+    
+    const currentMP = parseInt(mpInput.value, 10) || 0;
+    const maxMP = parseInt(mpTotal?.textContent, 10) || 99;
+    const newMP = Math.min(currentMP + roll, maxMP);
+    const gained = newMP - currentMP;
+    
+    // Update MP
+    mpInput.value = newMP;
+    mpInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Consume the daily use
+    this.character.magicSurgeUsesRemaining = 0;
+    this.updateMagicSurgeDisplay();
+    this.scheduleAutoSave();
+    
+    // Show result modal
+    let overlay = document.getElementById('magic-surge-result-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'magic-surge-result-overlay';
+    overlay.className = 'modal-overlay';
+    
+    const capNote = gained < roll ? `<div style="font-size: 0.82rem; color: #d4a017; margin-top: 0.3rem;">Capped at max MP (${maxMP})</div>` : '';
+    
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 320px; text-align: center;">
+        <div class="modal-header">
+          <h3>⚡ Magic Surge Result</h3>
+          <button class="modal-close" id="ms-result-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <div style="font-size: 0.88rem; color: #999; margin-bottom: 0.3rem;">
+            d6 roll: ${roll}
+          </div>
+          <div style="font-size: 2rem; font-weight: bold; color: #4fc3f7; margin: 0.5rem 0;">
+            +${gained} MP
+          </div>
+          <div style="font-size: 0.95rem;">
+            Magic Points: <strong>${currentMP}</strong> → <strong style="color: #4fc3f7;">${newMP}</strong>
+          </div>
+          ${capNote}
+        </div>
+        <div class="modal-footer" style="justify-content: center;">
+          <button type="button" class="btn btn-primary" id="ms-result-ok">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('ms-result-close').addEventListener('click', close);
+    document.getElementById('ms-result-ok').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   },
 
   /**

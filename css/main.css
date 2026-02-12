@@ -2346,6 +2346,70 @@ input.weapon-damage.rage-boosted,
   margin-top: 0.1rem;
 }
 
+/* Magic Surge Section */
+.magic-surge-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(30, 90, 200, 0.08), rgba(80, 160, 255, 0.06));
+  border: 2px solid rgba(80, 160, 255, 0.3);
+  border-radius: 6px;
+}
+
+.magic-surge-section .section-header {
+  color: #2a6cb8;
+}
+
+.magic-surge-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.magic-surge-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.magic-surge-value {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #2a6cb8;
+}
+
+.magic-surge-label {
+  color: #666;
+  font-size: 0.82rem;
+}
+
+.magic-surge-button-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-magic-surge {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  background: linear-gradient(to bottom, rgba(80, 160, 255, 0.15), rgba(80, 160, 255, 0.25));
+  border: 1px solid rgba(80, 160, 255, 0.4);
+  border-radius: 5px;
+  color: #1a5aa0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-magic-surge:hover {
+  background: linear-gradient(to bottom, rgba(80, 160, 255, 0.25), rgba(80, 160, 255, 0.35));
+  border-color: rgba(80, 160, 255, 0.6);
+}
+
+.btn-magic-surge:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Familiar Type Modal */
 .familiar-modal-content {
   max-width: 420px;
