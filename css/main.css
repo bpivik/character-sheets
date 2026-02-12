@@ -10316,8 +10316,8 @@ input.combat-skill-percent.damage-boosted {
 
 .spell-header-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.3rem;
   margin-bottom: 0.25rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--border-gold);
@@ -10325,6 +10325,7 @@ input.combat-skill-percent.damage-boosted {
 
 .spell-header-row .spell-rank-header {
   margin: 0;
+  flex: 1;
   padding: 0;
   border: none;
   text-align: left;

@@ -1918,6 +1918,20 @@ const App = {
       }
     });
     
+    // Spell row +/- buttons (individual for each rank)
+    document.querySelectorAll('.btn-add-spell-row').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.addSpellRow(btn.dataset.rank);
+        this.scheduleAutoSave();
+        this.updateSpellFillButtons();
+      });
+    });
+    document.querySelectorAll('.btn-remove-spell-row').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.removeLastSpellRow(btn.dataset.rank);
+      });
+    });
+    
     // Unlock originals button (for Attributes only)
     const unlockOriginalsBtn = document.getElementById('unlock-originals-btn');
     if (unlockOriginalsBtn) {
@@ -9285,14 +9299,6 @@ const App = {
         return maxSpellRank >= rankIndex;
       });
       
-      // Check if there's class spell data for this rank
-      // Sorcerers don't use Fill Spells — they know only what they've learned
-      const classesWithSpells = availableClasses.filter(c => {
-        if (c.name === 'sorcerer') return false;
-        const classList = window.ClassSpellLists[c.name];
-        return classList && classList[rankKey] && classList[rankKey].length > 0;
-      });
-      
       // Check for sorcerer swap eligibility
       const sorcererClass = availableClasses.find(c => c.name === 'sorcerer');
       const sorcererSwapRanks = this._getSorcererSwapRanks(sorcererClass);
@@ -9303,13 +9309,8 @@ const App = {
         window.ClassSpellLists.sorcerer && window.ClassSpellLists.sorcerer[rankKey] &&
         window.ClassSpellLists.sorcerer[rankKey].length > 0;
       
-      // Build button HTML - always start with Add Spell button
-      let buttonsHTML = `<button type="button" class="btn btn-small btn-add-spell" data-rank="${rankKey}" title="Add an empty spell row">+ Add Spell</button>`;
-      
-      classesWithSpells.forEach(c => {
-        const display = classDisplay[c.name] || { label: this.toTitleCase(c.name), icon: '📖' };
-        buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Choose ${display.label} spells to add">${display.icon} Fill ${display.label}</button>`;
-      });
+      // Build button HTML — only sorcerer-specific and clear buttons
+      let buttonsHTML = '';
       
       // Sorcerer "Add Sorcerer Spell" button
       if (sorcererHasRank) {
@@ -9330,24 +9331,10 @@ const App = {
       
       actionsBar.innerHTML = buttonsHTML;
       
-      // Bar is always visible (always has at least the + button)
-      actionsBar.style.display = '';
+      // Hide bar if no buttons
+      actionsBar.style.display = buttonsHTML ? '' : 'none';
       
       // Attach event listeners
-      actionsBar.querySelector('.btn-add-spell').addEventListener('click', () => {
-        this.addSpellRow(rankKey);
-        this.scheduleAutoSave();
-        this.updateSpellFillButtons();
-      });
-      
-      actionsBar.querySelectorAll('.btn-fill-spells').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const className = btn.dataset.class;
-          const rank = btn.dataset.rank;
-          this.fillClassSpellsForRank(className, rank);
-        });
-      });
-      
       const clearBtn = actionsBar.querySelector('.btn-clear-spells');
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
@@ -10037,6 +10024,38 @@ const App = {
   },
   
   /**
+   * Remove the last spell row from a rank (− button)
+   */
+  removeLastSpellRow(rankKey) {
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody || tbody.rows.length === 0) return;
+    
+    const lastRow = tbody.rows[tbody.rows.length - 1];
+    const nameInput = lastRow.querySelector('.spell-name');
+    const spellName = nameInput ? nameInput.value.trim() : '';
+    
+    if (spellName) {
+      // Has content — use warning modal instead of confirm()
+      this._showWarningModal(
+        '🗑️ Remove Spell',
+        `Remove <strong>${spellName}</strong> from your spell list?`,
+        'Remove',
+        'Cancel',
+        () => {
+          lastRow.remove();
+          this.scheduleAutoSave();
+          this.updateSpellFillButtons();
+        }
+      );
+    } else {
+      // Empty row — just remove
+      lastRow.remove();
+      this.scheduleAutoSave();
+      this.updateSpellFillButtons();
+    }
+  },
+
+  /**
    * Clear all spells in a specific rank with confirmation
    */
   clearSpellsInRank(rankKey) {
@@ -10045,17 +10064,19 @@ const App = {
     
     const spellCount = tbody.rows.length;
     const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')} Spells`;
-    if (!confirm(`Clear all ${spellCount} spell(s) from ${rankLabel}?\n\nThis will remove all spells, costs, and memorized flags in this rank.`)) {
-      return;
-    }
     
-    tbody.innerHTML = '';
-    
-    console.log(`Cleared all spells from ${rankKey}`);
-    this.scheduleAutoSave();
-    
-    // Refresh buttons (Clear All may need to hide)
-    this.updateSpellFillButtons();
+    this._showWarningModal(
+      '🗑️ Clear All Spells',
+      `Clear all <strong>${spellCount}</strong> spell(s) from <strong>${rankLabel}</strong>?<br><br>This will remove all spells, costs, and memorized flags in this rank.`,
+      'Clear All',
+      'Cancel',
+      () => {
+        tbody.innerHTML = '';
+        console.log(`Cleared all spells from ${rankKey}`);
+        this.scheduleAutoSave();
+        this.updateSpellFillButtons();
+      }
+    );
   },
   
   /**
