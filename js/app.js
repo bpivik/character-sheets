@@ -2979,11 +2979,11 @@ const App = {
       
       currentInput.addEventListener('input', (e) => {
         // If there's an active penalty and user is editing, update the original value
-        if (e.target.classList.contains('enc-penalized-value')) {
+        if (e.target.classList.contains('enc-penalized-value') || e.target.classList.contains('fatigue-penalized')) {
           const newOriginal = e.target.value;
           e.target.dataset.originalValue = newOriginal;
           // Re-apply penalty display after a short delay
-          setTimeout(() => this.updateTotalEnc(), 10);
+          setTimeout(() => this.applyAllPenalties(), 10);
         } else if (e.target.dataset.originalValue !== undefined) {
           e.target.dataset.originalValue = e.target.value;
         }
@@ -13996,10 +13996,7 @@ const App = {
           magicInput.dataset.originalValue = profValue;
           // Set the displayed value (penalties will be reapplied by applyAllPenalties)
           magicInput.value = profValue;
-          // Flag to prevent input listener from re-setting originalValue
-          this._syncingMagicFromProf = true;
-          magicInput.dispatchEvent(new Event('input', { bubbles: true }));
-          this._syncingMagicFromProf = false;
+          // No input event dispatch needed — applyAllPenalties below handles everything
         }
       }
     }
@@ -14082,11 +14079,21 @@ const App = {
     if (!config) return;
     if (!this.isMagicSkillRelevant(skillName)) return;
     
+    // CRITICAL: Always use original (unpenalized) value to prevent double-penalty
+    const unpenalizedValue = currentInput.dataset.originalValue || currentInput.value;
     const magicInput = document.getElementById(config.magicId);
-    if (magicInput && magicInput.value !== currentInput.value) {
-      magicInput.value = currentInput.value;
-      magicInput.dispatchEvent(new Event('input', { bubbles: true }));
-      magicInput.dispatchEvent(new Event('change', { bubbles: true }));
+    if (magicInput) {
+      const magicOriginal = magicInput.dataset.originalValue || magicInput.value;
+      if (magicOriginal !== unpenalizedValue) {
+        magicInput.dataset.originalValue = unpenalizedValue;
+        magicInput.value = unpenalizedValue;
+        this._syncingMagicFromProf = true;
+        magicInput.dispatchEvent(new Event('input', { bubbles: true }));
+        magicInput.dispatchEvent(new Event('change', { bubbles: true }));
+        this._syncingMagicFromProf = false;
+        // Re-apply penalties so magic input shows correct penalized value
+        this.applyAllPenalties();
+      }
     }
   },
   
@@ -14108,6 +14115,10 @@ const App = {
     if (!targetSkillName) return;
     if (!this.isMagicSkillRelevant(targetSkillName)) return;
     
+    // CRITICAL: Use the original (unpenalized) value from the magic input if available
+    const magicInput = document.getElementById(magicFieldId);
+    const syncValue = magicInput?.dataset.originalValue || value;
+    
     // Find this skill in professional skills
     for (let i = 0, _n = this._profSkillRowCount(); i < _n; i++) {
       const nameInput = document.getElementById(`prof-skill-${i}-name`);
@@ -14116,13 +14127,13 @@ const App = {
       if (nameInput && currentInput) {
         const profSkillName = nameInput.value.toLowerCase().replace(/\s*\(.*\)/, '').trim();
         if (profSkillName === targetSkillName) {
-          if (currentInput.value !== value) {
-            currentInput.value = value;
-            // Update original value for penalty tracking
-            if (currentInput.dataset.originalValue !== undefined) {
-              currentInput.dataset.originalValue = value;
-            }
+          const profOriginal = currentInput.dataset.originalValue || currentInput.value;
+          if (profOriginal !== syncValue) {
+            currentInput.dataset.originalValue = syncValue;
+            currentInput.value = syncValue;
             this.updateProfessionalSkillData(i);
+            // Re-apply penalties to show correct penalized value
+            this.applyAllPenalties();
           }
           return; // Found and updated
         }
@@ -14130,8 +14141,8 @@ const App = {
     }
     
     // Skill not found in professional skills — auto-add it
-    if (value && value.trim()) {
-      this._addMagicSkillToProfessional(targetSkillName, targetConfig, value);
+    if (syncValue && syncValue.toString().trim()) {
+      this._addMagicSkillToProfessional(targetSkillName, targetConfig, syncValue);
     }
   },
   
@@ -14236,6 +14247,8 @@ const App = {
       const magicInput = document.getElementById(config.magicId);
       if (magicInput) {
         magicInput.addEventListener('input', (e) => {
+          // Don't sync back to prof skill during a prof→magic sync (prevents circular cascade)
+          if (this._syncingMagicFromProf) return;
           this.syncMagicToProfSkill(config.magicId, e.target.value);
         });
       }
@@ -32056,10 +32069,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     });
     
     currentInput.addEventListener('input', (e) => {
-      if (e.target.classList.contains('enc-penalized-value')) {
+      if (e.target.classList.contains('enc-penalized-value') || e.target.classList.contains('fatigue-penalized')) {
         const newOriginal = e.target.value;
         e.target.dataset.originalValue = newOriginal;
-        setTimeout(() => this.updateTotalEnc(), 10);
+        setTimeout(() => this.applyAllPenalties(), 10);
       } else if (e.target.dataset.originalValue !== undefined) {
         e.target.dataset.originalValue = e.target.value;
       }
