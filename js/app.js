@@ -1232,20 +1232,24 @@ const App = {
     }
     
     abilities.forEach(ability => {
-      const card = document.createElement('div');
+      const card = document.createElement('section');
       card.className = 'species-ability-card';
       
       // Get description from AbilityDescriptions
-      let descHTML = '';
       let descPlain = '';
       if (window.AbilityDescriptions) {
         const desc = AbilityDescriptions.getDescription(ability);
         if (desc) {
-          descHTML = desc;
-          // Strip HTML for the card preview
+          // Strip HTML for the card preview - get just the bold summary line
           const tmp = document.createElement('div');
           tmp.innerHTML = desc;
-          descPlain = tmp.textContent || tmp.innerText || '';
+          // Try to get just the first strong/bold text as summary
+          const firstStrong = tmp.querySelector('strong');
+          if (firstStrong) {
+            descPlain = firstStrong.textContent || '';
+          } else {
+            descPlain = (tmp.textContent || '').substring(0, 120);
+          }
         }
       }
       
@@ -1254,16 +1258,28 @@ const App = {
         descPlain = this.replaceDynamicPlaceholders(descPlain);
       }
       
-      const nameDiv = document.createElement('div');
-      nameDiv.className = 'species-ability-card-name';
-      nameDiv.textContent = this.toTitleCase(ability);
+      // Header row with name
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'species-ability-card-header';
       
+      const nameEl = document.createElement('h3');
+      nameEl.className = 'species-ability-card-name';
+      nameEl.textContent = this.toTitleCase(ability);
+      headerDiv.appendChild(nameEl);
+      
+      // Description summary
       const descDiv = document.createElement('div');
       descDiv.className = 'species-ability-card-desc';
       descDiv.textContent = descPlain || 'No description available.';
       
-      card.appendChild(nameDiv);
+      // "Tap for details" hint
+      const tapHint = document.createElement('span');
+      tapHint.className = 'species-ability-card-tap';
+      tapHint.textContent = 'tap for details';
+      
+      card.appendChild(headerDiv);
       card.appendChild(descDiv);
+      card.appendChild(tapHint);
       
       // Click to open full detail modal
       card.addEventListener('click', () => {
@@ -1271,7 +1287,7 @@ const App = {
       });
       card.title = 'Click for full details';
       
-      // If description is long, keep at 2-col. If only 1-2 abilities, make full width
+      // Cards with very short descriptions go full-width if only 1-2 total
       if (abilities.length <= 2) {
         card.classList.add('full-width');
       }
