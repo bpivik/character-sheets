@@ -10414,6 +10414,124 @@ input.combat-skill-percent.damage-boosted {
   border-color: #c66;
 }
 
+/* Swap Spell Button */
+.spell-actions-bar .btn-swap-spell {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid rgba(80, 160, 255, 0.4);
+  line-height: 1.2;
+  white-space: nowrap;
+  background: rgba(80, 160, 255, 0.08);
+  color: #1a5aa0;
+}
+
+.spell-actions-bar .btn-swap-spell:hover {
+  background: rgba(80, 160, 255, 0.18);
+  border-color: rgba(80, 160, 255, 0.6);
+}
+
+/* ── Spell Picker Modal ── */
+.spell-picker-modal-content {
+  max-width: 480px;
+  width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.spell-picker-toolbar {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-light, rgba(139, 115, 85, 0.2));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spell-picker-search {
+  flex: 1;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-light, rgba(139, 115, 85, 0.3));
+  border-radius: 5px;
+  font-size: 0.85rem;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary, #333);
+}
+
+.spell-picker-search:focus {
+  outline: none;
+  border-color: var(--input-focus, #6a5acd);
+  box-shadow: 0 0 0 2px rgba(106, 90, 205, 0.15);
+}
+
+.spell-picker-count {
+  font-size: 0.78rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.spell-picker-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.4rem 0.6rem;
+  max-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.spell-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: background 0.1s;
+}
+
+.spell-pick-row:hover {
+  background: rgba(106, 90, 205, 0.08);
+}
+
+.spell-pick-row.spell-pick-existing {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.spell-pick-row.spell-pick-existing:hover {
+  background: transparent;
+}
+
+.spell-pick-cb,
+.spell-swap-radio {
+  width: 16px;
+  height: 16px;
+  accent-color: #6a5acd;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.spell-pick-name {
+  flex: 1;
+}
+
+.spell-pick-tag {
+  font-size: 0.68rem;
+  color: #999;
+  font-style: italic;
+}
+
+.spell-swap-step-label {
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  color: #6b5344;
+  background: rgba(139, 115, 85, 0.06);
+  border-bottom: 1px solid rgba(139, 115, 85, 0.15);
+}
+
 .spell-table {
   width: 100%;
   border-collapse: collapse;

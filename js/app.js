@@ -9293,13 +9293,23 @@ const App = {
         return classList && classList[rankKey] && classList[rankKey].length > 0;
       });
       
+      // Check for sorcerer swap eligibility
+      const sorcererClass = availableClasses.find(c => c.name === 'sorcerer');
+      const sorcererSwapRanks = this._getSorcererSwapRanks(sorcererClass);
+      const canSwapThisRank = sorcererSwapRanks.includes(rankKey);
+      
       // Build button HTML - always start with Add Spell button
       let buttonsHTML = `<button type="button" class="btn btn-small btn-add-spell" data-rank="${rankKey}" title="Add an empty spell row">+ Add Spell</button>`;
       
       classesWithSpells.forEach(c => {
         const display = classDisplay[c.name] || { label: this.toTitleCase(c.name), icon: '📖' };
-        buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Fill with ${display.label} spells">${display.icon} Fill ${display.label}</button>`;
+        buttonsHTML += `<button type="button" class="btn btn-small btn-fill-spells" data-class="${c.name}" data-rank="${rankKey}" title="Choose ${display.label} spells to add">${display.icon} Fill ${display.label}</button>`;
       });
+      
+      // Sorcerer swap button
+      if (canSwapThisRank) {
+        buttonsHTML += `<button type="button" class="btn btn-small btn-swap-spell" data-rank="${rankKey}" title="Swap one spell for another of the same rank">🔄 Swap Spell</button>`;
+      }
       
       // Show Clear All if there are any rows
       const tbody = document.getElementById(`${rankKey}-body`);
@@ -9335,6 +9345,13 @@ const App = {
           this.clearSpellsInRank(rank);
         });
       }
+      
+      const swapBtn = actionsBar.querySelector('.btn-swap-spell');
+      if (swapBtn) {
+        swapBtn.addEventListener('click', () => {
+          this._openSorcererSwapModal(swapBtn.dataset.rank);
+        });
+      }
     });
   },
   
@@ -9348,37 +9365,374 @@ const App = {
     const classList = window.ClassSpellLists[className.toLowerCase()];
     if (!classList || !classList[rankKey]) return;
     
-    const spellsToAdd = classList[rankKey];
+    const allSpells = classList[rankKey].slice().sort((a, b) => a.localeCompare(b));
     const existingSpells = this.getExistingSpellsInRank(rankKey);
+    const existingLower = existingSpells.map(s => s.toLowerCase());
     
-    let addedCount = 0;
+    this._openSpellPickerModal(className, rankKey, allSpells, existingLower);
+  },
+
+  /**
+   * Open a spell picker modal for choosing spells from a class list
+   */
+  _openSpellPickerModal(className, rankKey, allSpells, existingLower) {
+    let overlay = document.getElementById('spell-picker-overlay');
+    if (overlay) overlay.remove();
     
-    spellsToAdd.forEach(spellName => {
-      // Skip if spell already exists in this rank
-      if (existingSpells.some(s => s.toLowerCase() === spellName.toLowerCase())) {
-        return;
-      }
-      
-      // Get cost for the spell
-      const cost = window.SpellData.getSpellCost(spellName);
-      
-      this.addSpellRow(rankKey, {
-        name: spellName,
-        cost: cost || '',
-        memorized: false,
-        classSpell: className.toLowerCase()
+    overlay = document.createElement('div');
+    overlay.id = 'spell-picker-overlay';
+    overlay.className = 'modal-overlay';
+    
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')}`;
+    const classLabel = this.toTitleCase(className);
+    
+    const spellRows = allSpells.map((spell, i) => {
+      const isExisting = existingLower.includes(spell.toLowerCase());
+      const checkedAttr = isExisting ? 'checked disabled' : '';
+      const existingClass = isExisting ? ' spell-pick-existing' : '';
+      return `<label class="spell-pick-row${existingClass}">
+        <input type="checkbox" class="spell-pick-cb" data-spell="${this._escAttr(spell)}" ${checkedAttr}>
+        <span class="spell-pick-name">${spell}</span>
+      </label>`;
+    }).join('');
+    
+    overlay.innerHTML = `
+      <div class="modal-content spell-picker-modal-content">
+        <div class="modal-header">
+          <h3>📖 ${classLabel} ${rankLabel} Spells</h3>
+          <button class="modal-close" id="spell-picker-close">&times;</button>
+        </div>
+        <div class="spell-picker-toolbar">
+          <input type="text" id="spell-picker-search" class="spell-picker-search" placeholder="Search spells…">
+          <span class="spell-picker-count" id="spell-picker-count">0 selected</span>
+        </div>
+        <div class="spell-picker-list" id="spell-picker-list">
+          ${spellRows}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="spell-picker-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="spell-picker-add" disabled>Add Selected</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('spell-picker-close').addEventListener('click', close);
+    document.getElementById('spell-picker-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    // Search filter
+    const searchInput = document.getElementById('spell-picker-search');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase();
+      overlay.querySelectorAll('.spell-pick-row').forEach(row => {
+        const name = row.querySelector('.spell-pick-name').textContent.toLowerCase();
+        row.style.display = name.includes(q) ? '' : 'none';
       });
-      
-      addedCount++;
     });
     
-    if (addedCount > 0) {
-      console.log(`Filled ${addedCount} ${this.toTitleCase(className)} spells into ${rankKey}`);
-      this.scheduleAutoSave();
+    // Selection count + add button state
+    const addBtn = document.getElementById('spell-picker-add');
+    const countEl = document.getElementById('spell-picker-count');
+    const updateCount = () => {
+      const checked = overlay.querySelectorAll('.spell-pick-cb:checked:not(:disabled)').length;
+      countEl.textContent = `${checked} selected`;
+      addBtn.disabled = checked === 0;
+    };
+    
+    overlay.querySelectorAll('.spell-pick-cb:not(:disabled)').forEach(cb => {
+      cb.addEventListener('change', updateCount);
+    });
+    
+    // Add Selected
+    addBtn.addEventListener('click', () => {
+      const selected = [];
+      overlay.querySelectorAll('.spell-pick-cb:checked:not(:disabled)').forEach(cb => {
+        selected.push(cb.dataset.spell);
+      });
+      
+      let addedCount = 0;
+      selected.forEach(spellName => {
+        const cost = window.SpellData.getSpellCost(spellName);
+        this.addSpellRow(rankKey, {
+          name: spellName,
+          cost: cost || '',
+          memorized: false,
+          classSpell: className.toLowerCase()
+        });
+        addedCount++;
+      });
+      
+      if (addedCount > 0) {
+        console.log(`Added ${addedCount} ${this.toTitleCase(className)} spells to ${rankKey}`);
+        this.scheduleAutoSave();
+      }
+      this.updateSpellFillButtons();
+      close();
+    });
+    
+    setTimeout(() => searchInput.focus(), 100);
+  },
+
+  /** Escape HTML attribute */
+  _escAttr(str) {
+    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  },
+
+  /**
+   * Determine which spell rank keys a sorcerer can swap at their current rank
+   * Rank 3: cantrips only. Rank 4: cantrips + rank1. Rank 5: cantrips through rank3.
+   */
+  _getSorcererSwapRanks(sorcererClass) {
+    if (!sorcererClass) return [];
+    const r = sorcererClass.rank || 0;
+    if (r < 3) return [];
+    if (r === 3) return ['cantrips'];
+    if (r === 4) return ['cantrips', 'rank1'];
+    // Rank 5+
+    return ['cantrips', 'rank1', 'rank2', 'rank3'];
+  },
+
+  /**
+   * Open Sorcerer Spell Swap modal — two-step: pick spell to remove, then pick replacement
+   */
+  _openSorcererSwapModal(rankKey) {
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    if (existingSpells.length === 0) return;
+    
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')} Spell`;
+    
+    // Check swap tracking
+    const swapKey = `sorcererSwapUsed_${rankKey}`;
+    const sorcererClass = this._getCurrentClasses().find(c => c.name === 'sorcerer');
+    const currentRank = sorcererClass ? sorcererClass.rank : 0;
+    const trackKey = `sorcererSwapUsed_r${currentRank}`;
+    
+    // Track swaps per character rank advancement (one swap per rank per eligible rank-key)
+    if (!this.character.sorcererSwaps) this.character.sorcererSwaps = {};
+    if (this.character.sorcererSwaps[`${trackKey}_${rankKey}`]) {
+      // Already used swap for this rank-key at this character rank
+      this._showInfoModal('🔄 Swap Already Used', `You have already used your ${rankLabel} swap at Rank ${currentRank}. You may swap again when you advance to the next rank.`);
+      return;
     }
     
-    // Refresh buttons
-    this.updateSpellFillButtons();
+    let overlay = document.getElementById('spell-swap-overlay');
+    if (overlay) overlay.remove();
+    
+    overlay = document.createElement('div');
+    overlay.id = 'spell-swap-overlay';
+    overlay.className = 'modal-overlay';
+    
+    const spellRows = existingSpells.map((spell, i) => {
+      return `<label class="spell-pick-row spell-swap-row">
+        <input type="radio" name="swap-source" class="spell-swap-radio" data-spell="${this._escAttr(spell)}" data-index="${i}">
+        <span class="spell-pick-name">${spell}</span>
+      </label>`;
+    }).join('');
+    
+    overlay.innerHTML = `
+      <div class="modal-content spell-picker-modal-content">
+        <div class="modal-header">
+          <h3>🔄 Swap ${rankLabel}</h3>
+          <button class="modal-close" id="spell-swap-close">&times;</button>
+        </div>
+        <div class="spell-swap-step-label">Step 1: Select the spell to replace</div>
+        <div class="spell-picker-list" id="spell-swap-list">
+          ${spellRows}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="spell-swap-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="spell-swap-next" disabled>Next →</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('spell-swap-close').addEventListener('click', close);
+    document.getElementById('spell-swap-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    const nextBtn = document.getElementById('spell-swap-next');
+    overlay.querySelectorAll('.spell-swap-radio').forEach(radio => {
+      radio.addEventListener('change', () => { nextBtn.disabled = false; });
+    });
+    
+    nextBtn.addEventListener('click', () => {
+      const selected = overlay.querySelector('.spell-swap-radio:checked');
+      if (!selected) return;
+      const oldSpell = selected.dataset.spell;
+      const oldIndex = parseInt(selected.dataset.index, 10);
+      close();
+      this._openSorcererSwapStep2(rankKey, oldSpell, oldIndex, trackKey, currentRank);
+    });
+  },
+
+  /**
+   * Step 2: Choose replacement spell from the full list
+   */
+  _openSorcererSwapStep2(rankKey, oldSpell, oldIndex, trackKey, currentRank) {
+    const classList = window.ClassSpellLists.sorcerer;
+    if (!classList || !classList[rankKey]) return;
+    
+    const allSpells = classList[rankKey].slice().sort((a, b) => a.localeCompare(b));
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    const existingLower = existingSpells.map(s => s.toLowerCase());
+    
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')} Spell`;
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'spell-swap-overlay';
+    overlay.className = 'modal-overlay';
+    
+    const spellRows = allSpells.map(spell => {
+      const isExisting = existingLower.includes(spell.toLowerCase());
+      const disabledAttr = isExisting ? ' disabled' : '';
+      const existingClass = isExisting ? ' spell-pick-existing' : '';
+      return `<label class="spell-pick-row${existingClass}">
+        <input type="radio" name="swap-target" class="spell-swap-radio" data-spell="${this._escAttr(spell)}"${disabledAttr}>
+        <span class="spell-pick-name">${spell}</span>
+        ${isExisting ? '<span class="spell-pick-tag">already known</span>' : ''}
+      </label>`;
+    }).join('');
+    
+    overlay.innerHTML = `
+      <div class="modal-content spell-picker-modal-content">
+        <div class="modal-header">
+          <h3>🔄 Swap ${rankLabel}</h3>
+          <button class="modal-close" id="spell-swap2-close">&times;</button>
+        </div>
+        <div class="spell-swap-step-label">Step 2: Replacing <strong>${oldSpell}</strong> — choose new spell</div>
+        <div class="spell-picker-toolbar">
+          <input type="text" id="spell-swap2-search" class="spell-picker-search" placeholder="Search spells…">
+        </div>
+        <div class="spell-picker-list" id="spell-swap2-list">
+          ${spellRows}
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="spell-swap2-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="spell-swap2-confirm" disabled>Confirm Swap</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    const close = () => overlay.remove();
+    document.getElementById('spell-swap2-close').addEventListener('click', close);
+    document.getElementById('spell-swap2-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    // Search
+    const searchInput = document.getElementById('spell-swap2-search');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase();
+      overlay.querySelectorAll('.spell-pick-row').forEach(row => {
+        const name = row.querySelector('.spell-pick-name').textContent.toLowerCase();
+        row.style.display = name.includes(q) ? '' : 'none';
+      });
+    });
+    
+    const confirmBtn = document.getElementById('spell-swap2-confirm');
+    overlay.querySelectorAll('.spell-swap-radio:not(:disabled)').forEach(radio => {
+      radio.addEventListener('change', () => { confirmBtn.disabled = false; });
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      const selected = overlay.querySelector('.spell-swap-radio:checked');
+      if (!selected) return;
+      const newSpell = selected.dataset.spell;
+      
+      // Perform the swap in the spell table
+      this._performSorcererSwap(rankKey, oldSpell, oldIndex, newSpell);
+      
+      // Mark swap as used for this rank-key at this character rank
+      if (!this.character.sorcererSwaps) this.character.sorcererSwaps = {};
+      this.character.sorcererSwaps[`${trackKey}_${rankKey}`] = true;
+      
+      this.scheduleAutoSave();
+      this.updateSpellFillButtons();
+      close();
+      
+      // Show confirmation
+      this._showInfoModal('🔄 Spell Swapped', `<strong>${oldSpell}</strong> has been replaced with <strong>${newSpell}</strong>.`);
+    });
+    
+    setTimeout(() => searchInput.focus(), 100);
+  },
+
+  /**
+   * Perform the actual spell row swap in the DOM and data
+   */
+  _performSorcererSwap(rankKey, oldSpell, oldIndex, newSpell) {
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (!tbody) return;
+    
+    // Find the row with the old spell
+    const rows = tbody.querySelectorAll('tr');
+    for (const row of rows) {
+      const nameInput = row.querySelector('.spell-name-input');
+      if (nameInput && nameInput.value.toLowerCase() === oldSpell.toLowerCase()) {
+        nameInput.value = newSpell;
+        // Update cost
+        const cost = window.SpellData ? window.SpellData.getSpellCost(newSpell) : '';
+        const costInput = row.querySelector('.spell-cost-input');
+        if (costInput && cost) costInput.value = cost;
+        // Unmemorize the swapped spell
+        const memCb = row.querySelector('.spell-memorize-cb');
+        if (memCb) memCb.checked = false;
+        nameInput.dispatchEvent(new Event('change', { bubbles: true }));
+        break;
+      }
+    }
+  },
+
+  /**
+   * Show a simple info modal
+   */
+  _showInfoModal(title, bodyHTML) {
+    let overlay = document.getElementById('info-modal-overlay');
+    if (overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.id = 'info-modal-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content scratch-modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>${title}</h3>
+          <button class="modal-close" id="info-modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem; font-size: 0.92rem;">
+          ${bodyHTML}
+        </div>
+        <div class="modal-footer" style="justify-content: center;">
+          <button type="button" class="btn btn-primary" id="info-modal-ok">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    document.getElementById('info-modal-close').addEventListener('click', close);
+    document.getElementById('info-modal-ok').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  },
+
+  /**
+   * Get current classes helper for swap rank checks
+   */
+  _getCurrentClasses() {
+    const classes = [];
+    for (let i = 1; i <= 2; i++) {
+      const sel = document.getElementById(`class-select-${i}`);
+      const rankSel = document.getElementById(`class-rank-${i}`);
+      if (sel && sel.value) {
+        classes.push({
+          name: sel.value.toLowerCase(),
+          rank: parseInt(rankSel?.value, 10) || 1
+        });
+      }
+    }
+    return classes;
   },
   
   /**
