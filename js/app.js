@@ -627,6 +627,9 @@ const App = {
       
       // Apply ranged weapon load reductions for specializations
       this.applyRangedSpecLoadReduction();
+      
+      // Ensure sorcerer weaving charts are visible (safety call after full init)
+      this.updateWeavingChartVisibility();
     }, 100);
     
     // Save calculated values (like Resilient HP) after initialization
@@ -9462,7 +9465,7 @@ const App = {
         this.addSpellRow(rankKey, {
           name: spellName,
           cost: cost || '',
-          memorized: false,
+          memorized: className.toLowerCase() === 'sorcerer',
           classSpell: className.toLowerCase()
         });
         addedCount++;
@@ -9966,7 +9969,7 @@ const App = {
       this.addSpellRow(rankKey, {
         name: spellName,
         cost: cost || '',
-        memorized: false,
+        memorized: true,
         classSpell: 'sorcerer'
       });
       this.scheduleAutoSave();
@@ -10610,9 +10613,11 @@ const App = {
       this._updateIntensityDisplay(m, costStr);
     }
 
-    // Weaving section (sorcery only, not for non-memorized)
+    // Weaving section (sorcery only)
+    // Rules: no weaving on non-memorized sorcery spells, but cantrips don't require memorization
     const weavingSection = document.getElementById('cast-weaving-section');
-    if (m.castingType === 'sorcery' && !m.isNonMemorized) {
+    const canWeave = m.castingType === 'sorcery' && (!m.isNonMemorized || m.spellRank === 0);
+    if (canWeave) {
       weavingSection.classList.remove('hidden');
       m.activeWeaves = [];
       // Reset all checkboxes
@@ -10646,12 +10651,12 @@ const App = {
         m._weavingListenersAttached = true;
       }
 
-      // Weaving toggle (expand/collapse) — reset to collapsed each time
+      // Weaving toggle (expand/collapse) — default to EXPANDED for visibility
       const weavingBody = document.getElementById('weaving-body');
       const weavingArrow = document.getElementById('weaving-toggle-arrow');
       const weavingToggle = document.getElementById('weaving-toggle');
-      if (weavingBody) weavingBody.classList.add('hidden');
-      if (weavingArrow) weavingArrow.textContent = '▶';
+      if (weavingBody) weavingBody.classList.remove('hidden');
+      if (weavingArrow) weavingArrow.textContent = '▼';
       if (weavingToggle && !m._weavingToggleAttached) {
         weavingToggle.addEventListener('click', () => {
           const body = document.getElementById('weaving-body');
@@ -14096,7 +14101,7 @@ const App = {
     this.addSpellRow(rankKey, {
       name: spellName,
       cost: cost || '',
-      memorized: false,
+      memorized: true,
       classSpell: 'sorcerer'
     });
   },
