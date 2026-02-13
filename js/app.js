@@ -521,6 +521,7 @@ const App = {
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
     this.checkDetectMagicVisibility();
+    this.checkDeterminationVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -578,6 +579,8 @@ const App = {
     
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
+    this.setupClickableAbilityHeaders();
+    this.checkDeterminationVisibility();
     
     // Generate info cards for class abilities without dedicated buttons
     this.updateClassAbilityInfoCards();
@@ -1258,7 +1261,6 @@ const App = {
     'lightning reflexes': { emoji: '⚡' },
     'quick': { emoji: '🏃' },
     'fleet of foot': { emoji: '💨' },
-    'determination': { emoji: '🔥' },
     'hospitality': { emoji: '🏰' },
     'graceful strike': { emoji: '🌊' },
     'mounted combat': { emoji: '🐎', summary: 'Fight effectively from horseback with full combat skills' },
@@ -1424,7 +1426,7 @@ const App = {
   _hasInteractiveSection(baseName) {
     const INTERACTIVE_ABILITIES = [
       'berserk rage', 'brute strength', 'climb walls', 'commanding',
-      'cure disease', 'detect evil', 'detect magic and illusions',
+      'cure disease', 'detect evil', 'detect magic and illusions', 'determination',
       'divine protection', 'forceful strike', 'great hearing',
       'hide in shadows', 'holy smite', 'holy strike', 'improved aim',
       'just a scratch', 'lay on hands', 'mental strength', 'mystic healing',
@@ -4631,6 +4633,13 @@ const App = {
               <button type="button" class="btn btn-roll-endurance" id="btn-roll-endurance-serious">
                 🎲 Roll Endurance (${enduranceValue}%)
               </button>
+              ${this.hasAbility('Determination') ? `
+              <div style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid rgba(255,255,255,0.15);">
+                <p style="font-size:0.8rem; color:#e0a040; margin-bottom:0.4rem;">🔥 <strong>Determination:</strong> You may roll against an Oath instead of Endurance.</p>
+                <button type="button" class="btn btn-roll-endurance" id="btn-determination-serious" style="background:linear-gradient(135deg, #3a2a0a 0%, #5a4010 50%, #3a2a0a 100%); border-color:#b08030;">
+                  🔥 Use Determination
+                </button>
+              </div>` : ''}
             </div>
           </div>
           
@@ -4713,6 +4722,16 @@ const App = {
         this.rollD100('Endurance', enduranceValue);
       });
     }
+    
+    // Determination button for Serious Wounds
+    const determinationSeriousBtn = document.getElementById('btn-determination-serious');
+    if (determinationSeriousBtn) {
+      determinationSeriousBtn.addEventListener('click', () => {
+        this.closeWoundInfoModal();
+        this.useDetermination();
+      });
+    }
+    
     if (majorRollBtn) {
       majorRollBtn.addEventListener('click', () => {
         this.rollD100('Endurance', enduranceValue);
@@ -5278,6 +5297,7 @@ const App = {
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
     this.checkDetectMagicVisibility();
+    this.checkDeterminationVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -6667,6 +6687,7 @@ const App = {
         if (normalizedName === 'lay on hands') this.checkLayOnHandsVisibility();
         if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
         if (normalizedName === 'detect magic and illusions') this.checkDetectMagicVisibility();
+        if (normalizedName === 'determination') this.checkDeterminationVisibility();
         if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
         if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -6766,6 +6787,7 @@ const App = {
     if (normalizedName === 'lay on hands') this.checkLayOnHandsVisibility();
     if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
     if (normalizedName === 'detect magic and illusions') this.checkDetectMagicVisibility();
+    if (normalizedName === 'determination') this.checkDeterminationVisibility();
     if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
     if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -14264,6 +14286,7 @@ const App = {
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
     this.checkDetectMagicVisibility();
+    this.checkDeterminationVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -26519,6 +26542,388 @@ const App = {
   },
 
   /**
+   * Make all ability section headers clickable to open detail modals.
+   * Uses event delegation on the ability-cards-grid container.
+   */
+  setupClickableAbilityHeaders() {
+    const grid = document.querySelector('.ability-cards-grid');
+    if (!grid) return;
+
+    // Map of header text (lowercase, stripped of emoji) → ability name for lookup
+    const HEADER_TO_ABILITY = {
+      'berserk rage': 'Berserk Rage',
+      'brute strength': 'Brute Strength',
+      'climb walls': 'Climb Walls',
+      'commanding': 'Commanding',
+      'cure disease': 'Cure Disease',
+      'detect evil': 'Detect Evil',
+      'detect magic': 'Detect Magic and Illusions',
+      'determination': 'Determination',
+      'divine protection': 'Divine Protection',
+      'forceful strike': 'Forceful Strike',
+      'great hearing': 'Great Hearing',
+      'hide in shadows': 'Hide in Shadows',
+      'holy strike': 'Holy Strike',
+      'holy smite': 'Holy Smite',
+      'improved aim': 'Improved Aim',
+      'just a scratch': 'Just a Scratch',
+      'lay on hands': 'Lay on Hands',
+      'mental strength': 'Mental Strength',
+      'mystic healing': 'Mystic Healing',
+      'nether walk': 'Nether Walk',
+      'pain control': 'Pain Control',
+      'perfection': 'Perfection',
+      'powerful concentration': 'Powerful Concentration',
+      'quivering palm': 'Quivering Palm',
+      'read languages': 'Read Languages',
+      'shape change': 'Shape Change',
+      'sharp eyed': 'Sharp Eyed',
+      'stealthy': 'Stealthy',
+      'sneak attack': 'Sneak Attack',
+      'turn undead': 'Turn Undead',
+      'vaulting': 'Vaulting',
+      'animal companion': 'Animal Companion',
+      'use arcane scrolls': 'Use Arcane Scrolls',
+      'circle of power': 'Circle of Power',
+      'familiar': 'Familiar',
+      'magic surge': 'Magic Surge',
+      'defensive reflexes': 'Defensive Reflexes',
+      'skirmishing': 'Skirmishing',
+      'swashbuckling': 'Swashbuckling',
+      'unarmored defense': 'Unarmored Defense',
+      'weapon precision': 'Weapon Precision',
+      'diving strike': 'Diving Strike',
+      'radiant burst': 'Radiant Burst',
+    };
+
+    grid.addEventListener('click', (e) => {
+      const header = e.target.closest('.section-header');
+      if (!header) return;
+
+      // Don't interfere with buttons inside the section
+      if (e.target.closest('button')) return;
+
+      // Extract ability name from header text
+      const headerText = header.textContent.replace(/[^\w\s']/g, '').trim().toLowerCase();
+      
+      // Try direct mapping first
+      let abilityName = HEADER_TO_ABILITY[headerText];
+      
+      // If not found, try partial match
+      if (!abilityName) {
+        for (const [key, val] of Object.entries(HEADER_TO_ABILITY)) {
+          if (headerText.includes(key) || key.includes(headerText)) {
+            abilityName = val;
+            break;
+          }
+        }
+      }
+      
+      // Handle numbered variants (e.g., "Defensive Reflexes 1")
+      if (!abilityName) {
+        const baseName = headerText.replace(/\s*\d+$/, '').trim();
+        abilityName = HEADER_TO_ABILITY[baseName];
+        if (abilityName) abilityName = header.textContent.replace(/[^\w\s']/g, '').trim();
+      }
+
+      if (abilityName) {
+        this.showAbilityDetail(abilityName);
+      }
+    });
+
+    // Style all section headers as clickable
+    grid.querySelectorAll('.section-header').forEach(h => {
+      h.style.cursor = 'pointer';
+      h.style.textDecoration = 'none';
+      h.addEventListener('mouseenter', () => { h.style.textDecoration = 'underline'; });
+      h.addEventListener('mouseleave', () => { h.style.textDecoration = 'none'; });
+    });
+  },
+
+  // ============================================
+  // DETERMINATION (Paladin/Cavalier)
+  // Roll against Oath to ignore Serious Wounds & Fatigue
+  // ============================================
+
+  /**
+   * Gather all Oaths with their values from the character sheet
+   */
+  _gatherOaths() {
+    const oaths = [];
+    const container = document.getElementById('oaths-container');
+    if (container) {
+      const rows = container.querySelectorAll('.belief-row');
+      rows.forEach(row => {
+        const nameInput = row.querySelector('.belief-name');
+        const valueInput = row.querySelector('.belief-input');
+        if (nameInput && valueInput) {
+          const name = nameInput.value.trim();
+          const val = parseInt(valueInput.value, 10);
+          if (name && val > 0) oaths.push({ name, value: val });
+        }
+      });
+    }
+    // Fallback: try by ID pattern
+    if (oaths.length === 0) {
+      for (let i = 1; i <= 10; i++) {
+        const nameEl = document.getElementById(`oath-${i}-name`);
+        const valEl = document.getElementById(`oath-${i}-current`);
+        if (nameEl && valEl) {
+          const name = nameEl.value.trim();
+          const val = parseInt(valEl.value, 10);
+          if (name && val > 0) oaths.push({ name, value: val });
+        }
+      }
+    }
+    return oaths;
+  },
+
+  checkDeterminationVisibility() {
+    const section = document.getElementById('determination-section');
+    if (!section) return;
+    if (this.hasAbility('Determination')) {
+      section.style.display = '';
+      this.setupDeterminationListeners();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  setupDeterminationListeners() {
+    const btn = document.getElementById('btn-determination-use');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.useDetermination());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  /**
+   * Open modal for Determination roll.
+   * Offers manual entry or auto-roll against a chosen Oath.
+   */
+  useDetermination() {
+    // Gather oaths from the Oaths section
+    const oaths = this._gatherOaths();
+
+    let oathButtonsHTML = '';
+    if (oaths.length > 0) {
+      oathButtonsHTML = oaths.map((oath, i) => `
+        <button type="button" class="btn btn-primary" style="width:100%; margin-bottom:0.3rem; text-align:left; padding:0.5rem 0.8rem;"
+                onclick="App.rollDeterminationAgainstOath(${i})" data-oath-index="${i}">
+          <span style="font-weight:bold;">${oath.name}</span> <span style="color:#d4b870;">(${oath.value}%)</span>
+        </button>
+      `).join('');
+    } else {
+      oathButtonsHTML = '<p style="color:#aa8866; font-style:italic;">No Oaths found. Add Oaths in the Oaths section.</p>';
+    }
+
+    const modalHTML = `
+      <div style="padding:0.5rem;">
+        <p style="margin-bottom:0.8rem; color:#ccc; font-size:0.85rem;">
+          Through sheer willpower and loyalty to your Oath, you push through grievous injury or exhaustion.
+          Roll against one of your Oaths to ignore all detrimental effects of Serious Wounds and Fatigue.
+        </p>
+
+        <div style="margin-bottom:1rem;">
+          <h4 style="color:#e0a040; margin-bottom:0.5rem; font-size:0.9rem;">🎲 Auto-Roll Against an Oath</h4>
+          ${oathButtonsHTML}
+        </div>
+
+        <div style="border-top:1px solid #555; padding-top:0.8rem;">
+          <h4 style="color:#e0a040; margin-bottom:0.5rem; font-size:0.9rem;">✏️ Enter Manual Roll</h4>
+          <p style="color:#999; font-size:0.8rem; margin-bottom:0.4rem;">Roll d100 yourself and enter the result:</p>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <input type="number" id="determination-manual-roll" min="1" max="100" placeholder="d100 result"
+                   style="width:80px; padding:0.4rem; border-radius:4px; border:1px solid #666; background:#1a1a1a; color:white; text-align:center; font-size:1rem;">
+            <span style="color:#999;">vs Oath %:</span>
+            <input type="number" id="determination-manual-target" min="1" max="200" placeholder="Oath %"
+                   style="width:80px; padding:0.4rem; border-radius:4px; border:1px solid #666; background:#1a1a1a; color:white; text-align:center; font-size:1rem;">
+            <button type="button" class="btn btn-primary" onclick="App.resolveDeterminationManual()">Check</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.showResultModal('🔥 Determination', modalHTML);
+
+    // Store oaths data for auto-roll
+    this._determinationOaths = oaths;
+  },
+
+  /**
+   * Roll Determination against a specific Oath (auto-roll)
+   */
+  rollDeterminationAgainstOath(index) {
+    const oath = this._determinationOaths?.[index];
+    if (!oath) return;
+
+    const roll = Math.floor(Math.random() * 100) + 1;
+    this._showDeterminationResult(roll, oath.value, oath.name);
+  },
+
+  /**
+   * Resolve a manual Determination roll
+   */
+  resolveDeterminationManual() {
+    const rollInput = document.getElementById('determination-manual-roll');
+    const targetInput = document.getElementById('determination-manual-target');
+    const roll = parseInt(rollInput?.value, 10);
+    const target = parseInt(targetInput?.value, 10);
+
+    if (!roll || !target || roll < 1 || roll > 100) {
+      this.showResultModal('🔥 Determination', '<div class="modal-result-body"><p style="color:#cc8844;">Enter a valid roll (1–100) and Oath percentage.</p></div>');
+      return;
+    }
+
+    this._showDeterminationResult(roll, target, 'Oath');
+  },
+
+  /**
+   * Display Determination roll result
+   */
+  _showDeterminationResult(roll, target, oathName) {
+    const isCritical = roll <= Math.ceil(target / 10);
+    const isSuccess = roll <= target;
+    const isFumble = roll >= (100 - Math.ceil((100 - target) / 10) + 1);
+
+    let resultType, resultColor, resultText;
+    if (roll === 100) {
+      resultType = 'FUMBLE';
+      resultColor = '#ff4444';
+      resultText = 'Your resolve wavers. You <strong>cannot</strong> ignore the effects of your Serious Wounds or Fatigue this time. A Major Wound will still incapacitate you.';
+    } else if (isCritical && isSuccess) {
+      resultType = 'CRITICAL SUCCESS';
+      resultColor = '#4ade80';
+      resultText = 'Your determination is absolute! You may <strong>ignore all detrimental effects</strong> of Serious Wounds and Fatigue, continuing to fight as if uninjured. A Major Wound will still incapacitate you.';
+    } else if (isSuccess) {
+      resultType = 'SUCCESS';
+      resultColor = '#e0a040';
+      resultText = 'Your resolve holds firm. You may <strong>ignore all detrimental effects</strong> of Serious Wounds and Fatigue, continuing to fight as if uninjured. A Major Wound will still incapacitate you.';
+    } else if (isFumble) {
+      resultType = 'FUMBLE';
+      resultColor = '#ff4444';
+      resultText = 'Your resolve collapses entirely. You <strong>cannot</strong> push through your injuries. The GM may impose additional consequences.';
+    } else {
+      resultType = 'FAILURE';
+      resultColor = '#cc8844';
+      resultText = 'Your willpower is not enough. You <strong>cannot</strong> ignore the effects of your Serious Wounds or Fatigue this time.';
+    }
+
+    const resultHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">🔥</div>
+        <div class="result-title" style="color:#e0a040;">Determination</div>
+        <div class="result-detail">
+          <p><strong>${oathName}:</strong> ${target}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
+          <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
+          <p style="margin-top:0.4rem;">${resultText}</p>
+        </div>
+      </div>`;
+    this.showResultModal('🔥 Determination', resultHTML);
+  },
+
+  /**
+   * Show Serious Wound modal that offers Determination if available
+   */
+  showSeriousWoundDeterminationPrompt(locationName) {
+    if (!this.hasAbility('Determination')) return false;
+
+    // Get endurance value
+    const endInput = document.getElementById('endurance-current');
+    const endValue = parseInt(endInput?.value, 10) || 0;
+
+    // Gather oaths
+    const oaths = this._gatherOaths();
+
+    let oathButtonsHTML = oaths.map((oath, i) => `
+      <button type="button" class="btn btn-primary" style="width:100%; margin-bottom:0.3rem; text-align:left; padding:0.5rem 0.8rem;"
+              onclick="App.rollDeterminationAgainstOath(${i})" data-oath-index="${i}">
+        🔥 <span style="font-weight:bold;">${oath.name}</span> <span style="color:#d4b870;">(${oath.value}%)</span>
+      </button>
+    `).join('');
+
+    if (oaths.length === 0) {
+      oathButtonsHTML = '<p style="color:#aa8866; font-style:italic;">No Oaths found. Roll Endurance instead.</p>';
+    }
+
+    const modalHTML = `
+      <div style="padding:0.5rem;">
+        <p style="margin-bottom:0.8rem; color:#ff8888; font-size:0.9rem; font-weight:bold;">
+          ⚠️ Serious Wound${locationName ? ' to ' + locationName : ''}!
+        </p>
+        <p style="margin-bottom:0.8rem; color:#ccc; font-size:0.85rem;">
+          You have Determination. You may roll against your <strong>Endurance</strong> (standard),
+          or invoke your <strong>Determination</strong> and roll against an Oath instead.
+        </p>
+
+        <div style="margin-bottom:1rem;">
+          <h4 style="color:#80b0ff; margin-bottom:0.5rem; font-size:0.9rem;">🛡️ Standard Endurance Roll</h4>
+          <button type="button" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem;"
+                  onclick="App.rollSeriousWoundEndurance()">
+            Roll Endurance <span style="color:#80b0ff;">(${endValue}%)</span>
+          </button>
+        </div>
+
+        <div style="border-top:1px solid #555; padding-top:0.8rem;">
+          <h4 style="color:#e0a040; margin-bottom:0.5rem; font-size:0.9rem;">🔥 Determination — Roll Against an Oath</h4>
+          ${oathButtonsHTML}
+        </div>
+      </div>
+    `;
+
+    this.showResultModal('⚠️ Serious Wound — Choose Your Roll', modalHTML);
+    this._determinationOaths = oaths;
+    this._seriousWoundEndurance = endValue;
+    return true;
+  },
+
+  /**
+   * Roll Endurance for Serious Wound (standard path)
+   */
+  rollSeriousWoundEndurance() {
+    const endValue = this._seriousWoundEndurance || 0;
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const isCritical = roll <= Math.ceil(endValue / 10);
+    const isSuccess = roll <= endValue;
+    const isFumble = roll >= (100 - Math.ceil((100 - endValue) / 10) + 1);
+
+    let resultType, resultColor, resultText;
+    if (roll === 100) {
+      resultType = 'FUMBLE';
+      resultColor = '#ff4444';
+      resultText = 'You <strong>collapse from the pain</strong> and cannot act. You are incapacitated until you receive treatment.';
+    } else if (isCritical && isSuccess) {
+      resultType = 'CRITICAL SUCCESS';
+      resultColor = '#4ade80';
+      resultText = 'You shrug off the wound with barely a flinch. You may <strong>continue acting normally</strong> despite the Serious Wound.';
+    } else if (isSuccess) {
+      resultType = 'SUCCESS';
+      resultColor = '#80b0ff';
+      resultText = 'You grit your teeth and push through. You may <strong>continue acting</strong> despite the Serious Wound.';
+    } else if (isFumble) {
+      resultType = 'FUMBLE';
+      resultColor = '#ff4444';
+      resultText = 'The pain overwhelms you completely. You <strong>collapse and are incapacitated</strong>. The GM may impose additional consequences.';
+    } else {
+      resultType = 'FAILURE';
+      resultColor = '#cc8844';
+      resultText = 'The pain is too much. You <strong>cannot continue acting</strong> and are affected by the Serious Wound penalties.';
+    }
+
+    const resultHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">🛡️</div>
+        <div class="result-title" style="color:#80b0ff;">Endurance Roll</div>
+        <div class="result-detail">
+          <p><strong>Endurance:</strong> ${endValue}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
+          <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
+          <p style="margin-top:0.4rem;">${resultText}</p>
+        </div>
+      </div>`;
+    this.showResultModal('🛡️ Serious Wound — Endurance', resultHTML);
+  },
+
+  /**
    * Check if character has a specific ability
    */
   hasAbility(abilityName) {
@@ -37053,6 +37458,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
     this.checkDetectMagicVisibility();
+    this.checkDeterminationVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
