@@ -1265,6 +1265,14 @@ const App = {
     'graceful strike': { emoji: '🌊' },
     'mounted combat': { emoji: '🐎', summary: 'Fight effectively from horseback with full combat skills' },
     'mounted combat mastery': { emoji: '🐎', summary: 'Master rider — shield size +1 step, ignore 2 Ride difficulty grades' },
+    'exotic mounts i': { emoji: '🦄', summary: 'May obtain a unicorn as mount' },
+    'exotic mounts ii': { emoji: '🪶', summary: 'May obtain a pegasus as mount' },
+    'exotic mounts iii': { emoji: '🦅', summary: 'May obtain a hippogriff as mount' },
+    'exotic mounts iv': { emoji: '🦁', summary: 'May obtain a griffon as mount' },
+    'exotic mounts 1': { emoji: '🦄', summary: 'May obtain a unicorn as mount' },
+    'exotic mounts 2': { emoji: '🪶', summary: 'May obtain a pegasus as mount' },
+    'exotic mounts 3': { emoji: '🦅', summary: 'May obtain a hippogriff as mount' },
+    'exotic mounts 4': { emoji: '🦁', summary: 'May obtain a griffon as mount' },
     'cleric magical items': { emoji: '📿' },
     "thieves' cant": { emoji: '🗝️' },
     "druids' cant": { emoji: '🌿' },
@@ -20606,40 +20614,98 @@ const App = {
    * Use Commanding ability on a skill
    */
   useCommanding(skill) {
-    if (this.character.isCommanding || this.character.commandingUsesRemaining <= 0) return;
+    if (this.character.commandingUsesRemaining <= 0) return;
     
     const skillId = skill === 'insight' ? 'insight-current' : 'influence-current';
     const skillField = document.getElementById(skillId);
+    if (!skillField) return;
     
-    if (!skillField) {
-      alert(`Error: Could not find ${skill} skill field.`);
-      return;
-    }
+    const baseValue = parseInt(skillField.value, 10) || 0;
+    const boostedValue = baseValue + 40;
+    const skillName = skill.charAt(0).toUpperCase() + skill.slice(1);
     
-    // Store pre-commanding value
-    const currentValue = parseInt(skillField.value, 10) || 0;
-    this.character.preCommandingValue = currentValue;
-    this.character.commandingSkill = skill;
-    this.character.isCommanding = true;
+    const modalHTML = `
+      <div style="padding:0.5rem;">
+        <p style="margin-bottom:0.8rem; color:#ccc; font-size:0.85rem;">
+          Your commanding presence bolsters your ${skillName}. Roll against ${skillName} with a <strong>+40% bonus</strong> (2 Difficulty Grades easier).
+        </p>
+        <div style="text-align:center; margin-bottom:0.8rem;">
+          <span style="color:#d4b870; font-size:0.8rem;">${skillName}: ${baseValue}% + 40% =</span>
+          <span style="color:#e0c060; font-size:1.4rem; font-weight:bold;"> ${boostedValue}%</span>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <h4 style="color:#d4b870; margin-bottom:0.5rem; font-size:0.9rem;">🎲 Auto-Roll</h4>
+          <button type="button" class="btn btn-primary" style="width:100%;"
+                  id="btn-commanding-auto-roll">
+            Roll ${skillName} (${boostedValue}%)
+          </button>
+        </div>
+
+        <div style="border-top:1px solid #555; padding-top:0.8rem;">
+          <h4 style="color:#d4b870; margin-bottom:0.5rem; font-size:0.9rem;">✏️ Enter Manual Roll</h4>
+          <p style="color:#999; font-size:0.8rem; margin-bottom:0.4rem;">Roll d100 yourself and enter the result:</p>
+          <div style="display:flex; gap:0.5rem; align-items:center; justify-content:center;">
+            <input type="number" id="commanding-manual-roll" min="1" max="100" placeholder="d100"
+                   style="width:80px; padding:0.4rem; border-radius:4px; border:1px solid #666; background:#1a1a1a; color:white; text-align:center; font-size:1rem;">
+            <button type="button" class="btn btn-primary" id="btn-commanding-manual-check">Check</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.showResultModal(`👑 Commanding — ${skillName}`, modalHTML);
+
+    // Store data for roll resolution
+    this._commandingRollData = { skill, skillName, baseValue, boostedValue };
+
+    // Wire up buttons after modal renders
+    setTimeout(() => {
+      const autoBtn = document.getElementById('btn-commanding-auto-roll');
+      if (autoBtn) autoBtn.addEventListener('click', () => this._resolveCommandingRoll(Math.floor(Math.random() * 100) + 1));
+      const manualBtn = document.getElementById('btn-commanding-manual-check');
+      if (manualBtn) manualBtn.addEventListener('click', () => {
+        const val = parseInt(document.getElementById('commanding-manual-roll')?.value, 10);
+        if (!val || val < 1 || val > 100) {
+          this.showResultModal('👑 Commanding', '<div class="modal-result-body"><p style="color:#cc8844;">Enter a valid roll (1–100).</p></div>');
+          return;
+        }
+        this._resolveCommandingRoll(val);
+      });
+    }, 50);
+  },
+
+  _resolveCommandingRoll(roll) {
+    const data = this._commandingRollData;
+    if (!data) return;
+
+    // Spend the use
     this.character.commandingUsesRemaining--;
-    
-    // Apply +40% bonus
-    const newValue = currentValue + 40;
-    skillField.value = newValue;
-    skillField.classList.add('commanding-boosted');
-    skillField.title = '+40% from Commanding (2 Difficulty Grades easier)';
-    
-    // Update UI
-    const buttonsRow = document.getElementById('commanding-buttons');
-    const activeRow = document.getElementById('commanding-active');
-    const activeSkillLabel = document.getElementById('commanding-active-skill');
-    
-    if (buttonsRow) buttonsRow.style.display = 'none';
-    if (activeRow) activeRow.style.display = '';
-    if (activeSkillLabel) activeSkillLabel.textContent = skill.charAt(0).toUpperCase() + skill.slice(1);
-    
     this.updateCommandingDisplay();
     this.scheduleAutoSave();
+
+    const target = data.boostedValue;
+    const isCritical = roll <= Math.ceil(target / 10);
+    const isSuccess = roll <= target;
+    const isFumble = roll >= (100 - Math.ceil((100 - target) / 10) + 1);
+
+    let resultType, resultColor;
+    if (roll === 100) { resultType = 'FUMBLE'; resultColor = '#ff4444'; }
+    else if (isCritical && isSuccess) { resultType = 'CRITICAL SUCCESS'; resultColor = '#4ade80'; }
+    else if (isSuccess) { resultType = 'SUCCESS'; resultColor = '#d4b870'; }
+    else if (isFumble) { resultType = 'FUMBLE'; resultColor = '#ff4444'; }
+    else { resultType = 'FAILURE'; resultColor = '#cc8844'; }
+
+    const resultHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">👑</div>
+        <div class="result-title" style="color:#d4b870;">Commanding — ${data.skillName}</div>
+        <div class="result-detail">
+          <p><strong>${data.skillName}:</strong> ${data.baseValue}% + 40% = ${target}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
+          <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
+        </div>
+      </div>`;
+    this.showResultModal(`👑 Commanding — ${data.skillName}`, resultHTML);
   },
   
   /**
@@ -24185,36 +24251,94 @@ const App = {
    * Use Mental Strength ability
    */
   useMentalStrength() {
-    if (this.character.isMentalStrengthActive || this.character.mentalStrengthUsesRemaining <= 0) return;
+    if (this.character.mentalStrengthUsesRemaining <= 0) return;
     
     const willpowerField = document.getElementById('willpower-current');
+    if (!willpowerField) return;
     
-    if (!willpowerField) {
-      alert('Error: Could not find Willpower skill field.');
-      return;
-    }
+    const baseValue = parseInt(willpowerField.value, 10) || 0;
+    const boostedValue = baseValue + 40;
     
-    // Store pre-mental strength value
-    const currentValue = parseInt(willpowerField.value, 10) || 0;
-    this.character.preMentalStrengthValue = currentValue;
-    this.character.isMentalStrengthActive = true;
+    const modalHTML = `
+      <div style="padding:0.5rem;">
+        <p style="margin-bottom:0.8rem; color:#ccc; font-size:0.85rem;">
+          Your mental fortitude steels you against mind magic and illusions. Roll Willpower with a <strong>+40% bonus</strong> (2 Difficulty Grades easier).
+        </p>
+        <div style="text-align:center; margin-bottom:0.8rem;">
+          <span style="color:#80b0ff; font-size:0.8rem;">Willpower: ${baseValue}% + 40% =</span>
+          <span style="color:#90c0ff; font-size:1.4rem; font-weight:bold;"> ${boostedValue}%</span>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <h4 style="color:#80b0ff; margin-bottom:0.5rem; font-size:0.9rem;">🎲 Auto-Roll</h4>
+          <button type="button" class="btn btn-primary" style="width:100%;"
+                  id="btn-mental-strength-auto-roll">
+            Roll Willpower (${boostedValue}%)
+          </button>
+        </div>
+
+        <div style="border-top:1px solid #555; padding-top:0.8rem;">
+          <h4 style="color:#80b0ff; margin-bottom:0.5rem; font-size:0.9rem;">✏️ Enter Manual Roll</h4>
+          <p style="color:#999; font-size:0.8rem; margin-bottom:0.4rem;">Roll d100 yourself and enter the result:</p>
+          <div style="display:flex; gap:0.5rem; align-items:center; justify-content:center;">
+            <input type="number" id="mental-strength-manual-roll" min="1" max="100" placeholder="d100"
+                   style="width:80px; padding:0.4rem; border-radius:4px; border:1px solid #666; background:#1a1a1a; color:white; text-align:center; font-size:1rem;">
+            <button type="button" class="btn btn-primary" id="btn-mental-strength-manual-check">Check</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.showResultModal('🧠 Mental Strength — Willpower', modalHTML);
+
+    this._mentalStrengthRollData = { baseValue, boostedValue };
+
+    setTimeout(() => {
+      const autoBtn = document.getElementById('btn-mental-strength-auto-roll');
+      if (autoBtn) autoBtn.addEventListener('click', () => this._resolveMentalStrengthRoll(Math.floor(Math.random() * 100) + 1));
+      const manualBtn = document.getElementById('btn-mental-strength-manual-check');
+      if (manualBtn) manualBtn.addEventListener('click', () => {
+        const val = parseInt(document.getElementById('mental-strength-manual-roll')?.value, 10);
+        if (!val || val < 1 || val > 100) {
+          this.showResultModal('🧠 Mental Strength', '<div class="modal-result-body"><p style="color:#cc8844;">Enter a valid roll (1–100).</p></div>');
+          return;
+        }
+        this._resolveMentalStrengthRoll(val);
+      });
+    }, 50);
+  },
+
+  _resolveMentalStrengthRoll(roll) {
+    const data = this._mentalStrengthRollData;
+    if (!data) return;
+
+    // Spend the use
     this.character.mentalStrengthUsesRemaining--;
-    
-    // Apply +40% bonus (2 difficulty grades)
-    const newValue = currentValue + 40;
-    willpowerField.value = newValue;
-    willpowerField.classList.add('mental-strength-boosted');
-    willpowerField.title = '+40% from Mental Strength (2 Difficulty Grades easier vs mind magic)';
-    
-    // Update UI
-    const buttonsRow = document.getElementById('mental-strength-buttons');
-    const activeRow = document.getElementById('mental-strength-active');
-    
-    if (buttonsRow) buttonsRow.style.display = 'none';
-    if (activeRow) activeRow.style.display = '';
-    
     this.updateMentalStrengthDisplay();
     this.scheduleAutoSave();
+
+    const target = data.boostedValue;
+    const isCritical = roll <= Math.ceil(target / 10);
+    const isSuccess = roll <= target;
+    const isFumble = roll >= (100 - Math.ceil((100 - target) / 10) + 1);
+
+    let resultType, resultColor;
+    if (roll === 100) { resultType = 'FUMBLE'; resultColor = '#ff4444'; }
+    else if (isCritical && isSuccess) { resultType = 'CRITICAL SUCCESS'; resultColor = '#4ade80'; }
+    else if (isSuccess) { resultType = 'SUCCESS'; resultColor = '#80b0ff'; }
+    else if (isFumble) { resultType = 'FUMBLE'; resultColor = '#ff4444'; }
+    else { resultType = 'FAILURE'; resultColor = '#cc8844'; }
+
+    const resultHTML = `
+      <div class="modal-result-body">
+        <div class="result-icon">🧠</div>
+        <div class="result-title" style="color:#80b0ff;">Mental Strength — Willpower</div>
+        <div class="result-detail">
+          <p><strong>Willpower:</strong> ${data.baseValue}% + 40% = ${target}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
+          <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
+        </div>
+      </div>`;
+    this.showResultModal('🧠 Mental Strength — Willpower', resultHTML);
   },
   
   /**
@@ -33633,6 +33757,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     // Show result in an overlay
     this.showDamageResult(damageString, result);
+    
+    // Deactivate Forceful Strike after damage is rolled (attack is complete)
+    if (this.character?.isForcefulStrikeActive) {
+      this.deactivateForcefulStrike();
+    }
   },
 
   /**
