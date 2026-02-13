@@ -1096,7 +1096,7 @@
     <!-- ==================== PAGE 3: COMBAT AND SPECIAL ABILITIES ==================== -->
     <section id="page-combat" class="sheet-page page-combat">
       <div class="page-content ornate-border">
-        <h2 class="page-title">COMBAT AND SPECIAL ABILITIES</h2>
+        <h2 class="page-title">COMBAT</h2>
         
         <!-- Quick Reference Section -->
         <div class="combat-header-grid">
@@ -1359,40 +1359,28 @@
           </section>
         </div>
 
-        <!-- Abilities Sections Container -->
+        <!-- Special Abilities Title -->
+        <h2 class="page-title special-abilities-title">SPECIAL ABILITIES</h2>
+
+        <!-- Abilities Sections Container (single column layout) -->
         <div class="abilities-sections-container">
-          <!-- Left Column: Class Abilities -->
-          <div class="abilities-left-column">
-            <!-- Class Abilities Section (formerly Special Abilities) -->
-            <section class="class-abilities-section">
-              <div class="section-header-row">
-                <h3 class="section-header">Class Abilities</h3>
-                <div class="header-buttons">
-                  <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
-                  <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
-                  <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
-                </div>
+          <!-- Class Abilities Section -->
+          <section class="class-abilities-section">
+            <div class="section-header-row">
+              <h3 class="section-header">Class Abilities</h3>
+              <div class="header-buttons">
+                <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
+                <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
+                <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
               </div>
-              <div class="class-abilities-list" id="class-abilities-list">
-                <!-- Dynamically populated -->
-              </div>
-            </section>
+            </div>
+            <!-- Hidden text list for data tracking -->
+            <div class="class-abilities-list" id="class-abilities-list" style="display: none;">
+              <!-- Dynamically populated -->
+            </div>
 
-            <!-- Species Abilities Section -->
-            <section class="species-abilities-section" id="species-abilities-section">
-              <div class="section-header-row">
-                <h3 class="section-header">Species Abilities</h3>
-              </div>
-              <div class="species-abilities-fullwidth" id="species-abilities-cards">
-                <!-- Dynamically populated based on species -->
-              </div>
-            </section>
-          </div>
-
-          <!-- Right Column: Berserk Rage, Spell-Like Abilities, Forceful Strike -->
-          <div class="abilities-right-column">
-            <!-- Grid of ability cards -->
-            <div class="ability-cards-grid">
+            <!-- Interactive ability button sections -->
+            <div class="ability-cards-grid" id="ability-buttons-area">
               <!-- ===== SPECIES ABILITIES (dynamically injected as sections) ===== -->
               <!-- ===== ABILITY BUTTONS (Toggle/Activate) ===== -->
               <section class="berserk-rage-section" id="berserk-rage-section" style="display: none;">
@@ -2171,6 +2159,14 @@
 
             </div>
 
+            <!-- Divider between buttons and info cards -->
+            <hr class="special-abilities-divider" id="buttons-infocards-divider">
+
+            <!-- Passive ability info cards -->
+            <div class="ability-info-cards-grid" id="ability-info-cards-area">
+              <!-- Dynamically populated info cards -->
+            </div>
+
             <!-- Monk Abilities Section (only visible for Monk class) -->
             <hr class="ability-cards-divider" id="monk-abilities-divider" style="display: none;">
             <section class="weapon-spec-section" id="monk-abilities-section" style="display: none;">
@@ -2220,7 +2216,6 @@
               </div>
             </section>
             
-            
             <!-- Syrin Species Abilities Section (only visible for Syrin species) -->
             <hr class="ability-cards-divider" id="syrin-abilities-divider" style="display: none;">
             <div class="syrin-abilities-row" id="syrin-abilities-section" style="display: none;">
@@ -2264,7 +2259,22 @@
                 </div>
               </section>
             </div>
-          </div>
+
+          </section>
+
+          <!-- Divider before Species Abilities -->
+          <hr class="special-abilities-divider">
+
+          <!-- Species Abilities Section -->
+          <section class="species-abilities-section" id="species-abilities-section">
+            <div class="section-header-row">
+              <h3 class="section-header">Species Abilities</h3>
+            </div>
+            <div class="species-abilities-fullwidth" id="species-abilities-cards">
+              <!-- Dynamically populated based on species -->
+            </div>
+          </section>
+
         </div>
       </div>
     </section>

@@ -1395,7 +1395,7 @@ const App = {
    * Generates info-only cards for abilities that don't have dedicated interactive sections.
    */
   updateClassAbilityInfoCards() {
-    const grid = document.querySelector('.ability-cards-grid');
+    const grid = document.getElementById('ability-info-cards-area');
     if (!grid) return;
 
     // Remove all existing class info cards
@@ -1510,6 +1510,13 @@ const App = {
 
       grid.appendChild(section);
     });
+
+    // Manage divider visibility
+    const divider = document.getElementById('buttons-infocards-divider');
+    if (divider) {
+      const hasInfoCards = grid.querySelectorAll('.class-info-card-section').length > 0;
+      divider.style.display = hasInfoCards ? '' : 'none';
+    }
   },
 
   /**
@@ -26949,6 +26956,16 @@ const App = {
   },
 
   useCallWarHorse() {
+    // Trigger galloping animation
+    const section = document.getElementById('call-war-horse-section');
+    if (section) {
+      section.classList.remove('summoning');
+      void section.offsetWidth; // Force reflow
+      section.classList.add('summoning');
+      section.addEventListener('animationend', () => {
+        section.classList.remove('summoning');
+      }, { once: true });
+    }
     this.showAbilityDetail('Call War Horse');
   },
 
