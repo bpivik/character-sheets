@@ -1067,13 +1067,13 @@ const App = {
     
     // Only reset species abilities if species actually changed (not during init)
     if (speciesActuallyChanged) {
-      // Clear saved species abilities since species changed - use new species defaults
-      this.character.speciesAbilities = [];
+      // Set species abilities to new species defaults (not empty — needed for spell-like ability selection)
+      this.character.speciesAbilities = newData && newData.abilities ? [...newData.abilities] : [];
       
       // Populate the Species Abilities section (replaces old content)
       // Pass true to apply persistent effects since this is a user-initiated species change
-      this.populateSpeciesAbilitiesSection(newData ? newData.abilities : [], true);
-      this.populateSpeciesAbilitiesCards(newData ? newData.abilities : []);
+      this.populateSpeciesAbilitiesSection(this.character.speciesAbilities, true);
+      this.populateSpeciesAbilitiesCards(this.character.speciesAbilities);
       
       // Update spell-like section visibility (hide if new species doesn't have it)
       this.checkSpellLikeAbilitiesVisibility();
@@ -1190,8 +1190,6 @@ const App = {
     
     // Abilities that have dedicated interactive button sections
     const BUTTON_ABILITIES = [
-      'diving strike', 'radiant burst', 'spell-like abilities',
-      'spell-like ability (speak with animals - foxes)',
       'sharp eyed', 'stealthy'
     ];
     
@@ -1202,17 +1200,34 @@ const App = {
     if (sectionEl) sectionEl.style.display = infoAbilities.length > 0 ? '' : 'none';
     
     infoAbilities.forEach(ability => {
+      const abilityLower = ability.toLowerCase();
+      const isSpellLike = abilityLower.startsWith('spell-like abilit');
+      
       let summaryText = '';
-      if (window.AbilityDescriptions) {
-        const desc = AbilityDescriptions.getDescription(ability);
-        if (desc) {
-          const tmp = document.createElement('div');
-          tmp.innerHTML = desc;
-          const firstStrong = tmp.querySelector('strong');
-          if (firstStrong) {
-            summaryText = firstStrong.textContent || '';
-          } else {
-            summaryText = (tmp.textContent || '').substring(0, 100);
+      let displayName = this.toTitleCase(ability);
+      let spellMatch = ability.match(/\(([^)]+)\)/);
+      let chosenSpell = spellMatch ? spellMatch[1] : null;
+      
+      if (isSpellLike && chosenSpell && this.SPELL_LIKE_ABILITIES_DATA[chosenSpell]) {
+        // Has a chosen spell — show spell description as summary
+        const spellData = this.SPELL_LIKE_ABILITIES_DATA[chosenSpell];
+        const tmp2 = document.createElement('div');
+        tmp2.innerHTML = spellData.description;
+        summaryText = (tmp2.textContent || '').substring(0, 120) + '…';
+      } else if (isSpellLike && !chosenSpell) {
+        summaryText = 'Choose your innate spell — tap to select';
+      } else {
+        if (window.AbilityDescriptions) {
+          const desc = AbilityDescriptions.getDescription(ability);
+          if (desc) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = desc;
+            const firstStrong = tmp.querySelector('strong');
+            if (firstStrong) {
+              summaryText = firstStrong.textContent || '';
+            } else {
+              summaryText = (tmp.textContent || '').substring(0, 100);
+            }
           }
         }
       }
@@ -1224,7 +1239,7 @@ const App = {
       
       section.innerHTML = `
         <div class="section-header-row">
-          <h3 class="section-header">${this.toTitleCase(ability)}</h3>
+          <h3 class="section-header">${displayName}</h3>
         </div>
         <div class="species-ability-card-content">
           <span class="species-ability-card-label">${summaryText}</span>
@@ -1233,7 +1248,25 @@ const App = {
       `;
       
       section.addEventListener('click', () => {
-        this.showAbilityDetail(ability);
+        if (isSpellLike && !chosenSpell) {
+          // No spell chosen yet — prompt selection
+          this.promptSpellLikeAbilitySelection();
+        } else if (isSpellLike && chosenSpell && this.SPELL_LIKE_ABILITIES_DATA[chosenSpell]) {
+          // Show full spell details in modal
+          const spellData = this.SPELL_LIKE_ABILITIES_DATA[chosenSpell];
+          let resistLine = spellData.resist ? `<p style="color:#9a7acc; margin-bottom:0.5rem;"><strong>Resist:</strong> ${spellData.resist}</p>` : '';
+          const modalHTML = `
+            <div class="modal-result-body">
+              <div class="result-title" style="color:#c0a0e0;">✨ ${spellData.name}</div>
+              <div class="result-detail">
+                ${resistLine}
+                <div style="margin-top:0.4rem;">${spellData.description.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</div>
+              </div>
+            </div>`;
+          this.showResultModal(`✨ Spell-Like Ability — ${spellData.name}`, modalHTML);
+        } else {
+          this.showAbilityDetail(ability);
+        }
       });
       section.title = 'Click for full details';
       
@@ -1526,8 +1559,10 @@ const App = {
     
     const speciesData = window.SpeciesData.getSpecies(species);
     if (speciesData && speciesData.abilities) {
-      this.populateSpeciesAbilitiesSection(speciesData.abilities);
-      this.populateSpeciesAbilitiesCards(speciesData.abilities);
+      // Populate character data so spell-like ability selection can update it
+      this.character.speciesAbilities = [...speciesData.abilities];
+      this.populateSpeciesAbilitiesSection(this.character.speciesAbilities);
+      this.populateSpeciesAbilitiesCards(this.character.speciesAbilities);
     } else {
       this.populateSpeciesAbilitiesSection([]);
       this.populateSpeciesAbilitiesCards([]);
@@ -27463,17 +27498,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (this.character.speciesAbilities) {
       for (let i = 0; i < this.character.speciesAbilities.length; i++) {
         const baseName = this.character.speciesAbilities[i].split('(')[0].trim().toLowerCase();
-        if (baseName === 'spell-like abilities') {
+        if (baseName.startsWith('spell-like abilit')) {
           this.character.speciesAbilities[i] = `Spell-Like Abilities (${spellName})`;
           break;
         }
       }
     }
     
-    // Update the spell info section
-    this.updateSpellLikeSection(spellName);
-    
-    // Refresh the species cards
+    // Refresh the species cards to show the chosen spell
     this.populateSpeciesAbilitiesCards(this.character.speciesAbilities);
     
     this.scheduleAutoSave();
@@ -27483,31 +27515,24 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Check if character has Spell-Like Abilities and show/hide section
    */
   checkSpellLikeAbilitiesVisibility() {
+    // Spell-like abilities now render as species ability cards
+    // Hide the old standalone section
     const section = document.getElementById('spell-like-section');
     const divider = document.getElementById('spell-like-divider');
-    if (!section) return;
-    
-    // Check species abilities for Spell-Like Abilities
+    if (section) section.style.display = 'none';
+    if (divider) divider.style.display = 'none';
+
+    // Check if Abyssari spell needs selection prompt
     const speciesAbilities = this.getSpeciesAbilities();
-    
-    let spellName = null;
     for (const ability of speciesAbilities) {
       if (ability.toLowerCase().startsWith('spell-like abilities')) {
         const match = ability.match(/\(([^)]+)\)/);
-        if (match) {
-          spellName = match[1];
+        if (!match) {
+          // No spell chosen yet — auto-prompt
+          this.promptSpellLikeAbilitySelection();
         }
         break;
       }
-    }
-    
-    if (spellName && this.SPELL_LIKE_ABILITIES_DATA[spellName]) {
-      section.style.display = '';
-      if (divider) divider.style.display = '';
-      this.updateSpellLikeSection(spellName);
-    } else {
-      section.style.display = 'none';
-      if (divider) divider.style.display = 'none';
     }
   },
 
