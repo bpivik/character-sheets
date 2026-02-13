@@ -1619,6 +1619,12 @@ const RANKED_CLASS_ABILITIES = {
   'anti-paladin': [
     // Rank 2
     { 
+      name: "Turn Undead", 
+      rank: 2, 
+      prereqs: null,
+      summary: "Turn or control undead, demons, and devils (control lasts 24 hours)"
+    },
+    { 
       name: "Call War Horse", 
       rank: 2, 
       prereqs: null,
@@ -1691,8 +1697,11 @@ const REPEATABLE_ABILITIES = {
  * Get abilities for a class at a specific rank
  */
 function getRankedAbilitiesForClass(className, rank) {
-  const classKey = className.toLowerCase().replace('-', '').replace(' ', '').trim();
-  const abilities = RANKED_CLASS_ABILITIES[classKey];
+  const normalized = className.toLowerCase().trim();
+  // Try exact match first (preserves hyphens like 'anti-paladin'), then stripped
+  const abilities = RANKED_CLASS_ABILITIES[normalized] 
+    || RANKED_CLASS_ABILITIES[normalized.replace(/[-\s]/g, '')]
+    || null;
   if (!abilities) return [];
   return abilities.filter(a => a.rank === rank);
 }
@@ -1701,8 +1710,10 @@ function getRankedAbilitiesForClass(className, rank) {
  * Get all abilities for a class up to a specific rank
  */
 function getAllRankedAbilitiesUpToRank(className, maxRank) {
-  const classKey = className.toLowerCase().replace('-', '').replace(' ', '').trim();
-  const abilities = RANKED_CLASS_ABILITIES[classKey];
+  const normalized = className.toLowerCase().trim();
+  const abilities = RANKED_CLASS_ABILITIES[normalized] 
+    || RANKED_CLASS_ABILITIES[normalized.replace(/[-\s]/g, '')]
+    || null;
   if (!abilities) return [];
   return abilities.filter(a => a.rank <= maxRank);
 }

@@ -60,7 +60,6 @@ const ClassAbilities = {
   
   'anti-paladin': {
     rank1: ["Armor Proficiency", "Combat Proficiency", "Lay on Hands", "Unholy Protection", "Protection from Good (10' Radius)", "Immunity to Disease", "Cause Disease", "Cause Charm/Fear", "Sneak Attack", "Detect Good", "Unholy Weapons"],
-    rank2: ["Turn Undead"],
     rank3: ["Divine Spellcasting"]
   },
   
