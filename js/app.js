@@ -522,6 +522,8 @@ const App = {
     this.checkDetectEvilVisibility();
     this.checkDetectMagicVisibility();
     this.checkDeterminationVisibility();
+    this.checkCallWarHorseVisibility();
+    this.checkAlterSelfVisibility();
     this.checkCureDiseaseVisibility();
     this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -579,6 +581,8 @@ const App = {
     
     // Setup tooltips for ability cards
     this.setupAbilityCardTooltips();
+    this.checkCallWarHorseVisibility();
+    this.checkAlterSelfVisibility();
     this.setupClickableAbilityHeaders();
     this.checkDeterminationVisibility();
     
@@ -1304,6 +1308,47 @@ const App = {
     'mysticism': { emoji: '✨' },
     'identify plants and animals': { emoji: '🌿' },
     'identify pure water': { emoji: '💧' },
+    // Passive buff abilities
+    'agile': { emoji: '⚡', summary: '+4 Initiative while Unburdened & Light armor' },
+    'very agile': { emoji: '💨', summary: 'Evade 1 grade easier while Unburdened & no armor' },
+    'agelessness': { emoji: '♾️', summary: 'Immune to aging penalties' },
+    'immune to charm spells': { emoji: '🧠', summary: 'Immune to Charm spell effects' },
+    'protection from evil (10\' radius)': { emoji: '✝️', summary: 'Permanent 10ft protective aura vs evil' },
+    'pass without a trace': { emoji: '🌿', summary: 'Move through woods at normal pace, no trail' },
+    'camouflage': { emoji: '🍃', summary: 'Enhanced concealment in natural terrain' },
+    'camouflaged': { emoji: '🍃', summary: 'Enhanced concealment in natural terrain' },
+    'woodland languages': { emoji: '🌲', summary: 'Speak with woodland creatures' },
+    'speak with animals': { emoji: '🐾', summary: 'Communicate with animals at will' },
+    'speak with plants': { emoji: '🌱', summary: 'Communicate with plants at will' },
+    'animal empathy': { emoji: '🐻', summary: 'Calming & handling animals is easier' },
+    'wild casting': { emoji: '🔮', summary: 'Cast spells while in Shape Changed form' },
+    'characteristic increase': { emoji: '📈', summary: '+1 to a Characteristic (once per Rank)' },
+    'legendary sorcerer': { emoji: '🌟', summary: 'Capstone sorcerer mastery' },
+    // Bard performance abilities
+    'inspire competence': { emoji: '🎺', summary: '1 MP: allies +10% skills for 5 rounds' },
+    'inspire greatness': { emoji: '🎺', summary: '3 MP: allies +10% all rolls, halve first hit' },
+    'inspire heroics': { emoji: '🎺', summary: '3 MP: +20% Resistance, Evade, Parry' },
+    'suggestion': { emoji: '🎭', summary: '1 MP: implant suggestion in Fascinated target' },
+    'mass suggestion': { emoji: '🎭', summary: 'Suggestion on all Fascinated targets' },
+    'song of freedom': { emoji: '🎶', summary: 'Break Enchantment/Charm on ally within 30ft' },
+    // Combat passive abilities
+    'overrun': { emoji: '🐎', summary: 'Free attack along Charge path if you drop a foe' },
+    'greater overrun': { emoji: '🐎', summary: 'Enhanced Overrun — continue through multiple foes' },
+    'ki strike': { emoji: '👊', summary: 'Unarmed counts as magical weapon, scales with Rank' },
+    'arrowcut': { emoji: '🏹', summary: 'Deflect incoming missiles' },
+    'slow fall': { emoji: '🪶', summary: 'Ignore falling damage up to ½ Mysticism in feet' },
+    'spatial awareness': { emoji: '👁️', summary: 'React to attacks from behind (Formidable Perception)' },
+    'ranged touch': { emoji: '🎯', summary: 'Deliver touch-range spells at distance' },
+    // Rage & Turning extras
+    'extra rage i': { emoji: '😤', summary: '+1 Berserk Rage use per day' },
+    'extra rage ii': { emoji: '😤', summary: '+1 Berserk Rage use per day (stacks)' },
+    'extra rage iii': { emoji: '😤', summary: '+1 Berserk Rage use per day (stacks)' },
+    'extra rage iv': { emoji: '😤', summary: '+1 Berserk Rage use per day (stacks)' },
+    'extra rage 1': { emoji: '😤', summary: '+1 Berserk Rage use per day' },
+    'extra rage 2': { emoji: '😤', summary: '+1 Berserk Rage use per day (stacks)' },
+    'extra rage 3': { emoji: '😤', summary: '+1 Berserk Rage use per day (stacks)' },
+    'extra rage 4': { emoji: '😤', summary: '+1 Berserk Rage use per day (stacks)' },
+    'extra turning': { emoji: '✝️', summary: '+1 Turn Undead use per day' },
   },
 
   /**
@@ -1445,6 +1490,7 @@ const App = {
       'circle of power', 'familiar', 'magic surge', 'defensive reflexes',
       'skirmishing', 'swashbuckling', 'unarmored defense', 'weapon precision',
       'weapon specialization', 'subterfuge', 'second wind',
+      'call war horse', 'alter self',
       // Rank titles (no card needed)
       'grand master', 'high master', 'legendary master', 'war marshal',
       'lord commander', 'battle captain', 'weapon master',
@@ -5321,6 +5367,8 @@ const App = {
       } else if (normalizedName === 'commanding') {
         this.checkCommandingVisibility();
     this.checkHolyStrikeVisibility();
+    this.checkCallWarHorseVisibility();
+    this.checkAlterSelfVisibility();
     this.checkLayOnHandsVisibility();
     this.checkDetectEvilVisibility();
     this.checkDetectMagicVisibility();
@@ -6715,6 +6763,8 @@ const App = {
         if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
         if (normalizedName === 'detect magic and illusions') this.checkDetectMagicVisibility();
         if (normalizedName === 'determination') this.checkDeterminationVisibility();
+        if (normalizedName === 'call war horse') this.checkCallWarHorseVisibility();
+        if (normalizedName === 'alter self') this.checkAlterSelfVisibility();
         if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
         if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -6815,6 +6865,8 @@ const App = {
     if (normalizedName === 'detect evil') this.checkDetectEvilVisibility();
     if (normalizedName === 'detect magic and illusions') this.checkDetectMagicVisibility();
     if (normalizedName === 'determination') this.checkDeterminationVisibility();
+    if (normalizedName === 'call war horse') this.checkCallWarHorseVisibility();
+    if (normalizedName === 'alter self') this.checkAlterSelfVisibility();
     if (normalizedName === 'cure disease') this.checkCureDiseaseVisibility();
     if (normalizedName === 'divine protection') this.checkDivineProtectionVisibility();
     this.checkCircleOfPowerVisibility();
@@ -14308,6 +14360,8 @@ const App = {
     
     // After updating abilities, check visibility of ability-related UI sections
     this.checkTurnUndeadVisibility();
+    this.checkCallWarHorseVisibility();
+    this.checkAlterSelfVisibility();
     this.checkCommandingVisibility();
     this.checkHolyStrikeVisibility();
     this.checkLayOnHandsVisibility();
@@ -26737,6 +26791,8 @@ const App = {
       'weapon precision': 'Weapon Precision',
       'diving strike': 'Diving Strike',
       'radiant burst': 'Radiant Burst',
+      'call war horse': 'Call War Horse',
+      'alter self': 'Alter Self',
     };
 
     grid.addEventListener('click', (e) => {
@@ -26830,6 +26886,52 @@ const App = {
     } else {
       section.style.display = 'none';
     }
+  },
+
+  checkCallWarHorseVisibility() {
+    const section = document.getElementById('call-war-horse-section');
+    if (!section) return;
+    if (this.hasAbility('Call War Horse')) {
+      section.style.display = '';
+      this.setupCallWarHorseListeners();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  setupCallWarHorseListeners() {
+    const btn = document.getElementById('btn-call-war-horse');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.useCallWarHorse());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  useCallWarHorse() {
+    this.showAbilityDetail('Call War Horse');
+  },
+
+  checkAlterSelfVisibility() {
+    const section = document.getElementById('alter-self-section');
+    if (!section) return;
+    if (this.hasAbility('Alter Self')) {
+      section.style.display = '';
+      this.setupAlterSelfListeners();
+    } else {
+      section.style.display = 'none';
+    }
+  },
+
+  setupAlterSelfListeners() {
+    const btn = document.getElementById('btn-alter-self');
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.addEventListener('click', () => this.useAlterSelf());
+      btn.dataset.listenerAttached = 'true';
+    }
+  },
+
+  useAlterSelf() {
+    this.showAbilityDetail('Alter Self');
   },
 
   setupDeterminationListeners() {
@@ -37646,6 +37748,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     this.checkMysticHealingVisibility();
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
+    this.checkCallWarHorseVisibility();
+    this.checkAlterSelfVisibility();
     this.checkQuiveringPalmVisibility();
     this.checkPerfectionVisibility();
     this.checkCommandingVisibility();

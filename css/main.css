@@ -2007,6 +2007,102 @@ input.weapon-damage.rage-boosted,
 }
 
 /* ========================================
+   CALL WAR HORSE SECTION
+   ======================================== */
+
+.call-war-horse-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a1a0a 0%, #2a2810 100%);
+  border: 2px solid #a09050;
+  border-radius: 6px;
+}
+
+.call-war-horse-section .section-header {
+  color: #d4c080;
+  text-shadow: 0 0 10px rgba(212, 192, 128, 0.4);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.call-war-horse-content {
+  display: flex; flex-direction: column; gap: 0.35rem; align-items: center; text-align: center;
+}
+
+.call-war-horse-info { width: 100%; }
+
+.call-war-horse-label {
+  color: #908060; font-size: 0.72rem; font-style: italic;
+}
+
+.btn-call-war-horse {
+  width: 100%;
+  background: linear-gradient(135deg, #2a2008 0%, #403010 50%, #2a2008 100%);
+  color: #f0e0b0;
+  border: 1px solid #a09050;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(160, 144, 80, 0.3);
+}
+
+.btn-call-war-horse:hover {
+  background: linear-gradient(135deg, #3a3018 0%, #504020 50%, #3a3018 100%);
+  box-shadow: 0 4px 12px rgba(212, 192, 128, 0.5);
+}
+
+/* ========================================
+   ALTER SELF SECTION
+   ======================================== */
+
+.alter-self-section {
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #1a0a2a 0%, #2a1040 100%);
+  border: 2px solid #8060b0;
+  border-radius: 6px;
+}
+
+.alter-self-section .section-header {
+  color: #c0a0e0;
+  text-shadow: 0 0 10px rgba(192, 160, 224, 0.4);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.alter-self-content {
+  display: flex; flex-direction: column; gap: 0.35rem; align-items: center; text-align: center;
+}
+
+.alter-self-info { width: 100%; }
+
+.alter-self-label {
+  color: #906080; font-size: 0.72rem; font-style: italic;
+}
+
+.btn-alter-self {
+  width: 100%;
+  background: linear-gradient(135deg, #2a1040 0%, #401860 50%, #2a1040 100%);
+  color: #e0c0f0;
+  border: 1px solid #8060b0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(128, 96, 176, 0.3);
+}
+
+.btn-alter-self:hover {
+  background: linear-gradient(135deg, #3a2050 0%, #502870 50%, #3a2050 100%);
+  box-shadow: 0 4px 12px rgba(192, 160, 224, 0.5);
+}
+
+/* ========================================
    DETECT MAGIC SECTION
    ======================================== */
 .detect-magic-section {
