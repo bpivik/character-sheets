@@ -1615,6 +1615,43 @@ const RANKED_CLASS_ABILITIES = {
       summary: "As Mental Strength I, but usable 5/day"
     },
   ],
+
+  'anti-paladin': [
+    // Rank 2
+    { 
+      name: "Call War Horse", 
+      rank: 2, 
+      prereqs: null,
+      summary: "Summon a dark warhorse (25% chance of Nightmare)"
+    },
+    { 
+      name: "Characteristic Increase", 
+      rank: 2, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    // Rank 3
+    { 
+      name: "Characteristic Increase", 
+      rank: 3, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    // Rank 4
+    { 
+      name: "Characteristic Increase", 
+      rank: 4, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+    // Rank 5
+    { 
+      name: "Characteristic Increase", 
+      rank: 5, 
+      prereqs: null,
+      summary: "+1 to any Characteristic (once per Rank, cannot exceed racial max)"
+    },
+  ],
 };
 
 /**
