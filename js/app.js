@@ -2268,6 +2268,14 @@ const App = {
       });
     }
     
+    // Sort species abilities button
+    const sortSpeciesBtn = document.getElementById('btn-sort-species-abilities');
+    if (sortSpeciesBtn) {
+      sortSpeciesBtn.addEventListener('click', () => {
+        this.sortSpeciesAbilities();
+      });
+    }
+    
     // Alphabetize spells buttons (individual for each rank)
     const spellRanks = ['cantrips', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
     spellRanks.forEach(rankKey => {
@@ -6986,84 +6994,103 @@ const App = {
    * Sort special abilities alphabetically
    */
   sortSpecialAbilities() {
+    // Sort the hidden text list for data persistence
     const container = document.getElementById('class-abilities-list');
-    if (!container) return;
-    
-    // Collect all non-empty abilities
-    const inputs = Array.from(container.querySelectorAll('.class-ability-input'));
-    const abilities = [];
-    
-    inputs.forEach(input => {
-      if (input.value.trim()) {
-        abilities.push({
-          value: input.value.trim(),
-          classAbility: input.dataset.classAbility || ''
-        });
-      }
-    });
-    
-    if (abilities.length === 0) return;
-    
-    // Sort alphabetically
-    abilities.sort((a, b) => a.value.toLowerCase().localeCompare(b.value.toLowerCase()));
-    
-    // Calculate column-major layout for 3-column CSS grid
-    // We want: col1 reads down, col2 reads down, col3 reads down
-    // But CSS grid fills row-by-row, so we interleave
-    const numCols = 3;
-    const itemsPerCol = Math.ceil(abilities.length / numCols);
-    
-    // Split into columns
-    const columns = [
-      abilities.slice(0, itemsPerCol),
-      abilities.slice(itemsPerCol, itemsPerCol * 2),
-      abilities.slice(itemsPerCol * 2)
-    ];
-    
-    // Interleave: row0 = col1[0], col2[0], col3[0]; row1 = col1[1], col2[1], col3[1]; etc.
-    // Include null for empty grid slots to maintain alignment
-    const interleaved = [];
-    for (let row = 0; row < itemsPerCol; row++) {
-      for (let col = 0; col < numCols; col++) {
-        if (columns[col] && columns[col][row]) {
-          interleaved.push(columns[col][row]);
-        } else {
-          interleaved.push(null); // Empty grid slot placeholder
+    if (container) {
+      const inputs = Array.from(container.querySelectorAll('.class-ability-input'));
+      const abilities = inputs.filter(i => i.value.trim()).map(i => ({
+        value: i.value.trim(),
+        classAbility: i.dataset.classAbility || ''
+      }));
+      abilities.sort((a, b) => a.value.toLowerCase().localeCompare(b.value.toLowerCase()));
+      
+      const numCols = 3;
+      const itemsPerCol = Math.ceil(abilities.length / numCols);
+      const columns = [
+        abilities.slice(0, itemsPerCol),
+        abilities.slice(itemsPerCol, itemsPerCol * 2),
+        abilities.slice(itemsPerCol * 2)
+      ];
+      const interleaved = [];
+      for (let row = 0; row < itemsPerCol; row++) {
+        for (let col = 0; col < numCols; col++) {
+          interleaved.push(columns[col]?.[row] || null);
         }
       }
+      container.innerHTML = '';
+      interleaved.forEach(item => {
+        if (item) {
+          const input = this.addClassAbilityRow(item.value, item.classAbility || null);
+          if (input) input.dataset.previousValue = item.value;
+        } else {
+          const spacer = document.createElement('div');
+          spacer.className = 'class-ability-sort-spacer';
+          container.appendChild(spacer);
+        }
+      });
     }
     
-    // Clear container and rebuild
-    container.innerHTML = '';
-    interleaved.forEach((item) => {
-      if (item) {
-        const input = this.addClassAbilityRow(item.value, item.classAbility || null);
-        if (input) {
-          input.dataset.previousValue = item.value;
-        }
-      } else {
-        // Add invisible spacer div for grid alignment (no class-ability-row to avoid cleanup)
-        const spacer = document.createElement('div');
-        spacer.className = 'class-ability-sort-spacer';
-        container.appendChild(spacer);
-      }
-    });
+    // Sort the ability buttons grid
+    this._sortGridChildren('ability-buttons-area');
+    
+    // Sort the info cards grid
+    this._sortGridChildren('ability-info-cards-area');
     
     // Update tooltips after sorting
     this.updateAllAbilityTooltips();
-    
-    // Update character data to match the sorted DOM
     this.syncClassAbilitiesToCharacter();
-    
-    // Check Just a Scratch visibility
     this.checkJustAScratchVisibility();
     this.checkMysticHealingVisibility();
     this.checkPainControlVisibility();
     this.checkNertherWalkVisibility();
     this.checkQuiveringPalmVisibility();
     this.checkPerfectionVisibility();
-    
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Sort visible children of a grid container alphabetically by their section-header text
+   */
+  _sortGridChildren(containerId) {
+    const grid = document.getElementById(containerId);
+    if (!grid) return;
+    
+    const children = Array.from(grid.children).filter(el => {
+      // Only sort visible elements that have a section header
+      return el.style.display !== 'none' && el.querySelector('.section-header');
+    });
+    
+    // Also collect non-sortable elements (hidden, dividers, etc.)
+    const hidden = Array.from(grid.children).filter(el => {
+      return el.style.display === 'none' || !el.querySelector('.section-header');
+    });
+    
+    children.sort((a, b) => {
+      const aText = (a.querySelector('.section-header')?.textContent || '').replace(/^[^\w]+/, '').trim().toLowerCase();
+      const bText = (b.querySelector('.section-header')?.textContent || '').replace(/^[^\w]+/, '').trim().toLowerCase();
+      return aText.localeCompare(bText);
+    });
+    
+    // Re-append in sorted order, then hidden elements
+    children.forEach(el => grid.appendChild(el));
+    hidden.forEach(el => grid.appendChild(el));
+  },
+
+  /**
+   * Sort species ability cards alphabetically
+   */
+  sortSpeciesAbilities() {
+    const grid = document.getElementById('species-abilities-cards');
+    if (!grid) return;
+    
+    const cards = Array.from(grid.children);
+    cards.sort((a, b) => {
+      const aText = (a.querySelector('.section-header, h4')?.textContent || a.textContent || '').trim().toLowerCase();
+      const bText = (b.querySelector('.section-header, h4')?.textContent || b.textContent || '').trim().toLowerCase();
+      return aText.localeCompare(bText);
+    });
+    
+    cards.forEach(el => grid.appendChild(el));
   },
   
   /**
@@ -9434,6 +9461,9 @@ const App = {
     
     // Update prereq keys on magic skills
     this.updateMagicPrereqKeys();
+    
+    // Inject paladin/anti-paladin spell roll buttons
+    this.updatePaladinSpellButtons();
   },
   
   /**
@@ -9591,6 +9621,196 @@ const App = {
     
     // Set up click handlers for the dynamically added keys
     this.setupPrereqKeyClicks();
+  },
+
+  /**
+   * Inject "Add Paladin/Anti-Paladin Spells" buttons into spell rank headers
+   */
+  updatePaladinSpellButtons() {
+    // Remove any existing paladin spell buttons
+    document.querySelectorAll('.btn-paladin-spells').forEach(btn => btn.remove());
+    
+    // Check if character is paladin or anti-paladin
+    const classes = [
+      (document.getElementById('class-primary')?.value || '').trim().toLowerCase(),
+      (document.getElementById('class-secondary')?.value || '').trim().toLowerCase(),
+      (document.getElementById('class-tertiary')?.value || '').trim().toLowerCase()
+    ].filter(c => c);
+    
+    let paladinClass = null;
+    if (classes.includes('paladin')) paladinClass = 'paladin';
+    else if (classes.includes('anti-paladin')) paladinClass = 'anti-paladin';
+    
+    if (!paladinClass) return;
+    
+    const label = paladinClass === 'paladin' ? 'Paladin' : 'Anti-Paladin';
+    
+    // Inject buttons into cantrips, rank1, rank2, rank3
+    const ranks = ['cantrips', 'rank1', 'rank2', 'rank3'];
+    ranks.forEach(rankKey => {
+      const header = document.querySelector(`.spell-column.${rankKey} .spell-header-row`);
+      if (!header) return;
+      
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-small btn-paladin-spells';
+      btn.title = `Roll or pick from ${label} spell table`;
+      btn.textContent = `📜 ${label}`;
+      btn.addEventListener('click', () => {
+        this.openPaladinSpellRollModal(paladinClass, rankKey);
+      });
+      header.appendChild(btn);
+    });
+  },
+
+  /**
+   * Open modal to roll or pick from paladin/anti-paladin spell table
+   */
+  openPaladinSpellRollModal(classKey, rankKey) {
+    const rollTable = ClassSpellLists.rollTables?.[classKey]?.[rankKey];
+    if (!rollTable) return;
+    
+    const label = classKey === 'paladin' ? 'Paladin' : 'Anti-Paladin';
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')} Spells`;
+    
+    // Get existing spells in this rank to mark duplicates
+    const existingSpells = new Set();
+    const tbody = document.getElementById(`${rankKey}-body`);
+    if (tbody) {
+      tbody.querySelectorAll('.spell-name-input').forEach(input => {
+        if (input.value.trim()) existingSpells.add(input.value.trim().toLowerCase());
+      });
+    }
+    
+    let tableHTML = rollTable.map(entry => {
+      const rangeStr = entry.range[0].toString().padStart(2, '0') + '\u2013' + entry.range[1].toString().padStart(2, '0');
+      const spellName = entry.spell + (entry.note ? ` <span style="color:#d4a030">${entry.note}</span>` : '');
+      const isOwned = existingSpells.has(entry.spell.toLowerCase());
+      const rowClass = isOwned ? 'style="opacity:0.45;cursor:pointer"' : 'style="cursor:pointer"';
+      const ownedBadge = isOwned ? ' <span style="color:#6a6;font-size:0.7rem;">\u2713 owned</span>' : '';
+      
+      return `<tr ${rowClass} data-spell="${entry.spell}" class="paladin-roll-row">
+        <td style="text-align:center;color:#d4a030;font-family:monospace;padding:0.2rem 0.4rem;">${rangeStr}</td>
+        <td style="padding:0.2rem 0.4rem;">${spellName}${ownedBadge}</td>
+      </tr>`;
+    }).join('');
+    
+    const noteHTML = classKey === 'paladin'
+      ? '<p style="font-size:0.7rem;color:#999;margin-top:0.5rem;">* Not reversible.</p>'
+      : '';
+    
+    const modalHTML = `
+      <div style="padding:0.5rem;">
+        <p style="margin-bottom:0.8rem;color:#ccc;font-size:0.85rem;">
+          Roll d100 or click a spell to add it to your ${rankLabel} list.
+        </p>
+        <div style="text-align:center;margin-bottom:0.8rem;">
+          <button type="button" class="btn btn-primary" id="btn-paladin-roll-d100" 
+                  style="font-size:1rem;padding:0.5rem 1.5rem;">
+            \uD83C\uDFB2 Roll d100
+          </button>
+          <div id="paladin-roll-result" style="margin-top:0.5rem;display:none;">
+            <span style="font-size:1.4rem;font-weight:bold;color:#d4a030;" id="paladin-roll-value"></span>
+            <span style="font-size:1rem;margin-left:0.5rem;" id="paladin-roll-spell"></span>
+          </div>
+        </div>
+        <div style="max-height:35vh;overflow-y:auto;border:1px solid #444;border-radius:4px;">
+          <table style="width:100%;border-collapse:collapse;" id="paladin-roll-table">
+            <thead><tr>
+              <th style="text-align:center;padding:0.3rem;border-bottom:1px solid #555;color:#d4a030;">d100</th>
+              <th style="padding:0.3rem;border-bottom:1px solid #555;">Spell</th>
+            </tr></thead>
+            <tbody>${tableHTML}</tbody>
+          </table>
+        </div>
+        ${noteHTML}
+      </div>
+    `;
+    
+    this.showInfoModal(label + ' ' + rankLabel, modalHTML, 'none');
+    
+    // Set up roll button
+    setTimeout(() => {
+      const rollBtn = document.getElementById('btn-paladin-roll-d100');
+      if (rollBtn) {
+        rollBtn.addEventListener('click', () => {
+          const roll = Math.floor(Math.random() * 100) + 1;
+          const entry = rollTable.find(e => roll >= e.range[0] && roll <= e.range[1]);
+          
+          document.getElementById('paladin-roll-value').textContent = roll;
+          document.getElementById('paladin-roll-spell').textContent = '\u2192 ' + (entry?.spell || '???');
+          document.getElementById('paladin-roll-result').style.display = '';
+          
+          // Highlight the row
+          document.querySelectorAll('#paladin-roll-table .paladin-roll-row').forEach(row => {
+            row.style.background = '';
+          });
+          if (entry) {
+            const matchRow = document.querySelector('#paladin-roll-table .paladin-roll-row[data-spell="' + entry.spell + '"]');
+            if (matchRow) matchRow.style.background = 'rgba(212,160,48,0.2)';
+          }
+        });
+      }
+      
+      // Set up click-to-add for each row
+      document.querySelectorAll('#paladin-roll-table .paladin-roll-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const spellName = row.dataset.spell;
+          if (spellName) {
+            this.addSpellToRankList(rankKey, spellName);
+            
+            // Mark as owned
+            row.style.opacity = '0.45';
+            const td = row.querySelectorAll('td')[1];
+            if (td && !td.innerHTML.includes('\u2713 added')) {
+              td.innerHTML += ' <span style="color:#6a6;font-size:0.7rem;">\u2713 added</span>';
+            }
+          }
+        });
+      });
+    }, 100);
+  },
+
+  /**
+   * Add a spell to a specific rank's spell list
+   */
+  addSpellToRankList(rankKey, spellName) {
+    const tbody = document.getElementById(rankKey + '-body');
+    if (!tbody) return;
+    
+    // Check if spell already exists
+    const existing = tbody.querySelectorAll('.spell-name-input');
+    for (const input of existing) {
+      if (input.value.trim().toLowerCase() === spellName.toLowerCase()) {
+        return; // Already exists
+      }
+    }
+    
+    // Find first empty row or add one
+    let targetInput = null;
+    for (const input of existing) {
+      if (!input.value.trim()) {
+        targetInput = input;
+        break;
+      }
+    }
+    
+    if (!targetInput) {
+      // Add a new row
+      const addBtn = document.querySelector('.btn-add-spell-row[data-rank="' + rankKey + '"]');
+      if (addBtn) addBtn.click();
+      // Get the newly added input
+      const inputs = tbody.querySelectorAll('.spell-name-input');
+      targetInput = inputs[inputs.length - 1];
+    }
+    
+    if (targetInput) {
+      targetInput.value = spellName;
+      targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+      targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    this.scheduleAutoSave();
   },
   
   /**
@@ -36375,6 +36595,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       return;
     }
     
+    // Clear any prior pending selections
+    this._unlockPendingSelections.clear();
+    
     // Create modal if it doesn't exist
     let modal = document.getElementById('unlock-abilities-modal');
     if (!modal) {
@@ -36804,10 +37027,86 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     }
   },
 
+  // Track selections across rank tabs: Map of abilityName → {rank, cost}
+  _unlockPendingSelections: new Map(),
+
+  /**
+   * Save currently checked abilities on the visible rank tab to the pending map
+   */
+  _saveCurrentRankSelections() {
+    const modal = document.getElementById('unlock-abilities-modal');
+    if (!modal) return;
+    const currentRank = parseInt(modal.dataset.selectedRank, 10) || 0;
+    
+    // Remove old entries for this rank
+    for (const [name, info] of this._unlockPendingSelections) {
+      if (info.rank === currentRank) {
+        this._unlockPendingSelections.delete(name);
+      }
+    }
+    
+    // Add currently checked
+    const checked = document.querySelectorAll('#available-abilities-list input[name="unlock-ability"]:checked');
+    checked.forEach(cb => {
+      this._unlockPendingSelections.set(cb.value, {
+        rank: currentRank,
+        cost: parseInt(cb.dataset.cost, 10) || 0
+      });
+    });
+  },
+
+  /**
+   * Restore checkbox state for the current rank from pending map
+   */
+  _restoreCurrentRankSelections() {
+    const modal = document.getElementById('unlock-abilities-modal');
+    if (!modal) return;
+    const currentRank = parseInt(modal.dataset.selectedRank, 10) || 0;
+    
+    const checkboxes = document.querySelectorAll('#available-abilities-list input[name="unlock-ability"]');
+    checkboxes.forEach(cb => {
+      const pending = this._unlockPendingSelections.get(cb.value);
+      if (pending && pending.rank === currentRank) {
+        cb.checked = true;
+      }
+    });
+  },
+
+  /**
+   * Update rank tab badges showing pending selection counts
+   */
+  _updateRankTabBadges() {
+    // Count selections per rank
+    const countByRank = {};
+    for (const [, info] of this._unlockPendingSelections) {
+      countByRank[info.rank] = (countByRank[info.rank] || 0) + 1;
+    }
+    
+    document.querySelectorAll('.rank-tab').forEach(tab => {
+      const rank = parseInt(tab.dataset.rank, 10);
+      let badge = tab.querySelector('.rank-tab-badge');
+      const count = countByRank[rank] || 0;
+      
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'rank-tab-badge';
+          tab.appendChild(badge);
+        }
+        badge.textContent = count;
+      } else if (badge) {
+        badge.remove();
+      }
+    });
+  },
+
   /**
    * Select a rank tab and populate abilities
    */
   selectRankTab(rank) {
+    // Save selections from the tab we're leaving
+    this._saveCurrentRankSelections();
+    
     // Update active rank tab
     document.querySelectorAll('.rank-tab').forEach(tab => {
       tab.classList.toggle('active', parseInt(tab.dataset.rank, 10) === rank);
@@ -36819,6 +37118,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Populate abilities for selected class and rank
     const className = modal.dataset.selectedClass;
     this.populateAbilities(className, rank);
+    
+    // Restore any prior selections for this rank
+    this._restoreCurrentRankSelections();
+    
+    // Update badges and confirm button
+    this._updateRankTabBadges();
+    this.updateUnlockConfirmButton();
   },
 
   /**
@@ -37211,31 +37517,37 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
-   * Update the unlock confirm button state
+   * Update the unlock confirm button state — counts across ALL rank tabs
    */
   updateUnlockConfirmButton() {
-    const checked = document.querySelectorAll('#unlock-abilities-modal input[name="unlock-ability"]:checked');
+    // Save current tab selections to the pending map first
+    this._saveCurrentRankSelections();
+    
     const expRolls = parseInt(document.getElementById('exp-rolls')?.value, 10) || 0;
     const confirmBtn = document.getElementById('unlock-abilities-confirm');
     
+    // Total from all pending selections across all ranks
     let totalCost = 0;
-    checked.forEach(cb => {
-      totalCost += parseInt(cb.dataset.cost, 10) || 0;
-    });
+    let totalCount = this._unlockPendingSelections.size;
+    for (const [, info] of this._unlockPendingSelections) {
+      totalCost += info.cost;
+    }
     
     const canAfford = expRolls >= totalCost;
     
     if (confirmBtn) {
-      confirmBtn.disabled = checked.length === 0 || !canAfford;
+      confirmBtn.disabled = totalCount === 0 || !canAfford;
       
-      if (checked.length === 0) {
+      if (totalCount === 0) {
         confirmBtn.textContent = 'Unlock Selected';
       } else if (!canAfford) {
         confirmBtn.textContent = `Not enough EXP (need ${totalCost}, have ${expRolls})`;
       } else {
-        confirmBtn.textContent = `Unlock ${checked.length} Ability${checked.length > 1 ? 'ies' : ''} (${totalCost} EXP)`;
+        confirmBtn.textContent = `Unlock ${totalCount} Abilit${totalCount > 1 ? 'ies' : 'y'} (${totalCost} EXP)`;
       }
     }
+    
+    this._updateRankTabBadges();
   },
 
   /**
@@ -37249,12 +37561,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
-   * Confirm unlocking selected abilities
+   * Confirm unlocking selected abilities from ALL rank tabs
    */
   confirmUnlockAbilities() {
+    // Save current tab selections first
+    this._saveCurrentRankSelections();
+    
     const modal = document.getElementById('unlock-abilities-modal');
-    const checked = document.querySelectorAll('#unlock-abilities-modal input[name="unlock-ability"]:checked');
-    if (checked.length === 0) return;
+    if (this._unlockPendingSelections.size === 0) return;
     
     // Get the current class context
     const currentClass = modal?.dataset?.selectedClass || '';
@@ -37263,18 +37577,19 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const newAbilities = [];
     let characteristicIncreaseRank = null;
     
-    checked.forEach(cb => {
-      const cost = parseInt(cb.dataset.cost, 10) || 0;
-      totalCost += cost;
-      const abilityName = cb.value;
+    for (const [abilityName, info] of this._unlockPendingSelections) {
+      totalCost += info.cost;
       
       // Check for Characteristic Increase - needs special handling
       if (abilityName === 'Characteristic Increase') {
-        characteristicIncreaseRank = cost; // The rank is the cost
+        characteristicIncreaseRank = info.cost; // The rank is the cost
       } else {
         newAbilities.push(abilityName);
       }
-    });
+    }
+    
+    // Clear pending selections
+    this._unlockPendingSelections.clear();
     
     // If Characteristic Increase was selected, show the selection modal
     if (characteristicIncreaseRank !== null) {

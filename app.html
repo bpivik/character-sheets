@@ -150,7 +150,7 @@
               <input type="text" id="eyes" class="field-input" placeholder="">
             </div>
             <div class="field-row">
-              <label class="field-label">Deity</label>
+              <label class="field-label">Deity/ies</label>
               <input type="text" id="deity-name" class="field-input" placeholder="">
             </div>
             <div class="prereq-skills">
@@ -1369,9 +1369,7 @@
             <div class="section-header-row">
               <h3 class="section-header">Class Abilities</h3>
               <div class="header-buttons">
-                <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort alphabetically">A→Z</button>
-                <button type="button" class="btn btn-small btn-add-row" id="btn-add-ability" title="Add ability">+</button>
-                <button type="button" class="btn btn-small btn-remove-row" id="btn-remove-ability" title="Remove last empty ability">−</button>
+                <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-abilities" title="Sort all abilities alphabetically">A→Z</button>
               </div>
             </div>
             <!-- Hidden text list for data tracking -->
@@ -2269,6 +2267,9 @@
           <section class="species-abilities-section" id="species-abilities-section">
             <div class="section-header-row">
               <h3 class="section-header">Species Abilities</h3>
+              <div class="header-buttons">
+                <button type="button" class="btn btn-small btn-alphabetize" id="btn-sort-species-abilities" title="Sort species abilities alphabetically">A→Z</button>
+              </div>
             </div>
             <div class="species-abilities-fullwidth" id="species-abilities-cards">
               <!-- Dynamically populated based on species -->
@@ -2305,7 +2306,7 @@
                 <th>Knowledge Skill</th>
                 <th>Base %</th>
                 <th>%</th>
-                <th class="magic-deity-col">Deity</th>
+                <th class="magic-deity-col">Deity/ies</th>
               </tr>
             </thead>
             <tbody>
@@ -2498,7 +2499,7 @@
                 <th>Knowledge Skill</th>
                 <th>Base %</th>
                 <th>%</th>
-                <th class="magic-deity-col">Deity</th>
+                <th class="magic-deity-col">Deity/ies</th>
               </tr>
             </thead>
             <tbody>

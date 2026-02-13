@@ -325,6 +325,146 @@ const ClassSpellLists = {
 // Sorcerer uses the same spell table as Mage
 ClassSpellLists.sorcerer = ClassSpellLists.mage;
 
+// Anti-Paladin uses same spells as paladin but with reversed versions
+ClassSpellLists['anti-paladin'] = {
+  cantrips: [
+    "Avert", "Calm", "Fanaticism (Demoralize)", "Glamour (Repugnance)", "Ironhand",
+    "Might", "Protection", "Voice"
+  ],
+  rank1: [
+    "Bless (Curse)", "Ceremony", "Cure Fatigue (Cause Fatigue)", "Cure Minor Wounds (Cause Minor Wounds)",
+    "Detect Charm (Hide Charm)", "Detect Poison", "Endure Heat/Cold",
+    "Find Traps", "Know Passions (Obscure Passions)", "Sanctuary", "Slow Poison"
+  ],
+  rank2: [
+    "Augury", "Chant", "Cure Blindness or Deafness (Cause Blindness or Deafness)",
+    "Cure Disease (Cause Disease)", "Cure Serious Wounds (Cause Serious Wounds)", "Dispel Magic",
+    "Locate Object (Obscure Object)", "Remove Curse (Bestow Curse)", "Remove Paralysis",
+    "Speak with Dead", "Spiritual Hammer", "Strength"
+  ],
+  rank3: [
+    "Atonement", "Commune", "Cure Major Wounds (Cause Major Wounds)", "Detect Lie (Undetectable Lie)",
+    "Divination", "Exorcism", "Legend Lore", "Neutralize Poison (Inflict Poison)",
+    "Prayer", "Regenerate (Wither)", "Restoration", "Tongues (Confuse Tongues)",
+    "True Sight (False Sight)"
+  ]
+};
+
+/**
+ * Paladin/Anti-Paladin spell roll tables with d100 ranges.
+ * * = Not reversible (paladin only). Anti-paladin shows reversed versions in parens.
+ */
+ClassSpellLists.rollTables = {
+  paladin: {
+    cantrips: [
+      { range: [1, 12], spell: "Avert" },
+      { range: [13, 25], spell: "Calm" },
+      { range: [26, 38], spell: "Fanaticism", note: "*" },
+      { range: [39, 50], spell: "Glamour", note: "*" },
+      { range: [51, 62], spell: "Ironhand" },
+      { range: [63, 75], spell: "Might" },
+      { range: [76, 88], spell: "Protection" },
+      { range: [89, 100], spell: "Voice" }
+    ],
+    rank1: [
+      { range: [1, 9], spell: "Bless", note: "*" },
+      { range: [10, 18], spell: "Ceremony" },
+      { range: [19, 27], spell: "Cure Fatigue", note: "*" },
+      { range: [28, 37], spell: "Cure Minor Wounds", note: "*" },
+      { range: [38, 46], spell: "Detect Charm", note: "*" },
+      { range: [47, 55], spell: "Detect Poison" },
+      { range: [56, 64], spell: "Endure Heat/Cold" },
+      { range: [65, 73], spell: "Find Traps" },
+      { range: [74, 82], spell: "Know Passions", note: "*" },
+      { range: [83, 91], spell: "Sanctuary" },
+      { range: [92, 100], spell: "Slow Poison" }
+    ],
+    rank2: [
+      { range: [1, 8], spell: "Augury" },
+      { range: [9, 16], spell: "Chant" },
+      { range: [17, 24], spell: "Cure Blindness or Deafness", note: "*" },
+      { range: [25, 32], spell: "Cure Disease", note: "*" },
+      { range: [33, 41], spell: "Cure Serious Wounds", note: "*" },
+      { range: [42, 49], spell: "Dispel Magic" },
+      { range: [50, 57], spell: "Locate Object", note: "*" },
+      { range: [58, 66], spell: "Remove Curse", note: "*" },
+      { range: [67, 75], spell: "Remove Paralysis" },
+      { range: [76, 83], spell: "Speak with Dead" },
+      { range: [84, 91], spell: "Spiritual Hammer" },
+      { range: [92, 100], spell: "Strength" }
+    ],
+    rank3: [
+      { range: [1, 7], spell: "Atonement" },
+      { range: [8, 15], spell: "Commune" },
+      { range: [16, 23], spell: "Cure Major Wounds", note: "*" },
+      { range: [24, 30], spell: "Detect Lie", note: "*" },
+      { range: [31, 38], spell: "Divination" },
+      { range: [39, 46], spell: "Exorcism" },
+      { range: [47, 54], spell: "Legend Lore" },
+      { range: [55, 62], spell: "Neutralize Poison", note: "*" },
+      { range: [63, 69], spell: "Prayer" },
+      { range: [70, 77], spell: "Regenerate", note: "*" },
+      { range: [78, 85], spell: "Restoration" },
+      { range: [86, 92], spell: "Tongues", note: "*" },
+      { range: [93, 100], spell: "True Sight", note: "*" }
+    ]
+  },
+  'anti-paladin': {
+    cantrips: [
+      { range: [1, 12], spell: "Avert" },
+      { range: [13, 25], spell: "Calm" },
+      { range: [26, 38], spell: "Fanaticism (Demoralize)" },
+      { range: [39, 50], spell: "Glamour (Repugnance)" },
+      { range: [51, 62], spell: "Ironhand" },
+      { range: [63, 75], spell: "Might" },
+      { range: [76, 88], spell: "Protection" },
+      { range: [89, 100], spell: "Voice" }
+    ],
+    rank1: [
+      { range: [1, 9], spell: "Bless (Curse)" },
+      { range: [10, 18], spell: "Ceremony" },
+      { range: [19, 27], spell: "Cure Fatigue (Cause Fatigue)" },
+      { range: [28, 37], spell: "Cure Minor Wounds (Cause Minor Wounds)" },
+      { range: [38, 46], spell: "Detect Charm (Hide Charm)" },
+      { range: [47, 55], spell: "Detect Poison" },
+      { range: [56, 64], spell: "Endure Heat/Cold" },
+      { range: [65, 73], spell: "Find Traps" },
+      { range: [74, 82], spell: "Know Passions (Obscure Passions)" },
+      { range: [83, 91], spell: "Sanctuary" },
+      { range: [92, 100], spell: "Slow Poison" }
+    ],
+    rank2: [
+      { range: [1, 8], spell: "Augury" },
+      { range: [9, 16], spell: "Chant" },
+      { range: [17, 24], spell: "Cure Blindness or Deafness (Cause Blindness or Deafness)" },
+      { range: [25, 32], spell: "Cure Disease (Cause Disease)" },
+      { range: [33, 41], spell: "Cure Serious Wounds (Cause Serious Wounds)" },
+      { range: [42, 49], spell: "Dispel Magic" },
+      { range: [50, 57], spell: "Locate Object (Obscure Object)" },
+      { range: [58, 66], spell: "Remove Curse (Bestow Curse)" },
+      { range: [67, 75], spell: "Remove Paralysis" },
+      { range: [76, 83], spell: "Speak with Dead" },
+      { range: [84, 91], spell: "Spiritual Hammer" },
+      { range: [92, 100], spell: "Strength" }
+    ],
+    rank3: [
+      { range: [1, 7], spell: "Atonement" },
+      { range: [8, 15], spell: "Commune" },
+      { range: [16, 23], spell: "Cure Major Wounds (Cause Major Wounds)" },
+      { range: [24, 30], spell: "Detect Lie (Undetectable Lie)" },
+      { range: [31, 38], spell: "Divination" },
+      { range: [39, 46], spell: "Exorcism" },
+      { range: [47, 54], spell: "Legend Lore" },
+      { range: [55, 62], spell: "Neutralize Poison (Inflict Poison)" },
+      { range: [63, 69], spell: "Prayer" },
+      { range: [70, 77], spell: "Regenerate (Wither)" },
+      { range: [78, 85], spell: "Restoration" },
+      { range: [86, 92], spell: "Tongues (Confuse Tongues)" },
+      { range: [93, 100], spell: "True Sight (False Sight)" }
+    ]
+  }
+};
+
 /**
  * Define which classes get spells and at what ranks
  */
@@ -335,6 +475,7 @@ ClassSpellLists.spellProgression = {
   mage: { startRank: 1, maxSpellRank: 5 },
   sorcerer: { startRank: 1, maxSpellRank: 5 },
   paladin: { startRank: 2, maxSpellRank: 3 },
+  'anti-paladin': { startRank: 2, maxSpellRank: 3 },
   ranger: { startRank: 2, maxSpellRank: 3 }
 };
 
@@ -419,7 +560,7 @@ ClassSpellLists.isClassSpell = function(spellName, className) {
  */
 ClassSpellLists.getClassesWithSpell = function(spellName) {
   const classes = [];
-  const classNames = ['bard', 'cleric', 'druid', 'mage', 'paladin', 'ranger'];
+  const classNames = ['bard', 'cleric', 'druid', 'mage', 'paladin', 'anti-paladin', 'ranger'];
 
   for (const className of classNames) {
     if (this.hasSpell(className, spellName)) {

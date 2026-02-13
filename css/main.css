@@ -10679,6 +10679,22 @@ input.combat-skill-percent.damage-boosted {
   font-size: 0.7rem;
 }
 
+.btn-paladin-spells {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.65rem;
+  background: linear-gradient(135deg, #2a2008, #403010);
+  color: #f0e0b0;
+  border: 1px solid #a09050;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-paladin-spells:hover {
+  background: linear-gradient(135deg, #3a3018, #504020);
+  box-shadow: 0 0 6px rgba(212, 192, 128, 0.4);
+}
+
 .spell-rank-header {
   font-family: var(--font-header);
   font-size: 0.95rem;
@@ -13054,6 +13070,7 @@ input.combat-skill-percent.damage-boosted {
   font-size: 0.85rem;
   color: var(--text-secondary);
   transition: all 0.15s ease;
+  position: relative;
 }
 
 .rank-tab:hover {
@@ -13066,6 +13083,23 @@ input.combat-skill-percent.damage-boosted {
   border-color: var(--border-medium);
   color: var(--text-header);
   font-weight: 600;
+}
+
+.rank-tab-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #d4a030;
+  color: #1a1a0a;
+  font-size: 0.65rem;
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .abilities-container {
