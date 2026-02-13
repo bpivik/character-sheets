@@ -37113,11 +37113,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (el) return parseInt(el.value, 10) || 0;
     }
     
-    // Check Oaths (any entry in the Oaths container)
+    // Check Oaths (any entry in the Oaths container or saved character data)
     if (normalized === 'oath') {
+      let highestOath = 0;
+      
+      // Approach 1: Query DOM via container class selectors
       const oathsContainer = document.getElementById('oaths-container');
       if (oathsContainer) {
-        let highestOath = 0;
         const oathRows = oathsContainer.querySelectorAll('.belief-row');
         oathRows.forEach(row => {
           const nameEl = row.querySelector('.belief-name');
@@ -37128,23 +37130,64 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             if (value > highestOath) highestOath = value;
           }
         });
-        return highestOath;
       }
+      
+      // Approach 2: Direct ID pattern (oath-1-current, oath-2-current, etc.)
+      for (let i = 1; i <= 10; i++) {
+        const el = document.getElementById(`oath-${i}-current`);
+        if (!el) break;
+        const val = parseInt(el.value, 10) || 0;
+        if (val > highestOath) highestOath = val;
+      }
+      
+      // Approach 3: Fallback to saved character data
+      if (this.character && this.character.oaths) {
+        this.character.oaths.forEach(oath => {
+          if (oath.name) {
+            const val = parseInt(oath.current, 10) || 0;
+            if (val > highestOath) highestOath = val;
+          }
+        });
+      }
+      
+      console.log(`[getSkillValueByName] Oath lookup result: ${highestOath}%`);
+      return highestOath;
     }
     
     // Check Passions (return highest passion value)
     if (normalized === 'passion') {
+      let highestPassion = 0;
+      
+      // Approach 1: Query DOM via container class selectors
       const passionsContainer = document.getElementById('passions-container');
       if (passionsContainer) {
-        let highestPassion = 0;
         const passionRows = passionsContainer.querySelectorAll('.belief-row');
         passionRows.forEach(row => {
           const valueEl = row.querySelector('.belief-input');
           const value = parseInt(valueEl?.value, 10) || 0;
           if (value > highestPassion) highestPassion = value;
         });
-        return highestPassion;
       }
+      
+      // Approach 2: Direct ID pattern (passion-1-current, etc.)
+      for (let i = 1; i <= 10; i++) {
+        const el = document.getElementById(`passion-${i}-current`);
+        if (!el) break;
+        const val = parseInt(el.value, 10) || 0;
+        if (val > highestPassion) highestPassion = val;
+      }
+      
+      // Approach 3: Fallback to saved character data
+      if (this.character && this.character.passions) {
+        this.character.passions.forEach(passion => {
+          if (passion.name) {
+            const val = parseInt(passion.current, 10) || 0;
+            if (val > highestPassion) highestPassion = val;
+          }
+        });
+      }
+      
+      return highestPassion;
     }
     
     return 0;
