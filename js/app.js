@@ -4546,6 +4546,24 @@ const App = {
         this.applyWoundFatigue('incapacitated', 'Major Wound');
       }
       // Going from Major to Serious does not change fatigue - they stay Incapacitated
+      
+      // Auto-show wound modal when transitioning INTO a wound state
+      const locationName = statusSpan.dataset.location || '';
+      if (statusClass === 'wound-serious' && previousStatus !== 'wound-serious') {
+        // Serious Wound — show Determination prompt if available, otherwise Endurance modal
+        setTimeout(() => {
+          if (this.hasAbility('Determination')) {
+            this.showSeriousWoundDeterminationPrompt(locationName);
+          } else {
+            this.showWoundInfoModal('wound-serious', locationName);
+          }
+        }, 100);
+      } else if (statusClass === 'wound-major' && previousStatus !== 'wound-major') {
+        // Major Wound — auto-show wound info modal
+        setTimeout(() => {
+          this.showWoundInfoModal('wound-major', locationName);
+        }, 100);
+      }
     }
     
     statusSpan.textContent = status;
@@ -4735,8 +4753,9 @@ const App = {
     const determinationSeriousBtn = document.getElementById('btn-determination-serious');
     if (determinationSeriousBtn) {
       determinationSeriousBtn.addEventListener('click', () => {
+        this._pendingSeriousWoundLocation = locationName || '';
         this.closeWoundInfoModal();
-        this.useDetermination();
+        this.showSeriousWoundDeterminationPrompt(locationName);
       });
     }
     
@@ -26909,6 +26928,7 @@ const App = {
     const isCritical = roll <= Math.ceil(target / 10);
     const isSuccess = roll <= target;
     const isFumble = roll >= (100 - Math.ceil((100 - target) / 10) + 1);
+    const failed = roll === 100 || isFumble || (!isSuccess);
 
     let resultType, resultColor, resultText;
     if (roll === 100) {
@@ -26933,6 +26953,14 @@ const App = {
       resultText = 'Your willpower is not enough. You <strong>cannot</strong> ignore the effects of your Serious Wounds or Fatigue this time.';
     }
 
+    const pendingLoc = this._pendingSeriousWoundLocation;
+    const failChainBtn = (failed && pendingLoc !== undefined) ? `
+      <div style="margin-top:0.8rem; border-top:1px solid #555; padding-top:0.6rem;">
+        <button type="button" class="btn btn-primary" id="btn-view-wound-effects" style="width:100%;">
+          ⚠️ View Serious Wound Effects
+        </button>
+      </div>` : '';
+
     const resultHTML = `
       <div class="modal-result-body">
         <div class="result-icon">🔥</div>
@@ -26941,9 +26969,22 @@ const App = {
           <p><strong>${oathName}:</strong> ${target}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
           <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
           <p style="margin-top:0.4rem;">${resultText}</p>
+          ${failChainBtn}
         </div>
       </div>`;
     this.showResultModal('🔥 Determination', resultHTML);
+
+    if (failed && pendingLoc !== undefined) {
+      setTimeout(() => {
+        const btn = document.getElementById('btn-view-wound-effects');
+        if (btn) btn.addEventListener('click', () => {
+          this.showWoundInfoModal('wound-serious', pendingLoc);
+          this._pendingSeriousWoundLocation = undefined;
+        });
+      }, 50);
+    } else {
+      this._pendingSeriousWoundLocation = undefined;
+    }
   },
 
   /**
@@ -26951,6 +26992,9 @@ const App = {
    */
   showSeriousWoundDeterminationPrompt(locationName) {
     if (!this.hasAbility('Determination')) return false;
+
+    // Store location for chaining to wound info on failure
+    this._pendingSeriousWoundLocation = locationName || '';
 
     // Get endurance value
     const endInput = document.getElementById('endurance-current');
@@ -27010,6 +27054,7 @@ const App = {
     const isCritical = roll <= Math.ceil(endValue / 10);
     const isSuccess = roll <= endValue;
     const isFumble = roll >= (100 - Math.ceil((100 - endValue) / 10) + 1);
+    const failed = roll === 100 || isFumble || (!isSuccess);
 
     let resultType, resultColor, resultText;
     if (roll === 100) {
@@ -27034,6 +27079,14 @@ const App = {
       resultText = 'The pain is too much. You <strong>cannot continue acting</strong> and are affected by the Serious Wound penalties.';
     }
 
+    const pendingLoc = this._pendingSeriousWoundLocation;
+    const failChainBtn = (failed && pendingLoc !== undefined) ? `
+      <div style="margin-top:0.8rem; border-top:1px solid #555; padding-top:0.6rem;">
+        <button type="button" class="btn btn-primary" id="btn-view-wound-effects-end" style="width:100%;">
+          ⚠️ View Serious Wound Effects
+        </button>
+      </div>` : '';
+
     const resultHTML = `
       <div class="modal-result-body">
         <div class="result-icon">🛡️</div>
@@ -27042,9 +27095,22 @@ const App = {
           <p><strong>Endurance:</strong> ${endValue}% &nbsp;|&nbsp; <strong>Roll:</strong> ${roll}</p>
           <p style="margin-top:0.4rem;font-size:1.1rem;font-weight:bold;color:${resultColor};">${resultType}</p>
           <p style="margin-top:0.4rem;">${resultText}</p>
+          ${failChainBtn}
         </div>
       </div>`;
     this.showResultModal('🛡️ Serious Wound — Endurance', resultHTML);
+
+    if (failed && pendingLoc !== undefined) {
+      setTimeout(() => {
+        const btn = document.getElementById('btn-view-wound-effects-end');
+        if (btn) btn.addEventListener('click', () => {
+          this.showWoundInfoModal('wound-serious', pendingLoc);
+          this._pendingSeriousWoundLocation = undefined;
+        });
+      }, 50);
+    } else {
+      this._pendingSeriousWoundLocation = undefined;
+    }
   },
 
   /**
