@@ -9811,7 +9811,6 @@ input.combat-skill-percent.damage-boosted {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 0.5rem;
-  align-items: start;
 }
 
 /* Grid layout for info cards */
@@ -9819,7 +9818,6 @@ input.combat-skill-percent.damage-boosted {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 0.5rem;
-  align-items: start;
 }
 
 .ability-info-cards-grid:empty {
