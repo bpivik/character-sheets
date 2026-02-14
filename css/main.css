@@ -10301,18 +10301,83 @@ input.combat-skill-percent.damage-boosted {
 
 /* Pointer-based drag and drop (removed - using ↑↓ buttons instead) */
 
-/* Notes reorder buttons */
-.notes-reorder-btns {
+/* Notes reorder controls */
+.notes-reorder-controls {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 2px;
 }
 
-.notes-reorder-btns .notes-section-btn {
+.notes-reorder-controls .notes-section-btn {
   padding: 0 0.3rem;
   font-size: 0.55rem;
   line-height: 1;
   min-width: unset;
+}
+
+/* Drag handles */
+.notes-section-drag-handle {
+  cursor: grab;
+  color: #999;
+  font-size: 1rem;
+  padding: 0.1rem 0.25rem;
+  user-select: none;
+  transition: color 0.15s;
+  touch-action: none;
+}
+
+.notes-section-drag-handle:hover {
+  color: var(--accent-color);
+}
+
+.notes-section-drag-handle:active {
+  cursor: grabbing;
+}
+
+.widget-drag-handle {
+  cursor: grab;
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+  touch-action: none;
+  padding: 2px;
+}
+
+.widget-drag-handle:hover {
+  color: var(--accent-color, #8B4513);
+}
+
+.widget-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Grid drag ghost (follows pointer) */
+.grid-drag-ghost {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  background: white;
+  border: 2px solid var(--accent-color, #8B4513);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: var(--font-heading, inherit);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent-color, #8B4513);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.92;
+  transform: rotate(1.5deg);
+}
+
+/* Source item dims while being dragged */
+.grid-drag-source {
+  opacity: 0.3 !important;
+  outline: 2px dashed var(--accent-color, #8B4513);
+  outline-offset: -2px;
 }
 
 .notes-section-wide {
@@ -14629,6 +14694,7 @@ input.combat-skill-percent.damage-boosted {
   left: 4px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1px;
   z-index: 1;
 }

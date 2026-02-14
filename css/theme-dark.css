@@ -409,6 +409,32 @@
   border-color: var(--text-header, #c9a96e);
 }
 
+[data-theme="dark"] .notes-section-drag-handle {
+  color: #666;
+}
+
+[data-theme="dark"] .notes-section-drag-handle:hover {
+  color: var(--text-header, #c9a96e);
+}
+
+[data-theme="dark"] .widget-drag-handle {
+  color: #666;
+}
+
+[data-theme="dark"] .widget-drag-handle:hover {
+  color: var(--text-header, #c9a96e);
+}
+
+[data-theme="dark"] .grid-drag-ghost {
+  background: var(--bg-parchment, #2a2a2a);
+  border-color: var(--text-header, #c9a96e);
+  color: var(--text-header, #c9a96e);
+}
+
+[data-theme="dark"] .grid-drag-source {
+  outline-color: var(--text-header, #c9a96e);
+}
+
 /* Prereq modal */
 [data-theme="dark"] .prereq-modal {
   background: var(--bg-parchment);

@@ -32876,6 +32876,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Populate canvas with saved widgets
     this.populateCanvas(savedLayout);
     
+    // Setup pointer-based drag reordering on canvas
+    this._setupGridDrag(canvas, '.widget-drag-handle', '.widget-item', 'saveSummaryLayout');
+    
     // Reset button
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
@@ -32969,9 +32972,14 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this.saveSummaryLayout();
     });
     
-    // Reorder controls (↑↓ buttons)
+    // Reorder controls (drag handle + ↑↓ buttons)
     const reorderDiv = document.createElement('div');
     reorderDiv.className = 'widget-reorder-controls';
+    
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'widget-drag-handle';
+    dragHandle.innerHTML = '⋮⋮';
+    dragHandle.title = 'Drag to reorder';
     
     const upBtn = document.createElement('button');
     upBtn.className = 'widget-reorder-btn';
@@ -32997,6 +33005,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       }
     });
     
+    reorderDiv.appendChild(dragHandle);
     reorderDiv.appendChild(upBtn);
     reorderDiv.appendChild(downBtn);
     
@@ -33395,7 +33404,8 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     section.innerHTML = `
       <div class="notes-section-header">
-        <div class="notes-reorder-btns">
+        <div class="notes-reorder-controls">
+          <span class="notes-section-drag-handle" title="Drag to reorder">⋮⋮</span>
           <button type="button" class="notes-section-btn btn-move-up" title="Move up">▲</button>
           <button type="button" class="notes-section-btn btn-move-down" title="Move down">▼</button>
         </div>
@@ -33653,10 +33663,112 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
   
   /**
-   * Setup drag and drop for notes sections (palette → grid only; reorder uses ↑↓ buttons)
+   * Setup drag and drop for notes sections.
    */
   setupNotesDragDrop() {
-    // Palette items use click-to-add (set up in updateNotesPalette), no drag needed here
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    
+    this._setupGridDrag(grid, '.notes-section-drag-handle', '.notes-section', 'saveNotesLayout');
+  },
+  
+  /**
+   * Reusable pointer-based drag-and-drop for reordering items in a CSS Grid.
+   * Directly moves DOM elements — no placeholder insertion that would break grid layout.
+   *
+   * @param {HTMLElement} container - The grid container
+   * @param {string} handleSelector - CSS selector for the drag handle within each item
+   * @param {string} itemSelector - CSS selector for the draggable items
+   * @param {string} saveMethod - Name of method to call after reorder
+   */
+  _setupGridDrag(container, handleSelector, itemSelector, saveMethod) {
+    container.addEventListener('pointerdown', (e) => {
+      const handle = e.target.closest(handleSelector);
+      if (!handle) return;
+      
+      const dragItem = handle.closest(itemSelector);
+      if (!dragItem) return;
+      
+      e.preventDefault();
+      
+      const startY = e.clientY;
+      const startX = e.clientX;
+      let isDragging = false;
+      let ghost = null;
+      const THRESHOLD = 5;
+      
+      const onMove = (ev) => {
+        ev.preventDefault();
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        
+        if (!isDragging) {
+          if (Math.abs(dx) < THRESHOLD && Math.abs(dy) < THRESHOLD) return;
+          isDragging = true;
+          
+          // Create a compact ghost showing section/widget title
+          const rect = dragItem.getBoundingClientRect();
+          ghost = document.createElement('div');
+          ghost.className = 'grid-drag-ghost';
+          // Grab a meaningful label: h3 text, or widget name
+          const label = dragItem.querySelector('h3, .widget-content h4, .widget-content strong');
+          ghost.textContent = label ? label.textContent.trim() : 'Moving...';
+          ghost.style.width = Math.min(rect.width, 300) + 'px';
+          document.body.appendChild(ghost);
+          
+          dragItem.classList.add('grid-drag-source');
+        }
+        
+        if (ghost) {
+          ghost.style.left = (ev.clientX + 12) + 'px';
+          ghost.style.top = (ev.clientY - 16) + 'px';
+        }
+        
+        // Direct DOM reorder: find which sibling the pointer is over and move
+        const siblings = Array.from(container.querySelectorAll(itemSelector));
+        for (const sibling of siblings) {
+          if (sibling === dragItem) continue;
+          
+          const rect = sibling.getBoundingClientRect();
+          
+          // Check if pointer is within this sibling's bounding box
+          if (ev.clientX >= rect.left && ev.clientX <= rect.right &&
+              ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
+            
+            const midY = rect.top + rect.height / 2;
+            
+            // Determine position of dragItem vs sibling in DOM
+            const dragIndex = siblings.indexOf(dragItem);
+            const siblingIndex = siblings.indexOf(sibling);
+            
+            if (ev.clientY < midY && dragIndex > siblingIndex) {
+              // Pointer in top half, drag is after sibling → move before
+              container.insertBefore(dragItem, sibling);
+            } else if (ev.clientY >= midY && dragIndex < siblingIndex) {
+              // Pointer in bottom half, drag is before sibling → move after
+              container.insertBefore(dragItem, sibling.nextSibling);
+            }
+            break;
+          }
+        }
+      };
+      
+      const onUp = () => {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        
+        if (isDragging) {
+          dragItem.classList.remove('grid-drag-source');
+          if (ghost) ghost.remove();
+          if (saveMethod && typeof this[saveMethod] === 'function') {
+            this[saveMethod]();
+          }
+        }
+      };
+      
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
   },
   
   /**
