@@ -9463,7 +9463,11 @@ const App = {
     this.updateMagicPrereqKeys();
     
     // Inject paladin/anti-paladin spell roll buttons
-    this.updatePaladinSpellButtons();
+    try {
+      this.updatePaladinSpellButtons();
+    } catch (e) {
+      console.warn('updatePaladinSpellButtons error:', e);
+    }
   },
   
   /**
@@ -18261,11 +18265,13 @@ const App = {
     const rageBtn = document.getElementById('btn-rage-toggle');
     const tracker = document.getElementById('rage-tracker');
     const btnText = document.getElementById('rage-btn-text');
+    const rageSection = document.getElementById('berserk-rage-section');
     
     if (rageBtn) {
       rageBtn.classList.add('raging');
       rageBtn.disabled = true;
     }
+    if (rageSection) rageSection.classList.add('section-raging');
     if (tracker) tracker.style.display = '';
     if (btnText) btnText.textContent = '🔥 RAGING! 🔥';
     
@@ -18512,13 +18518,15 @@ const App = {
     const rageBtn = document.getElementById('btn-rage-toggle');
     const tracker = document.getElementById('rage-tracker');
     const btnText = document.getElementById('rage-btn-text');
+    const rageSection = document.getElementById('berserk-rage-section');
     
     if (rageBtn) {
       rageBtn.classList.remove('raging');
       rageBtn.disabled = this.character.rageUsesRemaining <= 0;
     }
+    if (rageSection) rageSection.classList.remove('section-raging');
     if (tracker) tracker.style.display = 'none';
-    if (btnText) btnText.textContent = "I'm RAGING!";
+    if (btnText) btnText.textContent = 'Rage!';
     
     this.updateBerserkRageDisplay();
     
@@ -18545,11 +18553,13 @@ const App = {
     const rageBtn = document.getElementById('btn-rage-toggle');
     const tracker = document.getElementById('rage-tracker');
     const btnText = document.getElementById('rage-btn-text');
+    const rageSection = document.getElementById('berserk-rage-section');
     
     if (rageBtn) {
       rageBtn.classList.add('raging');
       rageBtn.disabled = true;
     }
+    if (rageSection) rageSection.classList.add('section-raging');
     if (tracker) tracker.style.display = '';
     if (btnText) btnText.textContent = '🔥 RAGING! 🔥';
     

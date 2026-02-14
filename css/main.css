@@ -1094,7 +1094,81 @@ select:focus {
   background: linear-gradient(135deg, #2a1a1a 0%, #3d2020 100%);
   border: 2px solid #8b0000;
   border-radius: 6px;
+  animation: ambient-glow-red 3s ease-in-out infinite;
 }
+
+.berserk-rage-section.section-raging {
+  animation: rage-section-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes ambient-glow-red {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 0, 0, 0.1); border-color: #8b0000; }
+  50% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.3), 0 0 20px rgba(255, 0, 0, 0.1); border-color: #a83f3f; }
+}
+
+@keyframes rage-section-glow {
+  0%, 100% {
+    border-color: #8b0000;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.2);
+  }
+  50% {
+    border-color: #ff4444;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5), 0 0 30px rgba(255, 0, 0, 0.2);
+  }
+}
+
+@keyframes ambient-glow-amber {
+  0%, 100% { box-shadow: 0 0 4px rgba(212, 192, 128, 0.1); border-color: #a09050; }
+  50% { box-shadow: 0 0 10px rgba(212, 192, 128, 0.3), 0 0 20px rgba(212, 192, 128, 0.1); border-color: #b7ab7b; }
+}
+
+@keyframes ambient-glow-amber {
+  0%, 100% { box-shadow: 0 0 4px rgba(212, 192, 128, 0.1); border-color: #a09050; }
+  50% { box-shadow: 0 0 10px rgba(212, 192, 128, 0.3), 0 0 20px rgba(212, 192, 128, 0.1); border-color: a09050; }
+}
+
+@keyframes ambient-glow-blue {
+  0%, 100% { box-shadow: 0 0 4px rgba(128, 176, 255, 0.1); border-color: #6080c0; }
+  50% { box-shadow: 0 0 10px rgba(128, 176, 255, 0.3), 0 0 20px rgba(128, 176, 255, 0.1); border-color: #879fcf; }
+}
+
+@keyframes ambient-glow-darkred {
+  0%, 100% { box-shadow: 0 0 4px rgba(187, 102, 102, 0.1); border-color: #8b4a4a; }
+  50% { box-shadow: 0 0 10px rgba(187, 102, 102, 0.3), 0 0 20px rgba(187, 102, 102, 0.1); border-color: #a87777; }
+}
+
+@keyframes ambient-glow-divine {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 215, 0, 0.1); border-color: #8b7a2a; }
+  50% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.1); border-color: #a89b5f; }
+}
+
+@keyframes ambient-glow-gold {
+  0%, 100% { box-shadow: 0 0 4px rgba(204, 204, 102, 0.1); border-color: #8b8b4a; }
+  50% { box-shadow: 0 0 10px rgba(204, 204, 102, 0.3), 0 0 20px rgba(204, 204, 102, 0.1); border-color: #a8a877; }
+}
+
+@keyframes ambient-glow-green {
+  0%, 100% { box-shadow: 0 0 4px rgba(102, 187, 102, 0.1); border-color: #4a8b4a; }
+  50% { box-shadow: 0 0 10px rgba(102, 187, 102, 0.3), 0 0 20px rgba(102, 187, 102, 0.1); border-color: #77a877; }
+}
+
+@keyframes ambient-glow-holygreen {
+  0%, 100% { box-shadow: 0 0 4px rgba(74, 170, 74, 0.1); border-color: #4aaa4a; }
+  50% { box-shadow: 0 0 10px rgba(74, 170, 74, 0.3), 0 0 20px rgba(74, 170, 74, 0.1); border-color: #77bf77; }
+}
+
+@keyframes ambient-glow-purple {
+  0%, 100% { box-shadow: 0 0 4px rgba(153, 153, 255, 0.1); border-color: #6a6aaa; }
+  50% { box-shadow: 0 0 10px rgba(153, 153, 255, 0.3), 0 0 20px rgba(153, 153, 255, 0.1); border-color: #8f8fbf; }
+}
+
+@keyframes ambient-glow-teal {
+  0%, 100% { box-shadow: 0 0 4px rgba(102, 187, 187, 0.1); border-color: #4a8b8b; }
+  50% { box-shadow: 0 0 10px rgba(102, 187, 187, 0.3), 0 0 20px rgba(102, 187, 187, 0.1); border-color: #77a8a8; }
+}
+
+/* End ambient glow animations */
+
 
 .berserk-rage-section .section-header {
   color: #ff4444;
@@ -1167,14 +1241,27 @@ select:focus {
   box-shadow: none;
 }
 
-.btn-rage.raging {
-  animation: rage-pulse 1s infinite;
-  background: linear-gradient(135deg, #ff0000 0%, #ff4444 50%, #ff0000 100%);
+.btn-rage.raging,
+.btn-rage.raging:disabled {
+  animation: rage-pulse 1.2s ease-in-out infinite;
+  border-color: #ff4444 !important;
+  cursor: default;
+  transition: none;
 }
 
 @keyframes rage-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.5); }
-  50% { box-shadow: 0 0 18px rgba(255, 0, 0, 0.8), 0 0 35px rgba(255, 68, 68, 0.4); }
+  0%, 100% {
+    background: linear-gradient(135deg, #8b0000 0%, #b22222 50%, #8b0000 100%);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4), inset 0 0 4px rgba(255, 0, 0, 0.2);
+    transform: scale(1);
+    border-color: #ff4444;
+  }
+  50% {
+    background: linear-gradient(135deg, #cc0000 0%, #ff3333 50%, #cc0000 100%);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 68, 68, 0.4), inset 0 0 8px rgba(255, 100, 100, 0.3);
+    transform: scale(1.03);
+    border-color: #ff6666;
+  }
 }
 
 .rage-icon {
@@ -1199,8 +1286,8 @@ select:focus {
 }
 
 @keyframes rage-text-pulse {
-  from { text-shadow: 0 0 5px rgba(255, 68, 68, 0.5); }
-  to { text-shadow: 0 0 15px rgba(255, 68, 68, 1), 0 0 30px rgba(255, 0, 0, 0.5); }
+  from { text-shadow: 0 0 5px rgba(255, 68, 68, 0.5); color: #ff4444; }
+  to { text-shadow: 0 0 15px rgba(255, 68, 68, 1), 0 0 30px rgba(255, 0, 0, 0.5); color: #ff8888; }
 }
 
 .rage-rounds-row {
@@ -1412,6 +1499,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a2a1a 0%, #243824 100%);
   border: 2px solid #4a8b4a;
   border-radius: 6px;
+  animation: ambient-glow-green 3s ease-in-out infinite;
 }
 
 .forceful-strike-section .section-header {
@@ -1468,14 +1556,24 @@ input.weapon-damage.rage-boosted,
 }
 
 .btn-forceful.active {
-  background: linear-gradient(135deg, #2a5a2a 0%, #3a7a3a 50%, #2a5a2a 100%);
-  animation: forceful-pulse 1.5s infinite;
+  animation: forceful-pulse 1.5s ease-in-out infinite;
   border-color: #7dc87d;
+  transition: none;
 }
 
 @keyframes forceful-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(102, 187, 102, 0.5); }
-  50% { box-shadow: 0 0 15px rgba(102, 187, 102, 0.8), 0 0 30px rgba(90, 186, 90, 0.4); }
+  0%, 100% {
+    background: linear-gradient(135deg, #2a5a2a 0%, #3a7a3a 50%, #2a5a2a 100%);
+    box-shadow: 0 0 8px rgba(102, 187, 102, 0.4), inset 0 0 4px rgba(102, 187, 102, 0.2);
+    transform: scale(1);
+    border-color: #7dc87d;
+  }
+  50% {
+    background: linear-gradient(135deg, #3a7a3a 0%, #4a9a4a 50%, #3a7a3a 100%);
+    box-shadow: 0 0 18px rgba(102, 187, 102, 0.8), 0 0 35px rgba(90, 186, 90, 0.4), inset 0 0 6px rgba(102, 187, 102, 0.3);
+    transform: scale(1.03);
+    border-color: #99dd99;
+  }
 }
 
 .forceful-icon {
@@ -1503,6 +1601,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #2a2a1a 0%, #3d3d20 100%);
   border: 2px solid #8b8b4a;
   border-radius: 6px;
+  animation: ambient-glow-gold 3s ease-in-out infinite;
 }
 
 .commanding-section .section-header {
@@ -1609,8 +1708,8 @@ input.weapon-damage.rage-boosted,
 }
 
 @keyframes commanding-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(204, 204, 102, 0.6); }
+  50% { opacity: 0.85; text-shadow: 0 0 16px rgba(204, 204, 102, 1), 0 0 30px rgba(204, 204, 102, 0.4); }
 }
 
 .btn-end-commanding {
@@ -1789,6 +1888,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #2a1a1a 0%, #3d2020 100%);
   border: 2px solid #b8860b;
   border-radius: 6px;
+  animation: ambient-glow-holygreen 3s ease-in-out infinite;
 }
 
 .holy-strike-section .section-header {
@@ -1880,8 +1980,14 @@ input.weapon-damage.rage-boosted,
 }
 
 @keyframes holyBtnPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.3);
+    transform: scale(1.03);
+  }
 }
 
 /* Holy Strike damage cell highlight */
@@ -1919,6 +2025,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a1a2a 0%, #2d2040 100%);
   border: 2px solid #8060b0;
   border-radius: 6px;
+  animation: ambient-glow-purple 3s ease-in-out infinite;
 }
 
 .detect-evil-section .section-header {
@@ -1967,6 +2074,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #2a1a0a 0%, #3d2a10 100%);
   border: 2px solid #b08030;
   border-radius: 6px;
+  animation: ambient-glow-darkred 3s ease-in-out infinite;
 }
 
 .determination-section .section-header {
@@ -2017,6 +2125,7 @@ input.weapon-damage.rage-boosted,
   border-radius: 6px;
   position: relative;
   overflow: hidden;
+  animation: ambient-glow-amber 3s ease-in-out infinite;
 }
 
 .call-war-horse-section::before {
@@ -2092,6 +2201,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a0a2a 0%, #2a1040 100%);
   border: 2px solid #8060b0;
   border-radius: 6px;
+  animation: ambient-glow-purple 3s ease-in-out infinite;
 }
 
 .alter-self-section .section-header {
@@ -2139,6 +2249,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a1a2a 0%, #202040 100%);
   border: 2px solid #6080c0;
   border-radius: 6px;
+  animation: ambient-glow-blue 3s ease-in-out infinite;
 }
 
 .detect-magic-section .section-header {
@@ -2232,6 +2343,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a2a1a 0%, #2a3d2a 100%);
   border: 2px solid #5a8a5a;
   border-radius: 6px;
+  animation: ambient-glow-holygreen 3s ease-in-out infinite;
 }
 
 .cure-disease-section .section-header {
@@ -2360,6 +2472,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a1a2a 0%, #2a2a3d 100%);
   border: 2px solid #6080b8;
   border-radius: 6px;
+  animation: ambient-glow-blue 3s ease-in-out infinite;
 }
 
 .divine-protection-section .section-header {
@@ -2418,8 +2531,8 @@ input.weapon-damage.rage-boosted,
 }
 
 @keyframes divProtPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(128, 176, 255, 0.4); }
-  50% { box-shadow: 0 0 20px rgba(128, 176, 255, 0.8); }
+  0%, 100% { box-shadow: 0 0 10px rgba(128, 176, 255, 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(128, 176, 255, 0.8), 0 0 40px rgba(128, 176, 255, 0.3); transform: scale(1.03); }
 }
 
 /* Divine Protection boosted skill fields */
@@ -2618,6 +2731,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #151a28 0%, #1a2540 100%);
   border: 2px solid #4a7ab8;
   border-radius: 6px;
+  animation: ambient-glow-blue 3s ease-in-out infinite;
 }
 
 .magic-surge-section .section-header {
@@ -3571,6 +3685,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a2a1a 0%, #25352a 100%);
   border: 2px solid #4a8a4a;
   border-radius: 6px;
+  animation: ambient-glow-green 3s ease-in-out infinite;
 }
 
 .improved-aim-section .section-header {
@@ -3628,8 +3743,14 @@ input.weapon-damage.rage-boosted,
 }
 
 @keyframes aimPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(125, 204, 125, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(125, 204, 125, 0.7), 0 0 40px rgba(125, 204, 125, 0.3);
+    transform: scale(1.03);
+  }
 }
 
 /* Improved Aim animation */
@@ -3684,6 +3805,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #2a1a1a 0%, #352a1a 100%);
   border: 2px solid #8a6a3a;
   border-radius: 6px;
+  animation: ambient-glow-green 3s ease-in-out infinite;
 }
 
 .species-enemy-section .section-header {
@@ -3752,8 +3874,14 @@ input.weapon-damage.rage-boosted,
 }
 
 @keyframes sePulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(125, 204, 125, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(125, 204, 125, 0.7), 0 0 40px rgba(125, 204, 125, 0.3);
+    transform: scale(1.02);
+  }
 }
 
 /* Species Enemy animation */
@@ -3803,6 +3931,7 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #1a2a2a 0%, #1f3d3d 100%);
   border: 2px solid #5fa8a8;
   border-radius: 6px;
+  animation: ambient-glow-holygreen 3s ease-in-out infinite;
 }
 
 .lay-on-hands-section .section-header {
@@ -3891,6 +4020,7 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #1a1a2a 0%, #20203d 100%);
   border: 2px solid #6a6a8b;
   border-radius: 6px;
+  animation: ambient-glow-purple 3s ease-in-out infinite;
 }
 
 .mental-strength-section .section-header {
@@ -3997,8 +4127,8 @@ input.combat-skill-percent.se-boosted,
 }
 
 @keyframes mental-strength-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(153, 153, 255, 0.6); }
+  50% { opacity: 0.85; text-shadow: 0 0 16px rgba(153, 153, 255, 1), 0 0 30px rgba(153, 153, 255, 0.4); }
 }
 
 .btn-end-mental-strength {
@@ -4032,6 +4162,7 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #2a2510 0%, #3d3520 100%);
   border: 2px solid #d4a840;
   border-radius: 6px;
+  animation: ambient-glow-divine 3s ease-in-out infinite;
 }
 
 .turn-undead-section .section-header {
@@ -4142,8 +4273,8 @@ input.combat-skill-percent.se-boosted,
 }
 
 @keyframes turn-undead-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(255, 215, 0, 0.6); }
+  50% { opacity: 0.85; text-shadow: 0 0 16px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 215, 0, 0.4); }
 }
 
 .btn-end-turn-undead {
@@ -4536,6 +4667,7 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #1a1a2a 0%, #2d2045 100%);
   border: 2px solid #9a6fd4;
   border-radius: 6px;
+  animation: ambient-glow-holygreen 3s ease-in-out infinite;
 }
 
 .holy-smite-section .section-header {
@@ -4635,8 +4767,14 @@ input.combat-skill-percent.se-boosted,
 }
 
 @keyframes holy-smite-pulse {
-  0%, 100% { box-shadow: 0 0 15px rgba(74, 170, 74, 0.6); }
-  50% { box-shadow: 0 0 25px rgba(74, 170, 74, 0.8); }
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(74, 170, 74, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(74, 170, 74, 0.9), 0 0 45px rgba(74, 170, 74, 0.3);
+    transform: scale(1.03);
+  }
 }
 
 /* ============================================
@@ -4647,6 +4785,7 @@ input.combat-skill-percent.se-boosted,
   background: linear-gradient(135deg, #1a2a2a 0%, #203540 100%);
   border: 2px solid #4a9aaa;
   border-radius: 6px;
+  animation: ambient-glow-holygreen 3s ease-in-out infinite;
 }
 
 .powerful-concentration-section .section-header {
@@ -4709,8 +4848,14 @@ input.combat-skill-percent.se-boosted,
 }
 
 @keyframes powerful-concentration-pulse {
-  0%, 100% { box-shadow: 0 0 15px rgba(74, 170, 74, 0.6); }
-  50% { box-shadow: 0 0 25px rgba(74, 170, 74, 0.8); }
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(74, 170, 74, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(74, 170, 74, 0.9), 0 0 45px rgba(74, 170, 74, 0.3);
+    transform: scale(1.03);
+  }
 }
 
 /* Powerful Concentration bonus styling for Willpower */
@@ -5040,6 +5185,7 @@ input.skill-input.powerful-concentration-bonus,
   background: linear-gradient(135deg, #1a2a1a 0%, #2a3d2a 100%);
   border: 2px solid #4a8b4a;
   border-radius: 6px;
+  animation: ambient-glow-purple 3s ease-in-out infinite;
 }
 
 .shape-change-section .section-header-row {
@@ -5345,6 +5491,7 @@ input.skill-input.powerful-concentration-bonus,
   background: linear-gradient(135deg, #2a1a1a 0%, #3d2020 100%);
   border: 2px solid #8b4a4a;
   border-radius: 6px;
+  animation: ambient-glow-darkred 3s ease-in-out infinite;
 }
 
 .brute-strength-section .section-header {
@@ -5401,13 +5548,20 @@ input.skill-input.powerful-concentration-bonus,
 
 .btn-brute.active {
   background: linear-gradient(135deg, #9a4a4a 0%, #ba5a5a 50%, #9a4a4a 100%);
-  animation: brute-pulse 1.5s infinite;
+  animation: brute-pulse 1.5s ease-in-out infinite;
   border-color: #d88;
+  transition: none;
 }
 
 @keyframes brute-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(187, 102, 102, 0.5); }
-  50% { box-shadow: 0 0 15px rgba(187, 102, 102, 0.8), 0 0 30px rgba(186, 90, 90, 0.4); }
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(187, 102, 102, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(187, 102, 102, 0.8), 0 0 35px rgba(186, 90, 90, 0.4);
+    transform: scale(1.03);
+  }
 }
 
 .brute-icon {
@@ -5429,6 +5583,7 @@ input.skill-input.powerful-concentration-bonus,
   background: linear-gradient(135deg, #1a2a2a 0%, #204040 100%);
   border: 2px solid #4a8b8b;
   border-radius: 6px;
+  animation: ambient-glow-teal 3s ease-in-out infinite;
 }
 
 .just-a-scratch-section .section-header {
@@ -5932,8 +6087,8 @@ input.combat-skill-percent.damage-boosted {
 /* ---- Animations ---- */
 
 @keyframes wmPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 1; text-shadow: 0 0 5px currentColor; }
+  50% { opacity: 0.85; text-shadow: 0 0 15px currentColor; }
 }
 
 @keyframes wmFlash {
@@ -6113,7 +6268,7 @@ input.combat-skill-percent.damage-boosted {
 
 @keyframes syrin-pulse {
   0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(142, 200, 248, 0.5); }
-  50% { opacity: 0.7; text-shadow: 0 0 5px rgba(142, 200, 248, 0.3); }
+  50% { opacity: 0.85; text-shadow: 0 0 20px rgba(142, 200, 248, 0.8), 0 0 35px rgba(142, 200, 248, 0.3); }
 }
 
 .btn-end-syrin {
@@ -10497,8 +10652,8 @@ input.combat-skill-percent.damage-boosted {
 }
 
 @keyframes mpPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%, 100% { opacity: 1; text-shadow: 0 0 5px currentColor; }
+  50% { opacity: 0.7; text-shadow: 0 0 15px currentColor; }
 }
 
 .magic-skills-section {
@@ -15576,6 +15731,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #4a8a4a;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-green 3s ease-in-out infinite;
 }
 
 .climb-walls-section .section-header {
@@ -15629,8 +15785,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes climbPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.7), 0 0 40px rgba(125, 204, 125, 0.3); transform: scale(1.03); }
 }
 
 /* Hide in Shadows */
@@ -15640,6 +15796,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #6a5aaa;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-purple 3s ease-in-out infinite;
 }
 
 .hide-in-shadows-section .section-header {
@@ -15689,8 +15846,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes shadowPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(128, 90, 213, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(128, 90, 213, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(128, 90, 213, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(128, 90, 213, 0.7), 0 0 40px rgba(128, 90, 213, 0.3); transform: scale(1.03); }
 }
 
 /* Sneak Attack Info Card */
@@ -15700,6 +15857,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #8a3a3a;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-darkred 3s ease-in-out infinite;
 }
 
 .sneak-attack-section .section-header {
@@ -15912,6 +16070,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #4a8a4a;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-green 3s ease-in-out infinite;
 }
 
 .great-hearing-section .section-header {
@@ -15959,8 +16118,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes ghPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.7), 0 0 40px rgba(125, 204, 125, 0.3); transform: scale(1.03); }
 }
 
 .gh-boosted {
@@ -15976,6 +16135,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #4a8a4a;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-green 3s ease-in-out infinite;
 }
 
 .sharp-eyed-section .section-header {
@@ -16023,8 +16183,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes sePulseRogue {
-  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(125, 204, 125, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(125, 204, 125, 0.7), 0 0 40px rgba(125, 204, 125, 0.3); transform: scale(1.03); }
 }
 
 .se-boosted-rogue {
@@ -16040,6 +16200,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #6a5aaa;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-purple 3s ease-in-out infinite;
 }
 
 .stealthy-section .section-header {
@@ -16093,8 +16254,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes stealthyPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(128, 90, 213, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(128, 90, 213, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(128, 90, 213, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(128, 90, 213, 0.7), 0 0 40px rgba(128, 90, 213, 0.3); transform: scale(1.03); }
 }
 
 .stealthy-boosted {
@@ -16110,6 +16271,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   border: 2px solid #8a8a4a;
   border-radius: 6px;
   margin-top: 0.75rem;
+  animation: ambient-glow-gold 3s ease-in-out infinite;
 }
 
 .vaulting-section .section-header {
@@ -16161,8 +16323,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes vaultPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(200, 200, 100, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(200, 200, 100, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(200, 200, 100, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(200, 200, 100, 0.7), 0 0 40px rgba(200, 200, 100, 0.3); transform: scale(1.03); }
 }
 
 .vault-boosted {
@@ -16215,8 +16377,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes udPulse {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; box-shadow: 0 0 8px rgba(92, 188, 176, 0.4); }
+  0%, 100% { opacity: 0.85; box-shadow: 0 0 4px rgba(92, 188, 176, 0.2); }
+  50% { opacity: 1; box-shadow: 0 0 12px rgba(92, 188, 176, 0.6), 0 0 25px rgba(92, 188, 176, 0.2); }
 }
 
 /* ===== Sneak Attack Bonus Damage ===== */
@@ -16261,8 +16423,8 @@ body.dark-mode[data-class-theme] .subsection-header {
 }
 
 @keyframes sneakDmgPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(220, 80, 80, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(220, 80, 80, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px rgba(220, 80, 80, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(220, 80, 80, 0.7), 0 0 40px rgba(220, 80, 80, 0.3); transform: scale(1.03); }
 }
 
 /* ===== Weapon Precision Info Card ===== */
@@ -16271,7 +16433,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #2a2a1a 0%, #35352a 100%);
   border: 2px solid #7a7a5a;
   border-radius: 6px;
-  margin-top: 0.75rem;
+  animation: ambient-glow-amber 3s ease-in-out infinite;
 }
 
 .weapon-precision-section .section-header {
