@@ -1084,14 +1084,24 @@
             </div>
             <div class="cast-result-details" id="cast-result-details"></div>
 
+            <!-- Luck Point Section (shown on failure/fumble when luck > 0) -->
+            <div class="cast-luck-section hidden" id="cast-luck-section">
+              <div class="cast-luck-header">
+                <span class="cast-luck-label">🍀 Spend a Luck Point</span>
+                <span class="cast-luck-remaining">(<span id="cast-luck-count">0</span> remaining)</span>
+              </div>
+              <div class="cast-luck-buttons">
+                <button type="button" class="btn-luck-reroll" id="cast-luck-reroll" title="Re-roll the d100 — must accept the new result">🎲 Re-roll</button>
+                <button type="button" class="btn-luck-swap" id="cast-luck-swap" title="Swap the tens and units digits of your roll">🔄 Swap Digits <span class="luck-swap-preview" id="cast-luck-swap-preview"></span></button>
+              </div>
+              <div class="cast-luck-opponent-note">You may also spend a Luck Point to force an opponent to re-roll — tell your GM.</div>
+            </div>
+
             <!-- Force Failed Spell (hidden unless failed) -->
             <div class="cast-force-section hidden" id="cast-force-section">
               <p class="cast-force-explain">The spell fizzled. You may force it to succeed, but it will be expunged from memory.</p>
               <div class="cast-force-buttons">
                 <button type="button" class="btn-force-spell" id="cast-force-btn">Force Spell</button>
-                <button type="button" class="btn-force-luck" id="cast-luck-btn">
-                  Spend Luck Point (<span id="cast-luck-count">0</span>)
-                </button>
               </div>
             </div>
 

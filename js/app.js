@@ -13302,8 +13302,9 @@ const App = {
     // Force spell button
     document.getElementById('cast-force-btn').onclick = () => this._forceSpell();
 
-    // Luck point button
-    document.getElementById('cast-luck-btn').onclick = () => this._useLuckPoint();
+    // Luck point buttons (re-roll and swap)
+    document.getElementById('cast-luck-reroll').onclick = () => this._useLuckPoint();
+    document.getElementById('cast-luck-swap').onclick = () => this._useLuckPointSwap();
   },
 
   /**
@@ -13388,6 +13389,7 @@ const App = {
 
     // Hide sub-sections initially
     document.getElementById('cast-force-section').classList.add('hidden');
+    document.getElementById('cast-luck-section').classList.add('hidden');
     document.getElementById('cast-result-banner').style.visibility = 'hidden';
     document.getElementById('cast-result-details').textContent = '';
     document.getElementById('cast-roll-target').textContent = `vs ${m.effectiveSkill}%`;
@@ -13542,7 +13544,7 @@ const App = {
       }
 
       // Non-memorized: NO force spell option
-      // But still allow Luck Point reroll on failure
+      // But still allow Luck Point reroll/swap on failure
       if (resultClass === 'failure') {
         const forceSection = document.getElementById('cast-force-section');
         forceSection.classList.remove('hidden');
@@ -13550,14 +13552,16 @@ const App = {
         document.getElementById('cast-force-btn').style.display = 'none';
         const forceExplain = forceSection.querySelector('.cast-force-explain');
         if (classNorm.includes('cleric') || classNorm.includes('druid') || classNorm.includes('paladin') || classNorm.includes('ranger')) {
-          forceExplain.textContent = 'Your prayer was not answered. You may spend a Luck Point to beseech again.';
+          forceExplain.textContent = 'Your prayer was not answered.';
         } else {
-          forceExplain.textContent = 'The casting attempt failed. You may spend a Luck Point to try again.';
+          forceExplain.textContent = 'The casting attempt failed.';
         }
-        const luckEl = document.getElementById('luck-current');
-        const luckCount = parseInt(luckEl?.value, 10) || 0;
-        document.getElementById('cast-luck-count').textContent = luckCount;
-        document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
+        this._showCastLuck(m);
+      }
+
+      // Non-memorized fumble: show luck option too
+      if (resultClass === 'fumble') {
+        this._showCastLuck(m);
       }
 
     } else if (m.castingType === 'sorcery') {
@@ -13633,6 +13637,7 @@ const App = {
         const memCheck = document.getElementById(`${m.rankKey}-${m.slotIndex}-mem`);
         if (memCheck) memCheck.checked = false;
         details.textContent = `Fumble! ${actualCost} MP spent (half cost). Remaining: ${newMP} MP.${fatigueNote} The spell backfires \u2014 expunged from memory. Major Arcane Flux triggered!`;
+        this._showCastLuck(m);
         setTimeout(() => this._showArcaneFluxPrompt('major', m), 1200);
 
       } else {
@@ -13641,12 +13646,9 @@ const App = {
         const forceSection = document.getElementById('cast-force-section');
         forceSection.classList.remove('hidden');
         document.getElementById('cast-force-btn').style.display = '';
-        const luckEl = document.getElementById('luck-current');
-        const luckCount = parseInt(luckEl?.value, 10) || 0;
-        document.getElementById('cast-luck-count').textContent = luckCount;
-        document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
         const forceExplain = forceSection.querySelector('.cast-force-explain');
-        forceExplain.textContent = 'The spell failed. You may force it (full MP cost, spell expunged from memory), or spend a Luck Point to reroll.';
+        forceExplain.textContent = 'The spell failed. You may force it (full MP cost, spell expunged from memory).';
+        this._showCastLuck(m);
         setTimeout(() => this._showArcaneFluxPrompt('minor', m), 1200);
       }
 
@@ -13662,6 +13664,7 @@ const App = {
         details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell takes effect normally.`;
       } else if (resultClass === 'fumble') {
         details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell fails catastrophically \u2014 consult your GM for fumble effects.`;
+        this._showCastLuck(m);
       } else {
         details.textContent = `${m.cost} MP spent.${expStr} Remaining: ${newMP} MP.${fatigueNote} The spell fizzles and fails.`;
       }
@@ -13672,13 +13675,9 @@ const App = {
         forceSection.classList.remove('hidden');
         document.getElementById('cast-force-btn').style.display = '';  // Show Force button for normal casting
 
-        const luckEl = document.getElementById('luck-current');
-        const luckCount = parseInt(luckEl?.value, 10) || 0;
-        document.getElementById('cast-luck-count').textContent = luckCount;
-        document.getElementById('cast-luck-btn').disabled = luckCount <= 0;
-
         const forceExplain = forceSection.querySelector('.cast-force-explain');
         forceExplain.textContent = 'The spell fizzled. You may force it to succeed, but it will be expunged from memory and must be re-memorized.';
+        this._showCastLuck(m);
       }
     }
 
@@ -13753,7 +13752,7 @@ const App = {
    */
   _useLuckPoint() {
     const m = this._castModal;
-    if (!m.rollResult || m.rollResult.resultClass !== 'failure') return;
+    if (!m.rollResult || (m.rollResult.resultClass !== 'failure' && m.rollResult.resultClass !== 'fumble')) return;
 
     // Deduct luck point
     const luckEl = document.getElementById('luck-current');
@@ -13761,8 +13760,13 @@ const App = {
     if (luckCount <= 0) return;
 
     luckEl.value = luckCount - 1;
+    luckEl.dispatchEvent(new Event('input', { bubbles: true }));
     this.character.derived = this.character.derived || {};
     this.character.derived.luckCurrent = luckEl.value;
+
+    // Store original roll for display
+    m._luckOriginalRoll = m.rollResult.roll;
+    m._luckAction = 'reroll';
 
     // Reset and reroll
     m.hasRolled = false;
@@ -13772,8 +13776,9 @@ const App = {
     const fluxOverlay = document.getElementById('arcane-flux-overlay');
     if (fluxOverlay) fluxOverlay.remove();
 
-    // Hide force section
+    // Hide force and luck sections
     document.getElementById('cast-force-section').classList.add('hidden');
+    document.getElementById('cast-luck-section').classList.add('hidden');
 
     // Animate new roll
     const rollEl = document.getElementById('cast-roll-number');
@@ -13798,6 +13803,102 @@ const App = {
     }, 60);
 
     this.scheduleAutoSave();
+  },
+
+  /**
+   * Spend a Luck Point to swap the digits of the casting roll
+   */
+  _useLuckPointSwap() {
+    const m = this._castModal;
+    if (!m.rollResult || (m.rollResult.resultClass !== 'failure' && m.rollResult.resultClass !== 'fumble')) return;
+
+    const luckEl = document.getElementById('luck-current');
+    const luckCount = parseInt(luckEl?.value, 10) || 0;
+    if (luckCount <= 0) return;
+
+    const originalRoll = m.rollResult.roll;
+    const swapped = this._swapRollDigits(originalRoll);
+    if (swapped === originalRoll) return; // Shouldn't happen (button disabled) but safety
+
+    // Deduct luck point
+    luckEl.value = luckCount - 1;
+    luckEl.dispatchEvent(new Event('input', { bubbles: true }));
+    this.character.derived = this.character.derived || {};
+    this.character.derived.luckCurrent = luckEl.value;
+
+    // Store for display
+    m._luckOriginalRoll = originalRoll;
+    m._luckAction = 'swap';
+
+    // Reset
+    m.hasRolled = false;
+    m.rollResult = null;
+
+    // Close any open Arcane Flux modal
+    const fluxOverlay = document.getElementById('arcane-flux-overlay');
+    if (fluxOverlay) fluxOverlay.remove();
+
+    // Hide force and luck sections
+    document.getElementById('cast-force-section').classList.add('hidden');
+    document.getElementById('cast-luck-section').classList.add('hidden');
+
+    // Animate swap
+    const rollEl = document.getElementById('cast-roll-number');
+    rollEl.classList.add('rolling');
+    rollEl.style.color = '#2a2520';
+
+    document.getElementById('cast-result-banner').style.visibility = 'hidden';
+    document.getElementById('cast-result-details').textContent = `Luck Point spent \u2014 swapping ${String(originalRoll).padStart(2, '0')} → ${String(swapped).padStart(2, '0')}...`;
+
+    // Brief animation then resolve with swapped value
+    let ticks = 0;
+    const swapInterval = setInterval(() => {
+      ticks++;
+      // Alternate between original and swapped for visual effect
+      rollEl.textContent = ticks % 2 === 0 ? String(originalRoll).padStart(2, '0') : String(swapped).padStart(2, '0');
+      if (ticks >= 10) {
+        clearInterval(swapInterval);
+        rollEl.classList.remove('rolling');
+        rollEl.textContent = String(swapped).padStart(2, '0');
+        m.hasRolled = true;
+        this._resolveRoll(m, swapped);
+      }
+    }, 80);
+
+    this.scheduleAutoSave();
+  },
+
+  /**
+   * Show the Luck section in the cast modal for the current roll
+   */
+  _showCastLuck(m) {
+    const luckEl = document.getElementById('luck-current');
+    const luckCount = parseInt(luckEl?.value, 10) || 0;
+    const luckSection = document.getElementById('cast-luck-section');
+
+    if (luckCount <= 0) {
+      luckSection.classList.add('hidden');
+      return;
+    }
+
+    luckSection.classList.remove('hidden');
+    document.getElementById('cast-luck-count').textContent = luckCount;
+
+    // Swap preview
+    const roll = m.rollResult?.roll || 0;
+    const swapped = this._swapRollDigits(roll);
+    const swapPreview = document.getElementById('cast-luck-swap-preview');
+    const swapBtn = document.getElementById('cast-luck-swap');
+    if (swapped === roll) {
+      swapPreview.textContent = '(same)';
+      swapBtn.disabled = true;
+    } else {
+      swapPreview.textContent = `(${String(roll).padStart(2, '0')} → ${String(swapped).padStart(2, '0')})`;
+      swapBtn.disabled = false;
+    }
+
+    // Reroll always enabled if luck > 0
+    document.getElementById('cast-luck-reroll').disabled = false;
   },
 
   /**
@@ -34362,17 +34463,147 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
 
   /**
+   * Swap the tens and units digits of a d100 roll
+   * e.g., 72 → 27, 07 → 70, 100(00) → 100(00)
+   */
+  _swapRollDigits(roll) {
+    if (roll === 100) return 100; // 00 stays 00
+    const s = String(roll).padStart(2, '0');
+    const swapped = parseInt(s[1] + s[0], 10);
+    return swapped === 0 ? 100 : swapped;
+  },
+
+  /**
+   * Re-evaluate a d100 roll against a target percentage
+   * Returns { result, resultClass } using same rules as rollD100
+   */
+  _evaluateSkillRoll(roll, targetPct, skillName) {
+    let critThreshold = Math.ceil(targetPct / 10);
+    
+    const normalizedSkill = (skillName || '').toLowerCase().trim();
+    const combatSkillName = (document.getElementById('combat-skill-1-name')?.value || '').toLowerCase().trim();
+    const isCombatSkillRoll = normalizedSkill === combatSkillName || 
+      normalizedSkill.includes('combat skill') || normalizedSkill.includes('combat style');
+    
+    let rangerCrit = false;
+    const hasRangerRangedSpec = (this.character.weaponSpecializations || []).some(s => s.type === 'Ranger Ranged');
+    if (hasRangerRangedSpec && isCombatSkillRoll) {
+      critThreshold = Math.ceil(targetPct / 5);
+      rangerCrit = true;
+    }
+    
+    let critDoubled = false;
+    if (this.character.weaponSpecCritDoubled && (this.character.activeWeaponSpecs || []).length > 0) {
+      if (isCombatSkillRoll) {
+        critThreshold = critThreshold * 2;
+        critDoubled = true;
+      }
+    }
+    if (this.character.specIICritDoubled && isCombatSkillRoll) {
+      if (!critDoubled) {
+        critThreshold = critThreshold * 2;
+        critDoubled = true;
+      }
+    }
+    
+    const isFumble = targetPct >= 100 ? (roll === 100) : (roll >= 99);
+    const isAutoFail = roll >= 96;
+    const isAutoSuccess = roll <= 5;
+    
+    let result, resultClass;
+    if (isFumble) {
+      result = 'Fumble!';
+      resultClass = 'roll-fumble';
+    } else if (isAutoFail) {
+      result = 'Failure';
+      resultClass = 'roll-failure';
+    } else if (roll <= critThreshold && (roll <= targetPct || isAutoSuccess)) {
+      result = critDoubled ? 'Critical! (Doubled)' : rangerCrit ? 'Critical! (1/5th)' : 'Critical!';
+      resultClass = 'roll-critical';
+    } else if (roll <= targetPct || isAutoSuccess) {
+      result = 'Success';
+      resultClass = 'roll-success';
+    } else {
+      result = 'Failure';
+      resultClass = 'roll-failure';
+    }
+    return { result, resultClass };
+  },
+
+  /**
+   * Build Luck Point HTML for the skill roll result overlay
+   */
+  _buildLuckHTML(roll, targetPct, skillName) {
+    const luckEl = document.getElementById('luck-current');
+    const luckCount = parseInt(luckEl?.value, 10) || 0;
+    if (luckCount <= 0) return '';
+    
+    const swapped = this._swapRollDigits(roll);
+    const swapSame = swapped === roll;
+    const swapPreview = swapSame ? '(same)' : `(${String(roll).padStart(2, '0')} → ${String(swapped).padStart(2, '0')})`;
+    
+    return `
+      <div class="d100-luck-section">
+        <div class="d100-luck-header">🍀 Spend a Luck Point <span class="d100-luck-remaining">(${luckCount} remaining)</span></div>
+        <div class="d100-luck-buttons">
+          <button class="d100-luck-btn d100-luck-reroll" data-action="reroll">🎲 Re-roll</button>
+          <button class="d100-luck-btn d100-luck-swap" data-action="swap" ${swapSame ? 'disabled' : ''}>🔄 Swap Digits ${swapPreview}</button>
+        </div>
+        <div class="d100-luck-note">You may also spend a Luck Point to make an opponent re-roll — tell your GM.</div>
+      </div>
+    `;
+  },
+
+  /**
+   * Handle Luck Point usage from skill roll overlay
+   */
+  _useSkillLuck(action, roll, targetPct, skillName) {
+    const luckEl = document.getElementById('luck-current');
+    const luckCount = parseInt(luckEl?.value, 10) || 0;
+    if (luckCount <= 0) return;
+    
+    // Deduct luck point
+    luckEl.value = luckCount - 1;
+    luckEl.dispatchEvent(new Event('input', { bubbles: true }));
+    this.character.derived = this.character.derived || {};
+    this.character.derived.luckCurrent = luckEl.value;
+    this.scheduleAutoSave();
+    
+    if (action === 'swap') {
+      const swapped = this._swapRollDigits(roll);
+      const { result, resultClass } = this._evaluateSkillRoll(swapped, targetPct, skillName);
+      this.showD100Result(skillName, targetPct, swapped, result, resultClass, { luckUsed: 'swap', originalRoll: roll });
+    } else {
+      // Re-roll
+      const newRoll = Math.floor(Math.random() * 100) + 1;
+      const { result, resultClass } = this._evaluateSkillRoll(newRoll, targetPct, skillName);
+      this.showD100Result(skillName, targetPct, newRoll, result, resultClass, { luckUsed: 'reroll', originalRoll: roll });
+    }
+  },
+
+  /**
    * Show d100 roll result overlay
    */
   showD100Result(skillName, targetPct, roll, result, resultClass, options = {}) {
     const isFumble = resultClass === 'roll-fumble';
+    const isFailure = resultClass === 'roll-failure';
     const customFumble = options.customFumbleText || null;
+    const luckUsed = options.luckUsed || null;
     
     // Look up skill-specific outcome text
     const outcomeText = this.getSkillOutcome(skillName, resultClass);
     const outcomeHTML = outcomeText
       ? `<div class="d100-outcome-text">${outcomeText}</div>`
       : '';
+    
+    // Luck badge for re-rolls/swaps
+    const luckBadgeHTML = luckUsed
+      ? `<div class="d100-luck-used">${luckUsed === 'swap' ? '🔄 Digits Swapped' : '🎲 Re-rolled'} (was ${String(options.originalRoll).padStart(2, '0')})</div>`
+      : '';
+    
+    // Build luck section HTML (only for failures/fumbles without prior luck use, and no custom fumble)
+    const showLuck = (isFailure || isFumble) && !luckUsed && !customFumble;
+    const luckHTML = showLuck ? this._buildLuckHTML(roll, targetPct, skillName) : '';
     
     // Create or get overlay
     let overlay = document.getElementById('d100-result-overlay');
@@ -34383,8 +34614,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       document.body.appendChild(overlay);
     }
     
-    // Store fumble state so click-outside handler knows whether to close
-    overlay.dataset.fumble = isFumble ? 'true' : 'false';
+    // Determine if click-outside should close (not for fumbles without luck used, unless luck was already used)
+    const blockClickOutside = isFumble && !luckUsed && !customFumble;
+    overlay.dataset.fumble = blockClickOutside ? 'true' : 'false';
     
     // Remove old click handler and add fresh one
     const newOverlay = overlay.cloneNode(false);
@@ -34399,11 +34631,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     if (isFumble && customFumble) {
       // Custom fumble display — no auto-add buttons, just informational
-      overlay.dataset.fumble = 'false'; // Allow click-outside to close
       overlay.innerHTML = `
         <div class="damage-result-content d100-result-content d100-fumble-content">
           <div class="d100-skill-name">${skillName}</div>
           <div class="d100-target">Target: ${targetPct}%</div>
+          ${luckBadgeHTML}
           <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
           <div class="d100-result roll-fumble">${result}</div>
           ${outcomeHTML}
@@ -34420,9 +34652,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         <div class="damage-result-content d100-result-content d100-fumble-content">
           <div class="d100-skill-name">${skillName}</div>
           <div class="d100-target">Target: ${targetPct}%</div>
+          ${luckBadgeHTML}
           <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
           <div class="d100-result roll-fumble">Fumble!</div>
           ${outcomeHTML}
+          ${luckHTML}
           <div class="d100-fumble-text">
             Fumbled skills gain a free increase of 1%. It is a truism that we learn more from our mistakes than our successes, and this represents the reflection a character undergoes following a disastrous failure. Multiple fumbles of the same skill do not stack.
           </div>
@@ -34447,9 +34681,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         <div class="damage-result-content d100-result-content">
           <div class="d100-skill-name">${skillName}</div>
           <div class="d100-target">Target: ${targetPct}%</div>
+          ${luckBadgeHTML}
           <div class="d100-roll">${roll.toString().padStart(2, '0')}</div>
           <div class="d100-result ${resultClass}">${result}</div>
           ${outcomeHTML}
+          ${luckHTML}
           <button class="damage-close">OK</button>
         </div>
       `;
@@ -34457,6 +34693,24 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       overlay.querySelector('.damage-close').addEventListener('click', () => {
         overlay.classList.remove('visible');
       });
+    }
+    
+    // Attach luck button handlers
+    if (showLuck) {
+      const rerollBtn = overlay.querySelector('.d100-luck-reroll');
+      const swapBtn = overlay.querySelector('.d100-luck-swap');
+      if (rerollBtn) {
+        rerollBtn.addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          this._useSkillLuck('reroll', roll, targetPct, skillName);
+        });
+      }
+      if (swapBtn) {
+        swapBtn.addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          this._useSkillLuck('swap', roll, targetPct, skillName);
+        });
+      }
     }
     
     overlay.classList.add('visible');

@@ -12571,6 +12571,75 @@ input.combat-skill-percent.damage-boosted {
 .btn-force-luck:hover { background: #d4edda; border-color: #28a745; }
 .btn-force-luck:disabled { opacity: 0.35; cursor: not-allowed; }
 
+/* Spell Modal — Luck Point Section */
+.cast-luck-section {
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.cast-luck-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2e7d32;
+  margin-bottom: 8px;
+}
+
+.cast-luck-remaining {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: #558b2f;
+}
+
+.cast-luck-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.btn-luck-reroll, .btn-luck-swap {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.btn-luck-reroll:hover:not(:disabled), .btn-luck-swap:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #4caf50;
+  transform: scale(1.03);
+}
+
+.btn-luck-reroll:disabled, .btn-luck-swap:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.luck-swap-preview {
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+
+.cast-luck-opponent-note {
+  font-size: 0.7rem;
+  color: #689f38;
+  font-style: italic;
+  opacity: 0.7;
+}
+
 .btn-cast-done {
   width: 100%;
   padding: 0.5rem;
@@ -15608,6 +15677,77 @@ input.combat-skill-percent.damage-boosted {
   border-radius: 6px;
   text-align: left;
   max-width: 380px;
+}
+
+/* D100 Luck Point Section */
+.d100-luck-section {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.d100-luck-header {
+  font-size: 0.88rem;
+  color: #a5d6a7;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.d100-luck-remaining {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #81c784;
+}
+
+.d100-luck-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.d100-luck-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(76, 175, 80, 0.5);
+  background: rgba(76, 175, 80, 0.15);
+  color: #c8e6c9;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.d100-luck-btn:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #4caf50;
+  transform: scale(1.03);
+}
+
+.d100-luck-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.d100-luck-note {
+  font-size: 0.72rem;
+  color: #81c784;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.d100-luck-used {
+  font-size: 0.78rem;
+  color: #a5d6a7;
+  font-weight: 600;
+  margin-bottom: 4px;
+  padding: 3px 10px;
+  background: rgba(76, 175, 80, 0.12);
+  border-radius: 4px;
+  display: inline-block;
 }
 
 /* Skill Info Button (ℹ next to skill names) */
