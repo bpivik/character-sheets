@@ -18345,6 +18345,79 @@ const App = {
   startBerserkRage() {
     if (this.character.isRaging || this.character.rageUsesRemaining <= 0) return;
     
+    // Show rage animation first, then apply bonuses
+    this.showRageActivationAnimation(() => {
+      this._applyBerserkRage();
+    });
+  },
+  
+  /**
+   * Show Berserk Rage activation animation (fire burst with embers)
+   */
+  showRageActivationAnimation(callback) {
+    const overlay = document.createElement('div');
+    overlay.className = 'rage-anim-overlay';
+    overlay.innerHTML = `
+      <div class="rage-anim-content">
+        <div class="rage-fire-burst"></div>
+        <div class="rage-flames">
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+          <div class="flame"></div>
+        </div>
+        <div class="rage-embers">
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+          <div class="ember"></div>
+        </div>
+        <div class="rage-anim-icon">⚔️</div>
+        <div class="rage-anim-text">Entering Rage!</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // Screen shake effect on the main app
+    const app = document.getElementById('app');
+    if (app) app.classList.add('rage-screen-shake');
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
+    
+    // Remove after animation and call callback
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      if (app) app.classList.remove('rage-screen-shake');
+      setTimeout(() => {
+        overlay.remove();
+        if (callback) callback();
+      }, 400);
+    }, 1600);
+  },
+  
+  /**
+   * Apply Berserk Rage bonuses (called after animation completes)
+   */
+  _applyBerserkRage() {
+    if (this.character.isRaging || this.character.rageUsesRemaining <= 0) return;
+    
     this.character.isRaging = true;
     this.character.rageUsesRemaining--;
     
