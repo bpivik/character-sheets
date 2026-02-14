@@ -423,13 +423,14 @@
   color: #888;
 }
 
-/* Init roll button - dark */
-[data-theme="dark"] .widget-init-roll {
+/* HP location buttons - dark */
+[data-theme="dark"] .hp-loc-btn {
+  background: var(--button-bg);
   border-color: #666;
 }
 
-[data-theme="dark"] .widget-init-roll:hover {
-  background: rgba(255,255,255,0.1);
+[data-theme="dark"] .hp-loc-btn:hover {
+  background: #555;
 }
 
 /* Magic MP row - dark */

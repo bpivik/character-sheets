@@ -32005,11 +32005,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             <span class="hp-loc-name">${locNames[i]}</span>
             <span class="hp-ap-val">${ap}</span>
             <div class="hp-spinner">
-              <button class="spin-btn spin-down hp-loc-btn" data-loc="${i}">−</button>
+              <button class="hp-loc-btn hp-loc-down" data-loc="${i}">−</button>
               <span class="hp-current-val" data-loc="${i}">${current}</span>
               <span class="hp-sep">/</span>
               <span class="hp-max-val">${hp}</span>
-              <button class="spin-btn spin-up hp-loc-btn" data-loc="${i}">+</button>
+              <button class="hp-loc-btn hp-loc-up" data-loc="${i}">+</button>
             </div>
           </div>`;
         }
@@ -32041,7 +32041,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
               <span class="stat-label">Initiative</span>
               <div class="init-roll-row">
                 <span class="stat-value">${initiative}</span>
-                <button class="btn-init-roll widget-init-roll" title="Roll Initiative (d10 + ${initiative})"><img src="images/d10-init.svg" alt="d10" class="d10-icon"></button>
+                <button class="btn-init-roll widget-init-roll" title="Roll d10 + ${initiative}"><img src="images/d10-init.svg" alt="d10" class="d10-init-icon"></button>
               </div>
             </div>
             <div class="combat-stat editable">
@@ -33203,7 +33203,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (hpLocBtn) {
         e.stopPropagation();
         const loc = hpLocBtn.dataset.loc;
-        const isUp = hpLocBtn.classList.contains('spin-up');
+        const isUp = hpLocBtn.classList.contains('hp-loc-up');
         const maxEl = document.getElementById(`loc-${loc}-hp`);
         const currentEl = document.getElementById(`loc-${loc}-current`);
         if (!maxEl || !currentEl) return;

@@ -15095,7 +15095,7 @@ input.combat-skill-percent.damage-boosted {
   gap: 3px;
 }
 
-.hp-spinner .spin-btn {
+.hp-spinner .hp-loc-btn {
   width: 18px;
   height: 18px;
   font-size: 0.75rem;
@@ -15126,26 +15126,30 @@ input.combat-skill-percent.damage-boosted {
   gap: 6px;
 }
 
-.widget-init-roll {
-  background: none;
+/* === HP Location +/- Buttons === */
+.hp-loc-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   border: 1px solid var(--border-gold);
-  border-radius: 4px;
+  background: var(--button-bg, #5a4a3a);
+  color: var(--text-light, #fff);
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 2px 4px;
   display: flex;
   align-items: center;
-  opacity: 0.8;
-  transition: opacity 0.2s;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
 }
 
-.widget-init-roll:hover {
-  opacity: 1;
-  background: rgba(0,0,0,0.05);
+.hp-loc-btn:hover {
+  background: #6b5a4a;
 }
 
-.widget-init-roll .d10-icon {
-  width: 16px;
-  height: 16px;
+.hp-loc-btn:active {
+  transform: scale(0.95);
 }
 
 /* === Magic Points Row in Magic Skills Widget === */
