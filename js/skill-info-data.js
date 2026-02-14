@@ -487,10 +487,23 @@ const SKILL_INFO = {
   },
 
   'fly': {
-    title: 'Fly (STR+DEX)',
+    title: 'Fly / Flying (STR+DEX)',
     description: `
       <p>This skill represents the ability to control aerial movement — steering, diving, hovering, landing, or maneuvering at speed. Only creatures or beings with an inherent ability to fly may use this skill.</p>
       <p>Weather, wind currents, and fatigue can increase the Difficulty Grade of a roll.</p>
+      <p><em>"Fly" and "Flying" are the same skill and are interchangeable.</em></p>
+    `,
+    critical: `You execute your maneuver with perfect control, gaining an advantageous position or increased speed. Your next Fly rolls during the next Round are one Difficulty Grade easier.`,
+    failure: `Your maneuver is clumsy or partially successful. You lose altitude, drift off course, or become vulnerable to attacks until the next Round.`,
+    fumble: `You completely lose control — stalling, colliding with an obstacle, or tumbling out of the sky. You may crash or be unable to recover without immediate action.`
+  },
+
+  'flying': {
+    title: 'Fly / Flying (STR+DEX)',
+    description: `
+      <p>This skill represents the ability to control aerial movement — steering, diving, hovering, landing, or maneuvering at speed. Only creatures or beings with an inherent ability to fly may use this skill.</p>
+      <p>Weather, wind currents, and fatigue can increase the Difficulty Grade of a roll.</p>
+      <p><em>"Fly" and "Flying" are the same skill and are interchangeable.</em></p>
     `,
     critical: `You execute your maneuver with perfect control, gaining an advantageous position or increased speed. Your next Fly rolls during the next Round are one Difficulty Grade easier.`,
     failure: `Your maneuver is clumsy or partially successful. You lose altitude, drift off course, or become vulnerable to attacks until the next Round.`,

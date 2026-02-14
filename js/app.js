@@ -2800,8 +2800,17 @@ const App = {
     if (typeof SKILL_INFO === 'undefined') return null;
     const normalized = skillName.toLowerCase().trim();
     
+    // Skill aliases — these names are interchangeable
+    const SKILL_ALIASES = {
+      'fly': 'flying', 'flying': 'fly'
+    };
+    
     // Direct match
     if (SKILL_INFO[normalized]) return normalized;
+    
+    // Try alias
+    const alias = SKILL_ALIASES[normalized];
+    if (alias && SKILL_INFO[alias]) return alias;
     
     // Try with dashes instead of spaces
     const dashed = normalized.replace(/\s+/g, '-');
@@ -2810,6 +2819,10 @@ const App = {
     // Strip parenthetical suffix: "Lore (History)" → "lore"
     const base = normalized.replace(/\s*\(.*?\)\s*$/, '').trim();
     if (SKILL_INFO[base]) return base;
+    
+    // Try alias on base
+    const baseAlias = SKILL_ALIASES[base];
+    if (baseAlias && SKILL_INFO[baseAlias]) return baseAlias;
     
     // Try dashed base
     const dashedBase = base.replace(/\s+/g, '-');
@@ -9995,6 +10008,22 @@ const App = {
       // Build button HTML — class-specific and clear buttons
       let buttonsHTML = '';
       
+      // Divine caster "Fill [Class] Spells" buttons
+      const divineClasses = ['cleric', 'druid', 'paladin', 'anti-paladin', 'ranger'];
+      const classIcons = {
+        cleric: '✝️', druid: '🌿', paladin: '🛡️', 'anti-paladin': '🖤', ranger: '🏹',
+        bard: '🎵'
+      };
+      
+      availableClasses.forEach(c => {
+        const cName = c.name.toLowerCase();
+        if (divineClasses.includes(cName) || cName === 'bard') {
+          const icon = classIcons[cName] || '📜';
+          const label = cName === 'anti-paladin' ? 'Anti-Paladin' : this.toTitleCase(cName);
+          buttonsHTML += `<button type="button" class="btn btn-small btn-fill-divine-spells" data-rank="${rankKey}" data-class="${cName}" title="Fill all ${label} spells you qualify for (not memorized)">${icon} Fill ${label} Spells</button>`;
+        }
+      });
+      
       // Mage "Add Mage Spell" button
       if (mageHasRank) {
         buttonsHTML += `<button type="button" class="btn btn-small btn-add-mage-spell" data-rank="${rankKey}" title="Add a mage spell (choose, roll, or auto)">📖 Add Mage Spell</button>`;
@@ -10051,6 +10080,13 @@ const App = {
           this._openSorcererSwapModal(swapBtn.dataset.rank);
         });
       }
+      
+      // Divine/Bard fill buttons
+      actionsBar.querySelectorAll('.btn-fill-divine-spells').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this.fillDivineSpellsForRank(btn.dataset.class, btn.dataset.rank);
+        });
+      });
     });
   },
   
@@ -10069,6 +10105,51 @@ const App = {
     const existingLower = existingSpells.map(s => s.toLowerCase());
     
     this._openSpellPickerModal(className, rankKey, allSpells, existingLower);
+  },
+
+  /**
+   * Fill all divine/bard spells for a rank — divine casters automatically know all qualifying spells
+   * Adds all spells from the class list that aren't already present. None are memorized.
+   */
+  fillDivineSpellsForRank(className, rankKey) {
+    if (!window.ClassSpellLists) return;
+    
+    const classKey = className.toLowerCase();
+    const classList = window.ClassSpellLists[classKey];
+    if (!classList || !classList[rankKey]) return;
+    
+    const allSpells = classList[rankKey].slice().sort((a, b) => a.localeCompare(b));
+    const existingSpells = this.getExistingSpellsInRank(rankKey);
+    const existingLower = existingSpells.map(s => s.toLowerCase());
+    
+    // Filter to only new spells
+    const newSpells = allSpells.filter(s => !existingLower.includes(s.toLowerCase()));
+    
+    if (newSpells.length === 0) {
+      const rankLabel = rankKey === 'cantrips' ? 'Cantrips' : `Rank ${rankKey.replace('rank', '')}`;
+      this.showFloatingMessage(`All ${this.toTitleCase(className)} ${rankLabel} spells already added.`, 'info');
+      return;
+    }
+    
+    // Add each new spell (not memorized)
+    let addedCount = 0;
+    newSpells.forEach(spellName => {
+      const cost = window.SpellData ? (window.SpellData.getSpellCost(spellName) || '') : '';
+      this.addSpellRow(rankKey, {
+        name: spellName,
+        memorized: false,
+        cost: cost
+      });
+      addedCount++;
+    });
+    
+    // Save and update
+    this.syncSpellsToCharacter();
+    this.scheduleAutoSave();
+    this.updateSpellFillButtons();
+    
+    const rankLabel = rankKey === 'cantrips' ? 'Cantrip' : `Rank ${rankKey.replace('rank', '')}`;
+    this.showFloatingMessage(`Added ${addedCount} ${this.toTitleCase(className)} ${rankLabel} spell${addedCount !== 1 ? 's' : ''}.`, 'success');
   },
 
   /**

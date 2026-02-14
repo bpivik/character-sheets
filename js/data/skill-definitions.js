@@ -71,6 +71,7 @@ const SKILL_DEFINITIONS = {
     "culture": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
     "disguise": { formula: "INT+CHA", attrs: ['INT', 'CHA'] },
     "engineering": { formula: "INT x2", attrs: ['INT'], multiplier: 2 },
+    "fly": { formula: "STR+DEX", attrs: ['STR', 'DEX'] },
     "flying": { formula: "STR+DEX", attrs: ['STR', 'DEX'] },
     "gambling": { formula: "INT+POW", attrs: ['INT', 'POW'] },
     "healing": { formula: "INT+POW", attrs: ['INT', 'POW'] },
