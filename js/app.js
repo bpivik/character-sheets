@@ -2888,11 +2888,38 @@ const App = {
     const info = SKILL_INFO[skillKey];
     if (!info) return;
     
-    // Build description — handle Evade's dynamic description
+    // Build description — handle dynamic descriptions that need character data
     let descHTML;
     if (info.getDescription) {
-      const hasAD = !!(this.artfulDodgerDisplayed || (this.activeAbilityEffects && this.activeAbilityEffects['artful dodger']));
-      descHTML = info.getDescription(hasAD);
+      // Pass character context for dynamic calculations
+      const context = {
+        hasArtfulDodger: !!(this.artfulDodgerDisplayed || (this.activeAbilityEffects && this.activeAbilityEffects['artful dodger'])),
+        character: this.character,
+        getCharValue: (id) => {
+          const el = document.getElementById(id);
+          return el ? (parseInt(el.value, 10) || 0) : 0;
+        },
+        getDamageModifier: (siz) => {
+          // Standard Mythras damage modifier table
+          if (siz <= 5) return '-1d8';
+          if (siz <= 10) return '-1d6';
+          if (siz <= 15) return '-1d4';
+          if (siz <= 20) return '-1d2';
+          if (siz <= 25) return '+0';
+          if (siz <= 30) return '+1d2';
+          if (siz <= 35) return '+1d4';
+          if (siz <= 40) return '+1d6';
+          if (siz <= 45) return '+1d8';
+          if (siz <= 50) return '+1d10';
+          if (siz <= 60) return '+1d12';
+          if (siz <= 70) return '+2d6';
+          if (siz <= 80) return '+1d8+1d6';
+          if (siz <= 90) return '+2d8';
+          if (siz <= 100) return '+1d10+1d8';
+          return '+2d10';
+        }
+      };
+      descHTML = info.getDescription(context);
     } else {
       descHTML = info.description || '';
     }
@@ -7476,12 +7503,14 @@ const App = {
     
     // Notes are now loaded via setupNotesPage -> loadNotesData
     
-    // Images
-    if (this.character.images.fullBody) {
-      this.displayImage('full-body', this.character.images.fullBody);
-    }
-    if (this.character.images.portrait) {
-      this.displayImage('portrait', this.character.images.portrait);
+    // Images - restore from character data (including JSON imports)
+    if (this.character.images) {
+      if (this.character.images.fullBody) {
+        this.displayImage('full-body', this.character.images.fullBody);
+      }
+      if (this.character.images.portrait) {
+        this.displayImage('portrait', this.character.images.portrait);
+      }
     }
     
     // ENC automation
@@ -7767,6 +7796,17 @@ const App = {
   collectFormData() {
     // This is called before save/export to ensure all data is captured
     // Most data is already saved via event listeners, but this catches anything missed
+    
+    // Images - ensure images are captured from DOM for export
+    if (!this.character.images) this.character.images = { fullBody: null, portrait: null };
+    const fullBodyImg = document.getElementById('full-body-image');
+    if (fullBodyImg && fullBodyImg.src && !fullBodyImg.classList.contains('hidden') && fullBodyImg.src.startsWith('data:')) {
+      this.character.images.fullBody = fullBodyImg.src;
+    }
+    const portraitImg = document.getElementById('portrait-image');
+    if (portraitImg && portraitImg.src && !portraitImg.classList.contains('hidden') && portraitImg.src.startsWith('data:')) {
+      this.character.images.portrait = portraitImg.src;
+    }
     
     // Equipment - collect from actual rows
     this.character.equipment = [];
@@ -34458,6 +34498,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const langBtn = document.getElementById('btn-alphabetize-languages');
     if (langBtn) {
       langBtn.addEventListener('click', () => this.alphabetizeLanguages());
+    }
+    
+    // Language info button
+    const langInfoBtn = document.getElementById('btn-language-info');
+    if (langInfoBtn) {
+      langInfoBtn.addEventListener('click', () => this.showSkillInfo('language'));
     }
     
     // Equipment

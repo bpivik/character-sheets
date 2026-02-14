@@ -887,6 +887,68 @@
   color: var(--text-secondary);
 }
 
+/* Dark theme: skill subsections */
+[data-theme="dark"] .skill-subsection {
+  background: rgba(255, 255, 255, 0.05);
+  border-left-color: rgba(240, 200, 102, 0.4);
+}
+
+[data-theme="dark"] .skill-subsection-header {
+  color: #f0c866;
+}
+
+[data-theme="dark"] .skill-subsection p,
+[data-theme="dark"] .skill-subsection .indent-list {
+  color: #ccc;
+}
+
+[data-theme="dark"] .skill-subsection .dynamic-value {
+  color: #f0c866;
+}
+
+[data-theme="dark"] .skill-subsection .note-text {
+  color: #999;
+}
+
+/* Dark theme: outcome labels */
+[data-theme="dark"] .outcome-label.outcome-critical {
+  background: rgba(255, 215, 0, 0.2);
+  color: #f0c866;
+  border-color: rgba(255, 215, 0, 0.35);
+}
+
+[data-theme="dark"] .outcome-label.outcome-failure {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+[data-theme="dark"] .outcome-label.outcome-fumble {
+  background: rgba(233, 69, 96, 0.18);
+  color: #e94560;
+  border-color: rgba(233, 69, 96, 0.35);
+}
+
+[data-theme="dark"] .outcome-text {
+  color: #ccc;
+}
+
+/* Dark theme: fluency table */
+[data-theme="dark"] .fluency-table th {
+  background: rgba(240, 200, 102, 0.12);
+  color: #f0c866;
+  border-bottom-color: rgba(240, 200, 102, 0.3);
+}
+
+[data-theme="dark"] .fluency-table td {
+  color: #ccc;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .fluency-table td:first-child {
+  color: #f0c866;
+}
+
 [data-theme="dark"] .ability-callout {
   background: rgba(70, 130, 180, 0.18);
   border-left-color: #5a9fcf;

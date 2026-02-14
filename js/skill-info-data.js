@@ -11,26 +11,41 @@ const SKILL_INFO = {
 
   'athletics': {
     title: 'Athletics (STR+DEX)',
-    description: `
-      <p>Athletics covers a variety of physical activities, including climbing, jumping, throwing, and running. All rolls for these actions are made using a single check against the Athletics skill.</p>
-    `,
-    critical: `
-      <strong>If Climbing:</strong> You climb quickly or avoid hidden dangers.<br>
-      <strong>If Jumping:</strong> You add 3 extra feet to your jump and land upright.
-    `,
-    failure: `
-      <strong>If Climbing:</strong> You make no progress.<br>
-      <strong>If Running:</strong> You gain one Level of Fatigue.
-    `,
-    fumble: `
-      <strong>If Climbing:</strong> You fall and cannot use Acrobatics to reduce fall damage.<br>
-      <strong>If Jumping:</strong> You land awkwardly and must make an additional Endurance roll:<br>
-      &emsp;• <em>Success:</em> You take 1 point of damage to one leg.<br>
-      &emsp;• <em>Failure:</em> You take 1d4 damage instead.<br>
-      <strong>If Running:</strong> You pull a muscle or tear a ligament and must stop running. Make an Endurance roll:<br>
-      &emsp;• <em>Success:</em> You take 1 damage to one leg.<br>
-      &emsp;• <em>Failure:</em> You take 1d4 damage instead.
-    `
+    getDescription: function(ctx) {
+      return `
+        <p>Athletics covers a variety of physical activities, including climbing, jumping, throwing, and running. All rolls for these actions are made using a single check against the Athletics skill.</p>
+        <hr style="border:none;border-top:1px solid var(--border-light);margin:0.75rem 0;">
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">🧗 Climbing</h4>
+          <div class="skill-outcomes">
+            <div class="skill-outcome"><span class="outcome-label outcome-critical">Critical</span> <span class="outcome-text">You climb quickly or avoid hidden dangers.</span></div>
+            <div class="skill-outcome"><span class="outcome-label outcome-failure">Failure</span> <span class="outcome-text">You make no progress.</span></div>
+            <div class="skill-outcome"><span class="outcome-label outcome-fumble">Fumble</span> <span class="outcome-text">You fall and cannot use Acrobatics to reduce fall damage.</span></div>
+          </div>
+        </div>
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">🦘 Jumping</h4>
+          <div class="skill-outcomes">
+            <div class="skill-outcome"><span class="outcome-label outcome-critical">Critical</span> <span class="outcome-text">You add 3 extra feet to your jump and land upright.</span></div>
+            <div class="skill-outcome"><span class="outcome-label outcome-failure">Failure</span> <span class="outcome-text">You make no progress.</span></div>
+            <div class="skill-outcome"><span class="outcome-label outcome-fumble">Fumble</span> <span class="outcome-text">You land awkwardly and must make an additional Endurance roll:<br>&emsp;• <em>Success:</em> You take 1 point of damage to one leg.<br>&emsp;• <em>Failure:</em> You take 1d4 damage instead.</span></div>
+          </div>
+        </div>
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">🏃 Running</h4>
+          <div class="skill-outcomes">
+            <div class="skill-outcome"><span class="outcome-label outcome-critical">Critical</span> <span class="outcome-text">Add 5 feet to Movement Rate.</span></div>
+            <div class="skill-outcome"><span class="outcome-label outcome-failure">Failure</span> <span class="outcome-text">You gain one Level of Fatigue.</span></div>
+            <div class="skill-outcome"><span class="outcome-label outcome-fumble">Fumble</span> <span class="outcome-text">You pull a muscle or tear a ligament and must stop running. Make an Endurance roll:<br>&emsp;• <em>Success:</em> You take 1 damage to one leg.<br>&emsp;• <em>Failure:</em> You take 1d4 damage instead.</span></div>
+          </div>
+        </div>
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">🎯 Throwing</h4>
+          <p>You can throw an object a maximum of <strong>3 feet for every point your STR exceeds the object's SIZ</strong>.</p>
+        </div>
+      `;
+    }
+    // Outcomes are built into getDescription subsections above
   },
 
   'boating': {
@@ -46,10 +61,52 @@ const SKILL_INFO = {
 
   'brawn': {
     title: 'Brawn (STR+SIZ)',
-    description: `
-      <p>Brawn is the use of technique to maximize physical force. It covers tasks like lifting, breaking down doors, and competing in tests of strength.</p>
-    `
-    // No critical/failure/fumble defined
+    getDescription: function(ctx) {
+      // Get character's SIZ and Brawn skill
+      const siz = ctx.getCharValue('siz');
+      const brawnEl = document.getElementById('brawn-current') || document.getElementById('brawn-percent');
+      const brawnVal = brawnEl ? (parseInt(brawnEl.dataset?.originalValue || brawnEl.value, 10) || 0) : 0;
+      
+      // Lift capacity: SIZ + 1 per full 10% in Brawn
+      const liftBonus = Math.floor(brawnVal / 10);
+      const liftCapacity = siz + liftBonus;
+      const dragCapacity = liftCapacity * 2;
+      
+      // Damage modifier for breaking objects (based on lift capacity as effective SIZ)
+      const breakDM = ctx.getDamageModifier(liftCapacity);
+      
+      // Character's actual damage modifier (STR+SIZ based)
+      const str = ctx.getCharValue('str');
+      const dmEl = document.getElementById('damage-modifier');
+      const charDM = dmEl ? dmEl.value : ctx.getDamageModifier(str + siz);
+      
+      return `
+        <p>Brawn is the use of technique to maximize physical force. It covers tasks like lifting, breaking down doors, and competing in tests of strength.</p>
+        <hr style="border:none;border-top:1px solid var(--border-light);margin:0.75rem 0;">
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">🏋️ Lifting</h4>
+          <p>You can lift and carry an object of <strong class="dynamic-value">${liftCapacity} SIZ</strong> <span class="note-text">(SIZ ${siz} + ${liftBonus} from ${brawnVal}% Brawn)</span> off the ground, or drag up to <strong class="dynamic-value">${dragCapacity} SIZ</strong>, without needing a Brawn roll.</p>
+          <p>Failing a lift may cause injury. You must pass an Endurance roll or take <strong>1d3 damage</strong> to a random body part below the head. Fumbled Brawn rolls automatically result in injury.</p>
+          <p class="note-text">Note: The size and shape of an object might prevent lifting it, even if it's within your weight limit.</p>
+        </div>
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">💥 Breaking Objects</h4>
+          <p>You can attempt to break objects, such as shoulder-barging a door. Based on your effective lift SIZ of <strong class="dynamic-value">${liftCapacity}</strong>, you deal <strong class="dynamic-value">${breakDM}</strong> damage when breaking objects.</p>
+          <p>Failed rolls may cause injury. You must pass an Endurance roll or take <strong>1d3 damage</strong> to a random body part below the head. Fumbled Brawn rolls automatically result in injury.</p>
+        </div>
+        <div class="skill-subsection">
+          <h4 class="skill-subsection-header">💪 Contests of Strength</h4>
+          <p>Brawn rolls can be used for Opposed Roll situations, such as breaking free from a Grip, arm wrestling, or tug-of-war.</p>
+          <p>Compare your damage modifier (<strong class="dynamic-value">${charDM}</strong>) to that of your opponent. Whoever's is lower takes a Difficulty Grade penalty:</p>
+          <div class="indent-list">
+            &emsp;• <strong>One step difference:</strong> Difficulty increases to Hard.<br>
+            &emsp;• <strong>Two steps difference:</strong> Difficulty increases to Formidable.<br>
+            &emsp;• <strong>Three steps or more:</strong> Difficulty continues to increase accordingly.
+          </div>
+        </div>
+      `;
+    }
+    // Outcomes are built into getDescription subsections above
   },
 
   'conceal': {
@@ -121,7 +178,8 @@ const SKILL_INFO = {
     title: 'Evade (DEX×2)',
     // description is dynamic — set at runtime based on Artful Dodger
     description: null,
-    getDescription: function(hasArtfulDodger) {
+    getDescription: function(ctx) {
+      const hasArtfulDodger = ctx.hasArtfulDodger || ctx === true;
       const adNote = hasArtfulDodger
         ? '<strong>(You have this)</strong>'
         : '<strong>(You don\'t have this)</strong>';
@@ -480,16 +538,20 @@ const SKILL_INFO = {
   'language': {
     title: 'Language (INT+CHA)',
     description: `
-      <p>This skill represents your ability to speak and understand languages other than your native tongue. Like Native Tongue, Language is not usually rolled but instead serves as a static measure of fluency.</p>
-      <table class="attr-info-table">
+      <p>This skill represents a character's ability to speak and understand languages. Language is not usually rolled but instead serves as a static measure of fluency.</p>
+      <p>Its value determines how effectively a character can communicate in a given language. The Games Master may use this score to limit or guide the depth of spoken interaction with non-player characters. Refer to the Linguistic Fluency Table for interpreting skill levels.</p>
+      <hr style="border:none;border-top:1px solid var(--border-light);margin:0.75rem 0;">
+      <table class="fluency-table">
         <thead><tr><th>Language %</th><th>Conversational Fluency</th></tr></thead>
         <tbody>
           <tr><td>01–25%</td><td>Understands only a few words; cannot form sentences or read</td></tr>
-          <tr><td>26–50%</td><td>Can communicate in simple, broken sentences and read at an elementary level</td></tr>
+          <tr><td>26–50%</td><td>Can communicate in simple, broken sentences such as "Where is Temple?" or "How much food?", and read at an elementary level</td></tr>
           <tr><td>51–75%</td><td>Fluent enough for general conversation; reads at a high school level</td></tr>
           <tr><td>76%+</td><td>Speaks with eloquence; reads at a college level</td></tr>
         </tbody>
       </table>
+      <p>Each Language skill applies to a specific racial, national, or regional language, chosen when learned. It also helps with understanding related dialects, though rolls for these are made at least one Difficulty Grade harder.</p>
+      <p>This skill includes literacy, which may vary based on culture. Some cultures use carved symbols or knotted patterns rather than written alphabets. Literacy also encompasses non-phonetic systems, like hieroglyphs or ideograms.</p>
     `
   },
 
