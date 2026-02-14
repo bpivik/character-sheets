@@ -555,6 +555,13 @@ const SKILL_INFO = {
     `
   },
 
+  'lyrical magic': {
+    title: 'Lyrical Magic (POW+CHA)',
+    description: `
+      <p>The bard uses music to cast magic. More information forthcoming.</p>
+    `
+  },
+
   'lockpicking': {
     title: 'Lockpicking (DEX×2)',
     description: `

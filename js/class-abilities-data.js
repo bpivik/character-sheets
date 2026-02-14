@@ -5,7 +5,8 @@
 
 const ClassAbilities = {
   bard: {
-    rank1: ["Counter Song", "Fascinate", "Fleet of Foot", "Inspire Courage I", "Use Arcane Scrolls", "Bard Spellcaster"]
+    rank0: ["Bard Spellcaster"],
+    rank1: ["Counter Song", "Fascinate", "Fleet of Foot", "Inspire Courage I", "Use Arcane Scrolls"]
   },
   
   berserker: {
@@ -101,7 +102,8 @@ ClassAbilities.getAbilitiesForClassAndRank = function(className, rank) {
   if (!classData) return [];
   
   const abilities = [];
-  for (let r = 1; r <= rank; r++) {
+  // Start at rank 0 to include rank0 abilities (e.g., Bard Spellcaster)
+  for (let r = 0; r <= rank; r++) {
     const rankKey = `rank${r}`;
     if (classData[rankKey]) {
       abilities.push(...classData[rankKey]);
@@ -122,7 +124,7 @@ ClassAbilities.getAllAbilitiesForClass = function(className) {
   if (!classData) return [];
   
   const abilities = [];
-  for (let r = 1; r <= 5; r++) {
+  for (let r = 0; r <= 5; r++) {
     const rankKey = `rank${r}`;
     if (classData[rankKey]) {
       abilities.push(...classData[rankKey]);
@@ -155,7 +157,7 @@ ClassAbilities.isAbilityGrantingClass = function(className) {
   const classKey = className.toLowerCase().trim();
   const classData = this[classKey];
   // Must be an object with rank properties, not a function
-  return classData && typeof classData === 'object' && (classData.rank1 || classData.specialActions);
+  return classData && typeof classData === 'object' && (classData.rank0 || classData.rank1 || classData.specialActions);
 };
 
 /**

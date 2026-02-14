@@ -14644,7 +14644,7 @@ const App = {
         name: tertiaryClass.toLowerCase(),
         rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0
       }
-    ].filter(c => c.name && c.rank > 0);
+    ].filter(c => c.name && c.rank >= 0);
     
     // Get classes that grant abilities
     const activeAbilityClasses = currentClasses.filter(c => 
@@ -15683,7 +15683,7 @@ const App = {
         rank: parseInt(document.getElementById('rank-secondary')?.value, 10) || 0 },
       { name: document.getElementById('class-tertiary')?.value?.trim().toLowerCase() || '', 
         rank: parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0 }
-    ].filter(c => c.name && c.rank > 0 && c.name !== excludeClass.toLowerCase());
+    ].filter(c => c.name && c.rank >= 0 && c.name !== excludeClass.toLowerCase());
     
     const normalizedAbility = abilityName.toLowerCase().trim();
     
@@ -18310,6 +18310,8 @@ const App = {
     if (rageBtn) {
       rageBtn.classList.add('raging');
       rageBtn.disabled = true;
+      // Inline style fallback to guarantee visual state
+      this._applyRagingStyles(rageBtn);
     }
     if (rageSection) rageSection.classList.add('section-raging');
     if (tracker) tracker.style.display = '';
@@ -18563,6 +18565,7 @@ const App = {
     if (rageBtn) {
       rageBtn.classList.remove('raging');
       rageBtn.disabled = this.character.rageUsesRemaining <= 0;
+      this._clearRagingStyles(rageBtn);
     }
     if (rageSection) rageSection.classList.remove('section-raging');
     if (tracker) tracker.style.display = 'none';
@@ -18598,6 +18601,7 @@ const App = {
     if (rageBtn) {
       rageBtn.classList.add('raging');
       rageBtn.disabled = true;
+      this._applyRagingStyles(rageBtn);
     }
     if (rageSection) rageSection.classList.add('section-raging');
     if (tracker) tracker.style.display = '';
@@ -18663,6 +18667,38 @@ const App = {
     
     // Update dynamic rage text (damage steps, end-rage button) based on current rank
     this.updateBerserkRageDisplay();
+  },
+  
+  /**
+   * Apply inline raging styles to button (fallback for CSS specificity issues)
+   * IMPORTANT: Do NOT set box-shadow or transform here — they must be left free
+   * for the @keyframes animation to control. !important on those would block animation.
+   */
+  _applyRagingStyles(btn) {
+    if (!btn) return;
+    // Static visual overrides (these DON'T animate, so !important is safe)
+    btn.style.setProperty('background', 'linear-gradient(135deg, #8b0000 0%, #b22222 50%, #8b0000 100%)', 'important');
+    btn.style.setProperty('border-color', '#ff4444', 'important');
+    btn.style.setProperty('color', 'white', 'important');
+    btn.style.setProperty('cursor', 'default', 'important');
+    btn.style.setProperty('transition', 'none', 'important');
+    // Start the animation
+    btn.style.setProperty('animation', 'rage-pulse 1.2s ease-in-out infinite', 'important');
+    // DO NOT set box-shadow or transform here — keyframes must control these
+  },
+  
+  /**
+   * Clear inline raging styles from button
+   */
+  _clearRagingStyles(btn) {
+    if (!btn) return;
+    btn.style.removeProperty('background');
+    btn.style.removeProperty('border-color');
+    btn.style.removeProperty('box-shadow');
+    btn.style.removeProperty('transition');
+    btn.style.removeProperty('animation');
+    btn.style.removeProperty('color');
+    btn.style.removeProperty('cursor');
   },
   
   /**
