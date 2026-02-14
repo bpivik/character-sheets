@@ -33749,15 +33749,9 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const deleteBtn = section.querySelector('.btn-delete');
     if (deleteBtn) {
       deleteBtn.addEventListener('click', () => {
-        const sectionId = section.dataset.sectionId;
-        const sectionDef = this.NOTES_SECTIONS[sectionId];
-        const title = sectionDef?.title || section.dataset.customTitle || 'this section';
-        
-        if (confirm(`Remove "${title}" from the notes page?\n\nThe section will be moved to the palette and can be added back later. Content will be preserved.`)) {
-          section.remove();
-          this.saveNotesLayout();
-          this.updateNotesPalette();
-        }
+        section.remove();
+        this.saveNotesLayout();
+        this.updateNotesPalette();
       });
     }
     
