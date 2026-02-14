@@ -4130,7 +4130,7 @@ const App = {
   },
   
   /**
-   * Internal: create a single container row with optional data and auto-remove
+   * Internal: create a single container row with optional data
    */
   _addContainerRowWithData(name = '', enc = '') {
     const container = document.getElementById('container-items');
@@ -4151,7 +4151,7 @@ const App = {
     if (name) nameInput.value = this.toTitleCase(name);
     if (enc) encInput.value = enc;
     
-    // Autofill ENC on blur, auto-remove if cleared
+    // Autofill ENC on blur
     nameInput.addEventListener('blur', () => {
       if (nameInput.value.trim()) {
         nameInput.value = this.toTitleCase(nameInput.value.trim());
@@ -4162,19 +4162,12 @@ const App = {
           encInput.value = '';
           // Show brief notification
           this._showContainerWeaponWarning();
-          row.remove();
-          this._reindexContainerRows();
-          this.updateContainerCapacity();
           return;
         }
         
         if (window.EncumbranceData) {
           window.EncumbranceData.autofillEquipmentEnc('container', Array.from(container.querySelectorAll('.equipment-row')).indexOf(row), nameInput.value);
         }
-      } else if (!nameInput.value.trim() && !encInput.value.trim()) {
-        // Name cleared and no ENC — remove row
-        row.remove();
-        this._reindexContainerRows();
       }
       this.updateContainerCapacity();
     });
@@ -8124,7 +8117,7 @@ const App = {
     const primaryRank = parseInt(document.getElementById('rank-primary')?.value, 10) || 0;
     const secondaryRank = parseInt(document.getElementById('rank-secondary')?.value, 10) || 0;
     const tertiaryRank = parseInt(document.getElementById('rank-tertiary')?.value, 10) || 0;
-    const combinedRank = primaryRank + secondaryRank + tertiaryRank;
+    const combinedRank = Math.min(primaryRank + secondaryRank + tertiaryRank, 5);
     
     // Update the combined rank display field
     const combinedRankField = document.getElementById('rank-combined');
@@ -18309,9 +18302,7 @@ const App = {
     
     if (rageBtn) {
       rageBtn.classList.add('raging');
-      rageBtn.disabled = true;
-      // Inline style fallback to guarantee visual state
-      this._applyRagingStyles(rageBtn);
+      // CSS class .btn-rage.raging handles all visual + animation (no inline styles!)
     }
     if (rageSection) rageSection.classList.add('section-raging');
     if (tracker) tracker.style.display = '';
@@ -18600,8 +18591,7 @@ const App = {
     
     if (rageBtn) {
       rageBtn.classList.add('raging');
-      rageBtn.disabled = true;
-      this._applyRagingStyles(rageBtn);
+      // CSS class .btn-rage.raging handles all visual + animation (no inline styles!)
     }
     if (rageSection) rageSection.classList.add('section-raging');
     if (tracker) tracker.style.display = '';

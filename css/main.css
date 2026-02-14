@@ -1251,18 +1251,21 @@ select:focus {
   box-shadow: none;
 }
 
-.btn-rage.raging,
-.btn-rage.raging:disabled {
-  /* !important overrides :disabled gray — base "raging" look always visible */
+.btn-rage.raging {
+  /* Override any base/theme styles — the button is NOT disabled while raging */
   background: linear-gradient(135deg, #8b0000 0%, #b22222 50%, #8b0000 100%) !important;
   border-color: #ff4444 !important;
   color: white !important;
   cursor: default !important;
   transition: none !important;
-  /* Animate glow + scale pulse (keyframes animate box-shadow & transform) */
+  /* Pulsing glow + scale animation */
   animation: rage-pulse 1.2s ease-in-out infinite !important;
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.5);
-  transform: scale(1);
+}
+
+.btn-rage.raging:hover {
+  /* Prevent theme .btn:hover from overriding the animation */
+  background: linear-gradient(135deg, #8b0000 0%, #b22222 50%, #8b0000 100%) !important;
+  /* Don't set box-shadow or transform here — keyframes own those */
 }
 
 @keyframes rage-pulse {
