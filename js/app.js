@@ -2118,7 +2118,7 @@ const App = {
         const file = e.target.files[0];
         if (file) {
           try {
-            const base64 = await StorageManager.imageToBase64(file);
+            const base64 = await StorageManager.compressImage(file, 600, 900);
             this.character.images.fullBody = base64;
             this.displayImage('full-body', base64);
             this.scheduleAutoSave();
@@ -2136,7 +2136,7 @@ const App = {
         const file = e.target.files[0];
         if (file) {
           try {
-            const base64 = await StorageManager.imageToBase64(file);
+            const base64 = await StorageManager.compressImage(file, 250, 250);
             this.character.images.portrait = base64;
             this.displayImage('portrait', base64);
             this.scheduleAutoSave();
@@ -2209,8 +2209,18 @@ const App = {
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
         this.collectFormData();
-        if (!StorageManager.save(this.character)) {
-          this.showInfoModal('Save Error', 'Error saving character.', 'error');
+        const result = StorageManager.save(this.character);
+        if (result === 'quota_warning') {
+          this.showInfoModal('Storage Full', 
+            'Your character was saved, but images were removed to fit within browser storage limits. ' +
+            'Use <strong>Export JSON</strong> to save your full character (including images) as a file.', 
+            'warning');
+          // Clear the in-memory images too so they don't cause repeated issues
+          this.character.images = { fullBody: null, portrait: null };
+          this.removeImage('full-body');
+          this.removeImage('portrait');
+        } else if (!result) {
+          this.showInfoModal('Save Error', 'Error saving character. Browser storage may be full.', 'error');
         }
       });
     }
@@ -2233,6 +2243,10 @@ const App = {
               this.generateHitLocations();
               this.populateForm();
               this.recalculateAll();
+              // Re-render notes page sections and load imported notes data
+              this.renderNotesSections();
+              this.setupNotesDragDrop();
+              this.loadNotesData();
               this.showFloatingMessage('Character loaded!', 'success');
             } catch (error) {
               alert('Error loading file: ' + error.message);
@@ -8104,8 +8118,9 @@ const App = {
       }
     });
     
-    // Notes - save rich text sections and journal
+    // Notes - save rich text sections, journal, and layout
     this.saveNotesData();
+    this.saveNotesLayout();
     
     // Species Abilities - save from SpeciesData or existing saved data
     if (!this.character.speciesAbilities || this.character.speciesAbilities.length === 0) {

@@ -175,6 +175,8 @@ const StorageManager = {
       
       // Notes
       notes: '',
+      notesData: {},
+      notesLayout: [],
       
       // Images (stored as base64)
       images: {
@@ -200,6 +202,26 @@ const StorageManager = {
       return true;
     } catch (error) {
       console.error('Error saving character:', error);
+      
+      // If quota exceeded, try saving without images as fallback
+      if (error.name === 'QuotaExceededError' || error.code === 22) {
+        console.warn('localStorage quota exceeded — attempting save without images');
+        try {
+          const stripped = JSON.parse(JSON.stringify(characterData));
+          if (stripped.images) {
+            stripped.images = { fullBody: null, portrait: null };
+          }
+          stripped.lastModified = new Date().toISOString();
+          const strippedJson = JSON.stringify(stripped);
+          localStorage.setItem(this.STORAGE_KEY, strippedJson);
+          console.log('Character saved without images (quota recovery)');
+          return 'quota_warning';
+        } catch (e2) {
+          console.error('Failed even without images:', e2);
+          return false;
+        }
+      }
+      
       return false;
     }
   },
@@ -333,7 +355,11 @@ const StorageManager = {
     }
     
     this.autoSaveTimer = setTimeout(() => {
-      this.save(characterData);
+      const result = this.save(characterData);
+      if (result === 'quota_warning' && !this._quotaWarningShown) {
+        this._quotaWarningShown = true;
+        console.warn('Auto-save: images stripped due to storage quota. Use Export JSON to preserve images.');
+      }
     }, delay);
   },
 
@@ -352,6 +378,48 @@ const StorageManager = {
         reject(new Error('Error reading image'));
       };
       
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * Compress an image file using canvas resizing and JPEG compression.
+   * @param {File} file - The image file to compress
+   * @param {number} maxWidth - Maximum width in pixels
+   * @param {number} maxHeight - Maximum height in pixels
+   * @param {number} quality - JPEG quality (0-1), default 0.75
+   * @returns {Promise<string>} - Compressed base64 data URL
+   */
+  compressImage(file, maxWidth, maxHeight, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Error reading image'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Error loading image'));
+        img.onload = () => {
+          let w = img.width;
+          let h = img.height;
+          
+          // Scale down proportionally if exceeds max dimensions
+          if (w > maxWidth || h > maxHeight) {
+            const ratio = Math.min(maxWidth / w, maxHeight / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          
+          // Use JPEG for photos (much smaller than PNG)
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl);
+        };
+        img.src = e.target.result;
+      };
       reader.readAsDataURL(file);
     });
   },
