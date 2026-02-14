@@ -589,14 +589,6 @@
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .scrollable-skills-container::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.05);
-}
-
-[data-theme="dark"] .scrollable-skills-container::-webkit-scrollbar-thumb {
-  background: rgba(139, 115, 85, 0.5);
-}
-
 /* Rank prompt */
 [data-theme="dark"] .rank-prompt-overlay .rank-prompt-content {
   background: var(--bg-parchment);
