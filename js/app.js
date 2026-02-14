@@ -32870,41 +32870,11 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     // Load saved layout
     const savedLayout = this.loadSummaryLayout();
     
-    // Populate palette with widgets not in the saved layout
+    // Populate palette with widgets not in the saved layout (click to add)
     this.populatePalette(savedLayout);
     
     // Populate canvas with saved widgets
     this.populateCanvas(savedLayout);
-    
-    // Set up canvas drag-over events
-    canvas.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      canvas.classList.add('drag-over');
-    });
-    
-    canvas.addEventListener('dragleave', () => {
-      canvas.classList.remove('drag-over');
-    });
-    
-    canvas.addEventListener('drop', (e) => {
-      e.preventDefault();
-      canvas.classList.remove('drag-over');
-      
-      const widgetId = e.dataTransfer.getData('text/plain');
-      const source = e.dataTransfer.getData('source');
-      
-      // Only add from palette, not when reordering from canvas
-      if (source === 'canvas') {
-        // This is a reorder operation, handled by widget drop handlers
-        return;
-      }
-      
-      if (widgetId && this.summaryWidgets[widgetId]) {
-        this.addWidgetToCanvas(widgetId);
-        this.removeWidgetFromPalette(widgetId);
-        this.saveSummaryLayout();
-      }
-    });
     
     // Reset button
     if (resetBtn) {
@@ -32938,18 +32908,16 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       if (widget.hasContent && !widget.hasContent()) return;
       
       const item = document.createElement('div');
-      item.className = 'widget-item';
-      item.draggable = true;
+      item.className = 'widget-item widget-palette-item';
       item.dataset.widgetId = id;
       item.innerHTML = `<span class="widget-icon">${widget.icon}</span><span>${widget.name}</span>`;
+      item.title = 'Click to add';
       
-      item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', id);
-        item.classList.add('dragging');
-      });
-      
-      item.addEventListener('dragend', () => {
-        item.classList.remove('dragging');
+      // Click to add widget to canvas
+      item.addEventListener('click', () => {
+        this.addWidgetToCanvas(id);
+        this.removeWidgetFromPalette(id);
+        this.saveSummaryLayout();
       });
       
       palette.appendChild(item);
@@ -32986,7 +32954,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const item = document.createElement('div');
     item.className = 'widget-item';
     item.dataset.widgetId = widgetId;
-    item.draggable = true;
     
     const content = document.createElement('div');
     content.className = 'widget-content';
@@ -33002,77 +32969,38 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       this.saveSummaryLayout();
     });
     
-    // Drag handle for reordering
-    const dragHandle = document.createElement('div');
-    dragHandle.className = 'widget-drag-handle';
-    dragHandle.innerHTML = '⋮⋮';
-    dragHandle.title = 'Drag to reorder';
+    // Reorder controls (↑↓ buttons)
+    const reorderDiv = document.createElement('div');
+    reorderDiv.className = 'widget-reorder-controls';
     
-    // Drag events for reordering within canvas
-    item.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', widgetId);
-      e.dataTransfer.setData('source', 'canvas');
-      item.classList.add('dragging');
-      // Store reference for reordering
-      this.draggedWidget = item;
-    });
-    
-    item.addEventListener('dragend', () => {
-      item.classList.remove('dragging');
-      this.draggedWidget = null;
-      // Remove all drop indicators
-      canvas.querySelectorAll('.widget-item').forEach(w => {
-        w.classList.remove('drop-before', 'drop-after');
-      });
-    });
-    
-    item.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (!this.draggedWidget || this.draggedWidget === item) return;
-      
-      const rect = item.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      
-      // Remove previous indicators
-      canvas.querySelectorAll('.widget-item').forEach(w => {
-        w.classList.remove('drop-before', 'drop-after');
-      });
-      
-      // Show indicator
-      if (e.clientY < midY) {
-        item.classList.add('drop-before');
-      } else {
-        item.classList.add('drop-after');
-      }
-    });
-    
-    item.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const source = e.dataTransfer.getData('source');
-      
-      if (source === 'canvas' && this.draggedWidget && this.draggedWidget !== item) {
-        // Reordering within canvas
-        const rect = item.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        
-        if (e.clientY < midY) {
-          canvas.insertBefore(this.draggedWidget, item);
-        } else {
-          canvas.insertBefore(this.draggedWidget, item.nextSibling);
-        }
-        
+    const upBtn = document.createElement('button');
+    upBtn.className = 'widget-reorder-btn';
+    upBtn.innerHTML = '▲';
+    upBtn.title = 'Move up';
+    upBtn.addEventListener('click', () => {
+      const prev = item.previousElementSibling;
+      if (prev) {
+        canvas.insertBefore(item, prev);
         this.saveSummaryLayout();
       }
-      
-      // Clean up indicators
-      canvas.querySelectorAll('.widget-item').forEach(w => {
-        w.classList.remove('drop-before', 'drop-after');
-      });
     });
     
-    item.appendChild(dragHandle);
+    const downBtn = document.createElement('button');
+    downBtn.className = 'widget-reorder-btn';
+    downBtn.innerHTML = '▼';
+    downBtn.title = 'Move down';
+    downBtn.addEventListener('click', () => {
+      const next = item.nextElementSibling;
+      if (next) {
+        canvas.insertBefore(next, item);
+        this.saveSummaryLayout();
+      }
+    });
+    
+    reorderDiv.appendChild(upBtn);
+    reorderDiv.appendChild(downBtn);
+    
+    item.appendChild(reorderDiv);
     item.appendChild(content);
     item.appendChild(removeBtn);
     canvas.appendChild(item);
@@ -33427,7 +33355,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const section = document.createElement('div');
     section.className = 'notes-section';
     section.dataset.sectionId = layoutItem.id;
-    section.draggable = true;
     
     if (layoutItem.wide) {
       section.classList.add('notes-section-wide');
@@ -33468,7 +33395,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     
     section.innerHTML = `
       <div class="notes-section-header">
-        <span class="notes-section-drag-handle" title="Drag to reorder">⋮⋮</span>
+        <div class="notes-reorder-btns">
+          <button type="button" class="notes-section-btn btn-move-up" title="Move up">▲</button>
+          <button type="button" class="notes-section-btn btn-move-down" title="Move down">▼</button>
+        </div>
         <h3>${icon} ${title}</h3>
         <div class="notes-section-controls">
           ${addEntryBtn}
@@ -33495,6 +33425,30 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
    * Setup event handlers for a notes section
    */
   setupNotesSectionHandlers(section) {
+    // Move up
+    const upBtn = section.querySelector('.btn-move-up');
+    if (upBtn) {
+      upBtn.addEventListener('click', () => {
+        const prev = section.previousElementSibling;
+        if (prev) {
+          section.parentNode.insertBefore(section, prev);
+          this.saveNotesLayout();
+        }
+      });
+    }
+    
+    // Move down
+    const downBtn = section.querySelector('.btn-move-down');
+    if (downBtn) {
+      downBtn.addEventListener('click', () => {
+        const next = section.nextElementSibling;
+        if (next) {
+          section.parentNode.insertBefore(next, section);
+          this.saveNotesLayout();
+        }
+      });
+    }
+    
     // Width toggle
     const widthBtn = section.querySelector('.btn-width');
     if (widthBtn) {
@@ -33594,24 +33548,13 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         hasItems = true;
         const item = document.createElement('div');
         item.className = 'palette-item';
-        item.draggable = true;
         item.dataset.sectionId = id;
         item.innerHTML = `<span class="palette-item-icon">${def.icon}</span><span>${def.title}</span>`;
+        item.title = 'Click to add';
         
         // Click to add
         item.addEventListener('click', () => {
           this.addNotesSectionFromPalette(id);
-        });
-        
-        // Drag start
-        item.addEventListener('dragstart', (e) => {
-          e.dataTransfer.setData('text/plain', id);
-          e.dataTransfer.setData('source', 'palette');
-          item.classList.add('dragging');
-        });
-        
-        item.addEventListener('dragend', () => {
-          item.classList.remove('dragging');
         });
         
         palette.appendChild(item);
@@ -33659,8 +33602,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     const resetBtn = document.getElementById('btn-reset-notes-layout');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        if (confirm('Reset notes layout to default?\n\nThis will restore all sections to their default positions. Your content will be preserved.')) {
-          this.character.notesLayout = JSON.parse(JSON.stringify(this.DEFAULT_NOTES_LAYOUT));
+        // Collect existing custom sections so they aren't lost
+        const currentLayout = this.character.notesLayout || [];
+        const customSections = currentLayout.filter(item => item.custom);
+        const customCount = customSections.length;
+        const customNote = customCount > 0 
+          ? `\n\nYour ${customCount} custom section${customCount > 1 ? 's' : ''} will be preserved at the end.` 
+          : '';
+        
+        if (confirm('Reset notes layout to default?\n\nThis will restore default sections to their original positions. Your content will be preserved.' + customNote)) {
+          // Default layout + preserved custom sections appended at end
+          const newLayout = JSON.parse(JSON.stringify(this.DEFAULT_NOTES_LAYOUT));
+          if (customSections.length > 0) {
+            newLayout.push(...JSON.parse(JSON.stringify(customSections)));
+          }
+          this.character.notesLayout = newLayout;
           this.renderNotesSections();
           this.loadNotesData();
           this.scheduleAutoSave();
@@ -33697,105 +33653,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
   },
   
   /**
-   * Setup drag and drop for notes sections
+   * Setup drag and drop for notes sections (palette → grid only; reorder uses ↑↓ buttons)
    */
   setupNotesDragDrop() {
-    const grid = document.getElementById('notes-grid');
-    if (!grid) return;
-    
-    // Grid drop zone
-    grid.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      grid.classList.add('drag-over');
-    });
-    
-    grid.addEventListener('dragleave', (e) => {
-      if (!grid.contains(e.relatedTarget)) {
-        grid.classList.remove('drag-over');
-      }
-    });
-    
-    grid.addEventListener('drop', (e) => {
-      e.preventDefault();
-      grid.classList.remove('drag-over');
-      
-      const sectionId = e.dataTransfer.getData('text/plain');
-      const source = e.dataTransfer.getData('source');
-      
-      if (source === 'palette' && sectionId) {
-        this.addNotesSectionFromPalette(sectionId);
-      }
-    });
-    
-    // Event delegation for section drag
-    grid.addEventListener('dragstart', (e) => {
-      const section = e.target.closest('.notes-section');
-      if (section && e.target.classList.contains('notes-section-drag-handle')) {
-        section.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', section.dataset.sectionId);
-        e.dataTransfer.setData('source', 'grid');
-        e.dataTransfer.effectAllowed = 'move';
-        this.draggedNotesSection = section;
-      }
-    });
-    
-    grid.addEventListener('dragend', (e) => {
-      const section = e.target.closest('.notes-section');
-      if (section) {
-        section.classList.remove('dragging');
-      }
-      this.draggedNotesSection = null;
-      
-      // Remove all drag-over states
-      grid.querySelectorAll('.notes-section').forEach(s => {
-        s.classList.remove('drag-over');
-      });
-    });
-    
-    grid.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (!this.draggedNotesSection) return;
-      
-      const section = e.target.closest('.notes-section');
-      if (section && section !== this.draggedNotesSection) {
-        section.classList.add('drag-over');
-      }
-    });
-    
-    grid.addEventListener('dragleave', (e) => {
-      const section = e.target.closest('.notes-section');
-      if (section) {
-        section.classList.remove('drag-over');
-      }
-    });
-    
-    grid.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if (!this.draggedNotesSection) return;
-      
-      const targetSection = e.target.closest('.notes-section');
-      if (targetSection && targetSection !== this.draggedNotesSection) {
-        // Insert before or after based on position
-        const rect = targetSection.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        
-        if (e.clientY < midY) {
-          grid.insertBefore(this.draggedNotesSection, targetSection);
-        } else {
-          grid.insertBefore(this.draggedNotesSection, targetSection.nextSibling);
-        }
-        
-        this.saveNotesLayout();
-      }
-      
-      // Cleanup
-      grid.querySelectorAll('.notes-section').forEach(s => {
-        s.classList.remove('drag-over', 'dragging');
-      });
-      grid.classList.remove('drag-over');
-    });
+    // Palette items use click-to-add (set up in updateNotesPalette), no drag needed here
   },
   
   /**
@@ -34560,18 +34421,15 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
     if (!palette || !widget) return;
     
     const item = document.createElement('div');
-    item.className = 'widget-item';
-    item.draggable = true;
+    item.className = 'widget-item widget-palette-item';
     item.dataset.widgetId = widgetId;
     item.innerHTML = `<span class="widget-icon">${widget.icon}</span><span>${widget.name}</span>`;
+    item.title = 'Click to add';
     
-    item.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', widgetId);
-      item.classList.add('dragging');
-    });
-    
-    item.addEventListener('dragend', () => {
-      item.classList.remove('dragging');
+    item.addEventListener('click', () => {
+      this.addWidgetToCanvas(widgetId);
+      this.removeWidgetFromPalette(widgetId);
+      this.saveSummaryLayout();
     });
     
     palette.appendChild(item);

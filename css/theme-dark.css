@@ -397,12 +397,16 @@
   background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
 }
 
-[data-theme="dark"] .widget-drag-handle {
-  color: #666;
+[data-theme="dark"] .widget-reorder-btn {
+  background: rgba(50, 50, 50, 0.8);
+  border-color: rgba(255,255,255,0.15);
+  color: #999;
 }
 
-[data-theme="dark"] .widget-drag-handle:hover {
-  color: var(--text-header);
+[data-theme="dark"] .widget-reorder-btn:hover {
+  background: var(--text-header, #c9a96e);
+  color: #1a1a1a;
+  border-color: var(--text-header, #c9a96e);
 }
 
 /* Prereq modal */

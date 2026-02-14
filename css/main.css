@@ -10129,8 +10129,6 @@ input.combat-skill-percent.damage-boosted {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   margin-bottom: 1rem;
-  position: sticky;
-  top: 0;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -10236,7 +10234,7 @@ input.combat-skill-percent.damage-boosted {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 0.75rem;
-  cursor: grab;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 
@@ -10244,10 +10242,6 @@ input.combat-skill-percent.damage-boosted {
   background: var(--accent-color);
   color: white;
   border-color: var(--accent-color);
-}
-
-.palette-item.dragging {
-  opacity: 0.5;
 }
 
 .palette-item-icon {
@@ -10305,6 +10299,22 @@ input.combat-skill-percent.damage-boosted {
   box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.3);
 }
 
+/* Pointer-based drag and drop (removed - using ↑↓ buttons instead) */
+
+/* Notes reorder buttons */
+.notes-reorder-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.notes-reorder-btns .notes-section-btn {
+  padding: 0 0.3rem;
+  font-size: 0.55rem;
+  line-height: 1;
+  min-width: unset;
+}
+
 .notes-section-wide {
   grid-column: 1 / -1;
 }
@@ -10317,23 +10327,6 @@ input.combat-skill-percent.damage-boosted {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-}
-
-.notes-section-drag-handle {
-  cursor: grab;
-  color: #999;
-  font-size: 1rem;
-  padding: 0.1rem 0.25rem;
-  user-select: none;
-  transition: color 0.15s;
-}
-
-.notes-section-drag-handle:hover {
-  color: var(--accent-color);
-}
-
-.notes-section-drag-handle:active {
-  cursor: grabbing;
 }
 
 .notes-section-header h3 {
@@ -14580,7 +14573,6 @@ input.combat-skill-percent.damage-boosted {
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 14px 16px;
-  cursor: grab;
   font-size: 0.95rem;
   transition: all 0.2s;
   display: flex;
@@ -14588,17 +14580,14 @@ input.combat-skill-percent.damage-boosted {
   gap: 8px;
 }
 
+/* Palette widget items are clickable */
+.widget-palette-item {
+  cursor: pointer;
+}
+
 .widget-item:hover {
   border-color: var(--accent-color, #8B4513);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.widget-item:active {
-  cursor: grabbing;
-}
-
-.widget-item.dragging {
-  opacity: 0.5;
 }
 
 .widget-item .widget-icon {
@@ -14625,11 +14614,6 @@ input.combat-skill-percent.damage-boosted {
   align-content: start;
 }
 
-.canvas-grid.drag-over {
-  border-color: var(--accent-color, #8B4513);
-  background: #fff8f0;
-}
-
 .canvas-grid .widget-item {
   cursor: default;
   position: relative;
@@ -14638,40 +14622,42 @@ input.combat-skill-percent.damage-boosted {
   align-items: stretch;
 }
 
-.canvas-grid .widget-item.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
-}
-
-.canvas-grid .widget-item.drop-before {
-  box-shadow: 0 -3px 0 0 var(--accent-color, #8B4513);
-}
-
-.canvas-grid .widget-item.drop-after {
-  box-shadow: 0 3px 0 0 var(--accent-color, #8B4513);
-}
-
-.widget-drag-handle {
+/* Widget reorder controls */
+.widget-reorder-controls {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  color: #aaa;
-  cursor: grab;
-  font-size: 14px;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  z-index: 1;
+}
+
+.widget-reorder-btn {
+  width: 20px;
+  height: 16px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.8);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.5rem;
   line-height: 1;
-  user-select: none;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease;
 }
 
-.widget-drag-handle:hover {
-  color: var(--accent-color, #8B4513);
-}
-
-.widget-drag-handle:active {
-  cursor: grabbing;
+.widget-reorder-btn:hover {
+  background: var(--accent-color, #8B4513);
+  color: white;
+  border-color: var(--accent-color, #8B4513);
 }
 
 .canvas-grid .widget-item .widget-content {
-  padding-left: 20px;
+  padding-left: 28px;
 }
 
 .canvas-grid .widget-item .widget-remove {
