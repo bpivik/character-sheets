@@ -32733,7 +32733,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           }
         }
         // Check if there are any species abilities
-        const speciesAbilitiesCheck = this.getSpeciesAbilities();
+        const speciesAbilitiesCheck = App.getSpeciesAbilities();
         if (speciesAbilitiesCheck.length > 0) return true;
         return false;
       },
@@ -32754,7 +32754,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         }
         
         // Collect species abilities
-        const speciesAbilities = this.getSpeciesAbilities();
+        const speciesAbilities = App.getSpeciesAbilities();
         
         // Sort each group alphabetically
         classAbilities.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -33710,7 +33710,6 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           const rect = dragItem.getBoundingClientRect();
           ghost = document.createElement('div');
           ghost.className = 'grid-drag-ghost';
-          // Grab a meaningful label: h3 text, or widget name
           const label = dragItem.querySelector('h3, .widget-content h4, .widget-content strong');
           ghost.textContent = label ? label.textContent.trim() : 'Moving...';
           ghost.style.width = Math.min(rect.width, 300) + 'px';
@@ -33724,32 +33723,39 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           ghost.style.top = (ev.clientY - 16) + 'px';
         }
         
-        // Direct DOM reorder: find which sibling the pointer is over and move
+        // Find closest sibling by distance to center (handles grid gaps)
         const siblings = Array.from(container.querySelectorAll(itemSelector));
+        let closestSibling = null;
+        let closestDist = Infinity;
+        
         for (const sibling of siblings) {
           if (sibling === dragItem) continue;
-          
           const rect = sibling.getBoundingClientRect();
-          
-          // Check if pointer is within this sibling's bounding box
-          if (ev.clientX >= rect.left && ev.clientX <= rect.right &&
-              ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
-            
-            const midY = rect.top + rect.height / 2;
-            
-            // Determine position of dragItem vs sibling in DOM
-            const dragIndex = siblings.indexOf(dragItem);
-            const siblingIndex = siblings.indexOf(sibling);
-            
-            if (ev.clientY < midY && dragIndex > siblingIndex) {
-              // Pointer in top half, drag is after sibling → move before
-              container.insertBefore(dragItem, sibling);
-            } else if (ev.clientY >= midY && dragIndex < siblingIndex) {
-              // Pointer in bottom half, drag is before sibling → move after
-              container.insertBefore(dragItem, sibling.nextSibling);
-            }
-            break;
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestSibling = sibling;
           }
+        }
+        
+        if (!closestSibling) return;
+        
+        // Only swap if pointer is reasonably close (within 1.5x the item height)
+        const closestRect = closestSibling.getBoundingClientRect();
+        const maxDist = Math.max(closestRect.height, closestRect.width) * 1.2;
+        if (closestDist > maxDist) return;
+        
+        const dragIndex = siblings.indexOf(dragItem);
+        const siblingIndex = siblings.indexOf(closestSibling);
+        
+        if (dragIndex < siblingIndex) {
+          // Drag is before sibling → move after
+          container.insertBefore(dragItem, closestSibling.nextSibling);
+        } else if (dragIndex > siblingIndex) {
+          // Drag is after sibling → move before
+          container.insertBefore(dragItem, closestSibling);
         }
       };
       
