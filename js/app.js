@@ -11990,6 +11990,11 @@ const App = {
       console.warn(`[CAST] _ensureEffectiveSkill: non-mem penalty was 0, recalculated to ${m.nonMemPenalty}`);
     }
 
+    // Bard Sing augment bonus
+    if (m.singAugment && m.singBonus > 0) {
+      effective += m.singBonus;
+    }
+
     effective = Math.max(0, Math.min(effective, 200));
 
     // Apply weaving difficulty multiplier (sorcery only)
@@ -12003,6 +12008,40 @@ const App = {
       m.effectiveSkill = effective;
     }
     return effective;
+  },
+
+  /**
+   * Recalculate and update the cast modal display when Sing augment is toggled
+   */
+  _recalcSingAugment(m, costStr) {
+    // Recalculate effective skill with or without sing bonus
+    this._ensureEffectiveSkill(m);
+
+    // Update the skill percent display
+    document.getElementById('cast-skill-percent').textContent = m.effectiveSkill + '%';
+
+    // Update difficulty note
+    const diffNote = document.getElementById('cast-difficulty-note');
+    const L = window.SpellDetailsLookup;
+    if (m.isNonMemorized) {
+      diffNote.textContent = `(${m.nonMemDifficulty})`;
+      diffNote.classList.add('penalty');
+    } else if (m.singAugment && m.singBonus > 0) {
+      diffNote.textContent = `(Sing +${m.singBonus}%)`;
+      diffNote.classList.remove('penalty');
+    } else if (m.spellRank === 0 && m.casterRank >= 1) {
+      const bonus = L ? L.getCantripDifficultyAdjustment(m.casterRank) : '';
+      diffNote.textContent = `(${bonus})`;
+      diffNote.classList.remove('penalty');
+    } else if (m.armorRestriction?.penalty) {
+      diffNote.textContent = `(${m.armorRestriction.penalty})`;
+      diffNote.classList.add('penalty');
+    } else {
+      diffNote.textContent = '';
+    }
+
+    // Refresh cost display
+    this._updateCostDisplay(m, costStr);
   },
 
   /**
@@ -12273,6 +12312,41 @@ const App = {
     }
     document.getElementById('cast-full-desc').classList.add('hidden');
     document.getElementById('cast-toggle-desc').textContent = 'Show Full Description \u25BC';
+
+    // Bard Sing Augment section
+    const singSection = document.getElementById('cast-sing-augment');
+    const singCheck = document.getElementById('cast-sing-check');
+    const singBonusEl = document.getElementById('cast-sing-bonus');
+    const isBardCaster = m.castingType === 'bardic' || m.classSource?.toLowerCase().includes('bard');
+
+    if (isBardCaster) {
+      const singVal = parseInt(document.getElementById('sing-current')?.value, 10) || 0;
+      const singBonus = Math.ceil(singVal * 0.2);
+      m.singSkillValue = singVal;
+      m.singBonus = singBonus;
+      m.singAugment = false; // reset on modal open
+
+      if (singVal > 0) {
+        singSection.classList.remove('hidden');
+        singCheck.checked = false;
+        singBonusEl.textContent = `(Sing ${singVal}% → +${singBonus}%)`;
+
+        // Attach listener (only once per modal lifecycle)
+        if (!m._singListenerAttached) {
+          singCheck.addEventListener('change', () => {
+            m.singAugment = singCheck.checked;
+            this._recalcSingAugment(m, costStr);
+          });
+          m._singListenerAttached = true;
+        }
+      } else {
+        singSection.classList.add('hidden');
+      }
+    } else {
+      singSection.classList.add('hidden');
+      m.singAugment = false;
+      m.singBonus = 0;
+    }
 
     // Casting skill — show override for non-memorized divine
     // Defensive recalculation to guarantee non-mem penalty is applied
