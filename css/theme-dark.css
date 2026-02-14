@@ -393,6 +393,85 @@
   background: rgba(255,255,255,0.05);
 }
 
+/* Enhanced HP & AP widget - dark */
+[data-theme="dark"] .hp-ap-widget-header {
+  color: #888;
+  border-bottom-color: #555;
+}
+
+[data-theme="dark"] .hp-ap-row {
+  background: rgba(255,255,255,0.04);
+}
+
+[data-theme="dark"] .hp-ap-row.damaged {
+  background: rgba(200, 50, 50, 0.15);
+}
+
+[data-theme="dark"] .hp-loc-name {
+  color: #aaa;
+}
+
+[data-theme="dark"] .hp-ap-val {
+  color: #999;
+}
+
+[data-theme="dark"] .hp-sep {
+  color: #666;
+}
+
+[data-theme="dark"] .hp-max-val {
+  color: #888;
+}
+
+/* Init roll button - dark */
+[data-theme="dark"] .widget-init-roll {
+  border-color: #666;
+}
+
+[data-theme="dark"] .widget-init-roll:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Magic MP row - dark */
+[data-theme="dark"] .magic-mp-row {
+  border-bottom-color: #555;
+}
+
+[data-theme="dark"] .mp-label {
+  color: #aaa;
+}
+
+[data-theme="dark"] .mp-max-label {
+  color: #777;
+}
+
+/* Money input - dark */
+[data-theme="dark"] .money-widget-input {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .money-widget-input:hover {
+  border-color: #555;
+  background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .money-widget-input:focus {
+  border-color: var(--accent-color);
+  background: rgba(0,0,0,0.3);
+  box-shadow: 0 0 0 2px rgba(200,170,120,0.15);
+}
+
+/* Cast button - dark */
+[data-theme="dark"] .btn-cast-widget {
+  color: var(--accent-color);
+  border-color: rgba(200,170,120,0.3);
+}
+
+[data-theme="dark"] .btn-cast-widget:hover {
+  background: rgba(200,170,120,0.15);
+  border-color: var(--accent-color);
+}
+
 [data-theme="dark"] .damage-result-content {
   background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
 }

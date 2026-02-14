@@ -31985,15 +31985,32 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       name: 'Hit Points',
       icon: '❤️',
       render: () => {
-        let html = '<h4>Hit Points</h4><div class="hp-overview">';
-        for (let i = 0; i < 7; i++) {
+        const locNames7 = ['R.Leg', 'L.Leg', 'Abdom', 'Chest', 'R.Arm', 'L.Arm', 'Head'];
+        const locNames9 = ['Tail', 'R.Leg', 'L.Leg', 'Abdom', 'Chest', 'R.Wing', 'L.Wing', 'R.Arm', 'L.Arm', 'Head'];
+        // Detect Syrin (9-loc) vs standard (7-loc)
+        const sheetType = App.sheetType || 'human';
+        const isSyrin = sheetType === 'syrin';
+        const locNames = isSyrin ? locNames9 : locNames7;
+        const locCount = locNames.length;
+        
+        let html = '<h4>Hit Points & Armor</h4>';
+        html += '<div class="hp-ap-widget-header"><span>Location</span><span>AP</span><span>HP</span></div>';
+        html += '<div class="hp-ap-widget-list">';
+        for (let i = 0; i < locCount; i++) {
           const hp = document.getElementById(`loc-${i}-hp`)?.value || '-';
           const current = document.getElementById(`loc-${i}-current`)?.value || hp;
-          const locNames = ['R.Leg', 'L.Leg', 'Abdom', 'Chest', 'R.Arm', 'L.Arm', 'Head'];
-          const damaged = current !== hp && current !== '' && hp !== '';
-          html += `<div class="hp-location${damaged ? ' damaged' : ''}">
-            <div class="loc-name">${locNames[i] || 'Loc'}</div>
-            <div class="loc-hp">${current}/${hp}</div>
+          const ap = document.getElementById(`loc-${i}-ap`)?.value || '0';
+          const damaged = parseInt(current) < parseInt(hp);
+          html += `<div class="hp-ap-row${damaged ? ' damaged' : ''}">
+            <span class="hp-loc-name">${locNames[i]}</span>
+            <span class="hp-ap-val">${ap}</span>
+            <div class="hp-spinner">
+              <button class="spin-btn spin-down hp-loc-btn" data-loc="${i}">−</button>
+              <span class="hp-current-val" data-loc="${i}">${current}</span>
+              <span class="hp-sep">/</span>
+              <span class="hp-max-val">${hp}</span>
+              <button class="spin-btn spin-up hp-loc-btn" data-loc="${i}">+</button>
+            </div>
           </div>`;
         }
         html += '</div>';
@@ -32022,7 +32039,10 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
           <div class="combat-stats-grid two-col">
             <div class="combat-stat">
               <span class="stat-label">Initiative</span>
-              <span class="stat-value">${initiative}</span>
+              <div class="init-roll-row">
+                <span class="stat-value">${initiative}</span>
+                <button class="btn-init-roll widget-init-roll" title="Roll Initiative (d10 + ${initiative})"><img src="images/d10-init.svg" alt="d10" class="d10-icon"></button>
+              </div>
             </div>
             <div class="combat-stat editable">
               <span class="stat-label">Action Pts</span>
@@ -32236,7 +32256,21 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         const hasSorcerer = classes.some(c => sorcererClasses.includes(c));
         const hasBard = classes.some(c => bardClasses.includes(c));
         
-        let html = '<h4>Magic Skills</h4><div class="skill-list">';
+        let html = '<h4>Magic Skills</h4>';
+        
+        // Magic Points spinner
+        const mpMax = document.getElementById('magic-points-original')?.value || '0';
+        const mpCurrent = document.getElementById('magic-points-current')?.value || mpMax;
+        html += `<div class="magic-mp-row">
+          <span class="mp-label">Magic Points</span>
+          <div class="stat-spinner">
+            <button class="spin-btn spin-down" data-target="magic-points-current" data-max="${mpMax}">−</button>
+            <span class="stat-value" id="summary-magic-mp">${mpCurrent}</span>
+            <button class="spin-btn spin-up" data-target="magic-points-current" data-max="${mpMax}">+</button>
+          </div>
+          <span class="mp-max-label">/ ${mpMax}</span>
+        </div>`;
+        html += '<div class="skill-list">';
         
         if (hasDivine) {
           const channel = document.getElementById('channel-percent')?.value || '-';
@@ -32431,12 +32465,12 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         const ep = document.getElementById('money-electrum')?.value || '0';
         return `
           <h4>Money</h4>
-          <div class="stat-grid">
-            <div class="stat-box"><div class="label">PP</div><div class="value">${pp}</div></div>
-            <div class="stat-box"><div class="label">GP</div><div class="value">${gp}</div></div>
-            <div class="stat-box"><div class="label">EP</div><div class="value">${ep}</div></div>
-            <div class="stat-box"><div class="label">SP</div><div class="value">${sp}</div></div>
-            <div class="stat-box"><div class="label">CP</div><div class="value">${cp}</div></div>
+          <div class="stat-grid money-edit-grid">
+            <div class="stat-box"><div class="label">PP</div><input type="number" class="money-widget-input" data-money-target="money-platinum" value="${pp}" min="0"></div>
+            <div class="stat-box"><div class="label">GP</div><input type="number" class="money-widget-input" data-money-target="money-gold" value="${gp}" min="0"></div>
+            <div class="stat-box"><div class="label">EP</div><input type="number" class="money-widget-input" data-money-target="money-electrum" value="${ep}" min="0"></div>
+            <div class="stat-box"><div class="label">SP</div><input type="number" class="money-widget-input" data-money-target="money-silver" value="${sp}" min="0"></div>
+            <div class="stat-box"><div class="label">CP</div><input type="number" class="money-widget-input" data-money-target="money-copper" value="${cp}" min="0"></div>
           </div>
         `;
       }
@@ -32455,7 +32489,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       },
       render: () => {
         let html = '<h4>Cantrips (Memorized)</h4>';
-        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span><span></span></div>';
         html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
@@ -32466,7 +32500,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const spellName = nameEl.value.trim();
             const description = window.SpellData?.getSpellDescription(spellName) || '';
             const escapedDesc = description.replace(/"/g, '&quot;');
-            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span><button class="btn-cast-widget" data-rank="cantrips" data-slot="${i}" title="Cast ${spellName}">✦</button></div>`;
             found = true;
           }
         }
@@ -32489,7 +32523,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       },
       render: () => {
         let html = '<h4>Rank 1 Spells (Memorized)</h4>';
-        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span><span></span></div>';
         html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
@@ -32500,7 +32534,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const spellName = nameEl.value.trim();
             const description = window.SpellData?.getSpellDescription(spellName) || '';
             const escapedDesc = description.replace(/"/g, '&quot;');
-            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span><button class="btn-cast-widget" data-rank="rank1" data-slot="${i}" title="Cast ${spellName}">✦</button></div>`;
             found = true;
           }
         }
@@ -32523,7 +32557,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       },
       render: () => {
         let html = '<h4>Rank 2 Spells (Memorized)</h4>';
-        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span><span></span></div>';
         html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
@@ -32534,7 +32568,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const spellName = nameEl.value.trim();
             const description = window.SpellData?.getSpellDescription(spellName) || '';
             const escapedDesc = description.replace(/"/g, '&quot;');
-            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span><button class="btn-cast-widget" data-rank="rank2" data-slot="${i}" title="Cast ${spellName}">✦</button></div>`;
             found = true;
           }
         }
@@ -32557,7 +32591,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       },
       render: () => {
         let html = '<h4>Rank 3 Spells (Memorized)</h4>';
-        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span><span></span></div>';
         html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
@@ -32568,7 +32602,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const spellName = nameEl.value.trim();
             const description = window.SpellData?.getSpellDescription(spellName) || '';
             const escapedDesc = description.replace(/"/g, '&quot;');
-            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span><button class="btn-cast-widget" data-rank="rank3" data-slot="${i}" title="Cast ${spellName}">✦</button></div>`;
             found = true;
           }
         }
@@ -32591,7 +32625,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       },
       render: () => {
         let html = '<h4>Rank 4 Spells (Memorized)</h4>';
-        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span><span></span></div>';
         html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
@@ -32602,7 +32636,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const spellName = nameEl.value.trim();
             const description = window.SpellData?.getSpellDescription(spellName) || '';
             const escapedDesc = description.replace(/"/g, '&quot;');
-            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span><button class="btn-cast-widget" data-rank="rank4" data-slot="${i}" title="Cast ${spellName}">✦</button></div>`;
             found = true;
           }
         }
@@ -32625,7 +32659,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
       },
       render: () => {
         let html = '<h4>Rank 5 Spells (Memorized)</h4>';
-        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span></div>';
+        html += '<div class="spell-widget-header"><span>Spell</span><span>Cost</span><span></span></div>';
         html += '<div class="skill-list">';
         let found = false;
         for (let i = 0; i < 12; i++) {
@@ -32636,7 +32670,7 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
             const spellName = nameEl.value.trim();
             const description = window.SpellData?.getSpellDescription(spellName) || '';
             const escapedDesc = description.replace(/"/g, '&quot;');
-            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span></div>`;
+            html += `<div class="skill-item spell-hover" title="${escapedDesc}"><span>${spellName}</span><span>${cost?.value || ''}</span><button class="btn-cast-widget" data-rank="rank5" data-slot="${i}" title="Cast ${spellName}">✦</button></div>`;
             found = true;
           }
         }
@@ -33162,6 +33196,73 @@ The target will not follow any suggestion that would lead to obvious harm. Howev
         e.stopPropagation();
         this.openExpModal();
         return;
+      }
+      
+      // Handle HP location +/- buttons
+      const hpLocBtn = e.target.closest('.hp-loc-btn');
+      if (hpLocBtn) {
+        e.stopPropagation();
+        const loc = hpLocBtn.dataset.loc;
+        const isUp = hpLocBtn.classList.contains('spin-up');
+        const maxEl = document.getElementById(`loc-${loc}-hp`);
+        const currentEl = document.getElementById(`loc-${loc}-current`);
+        if (!maxEl || !currentEl) return;
+        
+        const max = parseInt(maxEl.value, 10) || 0;
+        let current = parseInt(currentEl.value, 10);
+        if (isNaN(current)) current = max;
+        
+        if (isUp && current < max) current++;
+        else if (!isUp) current--;
+        
+        currentEl.value = current;
+        currentEl.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Update the widget display
+        const valSpan = canvas.querySelector(`.hp-current-val[data-loc="${loc}"]`);
+        if (valSpan) {
+          valSpan.textContent = current;
+          const row = valSpan.closest('.hp-ap-row');
+          if (row) {
+            row.classList.toggle('damaged', current < max);
+          }
+        }
+        this.scheduleAutoSave();
+        return;
+      }
+      
+      // Handle initiative roll button from Combat widget
+      const initRollBtn = e.target.closest('.widget-init-roll');
+      if (initRollBtn) {
+        e.stopPropagation();
+        this.rollInitiativeD10();
+        return;
+      }
+      
+      // Handle cast spell buttons from spell widgets
+      const castWidgetBtn = e.target.closest('.btn-cast-widget');
+      if (castWidgetBtn) {
+        e.stopPropagation();
+        const rank = castWidgetBtn.dataset.rank;
+        const slot = parseInt(castWidgetBtn.dataset.slot, 10);
+        if (rank !== undefined && !isNaN(slot)) {
+          this.castSpell(rank, slot);
+        }
+        return;
+      }
+    });
+    
+    // Handle money input changes (use 'input' event, not click)
+    canvas.addEventListener('input', (e) => {
+      const moneyInput = e.target.closest('.money-widget-input');
+      if (moneyInput) {
+        const targetId = moneyInput.dataset.moneyTarget;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.value = moneyInput.value || '0';
+          targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        this.scheduleAutoSave();
       }
     });
   },

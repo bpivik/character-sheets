@@ -15033,6 +15033,226 @@ input.combat-skill-percent.damage-boosted {
   background: #ffe0e0;
 }
 
+/* === Enhanced HP & AP Widget === */
+.hp-ap-widget-header {
+  display: grid;
+  grid-template-columns: 1fr 30px 1fr;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #888;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.hp-ap-widget-header span:first-child { text-align: left; }
+
+.hp-ap-widget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hp-ap-row {
+  display: grid;
+  grid-template-columns: 1fr 30px 1fr;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 4px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.02);
+  font-size: 0.85rem;
+}
+
+.hp-ap-row.damaged {
+  background: rgba(200, 50, 50, 0.08);
+}
+
+.hp-ap-row.damaged .hp-current-val {
+  color: #c33;
+  font-weight: 700;
+}
+
+.hp-loc-name {
+  font-size: 0.78rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.hp-ap-val {
+  text-align: center;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.8rem;
+}
+
+.hp-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.hp-spinner .spin-btn {
+  width: 18px;
+  height: 18px;
+  font-size: 0.75rem;
+}
+
+.hp-current-val {
+  font-weight: 600;
+  min-width: 16px;
+  text-align: right;
+}
+
+.hp-sep {
+  color: #999;
+  font-size: 0.75rem;
+}
+
+.hp-max-val {
+  color: #888;
+  min-width: 16px;
+  text-align: left;
+}
+
+/* === Initiative Roll Button in Combat Widget === */
+.init-roll-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.widget-init-roll {
+  background: none;
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.widget-init-roll:hover {
+  opacity: 1;
+  background: rgba(0,0,0,0.05);
+}
+
+.widget-init-roll .d10-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* === Magic Points Row in Magic Skills Widget === */
+.magic-mp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #ccc;
+}
+
+.mp-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
+}
+
+.mp-max-label {
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* === Editable Money Widget === */
+.money-edit-grid .stat-box {
+  position: relative;
+}
+
+.money-widget-input {
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  padding: 2px;
+  color: var(--text-primary, #333);
+  transition: border-color 0.2s, background 0.2s;
+  -moz-appearance: textfield;
+}
+
+.money-widget-input::-webkit-outer-spin-button,
+.money-widget-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.money-widget-input:hover {
+  border-color: var(--border-light);
+  background: rgba(0,0,0,0.03);
+}
+
+.money-widget-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 0 2px rgba(139,69,19,0.15);
+}
+
+/* === Cast Button in Spell Widgets === */
+.btn-cast-widget {
+  background: none;
+  border: 1px solid rgba(139, 69, 19, 0.3);
+  border-radius: 4px;
+  color: var(--accent-color, #8b4513);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 1px 6px;
+  line-height: 1;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-cast-widget:hover {
+  background: rgba(139, 69, 19, 0.1);
+  border-color: var(--accent-color);
+  transform: scale(1.1);
+}
+
+.btn-cast-widget:active {
+  transform: scale(0.95);
+}
+
+/* Update spell widget header for 3-column layout */
+.widget-content .spell-widget-header {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #888;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 4px;
+}
+
+/* Spell items: 3-column with cast button */
+.widget-content .skill-item.spell-hover {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
 /* Combat Stats Grid in Widget */
 .combat-stats-grid {
   display: grid;
