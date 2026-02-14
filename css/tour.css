@@ -129,6 +129,11 @@
   pointer-events: auto;
 }
 
+/* Reduced dimming for demo steps so app modals remain visible */
+.tour-overlay.tour-overlay-demo::before {
+  background: rgba(0, 0, 0, 0.35);
+}
+
 /* === Spotlight Cutout === */
 .tour-spotlight {
   position: fixed;
