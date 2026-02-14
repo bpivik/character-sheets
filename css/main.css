@@ -2572,6 +2572,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a1a2d 0%, #25254a 100%);
   border: 2px solid #5588cc;
   border-radius: 6px;
+  margin-top: 0.75rem;
 }
 
 .circle-of-power-section .section-header {
@@ -2637,6 +2638,7 @@ input.weapon-damage.rage-boosted,
   background: linear-gradient(135deg, #1a1528 0%, #231a35 100%);
   border: 2px solid #7a4f9e;
   border-radius: 6px;
+  margin-top: 0.75rem;
 }
 
 .familiar-section .section-header {
@@ -5039,6 +5041,7 @@ input.skill-input.powerful-concentration-bonus,
   background: linear-gradient(135deg, #1a2a1a 0%, #2d3a2d 100%);
   border: 2px solid #5a8a5a;
   border-radius: 6px;
+  margin-top: 0.75rem;
 }
 
 .animal-companion-section .section-header-row {
@@ -16695,6 +16698,7 @@ body.dark-mode[data-class-theme] .subsection-header {
   background: linear-gradient(135deg, #2a2a1a 0%, #35352a 100%);
   border: 2px solid #7a7a5a;
   border-radius: 6px;
+  margin-top: 0.75rem;
   animation: ambient-glow-amber 3s ease-in-out infinite;
 }
 
