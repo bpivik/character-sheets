@@ -154,6 +154,30 @@ const GuidedTour = {
       position: 'bottom',
       page: 'combat'
     },
+    // DEMO: Serious Wound Modal
+    {
+      target: function() {
+        return document.getElementById('wound-info-modal');
+      },
+      title: 'Serious Wound Example',
+      text: 'When a hit location drops to <strong>0 HP or below</strong>, a Serious Wound occurs! This modal explains the effects \u2014 your character is <strong>stunned for 1d3 Turns</strong> and must pass an <strong>Endurance roll</strong> or suffer further penalties.',
+      position: 'bottom',
+      page: 'combat',
+      demo: true,
+      action: function() {
+        setTimeout(function() {
+          App.showWoundInfoModal('wound-serious', 'Right Arm');
+          setTimeout(function() {
+            var modal = document.getElementById('wound-info-modal');
+            if (modal) modal.style.zIndex = '100002';
+          }, 100);
+        }, 400);
+      },
+      cleanupAction: function() {
+        var modal = document.getElementById('wound-info-modal');
+        if (modal) { modal.style.zIndex = ''; modal.classList.add('hidden'); }
+      }
+    },
     // Weapons
     {
       target: '.melee-weapons',
@@ -172,24 +196,44 @@ const GuidedTour = {
       page: 'combat',
       scrollTo: true
     },
-    // DEMO: Ability Button
+    // DEMO: Holy Strike Ability
     {
       target: function() {
-        var detectEvil = document.getElementById('detect-evil-section');
-        if (detectEvil && detectEvil.style.display !== 'none') {
-          return document.getElementById('btn-detect-evil-use') || detectEvil;
+        var section = document.getElementById('holy-strike-section');
+        if (section && section.style.display !== 'none') {
+          return document.getElementById('btn-holy-strike-use') || section;
         }
-        var layOnHands = document.getElementById('lay-on-hands-section');
-        if (layOnHands && layOnHands.style.display !== 'none') {
-          return document.getElementById('btn-lay-on-hands-use') || layOnHands;
-        }
-        return document.querySelector('.ability-cards-grid section:not([style*="display: none"])');
+        return section;
       },
-      title: 'Interactive Abilities',
-      text: 'Some abilities have <strong>use buttons</strong> with daily limits. Cassian can <strong>Detect Evil</strong> within 60 feet, <strong>Lay on Hands</strong> to heal wounds, and <strong>Holy Strike</strong> for bonus damage. Uses reset with New Game.',
+      title: 'Holy Strike Demo',
+      text: 'Watch this! Cassian activates <strong>Holy Strike</strong>, adding <strong>+1d6 holy damage</strong> to his next melee attack against an evil creature. Abilities like this have daily uses that reset with a New Game session.',
       position: 'bottom',
       page: 'combat',
-      scrollTo: true
+      scrollTo: true,
+      demo: true,
+      action: function() {
+        setTimeout(function() {
+          var btn = document.getElementById('btn-holy-strike-use');
+          if (btn && !btn.disabled) {
+            btn.click();
+            setTimeout(function() {
+              var anim = document.getElementById('holy-strike-anim-overlay');
+              if (anim) anim.style.zIndex = '100002';
+            }, 50);
+          }
+        }, 400);
+      },
+      cleanupAction: function() {
+        var anim = document.getElementById('holy-strike-anim-overlay');
+        if (anim) { anim.style.zIndex = ''; anim.style.display = 'none'; }
+        // Deactivate holy strike to restore original state
+        if (App.character && App.character.holyStrikeActive) {
+          App.deactivateHolyStrike();
+          // Restore the use that was consumed
+          App.character.holyStrikeUsesRemaining = (App.character.holyStrikeUsesRemaining || 0) + 1;
+          App.updateHolyStrikeDisplay();
+        }
+      }
     },
     // Magic Page
     {
