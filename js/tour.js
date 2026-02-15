@@ -85,7 +85,7 @@ const GuidedTour = {
     },
     // Characteristics
     {
-      target: '.attributes-grid',
+      target: '.core-attributes',
       title: 'Characteristics',
       text: 'Your seven core stats: <strong>STR, CON, SIZ, DEX, INT, POW, CHA</strong>. These drive everything \u2014 skills, hit points, damage, initiative, and more. All derived values update automatically.',
       position: 'bottom',
@@ -93,7 +93,7 @@ const GuidedTour = {
     },
     // Derived Attributes
     {
-      target: '.derived-stats',
+      target: '.derived-attributes',
       title: 'Derived Attributes',
       text: 'Action Points, Damage Modifier, Initiative, Magic Points, and more \u2014 all <strong>auto-calculated</strong> from your characteristics. Gray fields are locked; editable fields track temporary changes.',
       position: 'bottom',
@@ -142,7 +142,7 @@ const GuidedTour = {
     },
     // Professional Skills
     {
-      target: '.professional-skills-section',
+      target: '.professional-skills',
       title: 'Professional Skills',
       text: 'Specialized skills from your class and culture. Cassian has <strong>Channel</strong>, <strong>Piety</strong>, <strong>Courtesy</strong>, and more. You can add, remove, and alphabetize rows.',
       position: 'top',
@@ -331,7 +331,7 @@ const GuidedTour = {
     // Spell List
     {
       target: function() {
-        return document.querySelector('#page-magic1 .spell-section');
+        return document.querySelector('#page-magic1 .spell-column');
       },
       title: 'Spells & Memorization',
       text: 'Spells are organized by rank. The <strong>\u2713 checkbox</strong> marks memorized spells \u2014 casting non-memorized spells is harder. The <strong>\u2726 button</strong> opens the casting modal. Let\'s try it...',
