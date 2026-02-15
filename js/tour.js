@@ -35,6 +35,54 @@ const GuidedTour = {
       position: 'bottom',
       page: 'main'
     },
+    // DEMO: Class Prereq Skills
+    {
+      target: function() {
+        return document.getElementById('prereq-label-primary');
+      },
+      title: 'Class Prerequisite Skills',
+      text: 'Click the <strong>Class Prereq. Skill</strong> label to see your progress toward the next rank. It shows which skills meet the threshold and how much each remaining skill needs to improve.',
+      position: 'bottom',
+      page: 'main',
+      demo: true,
+      action: function() {
+        setTimeout(function() {
+          App.showPrereqStatus('primary');
+          setTimeout(function() {
+            var modal = document.getElementById('prereq-modal');
+            if (modal) modal.style.zIndex = '100002';
+          }, 100);
+        }, 400);
+      },
+      cleanupAction: function() {
+        var modal = document.getElementById('prereq-modal');
+        if (modal) { modal.style.zIndex = ''; modal.remove(); }
+      }
+    },
+    // DEMO: Spend EXP Rolls
+    {
+      target: function() {
+        return document.getElementById('btn-spend-exp');
+      },
+      title: 'Spend EXP Rolls',
+      text: 'After a session, spend your <strong>EXP Rolls</strong> to grow your character. You can improve existing skills, unlock new class abilities, learn new skills or spells, strengthen passions, or even add a sub-class!',
+      position: 'bottom',
+      page: 'main',
+      demo: true,
+      action: function() {
+        setTimeout(function() {
+          App.openExpModal();
+          setTimeout(function() {
+            var modal = document.getElementById('exp-modal');
+            if (modal) modal.style.zIndex = '100002';
+          }, 100);
+        }, 400);
+      },
+      cleanupAction: function() {
+        var modal = document.getElementById('exp-modal');
+        if (modal) { modal.style.zIndex = ''; modal.classList.add('hidden'); }
+      }
+    },
     // Characteristics
     {
       target: '.attributes-grid',
