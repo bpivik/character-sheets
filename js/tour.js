@@ -182,7 +182,7 @@ const GuidedTour = {
     {
       target: '.melee-weapons',
       title: 'Weapons',
-      text: 'Your melee and ranged weapons with damage, size, and special effects. Click the <strong>\ud83c\udfb2 button</strong> next to any damage field to roll weapon damage. Weapons auto-populate from your class combat style.',
+      text: 'Your melee and ranged weapons with damage, size, and special effects. Click the <strong>\ud83c\udfb2 button</strong> next to any damage field to roll weapon damage.',
       position: 'bottom',
       page: 'combat',
       scrollTo: true
@@ -191,7 +191,7 @@ const GuidedTour = {
     {
       target: '.special-abilities-title',
       title: 'Special Abilities',
-      text: 'Class and species abilities live here. Abilities with <strong>interactive buttons</strong> can be activated during play. Look for \u2139\ufe0f icons for detailed descriptions.',
+      text: 'Class and species abilities live here. Abilities with <strong>interactive buttons</strong> can be activated during play. Click the ability name to get more detailed descriptions.',
       position: 'bottom',
       page: 'combat',
       scrollTo: true
@@ -206,32 +206,39 @@ const GuidedTour = {
         return section;
       },
       title: 'Holy Strike Demo',
-      text: 'Watch this! Cassian activates <strong>Holy Strike</strong>, adding <strong>+1d6 holy damage</strong> to his next melee attack against an evil creature. Abilities like this have daily uses that reset with a New Game session.',
+      text: 'Cassian activates <strong>Holy Strike</strong>, adding <strong>+1d6 holy damage</strong> to his next melee attack against an evil creature. Abilities like this have daily uses that reset with a New Game session.',
       position: 'bottom',
       page: 'combat',
       scrollTo: true,
       demo: true,
       action: function() {
         setTimeout(function() {
-          var btn = document.getElementById('btn-holy-strike-use');
-          if (btn && !btn.disabled) {
-            btn.click();
-            setTimeout(function() {
-              var anim = document.getElementById('holy-strike-anim-overlay');
-              if (anim) anim.style.zIndex = '100002';
-            }, 50);
+          // Create a persistent version of the animation overlay (the real one auto-dismisses in 1.5s)
+          var overlay = document.getElementById('tour-holy-strike-demo');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'tour-holy-strike-demo';
+            overlay.className = 'ability-anim-overlay';
+            overlay.style.zIndex = '100002';
+            overlay.innerHTML =
+              '<div class="ability-anim-content holy-strike-anim">' +
+              '<div class="holy-strike-icon">\u2694\ufe0f</div>' +
+              '<div class="holy-strike-title">Holy Strike</div>' +
+              '<div class="holy-strike-subtitle">+1d6 Holy Damage to next melee attack!</div>' +
+              '</div>';
+            document.body.appendChild(overlay);
           }
+          overlay.style.display = 'flex';
+          overlay.offsetHeight;
+          overlay.classList.add('active');
         }, 400);
       },
       cleanupAction: function() {
-        var anim = document.getElementById('holy-strike-anim-overlay');
-        if (anim) { anim.style.zIndex = ''; anim.style.display = 'none'; }
-        // Deactivate holy strike to restore original state
-        if (App.character && App.character.holyStrikeActive) {
-          App.deactivateHolyStrike();
-          // Restore the use that was consumed
-          App.character.holyStrikeUsesRemaining = (App.character.holyStrikeUsesRemaining || 0) + 1;
-          App.updateHolyStrikeDisplay();
+        var overlay = document.getElementById('tour-holy-strike-demo');
+        if (overlay) {
+          overlay.classList.remove('active');
+          overlay.style.display = 'none';
+          overlay.remove();
         }
       }
     },
