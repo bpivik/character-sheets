@@ -242,6 +242,36 @@ const GuidedTour = {
         }
       }
     },
+    // Holy Strike Effect on Weapons
+    {
+      target: function() {
+        // Activate Holy Strike visuals so +1d6 badges appear on melee weapons
+        if (App.character && !App.character.holyStrikeActive) {
+          var btn = document.getElementById('btn-holy-strike-use');
+          if (btn && !btn.disabled) {
+            App.character.holyStrikeUsesRemaining--;
+            App.character.holyStrikeActive = true;
+            App._applyHolyStrikeVisuals();
+            App.updateHolyStrikeDisplay();
+          }
+        }
+        return document.querySelector('.melee-weapons');
+      },
+      title: 'Holy Strike \u2014 Weapon Damage',
+      text: 'See the <strong>+1d6 badges</strong> on each melee weapon? That\u2019s Holy Strike in action! The bonus holy damage is added to your next attack roll against an evil creature, then the effect ends.',
+      position: 'bottom',
+      page: 'combat',
+      scrollTo: true,
+      cleanupAction: function() {
+        // Deactivate Holy Strike and restore the used charge
+        if (App.character && App.character.holyStrikeActive) {
+          App.deactivateHolyStrike();
+          App.character.holyStrikeUsesRemaining = (App.character.holyStrikeUsesRemaining || 0) + 1;
+          App.updateHolyStrikeDisplay();
+          App.scheduleAutoSave();
+        }
+      }
+    },
     // Magic Page
     {
       target: '.magic-skills-section',
@@ -315,15 +345,13 @@ const GuidedTour = {
       position: 'bottom',
       page: 'summary'
     },
-    // Notes Tab
+    // Notes Page
     {
-      target: function() {
-        return document.querySelector('.tab-btn[data-page="notes"]');
-      },
+      target: '.notes-page-content',
       title: 'Notes & Journal',
-      text: 'The <strong>Notes</strong> tab holds your backstory, appearance, personality, connections, quest log, and custom sections. Cassian\'s rich backstory is already filled in \u2014 explore it!',
+      text: 'The <strong>Notes</strong> page holds your backstory, appearance, personality, connections, quest log, and custom sections. You can reorder sections, add your own, and use the rich text toolbar to format entries. Cassian\'s backstory is already filled in \u2014 explore it!',
       position: 'bottom',
-      page: null
+      page: 'notes'
     },
     // Theme & Controls
     {
